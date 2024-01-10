@@ -34,6 +34,7 @@ const getWorkById = async (id: string) => {
 const updateWork = async (id: string, data: any) => {
   const payload = {
     work: data,
+    regenerate_documents: true,
   };
 
   try {
@@ -44,4 +45,13 @@ const updateWork = async (id: string, data: any) => {
   }
 };
 
-export { createWork, getAllWorks, getWorkById, updateWork };
+const createDraftWork = async (data: any) => {
+  try {
+    const response = await api.post('/draft/works', data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export { createWork, getAllWorks, getWorkById, updateWork, createDraftWork };

@@ -148,7 +148,6 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
 
   const handleSubmitForm = async () => {
     try {
-      console.log(selectedOfficeType);
       if (!selectedOfficeType) throw new Error('Selecione o Tipo de Escritório');
       if (!formData.name) throw new Error('Informe o Nome do Escritório');
       if (!formData.oab) throw new Error('Informe o Identificador OAB');

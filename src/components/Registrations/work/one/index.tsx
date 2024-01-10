@@ -189,7 +189,6 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
       if (selectedProcedures.length <= 0) {
         throw new Error('Preencha o Procedimento.');
       }
-      console.log(selectedProcedures);
 
       if (
         selectedArea === '' &&

@@ -88,9 +88,21 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
       let data = {};
 
       if (router.pathname.includes('alterar')) {
-        const transformObjects = documentsProduced.map(document => ({
-          document_type: document,
-        }));
+        const transformObjects = documentsProduced.map((document: any) => {
+          if (document.id) {
+            return {
+              id: document.id,
+              document_type: document.document_type,
+              url: document.url,
+            };
+          } else {
+            if (typeof document === 'string') {
+              return {
+                document_type: document,
+              };
+            }
+          }
+        });
 
         data = {
           ...workForm,
@@ -112,6 +124,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
       }
 
       setWorkForm(data);
+
       saveDataLocalStorage(data);
       confirmation();
     } catch (err) {
@@ -141,12 +154,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
         if (attributes.documents) {
           const documents_types = attributes.documents.map((document: any) => document);
 
-          const uniqueDocuments = documents_types.filter(
-            (document: any, index: number, self: any) =>
-              index === self.findIndex((t: any) => t.document_type === document.document_type),
-          );
-
-          setDocumentsProduced(uniqueDocuments.map((document: any) => document.document_type));
+          setDocumentsProduced(documents_types);
         }
 
         if (attributes.extra_pending_document) {
@@ -278,7 +286,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                   }
                   label="Procuração"
                 />
-                {/* 
+
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -312,9 +320,9 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                   style={{
                     marginRight: '0px',
                   }}
-                /> */}
+                />
 
-                <FormControlLabel
+                {/* <FormControlLabel
                   control={
                     <Checkbox
                       value="termOfResidence"
@@ -331,8 +339,8 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                   style={{
                     marginRight: '0px',
                   }}
-                />
-
+                /> */}
+                {/* 
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -350,7 +358,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                   style={{
                     marginRight: '0px',
                   }}
-                />
+                /> */}
               </Flex>
             </Box>
 
