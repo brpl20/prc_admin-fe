@@ -320,7 +320,8 @@ const Customers = () => {
                     cpf:
                       (customer.attributes.cpf &&
                         customer.attributes.customer_type === 'physical_person') ||
-                      customer.attributes.customer_type === 'counter'
+                      customer.attributes.customer_type === 'counter' ||
+                      customer.attributes.customer_type === 'representative'
                         ? cpfMask(customer.attributes.cpf)
                         : customer.attributes.cnpj &&
                           customer.attributes.customer_type === 'legal_person'

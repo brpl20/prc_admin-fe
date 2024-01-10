@@ -148,7 +148,8 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
 
   const handleSubmitForm = async () => {
     try {
-      if (selectedOfficeType.id === undefined) throw new Error('Selecione o Tipo de Escritório');
+      console.log(selectedOfficeType);
+      if (!selectedOfficeType) throw new Error('Selecione o Tipo de Escritório');
       if (!formData.name) throw new Error('Informe o Nome do Escritório');
       if (!formData.oab) throw new Error('Informe o Identificador OAB');
       if (!formData.cnpj_cpf) throw new Error('Informe o CNPJ/CPF');

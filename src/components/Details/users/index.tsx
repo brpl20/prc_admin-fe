@@ -1,21 +1,12 @@
 import { useEffect, useState } from 'react';
 
-import {
-  Title,
-  ButtonShowData,
-  ContainerDetails,
-  Flex,
-  Box,
-  DetailsWrapper,
-  BoxInfo,
-  GridInfo,
-} from '../styles';
-import { cnpjMask, phoneMask } from '@/utils/masks';
-import { MdKeyboardArrowDown } from 'react-icons/md';
+import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
+import { cpfMask, rgMask } from '@/utils/masks';
 import { CircularProgress } from '@mui/material';
-import Link from 'next/link';
 import { getAdminByID } from '@/services/admins';
 import { getAllOffices } from '@/services/offices';
+import { FiMinusCircle } from 'react-icons/fi';
+import { GoPlusCircle } from 'react-icons/go';
 
 interface UserDetailsProps {
   id: string | string[];
@@ -27,9 +18,9 @@ export default function UserDetails({ id }: UserDetailsProps) {
   const [personalDataIsOpen, setPersonalDataIsOpen] = useState(true);
   const [userAddressIsOpen, setUserAddressIsOpen] = useState(true);
   const [userContactIsOpen, setUserContactIsOpen] = useState(true);
-  const [userGeneralData, setUserGeneralData] = useState(true);
-  const [userBankDataIsOpen, setUserBankDataIsOpen] = useState(true);
-  const [userAccessDataIsOpen, setUserAccessDataIsOpen] = useState(true);
+  const [userGeneralData, setUserGeneralData] = useState(false);
+  const [userBankDataIsOpen, setUserBankDataIsOpen] = useState(false);
+  const [userAccessDataIsOpen, setUserAccessDataIsOpen] = useState(false);
 
   const [allOffices, setAllOffices] = useState<any[]>([]);
 
@@ -56,6 +47,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
     try {
       setLoading(true);
       const { data } = await getAdminByID(id as string);
+      console.log(data);
 
       if (data) {
         const addresses = data.data.attributes.addresses.map((address: any) => {
@@ -118,952 +110,1466 @@ export default function UserDetails({ id }: UserDetailsProps) {
   }, []);
 
   return (
-    <DetailsWrapper>
+    <div
+      style={{
+        backgroundColor: '#EEE',
+      }}
+    >
       {loading && (
-        <Flex
+        <div
           style={{
-            height: '100%',
-            width: '100%',
-            alignItems: 'center',
+            display: 'flex',
             justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh',
           }}
         >
           <CircularProgress />
-        </Flex>
+        </div>
       )}
-      {userData && (
-        <>
-          <Flex>
-            <span
+
+      {!loading && userData && (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+          }}
+        >
+          <DetailsWrapper
+            style={{
+              borderBottom: '1px solid #C0C0C0',
+              boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
+            }}
+          >
+            <ContainerDetails
               style={{
-                fontSize: '32px',
-                fontWeight: '500',
-                color: '#2A3F54',
+                gap: '18px',
               }}
             >
-              Usuário {userData.name}
-            </span>
-          </Flex>
-
-          <Flex
-            style={{
-              borderBottom: '1px solid #2A3F54',
-            }}
-          ></Flex>
-
-          <ContainerDetails>
-            <Box>
-              <Flex
-                style={{
-                  justifyContent: 'space-between',
-                  alignItems: 'start',
-                  cursor: 'pointer',
-                }}
-                onClick={() => setPersonalDataIsOpen(!personalDataIsOpen)}
-              >
-                <span
+              <>
+                <Flex
                   style={{
-                    fontSize: '20px',
-                    fontWeight: '500',
-                    color: '#2A3F54',
-                    minWidth: '350px',
+                    padding: '20px 32px 20px 32px',
+                    borderBottom: '1px solid #C0C0C0',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
                   }}
                 >
-                  Dados Pessoais
-                </span>
+                  <span
+                    style={{
+                      fontSize: '22px',
+                      fontWeight: '500',
+                      color: '#344054',
+                    }}
+                  >
+                    Dados Pessoais
+                  </span>
+                  <ButtonShowContact>
+                    {personalDataIsOpen ? (
+                      <FiMinusCircle
+                        size={24}
+                        color="#344054"
+                        onClick={() => setPersonalDataIsOpen(!personalDataIsOpen)}
+                      />
+                    ) : (
+                      <GoPlusCircle
+                        size={24}
+                        color="#344054"
+                        onClick={() => setPersonalDataIsOpen(!personalDataIsOpen)}
+                      />
+                    )}
+                  </ButtonShowContact>
+                </Flex>
                 {personalDataIsOpen && (
-                  <Flex
+                  <div
                     style={{
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                    }}
-                  >
-                    <GridInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          Nome:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {userData.name}
-                        </span>
-                      </BoxInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          Sobrenome:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {userData.last_name}
-                        </span>
-                      </BoxInfo>
-                    </GridInfo>
-                    <GridInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          CPF:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {userData.cpf}
-                        </span>
-                      </BoxInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          RG:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {userData.rg}
-                        </span>
-                      </BoxInfo>
-                    </GridInfo>
-                    <GridInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          Data de Nascimento:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {userData.birth}
-                        </span>
-                      </BoxInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          Nome da Mãe:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {userData.mother_name}
-                        </span>
-                      </BoxInfo>
-                    </GridInfo>
-                    <GridInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          Naturalidade:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {userData.nationality}
-                        </span>
-                      </BoxInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          Gênero:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {userData.gender}
-                        </span>
-                      </BoxInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          Estado Civil:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {userData.civil_status}
-                        </span>
-                      </BoxInfo>
-                    </GridInfo>
-                  </Flex>
-                )}
-                <ButtonShowData onClick={() => setPersonalDataIsOpen(!personalDataIsOpen)}>
-                  <MdKeyboardArrowDown
-                    style={{
-                      fontSize: '24px',
-                      color: '#2A3F54',
-                    }}
-                  />
-                </ButtonShowData>
-              </Flex>
-            </Box>
-
-            <Box>
-              <Flex
-                style={{
-                  borderBottom: '1px solid #2A3F54',
-                }}
-              ></Flex>
-
-              <Flex
-                style={{
-                  justifyContent: 'space-between',
-                  alignItems: 'start',
-                  cursor: 'pointer',
-                  paddingTop: '32px',
-                }}
-                onClick={() => setUserAddressIsOpen(!userAddressIsOpen)}
-              >
-                <span
-                  style={{
-                    fontSize: '20px',
-                    fontWeight: '500',
-                    color: '#2A3F54',
-                    minWidth: '350px',
-                  }}
-                >
-                  Endereço
-                </span>
-                {userAddressIsOpen && (
-                  <Flex
-                    style={{
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                    }}
-                  >
-                    {userData.addresses &&
-                      userData.addresses.map((address: any, index: any) => (
-                        <Flex
-                          style={{
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            width: '100%',
-                          }}
-                          key={index}
-                        >
-                          <GridInfo key={index}>
-                            <BoxInfo>
-                              <strong
-                                style={{
-                                  fontSize: '20px',
-                                  fontWeight: '500',
-                                  color: '#2A3F54',
-                                }}
-                              >
-                                CEP:
-                              </strong>
-                              <span
-                                style={{
-                                  fontSize: '18px',
-                                  fontWeight: '400',
-                                  color: '#000',
-                                }}
-                              >
-                                {address.zip_code}
-                              </span>
-                            </BoxInfo>
-                            <BoxInfo>
-                              <strong
-                                style={{
-                                  fontSize: '20px',
-                                  fontWeight: '500',
-                                  color: '#2A3F54',
-                                }}
-                              >
-                                Bairro:
-                              </strong>
-                              <span
-                                style={{
-                                  fontSize: '18px',
-                                  fontWeight: '400',
-                                  color: '#000',
-                                }}
-                              >
-                                {address.neighborhood}
-                              </span>
-                            </BoxInfo>
-                          </GridInfo>
-                          <GridInfo>
-                            <BoxInfo>
-                              <strong
-                                style={{
-                                  fontSize: '20px',
-                                  fontWeight: '500',
-                                  color: '#2A3F54',
-                                }}
-                              >
-                                Estado:
-                              </strong>
-                              <span
-                                style={{
-                                  fontSize: '18px',
-                                  fontWeight: '400',
-                                  color: '#000',
-                                }}
-                              >
-                                {address.state}
-                              </span>
-                            </BoxInfo>
-                            <BoxInfo>
-                              <strong
-                                style={{
-                                  fontSize: '20px',
-                                  fontWeight: '500',
-                                  color: '#2A3F54',
-                                }}
-                              >
-                                Endereço:
-                              </strong>
-                              <span
-                                style={{
-                                  fontSize: '18px',
-                                  fontWeight: '400',
-                                  color: '#000',
-                                }}
-                              >
-                                {address.street}
-                              </span>
-                            </BoxInfo>
-                            <BoxInfo>
-                              <strong
-                                style={{
-                                  fontSize: '20px',
-                                  fontWeight: '500',
-                                  color: '#2A3F54',
-                                }}
-                              >
-                                Número:
-                              </strong>
-                              <span
-                                style={{
-                                  fontSize: '18px',
-                                  fontWeight: '400',
-                                  color: '#000',
-                                }}
-                              >
-                                {address.number}
-                              </span>
-                            </BoxInfo>
-                          </GridInfo>
-                          <GridInfo>
-                            <BoxInfo>
-                              <strong
-                                style={{
-                                  fontSize: '20px',
-                                  fontWeight: '500',
-                                  color: '#2A3F54',
-                                }}
-                              >
-                                Cidade:
-                              </strong>
-                              <span
-                                style={{
-                                  fontSize: '18px',
-                                  fontWeight: '400',
-                                  color: '#000',
-                                }}
-                              >
-                                {address.city}
-                              </span>
-                            </BoxInfo>
-                            <BoxInfo>
-                              <strong
-                                style={{
-                                  fontSize: '20px',
-                                  fontWeight: '500',
-                                  color: '#2A3F54',
-                                }}
-                              >
-                                Complemento:
-                              </strong>
-                              <span
-                                style={{
-                                  fontSize: '18px',
-                                  fontWeight: '400',
-                                  color: '#000',
-                                }}
-                              >
-                                Sem complemento
-                              </span>
-                            </BoxInfo>
-                          </GridInfo>
-                        </Flex>
-                      ))}
-                  </Flex>
-                )}
-                <ButtonShowData onClick={() => setPersonalDataIsOpen(!personalDataIsOpen)}>
-                  <MdKeyboardArrowDown
-                    style={{
-                      fontSize: '24px',
-                      color: '#2A3F54',
-                    }}
-                  />
-                </ButtonShowData>
-              </Flex>
-            </Box>
-
-            <Box>
-              <Flex
-                style={{
-                  borderBottom: '1px solid #2A3F54',
-                }}
-              ></Flex>
-
-              <Flex
-                style={{
-                  justifyContent: 'space-between',
-                  alignItems: 'start',
-                  cursor: 'pointer',
-                  paddingTop: '32px',
-                }}
-                onClick={() => setUserContactIsOpen(!userContactIsOpen)}
-              >
-                <span
-                  style={{
-                    fontSize: '20px',
-                    fontWeight: '500',
-                    color: '#2A3F54',
-                    minWidth: '350px',
-                  }}
-                >
-                  Contato
-                </span>
-                {userContactIsOpen && (
-                  <Flex
-                    style={{
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                    }}
-                  >
-                    <GridInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          Telefone:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {userData.phones
-                            ? userData.phones
-                                .map((phone: any) => phoneMask(phone.phone_number))
-                                .join(', ')
-                            : ''}
-                        </span>
-                      </BoxInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          E-mail Oficial:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {userData.emails
-                            ? userData.emails.map((email: any) => email.email).join(', ')
-                            : ''}
-                        </span>
-                      </BoxInfo>
-                    </GridInfo>
-                  </Flex>
-                )}
-                <ButtonShowData onClick={() => setPersonalDataIsOpen(!personalDataIsOpen)}>
-                  <MdKeyboardArrowDown
-                    style={{
-                      fontSize: '24px',
-                      color: '#2A3F54',
-                    }}
-                  />
-                </ButtonShowData>
-              </Flex>
-            </Box>
-
-            <Box>
-              <Flex
-                style={{
-                  borderBottom: '1px solid #2A3F54',
-                }}
-              ></Flex>
-
-              <Flex
-                style={{
-                  justifyContent: 'space-between',
-                  alignItems: 'start',
-                  cursor: 'pointer',
-                  paddingTop: '32px',
-                }}
-                onClick={() => setUserGeneralData(!userGeneralData)}
-              >
-                <span
-                  style={{
-                    fontSize: '20px',
-                    fontWeight: '500',
-                    color: '#2A3F54',
-                    minWidth: '350px',
-                  }}
-                >
-                  Dados Gerais
-                </span>
-                {userGeneralData && (
-                  <Flex
-                    style={{
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                    }}
-                  >
-                    <GridInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          Origin:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {userData.name}
-                        </span>
-                      </BoxInfo>
-                    </GridInfo>
-                    <GridInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          Tipo:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {userData.role}
-                        </span>
-                      </BoxInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          Escritório:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {getOfficeName(userData.office_id)}
-                        </span>
-                      </BoxInfo>
-                    </GridInfo>
-                  </Flex>
-                )}
-                <ButtonShowData onClick={() => setPersonalDataIsOpen(!personalDataIsOpen)}>
-                  <MdKeyboardArrowDown
-                    style={{
-                      fontSize: '24px',
-                      color: '#2A3F54',
-                    }}
-                  />
-                </ButtonShowData>
-              </Flex>
-            </Box>
-
-            <Box>
-              <Flex
-                style={{
-                  borderBottom: '1px solid #2A3F54',
-                }}
-              ></Flex>
-
-              <Flex
-                style={{
-                  justifyContent: 'space-between',
-                  alignItems: 'start',
-                  cursor: 'pointer',
-                  paddingTop: '32px',
-                }}
-                onClick={() => setUserBankDataIsOpen(!userBankDataIsOpen)}
-              >
-                <span
-                  style={{
-                    fontSize: '20px',
-                    fontWeight: '500',
-                    color: '#2A3F54',
-                    minWidth: '350px',
-                  }}
-                >
-                  Dados Bancarios
-                </span>
-                {userBankDataIsOpen && (
-                  <Flex
-                    style={{
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                    }}
-                  >
-                    {userData.bank_accounts &&
-                      userData.bank_accounts.map((bankAccount: any, index: any) => (
-                        <Flex
-                          style={{
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            width: '100%',
-                          }}
-                          key={index}
-                        >
-                          <GridInfo>
-                            <BoxInfo>
-                              <strong
-                                style={{
-                                  fontSize: '20px',
-                                  fontWeight: '500',
-                                  color: '#2A3F54',
-                                }}
-                              >
-                                Banco:
-                              </strong>
-                              <span
-                                style={{
-                                  fontSize: '18px',
-                                  fontWeight: '400',
-                                  color: '#000',
-                                }}
-                              >
-                                {bankAccount.bank_name}
-                              </span>
-                            </BoxInfo>
-                          </GridInfo>
-                          <GridInfo>
-                            <BoxInfo>
-                              <strong
-                                style={{
-                                  fontSize: '20px',
-                                  fontWeight: '500',
-                                  color: '#2A3F54',
-                                }}
-                              >
-                                Agência:
-                              </strong>
-                              <span
-                                style={{
-                                  fontSize: '18px',
-                                  fontWeight: '400',
-                                  color: '#000',
-                                }}
-                              >
-                                {bankAccount.agency}
-                              </span>
-                            </BoxInfo>
-                            <BoxInfo>
-                              <strong
-                                style={{
-                                  fontSize: '20px',
-                                  fontWeight: '500',
-                                  color: '#2A3F54',
-                                }}
-                              >
-                                Operação:
-                              </strong>
-                              <span
-                                style={{
-                                  fontSize: '18px',
-                                  fontWeight: '400',
-                                  color: '#000',
-                                }}
-                              >
-                                {bankAccount.operation}
-                              </span>
-                            </BoxInfo>
-                            <BoxInfo>
-                              <strong
-                                style={{
-                                  fontSize: '20px',
-                                  fontWeight: '500',
-                                  color: '#2A3F54',
-                                }}
-                              >
-                                Conta:
-                              </strong>
-                              <span
-                                style={{
-                                  fontSize: '18px',
-                                  fontWeight: '400',
-                                  color: '#000',
-                                }}
-                              >
-                                {bankAccount.account}
-                              </span>
-                            </BoxInfo>
-                          </GridInfo>
-                          <GridInfo>
-                            <BoxInfo>
-                              <strong
-                                style={{
-                                  fontSize: '20px',
-                                  fontWeight: '500',
-                                  color: '#2A3F54',
-                                }}
-                              >
-                                Chave Pix:
-                              </strong>
-                              <span
-                                style={{
-                                  fontSize: '18px',
-                                  fontWeight: '400',
-                                  color: '#000',
-                                }}
-                              >
-                                {bankAccount.pix}
-                              </span>
-                            </BoxInfo>
-                          </GridInfo>
-                        </Flex>
-                      ))}
-                  </Flex>
-                )}
-                <ButtonShowData onClick={() => setPersonalDataIsOpen(!personalDataIsOpen)}>
-                  <MdKeyboardArrowDown
-                    style={{
-                      fontSize: '24px',
-                      color: '#2A3F54',
-                    }}
-                  />
-                </ButtonShowData>
-              </Flex>
-            </Box>
-
-            <Box>
-              <Flex
-                style={{
-                  borderBottom: '1px solid #2A3F54',
-                }}
-              ></Flex>
-
-              <Flex
-                style={{
-                  justifyContent: 'space-between',
-                  alignItems: 'start',
-                  cursor: 'pointer',
-                  paddingTop: '32px',
-                }}
-                onClick={() => setUserAccessDataIsOpen(!userAccessDataIsOpen)}
-              >
-                <span
-                  style={{
-                    fontSize: '20px',
-                    fontWeight: '500',
-                    color: '#2A3F54',
-                    minWidth: '350px',
-                  }}
-                >
-                  Acesso ao Sistema
-                </span>
-                {userAccessDataIsOpen && (
-                  <Flex
-                    style={{
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                    }}
-                  >
-                    <GridInfo>
-                      <BoxInfo>
-                        <strong
-                          style={{
-                            fontSize: '20px',
-                            fontWeight: '500',
-                            color: '#2A3F54',
-                          }}
-                        >
-                          E-mail:
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '400',
-                            color: '#000',
-                          }}
-                        >
-                          {userData.email}
-                        </span>
-                      </BoxInfo>
-                    </GridInfo>
-                  </Flex>
-                )}
-                <ButtonShowData onClick={() => setPersonalDataIsOpen(!personalDataIsOpen)}>
-                  <MdKeyboardArrowDown
-                    style={{
-                      fontSize: '24px',
-                      color: '#2A3F54',
-                    }}
-                  />
-                </ButtonShowData>
-              </Flex>
-            </Box>
-
-            <Box>
-              <Flex
-                style={{
-                  borderBottom: '1px solid #2A3F54',
-                }}
-              ></Flex>
-
-              <Flex
-                style={{
-                  justifyContent: 'flex-end',
-                  alignItems: 'start',
-                  padding: '32px 0px 0px 0px',
-                }}
-              >
-                <Link href="/usuarios" legacyBehavior>
-                  <a
-                    style={{
-                      fontSize: '18px',
-                      width: '100px',
-                      height: '36px',
-                      background: '#fff',
-                      color: '#2A3F54',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      border: '1px solid #2A3F54',
                       display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      textDecoration: 'none',
+                      flexDirection: 'column',
+                      gap: '18px',
+                      paddingBottom: '20px',
                     }}
                   >
-                    Fechar
-                  </a>
-                </Link>
-              </Flex>
-            </Box>
-          </ContainerDetails>
-        </>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                        gap: '18px',
+                        padding: '0 32px',
+                      }}
+                    >
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Nome
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {`${userData.name ? userData.name : ''} ${
+                            userData.last_name ? userData.last_name : ''
+                          }`}
+                        </span>
+                      </Flex>
+
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          CPF
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.cpf ? cpfMask(userData.cpf) : 'Não Informado'}
+                        </span>
+                      </Flex>
+
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          RG
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.rg ? rgMask(userData.rg) : 'Não Informado'}
+                        </span>
+                      </Flex>
+
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Data de Nascimento
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                          }}
+                        >
+                          {userData.birth
+                            ? userData.birth.split('-').reverse().join('/')
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      ></Flex>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                        gap: '18px',
+                        padding: '0 32px',
+                      }}
+                    >
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Nome da Mãe
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.mother_name ? userData.mother_name : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Naturalidade
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.nationality
+                            ? userData.nationality === 'brazilian'
+                              ? 'Brasileiro'
+                              : 'Estrangeiro'
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Estado Civil
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.civil_status
+                            ? userData.civil_status === 'single'
+                              ? 'Solteiro(a)'
+                              : userData.civil_status === 'married'
+                              ? 'Casado(a)'
+                              : userData.civil_status === 'divorced'
+                              ? 'Divorciado(a)'
+                              : userData.civil_status === 'widower'
+                              ? 'Viúvo(a)'
+                              : ''
+                            : ''}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Gênero
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.gender
+                            ? userData.gender === 'male'
+                              ? 'Masculino'
+                              : 'Feminino'
+                            : ''}
+                        </span>
+                      </Flex>
+                    </div>
+                  </div>
+                )}
+              </>
+            </ContainerDetails>
+          </DetailsWrapper>
+
+          <DetailsWrapper
+            style={{
+              borderBottom: '1px solid #C0C0C0',
+              boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
+            }}
+          >
+            <ContainerDetails
+              style={{
+                gap: '18px',
+              }}
+            >
+              <>
+                <Flex
+                  style={{
+                    padding: '20px 32px 20px 32px',
+                    borderBottom: '1px solid #C0C0C0',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '22px',
+                      fontWeight: '500',
+                      color: '#344054',
+                    }}
+                  >
+                    Endereço
+                  </span>
+                  <ButtonShowContact>
+                    {userAddressIsOpen ? (
+                      <FiMinusCircle
+                        size={24}
+                        color="#344054"
+                        onClick={() => setUserAddressIsOpen(!userAddressIsOpen)}
+                      />
+                    ) : (
+                      <GoPlusCircle
+                        size={24}
+                        color="#344054"
+                        onClick={() => setUserAddressIsOpen(!userAddressIsOpen)}
+                      />
+                    )}
+                  </ButtonShowContact>
+                </Flex>
+                {userAddressIsOpen && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '18px',
+                      paddingBottom: '20px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                        gap: '18px',
+                        padding: '0 32px',
+                      }}
+                    >
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Endereço
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.addresses &&
+                          userData.addresses[0] &&
+                          userData.addresses[0].street
+                            ? userData.addresses[0].street
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Número
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.addresses &&
+                          userData.addresses[0] &&
+                          userData.addresses[0].number
+                            ? userData.addresses[0].number
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Complemento
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          Não Informado
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          CEP
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.addresses &&
+                          userData.addresses[0] &&
+                          userData.addresses[0].zip_code
+                            ? userData.addresses[0].zip_code
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      ></Flex>
+                    </div>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                        gap: '18px',
+                        padding: '0 32px',
+                      }}
+                    >
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Cidade
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.addresses && userData.addresses[0] && userData.addresses[0].city
+                            ? userData.addresses[0].city
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Bairro
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.addresses &&
+                          userData.addresses[0] &&
+                          userData.addresses[0].neighborhood
+                            ? userData.addresses[0].neighborhood
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Estado
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.addresses &&
+                          userData.addresses[0] &&
+                          userData.addresses[0].state
+                            ? userData.addresses[0].state
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        ></span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        ></span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        ></span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        ></span>
+                      </Flex>
+                    </div>
+                  </div>
+                )}
+              </>
+            </ContainerDetails>
+          </DetailsWrapper>
+
+          <DetailsWrapper
+            style={{
+              borderBottom: '1px solid #C0C0C0',
+              boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
+            }}
+          >
+            <ContainerDetails
+              style={{
+                gap: '18px',
+              }}
+            >
+              <>
+                <Flex
+                  style={{
+                    padding: '20px 32px 20px 32px',
+                    borderBottom: '1px solid #C0C0C0',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '22px',
+                      fontWeight: '500',
+                      color: '#344054',
+                    }}
+                  >
+                    Contato
+                  </span>
+                  <ButtonShowContact>
+                    {userContactIsOpen ? (
+                      <FiMinusCircle
+                        size={24}
+                        color="#344054"
+                        onClick={() => setUserContactIsOpen(!userContactIsOpen)}
+                      />
+                    ) : (
+                      <GoPlusCircle
+                        size={24}
+                        color="#344054"
+                        onClick={() => setUserContactIsOpen(!userContactIsOpen)}
+                      />
+                    )}
+                  </ButtonShowContact>
+                </Flex>
+                {userContactIsOpen && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '18px',
+                      paddingBottom: '20px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                        gap: '18px',
+                        padding: '0 32px',
+                      }}
+                    >
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '300px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Telefone
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {`${
+                            userData.phones && userData.phones[0] && userData.phones[0].phone_number
+                              ? userData.phones[0].phone_number
+                              : 'Não Informado'
+                          }`}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          E-mail
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {`${
+                            userData.emails && userData.emails[0] && userData.emails[0].email
+                              ? userData.emails[0].email
+                              : 'Não Informado'
+                          }`}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        ></span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        ></span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        ></span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        ></span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      ></Flex>
+                    </div>
+                  </div>
+                )}
+              </>
+            </ContainerDetails>
+          </DetailsWrapper>
+
+          <DetailsWrapper
+            style={{
+              borderBottom: '1px solid #C0C0C0',
+              boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
+            }}
+          >
+            <ContainerDetails
+              style={{
+                gap: '18px',
+              }}
+            >
+              <>
+                <Flex
+                  style={{
+                    padding: '20px 32px 20px 32px',
+                    borderBottom: '1px solid #C0C0C0',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '22px',
+                      fontWeight: '500',
+                      color: '#344054',
+                    }}
+                  >
+                    Dados Gerais
+                  </span>
+                  <ButtonShowContact>
+                    {userGeneralData ? (
+                      <FiMinusCircle
+                        size={24}
+                        color="#344054"
+                        onClick={() => setUserGeneralData(!userGeneralData)}
+                      />
+                    ) : (
+                      <GoPlusCircle
+                        size={24}
+                        color="#344054"
+                        onClick={() => setUserGeneralData(!userGeneralData)}
+                      />
+                    )}
+                  </ButtonShowContact>
+                </Flex>
+                {userGeneralData && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '18px',
+                      paddingBottom: '20px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                        gap: '18px',
+                        padding: '0 32px',
+                      }}
+                    >
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '300px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Origin
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          Origin
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Perfil
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.role ? userData.role : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Escritório
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.office_id ? getOfficeName(userData.office_id) : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        ></span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        ></span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      ></Flex>
+                    </div>
+                  </div>
+                )}
+              </>
+            </ContainerDetails>
+          </DetailsWrapper>
+
+          <DetailsWrapper
+            style={{
+              borderBottom: '1px solid #C0C0C0',
+              boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
+            }}
+          >
+            <ContainerDetails
+              style={{
+                gap: '18px',
+              }}
+            >
+              <>
+                <Flex
+                  style={{
+                    padding: '20px 32px 20px 32px',
+                    borderBottom: '1px solid #C0C0C0',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '22px',
+                      fontWeight: '500',
+                      color: '#344054',
+                    }}
+                  >
+                    Dados Bancários
+                  </span>
+                  <ButtonShowContact>
+                    {userBankDataIsOpen ? (
+                      <FiMinusCircle
+                        size={24}
+                        color="#344054"
+                        onClick={() => setUserBankDataIsOpen(!userBankDataIsOpen)}
+                      />
+                    ) : (
+                      <GoPlusCircle
+                        size={24}
+                        color="#344054"
+                        onClick={() => setUserBankDataIsOpen(!userBankDataIsOpen)}
+                      />
+                    )}
+                  </ButtonShowContact>
+                </Flex>
+                {userBankDataIsOpen && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '18px',
+                      paddingBottom: '20px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                        gap: '18px',
+                        padding: '0 32px',
+                      }}
+                    >
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '300px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Banco
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.bank_accounts &&
+                          userData.bank_accounts[0] &&
+                          userData.bank_accounts[0].bank_name
+                            ? userData.bank_accounts[0].bank_name
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Agência
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.bank_accounts &&
+                          userData.bank_accounts[0] &&
+                          userData.bank_accounts[0].agency
+                            ? userData.bank_accounts[0].agency
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Operação
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.bank_accounts &&
+                          userData.bank_accounts[0] &&
+                          userData.bank_accounts[0].operation
+                            ? userData.bank_accounts[0].operation
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Conta
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.bank_accounts &&
+                          userData.bank_accounts[0] &&
+                          userData.bank_accounts[0].account
+                            ? userData.bank_accounts[0].account
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      ></Flex>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                        gap: '18px',
+                        padding: '0 32px',
+                      }}
+                    >
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '300px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Pix
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.bank_accounts &&
+                          userData.bank_accounts[0] &&
+                          userData.bank_accounts[0].pix
+                            ? userData.bank_accounts[0].pix
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                    </div>
+                  </div>
+                )}
+              </>
+            </ContainerDetails>
+          </DetailsWrapper>
+
+          <DetailsWrapper
+            style={{
+              borderBottom: '1px solid #C0C0C0',
+              boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
+            }}
+          >
+            <ContainerDetails
+              style={{
+                gap: '18px',
+              }}
+            >
+              <>
+                <Flex
+                  style={{
+                    padding: '20px 32px 20px 32px',
+                    borderBottom: '1px solid #C0C0C0',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '22px',
+                      fontWeight: '500',
+                      color: '#344054',
+                    }}
+                  >
+                    Acesso ao Sistema
+                  </span>
+                  <ButtonShowContact>
+                    {userAccessDataIsOpen ? (
+                      <FiMinusCircle
+                        size={24}
+                        color="#344054"
+                        onClick={() => setUserAccessDataIsOpen(!userAccessDataIsOpen)}
+                      />
+                    ) : (
+                      <GoPlusCircle
+                        size={24}
+                        color="#344054"
+                        onClick={() => setUserAccessDataIsOpen(!userAccessDataIsOpen)}
+                      />
+                    )}
+                  </ButtonShowContact>
+                </Flex>
+                {userAccessDataIsOpen && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '18px',
+                      paddingBottom: '20px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                        gap: '18px',
+                        padding: '0 32px',
+                      }}
+                    >
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '300px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          E-mail
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.email ? userData.email : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        ></span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        ></span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        ></span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        ></span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        ></span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        ></span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      ></Flex>
+                    </div>
+                  </div>
+                )}
+              </>
+            </ContainerDetails>
+          </DetailsWrapper>
+        </div>
       )}
-    </DetailsWrapper>
+    </div>
   );
 }
