@@ -1,6 +1,5 @@
-import PersonalData from './customers/PersonalData';
+import PersonalData from './customers';
 import { useRouter } from 'next/router';
-import PersonalWorks from './customers/Works';
 import { Container } from './styles';
 import OfficeDetails from './offices';
 import UserDetails from './users';
@@ -26,7 +25,6 @@ const Details = ({ params }: DetailsProps) => {
       {params.includes('cliente') && (
         <>
           <PersonalData id={id} type={type} />
-          <PersonalWorks id={id} />
         </>
       )}
 

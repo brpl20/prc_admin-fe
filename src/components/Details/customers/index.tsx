@@ -1,5 +1,4 @@
-import { getOfficeById } from '@/services/offices';
-
+import { getCustomerById } from '@/services/customers';
 import { useEffect, useState } from 'react';
 
 import {
@@ -13,95 +12,142 @@ import {
   GridInfo,
   ButtonShowContact,
 } from '../styles';
-import { cnpjMask, phoneMask } from '@/utils/masks';
-import { MdKeyboardArrowDown } from 'react-icons/md';
-import { CircularProgress } from '@mui/material';
-import Link from 'next/link';
-import { IAdminProps } from '@/interfaces/IAdmin';
-import { getAllCustomers } from '@/services/customers';
+import { cnpjMask, cpfMask, phoneMask, rgMask } from '@/utils/masks';
 import { FiMinusCircle } from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
+import { CircularProgress } from '@mui/material';
 
-interface OfficeDetailsProps {
+interface PersonalDataProps {
   id: string | string[];
+  type?: string | string[];
 }
 
-export default function OfficeDetails({ id }: OfficeDetailsProps) {
-  const [allLawyers, SetAllLawyers] = useState<any>([]);
+interface PersonalData {
+  name: string;
+  last_name: string;
+  full_name: string;
+  state: string;
+  city: string;
+  zip_code: string;
+  description: string;
+  neighborhood: string;
+  street: string;
+  number: string;
+  birth: string;
+  gender: string;
+  capacity: string;
+  nationality: string;
+  civil_status: string;
+  cpf: string;
+  cnpj: string;
+  rg: string;
+  accountant_id: string;
+  mother_name: string;
+  customer_type: string;
+  company: string;
+  professional: string;
+  number_benefit: string;
+  nit: string;
+  inss_password: string;
+  emails: [
+    {
+      email: string;
+    },
+  ];
+  phones: [
+    {
+      phone_number: string;
+    },
+  ];
+  bank_accounts: [
+    {
+      account: string;
+      agency: string;
+      bank_name: string;
+      id: string;
+      operation: string;
+      pix: string;
+      type_account: string;
+    },
+  ];
+}
 
-  const [officeData, setOfficeData] = useState<any>([]);
-  const [loading, setLoading] = useState(false);
-  const [officeDataIsOpen, setOfficeDataIsOpen] = useState(true);
-  const [officeAddressIsOpen, setOfficeAddressIsOpen] = useState(true);
-  const [officeContactIsOpen, setOfficeContactIsOpen] = useState(true);
-  const [officeAdicionalIsOpen, setOfficeAdicionalIsOpen] = useState(false);
-
-  const getAdmins = async () => {
-    const response: {
-      data: IAdminProps[];
-    } = await getAllCustomers();
-    SetAllLawyers(response.data);
-  };
-
-  const getLawyerName = (lawyerId: number) => {
-    if (lawyerId) {
-      const lawyer = allLawyers.find((lawyer: any) => lawyer.id == lawyerId);
-      return (
-        lawyer &&
-        `${lawyer?.attributes.name ? lawyer?.attributes.name : ''} ${
-          lawyer?.attributes.last_name ? lawyer?.attributes.last_name : ''
-        }`
-      );
-    }
-  };
+const PersonalData = ({ id, type }: PersonalDataProps) => {
+  const [personalData, setPersonalData] = useState({} as PersonalData);
+  const [personalDataIsOpen, setPersonalDataIsOpen] = useState(true);
+  const [addressIsOpen, setAddressIsOpen] = useState(true);
+  const [contactIsOpen, setContactIsOpen] = useState(true);
+  const [bankIsOpen, setBankIsOpen] = useState(false);
+  const [aditionalIsOpen, setAditionalIsOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     try {
-      setLoading(true);
-      const { data } = await getOfficeById(id as string);
-      console.log(data);
+      const { data } = await getCustomerById(id as string);
+
+      console.log('data: ', data);
+
       if (data) {
-        const newData = {
+        const address = data.attributes.addresses[0]
+          ? data.attributes.addresses[0]
+          : [
+              {
+                state: 'Não Informado',
+                city: 'Não Informado',
+                zip_code: 'Não Informado',
+                description: 'Não Informado',
+                neighborhood: 'Não Informado',
+                street: 'Não Informado',
+                number: 'Não Informado',
+              },
+            ];
+
+        const customerData = {
           name: data.attributes.name ? data.attributes.name : '',
-          oab: data.attributes.oab ? data.attributes.oab : '',
-          cnpj: data.attributes.cnpj ? data.attributes.cnpj : '',
-          cpf: data.attributes.cpf ? data.attributes.cpf : '',
-          office_type_description: data.attributes.office_type_description
-            ? data.attributes.office_type_description
-            : '',
-          society: data.attributes.society ? data.attributes.society : '',
-          cep: data.attributes.cep ? data.attributes.cep : '',
-          state: data.attributes.state ? data.attributes.state : '',
-          city: data.attributes.city ? data.attributes.city : '',
-          neighborhood: data.attributes.neighborhood ? data.attributes.neighborhood : '',
-          address: data.attributes.address ? data.attributes.address : '',
-          street: data.attributes.street ? data.attributes.street : '',
-          number: data.attributes.number ? data.attributes.number : '',
-          foundation: data.attributes.foundation ? data.attributes.foundation : '',
-          phones: data.attributes.phones ? data.attributes.phones : '',
-          emails: data.attributes.emails ? data.attributes.emails : '',
-          site: data.attributes.site ? data.attributes.site : '',
-          responsible_lawyer: data.attributes.responsible_lawyer_id
-            ? getLawyerName(data.attributes.responsible_lawyer_id)
-            : '',
+          last_name: data.attributes.last_name ? data.attributes.last_name : '',
+          cpf: data.attributes.cpf ? data.attributes.cpf : 'Não Informado',
+          cnpj: data.attributes.cnpj ? data.attributes.cnpj : 'Não Informado',
+          rg: data.attributes.rg ? data.attributes.rg : 'Não Informado',
+          state: address.state ? address.state : 'Não Informado',
+          city: address.city ? address.city : 'Não Informado',
+          zip_code: address.zip_code ? address.zip_code : 'Não Informado',
+          description: address.description ? address.description : 'Não Informado',
+          neighborhood: address.neighborhood ? address.neighborhood : 'Não Informado',
+          number: address.number ? address.number : 'Não Informado',
+          street: address.street ? address.street : 'Não Informado',
+          capacity: data.attributes.capacity ? data.attributes.capacity : 'Não Informado',
+          birth: data.attributes.birth ? data.attributes.birth : 'Não Informado',
+          gender: data.attributes.gender ? data.attributes.gender : 'Não Informado',
+          nationality: data.attributes.nationality ? data.attributes.nationality : 'Não Informado',
+          civil_status: data.attributes.civil_status
+            ? data.attributes.civil_status
+            : 'Não Informado',
+          emails: data.attributes.emails ? data.attributes.emails : 'Não Informado',
+          phones: data.attributes.phones ? data.attributes.phones : 'Não Informado',
+          mother_name: data.attributes.mother_name ? data.attributes.mother_name : '',
+          customer_type: data.attributes.customer_type ? data.attributes.customer_type : '',
+          bank_accounts: data.attributes.bank_accounts ? data.attributes.bank_accounts : '',
+          professional: data.attributes.professional ? data.attributes.professional : '',
+          company: data.attributes.company ? data.attributes.company : '',
+          number_benefit: data.attributes.number_benefit ? data.attributes.number_benefit : '',
+          nit: data.attributes.nit ? data.attributes.nit : '',
+          inss_password: data.attributes.inss_password ? data.attributes.inss_password : '',
         };
 
-        setOfficeData(newData);
+        setPersonalData(customerData as PersonalData);
+
+        console.log('customerData: ', customerData);
       }
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      throw new Error(error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    getAdmins();
-  }, []);
-
-  useEffect(() => {
     fetchData();
-  }, [id, allLawyers]);
+  }, [id]);
 
   return (
     <div
@@ -122,7 +168,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
         </div>
       )}
 
-      {!loading && officeData && (
+      {!loading && personalData && (
         <div
           style={{
             display: 'flex',
@@ -157,25 +203,25 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                       color: '#344054',
                     }}
                   >
-                    Identificação do Escritório
+                    Dados Pessoais
                   </span>
                   <ButtonShowContact>
-                    {officeDataIsOpen ? (
+                    {personalDataIsOpen ? (
                       <FiMinusCircle
                         size={24}
                         color="#344054"
-                        onClick={() => setOfficeDataIsOpen(!officeDataIsOpen)}
+                        onClick={() => setPersonalDataIsOpen(!personalDataIsOpen)}
                       />
                     ) : (
                       <GoPlusCircle
                         size={24}
                         color="#344054"
-                        onClick={() => setOfficeDataIsOpen(!officeDataIsOpen)}
+                        onClick={() => setPersonalDataIsOpen(!personalDataIsOpen)}
                       />
                     )}
                   </ButtonShowContact>
                 </Flex>
-                {officeDataIsOpen && (
+                {personalDataIsOpen && (
                   <div
                     style={{
                       display: 'flex',
@@ -206,7 +252,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '500',
                           }}
                         >
-                          Nome
+                          Nome Completo
                         </span>
                         <span
                           style={{
@@ -215,94 +261,134 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {`${officeData.name ? officeData.name : ''} ${
-                            officeData.last_name ? officeData.last_name : ''
+                          {`${personalData.name ? personalData.name : ''} ${
+                            personalData.last_name ? personalData.last_name : ''
                           }`}
                         </span>
                       </Flex>
 
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
+                      {(personalData.customer_type === 'physical_person' ||
+                        personalData.customer_type === 'counter' ||
+                        personalData.customer_type === 'representative') && (
+                        <Flex
                           style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
+                            flexDirection: 'column',
+                            gap: '8px',
+                            alignItems: 'flex-start',
                           }}
                         >
-                          Tipo de Escritório
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {officeData.office_type_description
-                            ? officeData.office_type_description
-                            : 'Não Informado'}
-                        </span>
-                      </Flex>
+                          <span
+                            style={{
+                              color: '#344054',
+                              fontSize: '20px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            CPF
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '18px',
+                              color: '#344054',
+                              fontWeight: '400',
+                            }}
+                          >
+                            {personalData.cpf ? cpfMask(personalData.cpf) : 'Não Informado'}
+                          </span>
+                        </Flex>
+                      )}
 
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
+                      {personalData.customer_type === 'legal_person' && (
+                        <Flex
                           style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
+                            flexDirection: 'column',
+                            gap: '8px',
+                            alignItems: 'flex-start',
                           }}
                         >
-                          OAB
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {officeData.oab ? officeData.oab : 'Não Informado'}
-                        </span>
-                      </Flex>
+                          <span
+                            style={{
+                              color: '#344054',
+                              fontSize: '20px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            CNPJ
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '18px',
+                              color: '#344054',
+                              fontWeight: '400',
+                            }}
+                          >
+                            {personalData.cnpj ? cnpjMask(personalData.cnpj) : 'Não Informado'}
+                          </span>
+                        </Flex>
+                      )}
 
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
+                      {(personalData.customer_type === 'physical_person' ||
+                        personalData.customer_type === 'representative' ||
+                        personalData.customer_type === 'counter') && (
+                        <Flex
                           style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
+                            flexDirection: 'column',
+                            gap: '8px',
+                            alignItems: 'flex-start',
                           }}
                         >
-                          CNPJ
-                        </span>
-                        <span
+                          <span
+                            style={{
+                              color: '#344054',
+                              fontSize: '20px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            RG
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '18px',
+                              color: '#344054',
+                              fontWeight: '400',
+                            }}
+                          >
+                            {personalData.rg ? rgMask(personalData.rg) : 'Não Informado'}
+                          </span>
+                        </Flex>
+                      )}
+
+                      {(personalData.customer_type === 'representative' ||
+                        personalData.customer_type === 'counter' ||
+                        personalData.customer_type === 'physical_person') && (
+                        <Flex
                           style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
+                            flexDirection: 'column',
+                            gap: '8px',
+                            alignItems: 'flex-start',
                           }}
                         >
-                          {officeData.cnpj ? cnpjMask(officeData.cnpj) : 'Não Informado'}
-                        </span>
-                      </Flex>
+                          <span
+                            style={{
+                              color: '#344054',
+                              fontSize: '20px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            Data de Nascimento
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '18px',
+                              color: '#344054',
+                            }}
+                          >
+                            {personalData.birth
+                              ? personalData.birth.split('-').reverse().join('/')
+                              : 'Não Informado'}
+                          </span>
+                        </Flex>
+                      )}
 
                       <Flex
                         style={{
@@ -335,7 +421,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '500',
                           }}
                         >
-                          Tipo da Sociedade
+                          Nome da Mãe
                         </span>
                         <span
                           style={{
@@ -344,7 +430,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {officeData.society ? officeData.society : 'Não Informado'}
+                          {personalData.mother_name ? personalData.mother_name : 'Não Informado'}
                         </span>
                       </Flex>
                       <Flex
@@ -361,7 +447,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '500',
                           }}
                         >
-                          Data de Função Exp. OAB
+                          Naturalidade
                         </span>
                         <span
                           style={{
@@ -370,8 +456,10 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {officeData.foundation
-                            ? officeData.foundation.split('-').reverse().join('/')
+                          {personalData.nationality
+                            ? personalData.nationality === 'brazilian'
+                              ? 'Brasileiro'
+                              : 'Estrangeiro'
                             : 'Não Informado'}
                         </span>
                       </Flex>
@@ -388,14 +476,28 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontSize: '20px',
                             fontWeight: '500',
                           }}
-                        ></span>
+                        >
+                          Estado Civil
+                        </span>
                         <span
                           style={{
                             fontSize: '18px',
                             color: '#344054',
                             fontWeight: '400',
                           }}
-                        ></span>
+                        >
+                          {personalData.civil_status
+                            ? personalData.civil_status === 'single'
+                              ? 'Solteiro(a)'
+                              : personalData.civil_status === 'married'
+                              ? 'Casado(a)'
+                              : personalData.civil_status === 'divorced'
+                              ? 'Divorciado(a)'
+                              : personalData.civil_status === 'widower'
+                              ? 'Viúvo(a)'
+                              : ''
+                            : ''}
+                        </span>
                       </Flex>
                       <Flex
                         style={{
@@ -410,14 +512,22 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontSize: '20px',
                             fontWeight: '500',
                           }}
-                        ></span>
+                        >
+                          Gênero
+                        </span>
                         <span
                           style={{
                             fontSize: '18px',
                             color: '#344054',
                             fontWeight: '400',
                           }}
-                        ></span>
+                        >
+                          {personalData.gender
+                            ? personalData.gender === 'male'
+                              ? 'Masculino'
+                              : 'Feminino'
+                            : ''}
+                        </span>
                       </Flex>
                       <Flex
                         style={{
@@ -432,14 +542,22 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontSize: '20px',
                             fontWeight: '500',
                           }}
-                        ></span>
+                        >
+                          Capacidade
+                        </span>
                         <span
                           style={{
                             fontSize: '18px',
                             color: '#344054',
                             fontWeight: '400',
                           }}
-                        ></span>
+                        >
+                          {personalData.capacity
+                            ? personalData.capacity === 'able'
+                              ? 'Capaz'
+                              : 'Incapaz'
+                            : ''}
+                        </span>
                       </Flex>
                     </div>
                   </div>
@@ -478,22 +596,22 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                     Endereço
                   </span>
                   <ButtonShowContact>
-                    {officeAddressIsOpen ? (
+                    {addressIsOpen ? (
                       <FiMinusCircle
                         size={24}
                         color="#344054"
-                        onClick={() => setOfficeAddressIsOpen(!officeAddressIsOpen)}
+                        onClick={() => setAddressIsOpen(!addressIsOpen)}
                       />
                     ) : (
                       <GoPlusCircle
                         size={24}
                         color="#344054"
-                        onClick={() => setOfficeAddressIsOpen(!officeAddressIsOpen)}
+                        onClick={() => setAddressIsOpen(!addressIsOpen)}
                       />
                     )}
                   </ButtonShowContact>
                 </Flex>
-                {officeAddressIsOpen && (
+                {addressIsOpen && (
                   <div
                     style={{
                       display: 'flex',
@@ -533,7 +651,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {`${officeData.street ? officeData.street : 'Não Informado'}`}
+                          {`${personalData.street ? personalData.street : 'Não Informado'}`}
                         </span>
                       </Flex>
                       <Flex
@@ -559,7 +677,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {`${officeData.number ? officeData.number : 'Não Informado'}`}
+                          {`${personalData.number ? personalData.number : 'Não Informado'}`}
                         </span>
                       </Flex>
                       <Flex
@@ -611,7 +729,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {officeData.cep ? officeData.cep : 'Não Informado'}
+                          {personalData.zip_code ? personalData.zip_code : 'Não Informado'}
                         </span>
                       </Flex>
                       <Flex
@@ -653,7 +771,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {`${officeData.city ? officeData.city : 'Não Informado'}`}
+                          {`${personalData.city ? personalData.city : 'Não Informado'}`}
                         </span>
                       </Flex>
                       <Flex
@@ -679,7 +797,9 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {`${officeData.neighborhood ? officeData.neighborhood : 'Não Informado'}`}
+                          {`${
+                            personalData.neighborhood ? personalData.neighborhood : 'Não Informado'
+                          }`}
                         </span>
                       </Flex>
                       <Flex
@@ -705,7 +825,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {`${officeData.state ? officeData.state : 'Não Informado'}`}
+                          {`${personalData.state ? personalData.state : 'Não Informado'}`}
                         </span>
                       </Flex>
                       <Flex
@@ -789,22 +909,22 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                     Contato
                   </span>
                   <ButtonShowContact>
-                    {officeContactIsOpen ? (
+                    {contactIsOpen ? (
                       <FiMinusCircle
                         size={24}
                         color="#344054"
-                        onClick={() => setOfficeContactIsOpen(!officeContactIsOpen)}
+                        onClick={() => setContactIsOpen(!contactIsOpen)}
                       />
                     ) : (
                       <GoPlusCircle
                         size={24}
                         color="#344054"
-                        onClick={() => setOfficeContactIsOpen(!officeContactIsOpen)}
+                        onClick={() => setContactIsOpen(!contactIsOpen)}
                       />
                     )}
                   </ButtonShowContact>
                 </Flex>
-                {officeContactIsOpen && (
+                {contactIsOpen && (
                   <div
                     style={{
                       display: 'flex',
@@ -846,10 +966,10 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                           }}
                         >
                           {`${
-                            officeData.phones &&
-                            officeData.phones[0] &&
-                            officeData.phones[0].phone_number
-                              ? officeData.phones[0].phone_number
+                            personalData.phones &&
+                            personalData.phones[0] &&
+                            personalData.phones[0].phone_number
+                              ? personalData.phones[0].phone_number
                               : 'Não Informado'
                           }`}
                         </span>
@@ -879,8 +999,10 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                           }}
                         >
                           {`${
-                            officeData.emails && officeData.emails[0] && officeData.emails[0].email
-                              ? officeData.emails[0].email
+                            personalData.emails &&
+                            personalData.emails[0] &&
+                            personalData.emails[0].email
+                              ? personalData.emails[0].email
                               : 'Não Informado'
                           }`}
                         </span>
@@ -973,25 +1095,25 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                       color: '#344054',
                     }}
                   >
-                    Informações Adicionais
+                    Dados Bancários
                   </span>
                   <ButtonShowContact>
-                    {officeAdicionalIsOpen ? (
+                    {bankIsOpen ? (
                       <FiMinusCircle
                         size={24}
                         color="#344054"
-                        onClick={() => setOfficeAdicionalIsOpen(!officeAdicionalIsOpen)}
+                        onClick={() => setBankIsOpen(!bankIsOpen)}
                       />
                     ) : (
                       <GoPlusCircle
                         size={24}
                         color="#344054"
-                        onClick={() => setOfficeAdicionalIsOpen(!officeAdicionalIsOpen)}
+                        onClick={() => setBankIsOpen(!bankIsOpen)}
                       />
                     )}
                   </ButtonShowContact>
                 </Flex>
-                {officeAdicionalIsOpen && (
+                {bankIsOpen && (
                   <div
                     style={{
                       display: 'flex',
@@ -1023,7 +1145,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '500',
                           }}
                         >
-                          Site
+                          Banco
                         </span>
                         <span
                           style={{
@@ -1032,35 +1154,8 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {officeData.site ? officeData.site : 'Não Informado'}
-                        </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '300px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Responsável pelo Escritório
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {officeData.responsible_lawyer
-                            ? officeData.responsible_lawyer
+                          {personalData.bank_accounts[0] && personalData.bank_accounts[0].bank_name
+                            ? personalData.bank_accounts[0].bank_name
                             : 'Não Informado'}
                         </span>
                       </Flex>
@@ -1078,14 +1173,20 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontSize: '20px',
                             fontWeight: '500',
                           }}
-                        ></span>
+                        >
+                          Agência
+                        </span>
                         <span
                           style={{
                             fontSize: '18px',
                             color: '#344054',
                             fontWeight: '400',
                           }}
-                        ></span>
+                        >
+                          {personalData.bank_accounts[0] && personalData.bank_accounts[0].agency
+                            ? personalData.bank_accounts[0].agency
+                            : 'Não Informado'}
+                        </span>
                       </Flex>
                       <Flex
                         style={{
@@ -1101,14 +1202,49 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontSize: '20px',
                             fontWeight: '500',
                           }}
-                        ></span>
+                        >
+                          Operação
+                        </span>
                         <span
                           style={{
                             fontSize: '18px',
                             color: '#344054',
                             fontWeight: '400',
                           }}
-                        ></span>
+                        >
+                          {personalData.bank_accounts[0] && personalData.bank_accounts[0].operation
+                            ? personalData.bank_accounts[0].operation
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Conta
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {personalData.bank_accounts[0] && personalData.bank_accounts[0].account
+                            ? personalData.bank_accounts[0].account
+                            : 'Não Informado'}
+                        </span>
                       </Flex>
                       <Flex
                         style={{
@@ -1119,6 +1255,298 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                         }}
                       ></Flex>
                     </div>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                        gap: '18px',
+                        padding: '0 32px',
+                      }}
+                    >
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '300px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Pix
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {personalData.bank_accounts[0] && personalData.bank_accounts[0].pix
+                            ? personalData.bank_accounts[0].pix
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                    </div>
+                  </div>
+                )}
+              </>
+            </ContainerDetails>
+          </DetailsWrapper>
+
+          <DetailsWrapper
+            style={{
+              borderBottom: '1px solid #C0C0C0',
+              boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
+            }}
+          >
+            <ContainerDetails
+              style={{
+                gap: '18px',
+              }}
+            >
+              <>
+                <Flex
+                  style={{
+                    padding: '20px 32px 20px 32px',
+                    borderBottom: '1px solid #C0C0C0',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '22px',
+                      fontWeight: '500',
+                      color: '#344054',
+                    }}
+                  >
+                    Informações Adicionais
+                  </span>
+                  <ButtonShowContact>
+                    {aditionalIsOpen ? (
+                      <FiMinusCircle
+                        size={24}
+                        color="#344054"
+                        onClick={() => setAditionalIsOpen(!aditionalIsOpen)}
+                      />
+                    ) : (
+                      <GoPlusCircle
+                        size={24}
+                        color="#344054"
+                        onClick={() => setAditionalIsOpen(!aditionalIsOpen)}
+                      />
+                    )}
+                  </ButtonShowContact>
+                </Flex>
+                {aditionalIsOpen && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '18px',
+                      paddingBottom: '20px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                        gap: '18px',
+                        padding: '0 32px',
+                      }}
+                    >
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '300px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Profissão
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {personalData.professional ? personalData.professional : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Empresa Atual
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {personalData.company ? personalData.company : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Número de Benefício
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {personalData.number_benefit
+                            ? personalData.number_benefit
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          NIT
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {personalData.nit ? personalData.nit : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      ></Flex>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                        gap: '18px',
+                        padding: '0 32px',
+                      }}
+                    >
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '300px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Nome da Mãe
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {personalData.mother_name ? personalData.mother_name : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '300px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          Senha do meu INSS
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {personalData.inss_password
+                            ? personalData.inss_password
+                            : 'Não Informado'}
+                        </span>
+                      </Flex>
+                    </div>
                   </div>
                 )}
               </>
@@ -1128,4 +1556,6 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
       )}
     </div>
   );
-}
+};
+
+export default PersonalData;
