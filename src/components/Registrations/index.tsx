@@ -11,7 +11,7 @@ import {
   createCustomer as createCustomerApi,
   updateProfileCustomer,
 } from '@/services/customers';
-import { createWork, updateWork } from '@/services/works';
+import { createDraftWork, createWork, updateWork } from '@/services/works';
 
 import { DescriptionText, ContentContainer, PageTitle } from '@/styles/globals';
 import { Container, Content } from './styles';
@@ -131,34 +131,13 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
     }
   };
 
-  const handleDownloadDocument = async () => {
-    try {
-      urlsDocuments.forEach((document: any) => {
-        if (document.url === null) {
-          return;
-        }
-
-        window.open(document.url, '_blank');
-
-        window.close();
-      });
-    } catch (error: any) {
-      setMessage(error.message);
-      setTypeMessage('error');
-      setOpenSnackbar(true);
-    } finally {
-      Router.push('/trabalhos');
-      setWorkForm({});
-    }
-  };
-
   const createCustomer = async (data: any) => {
     const response = await createCustomerApi(data);
 
     return response;
   };
 
-  const completeRegistration = async () => {
+  const completeRegistration = async (title: string) => {
     if (registrationType.search('liente') !== -1) {
       try {
         if (pageTitle.search('terar') !== -1) {
@@ -204,10 +183,23 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
           const id: any = router.query.id;
           const res = await updateWork(id, workForm);
 
+          if (title != '') {
+            const draftWork = {
+              draft_work: {
+                name: title,
+                work_id: res.data.id,
+              },
+            };
+
+            const responseDraft = await createDraftWork(draftWork);
+          }
+
           const url = res.data.attributes.documents;
 
           if (url) {
             setUrlsDocuments(url);
+
+            setOpenModal(false);
 
             setOpenDownloadModal(true);
           }
@@ -215,29 +207,42 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
           return;
         }
 
-        const res = await createWork(workForm);
+        const work = await createWork(workForm);
 
-        const url = res.data.attributes.documents;
+        if (title != '') {
+          const draftWork = {
+            draft_work: {
+              name: title,
+              work_id: work.data.id,
+            },
+          };
+
+          const responseDraft = await createDraftWork(draftWork);
+        }
+
+        const url = work.data.attributes.documents;
 
         if (url) {
           setUrlsDocuments(url);
+
+          setOpenModal(false);
 
           setOpenDownloadModal(true);
         }
 
         return;
       } catch (error: any) {
-        setMessage(error.message);
+        setMessage(error.response && error.response.data && error.response.data.name[0]);
         setTypeMessage('error');
         setOpenSnackbar(true);
       }
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (title: string) => {
     try {
       setLoading(true);
-      await completeRegistration();
+      await completeRegistration(title);
       setFinished(true);
     } catch (error: any) {
       setMessage(error.message);
@@ -391,10 +396,7 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
         <ConfirmDownloadDocument
           isOpen={openDownloadModal}
           onClose={() => setOpenDownloadModal(false)}
-          handleConfirm={() => {
-            setDownloadDocument(true);
-            handleDownloadDocument();
-          }}
+          documents={urlsDocuments}
         />
       )}
 

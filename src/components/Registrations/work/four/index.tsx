@@ -151,8 +151,8 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
         setOfficesSelected(officesSelected);
       }
 
-      if (parsedData.office_lawyers) {
-        setSelectedLawyers(parsedData.office_lawyers);
+      if (parsedData.profile_admin_ids) {
+        setSelectedLawyers(parsedData.profile_admin_ids);
       }
 
       if (parsedData.physical_lawyer) {

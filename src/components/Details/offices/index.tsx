@@ -59,7 +59,6 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
     try {
       setLoading(true);
       const { data } = await getOfficeById(id as string);
-      console.log(data);
       if (data) {
         const newData = {
           name: data.attributes.name ? data.attributes.name : '',

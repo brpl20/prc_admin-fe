@@ -47,7 +47,6 @@ export default function UserDetails({ id }: UserDetailsProps) {
     try {
       setLoading(true);
       const { data } = await getAdminByID(id as string);
-      console.log(data);
 
       if (data) {
         const addresses = data.data.attributes.addresses.map((address: any) => {

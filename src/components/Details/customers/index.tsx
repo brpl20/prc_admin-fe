@@ -85,8 +85,6 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
     try {
       const { data } = await getCustomerById(id as string);
 
-      console.log('data: ', data);
-
       if (data) {
         const address = data.attributes.addresses[0]
           ? data.attributes.addresses[0]
@@ -135,8 +133,6 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
         };
 
         setPersonalData(customerData as PersonalData);
-
-        console.log('customerData: ', customerData);
       }
     } catch (error: any) {
       throw new Error(error);
