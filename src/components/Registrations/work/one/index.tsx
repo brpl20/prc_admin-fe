@@ -640,9 +640,32 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
             </Flex>
 
             <Flex style={{ flexDirection: 'column' }}>
-              <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                {'Pré-Definições'}
-              </Typography>
+              <Flex
+                style={{
+                  flexDirection: 'row',
+                  marginBottom: '8px',
+                  alignItems: 'center',
+                  marginTop: '16px',
+                }}
+              >
+                <Typography variant="h6">{'Pré-Definição'}</Typography>
+                <CustomTooltip
+                  title="Selecione uma opção para preencher automaticamente o formulário com dados anteriores, simplificando o processo de cadastro."
+                  placement="right"
+                >
+                  <span
+                    aria-label="Pré-Definição"
+                    style={{
+                      display: 'flex',
+                    }}
+                  >
+                    <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
+                  </span>
+                </CustomTooltip>
+                {errors.procedure && selectedProcedures.length <= 0 && (
+                  <label className="flagError">{'*'}</label>
+                )}
+              </Flex>
 
               <Autocomplete
                 limitTags={1}
@@ -673,7 +696,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
             }}
           >
             <Typography variant="h6">{'Procedimento'}</Typography>
-            <CustomTooltip title="Selecione um tipo de pré-definição." placement="right">
+            <CustomTooltip title="Selecione um tipo de procedimento." placement="right">
               <span
                 aria-label="Procedimento"
                 style={{
