@@ -54,4 +54,13 @@ const createDraftWork = async (data: any) => {
   }
 };
 
-export { createWork, getAllWorks, getWorkById, updateWork, createDraftWork };
+const getAllDraftWorks = async () => {
+  try {
+    const response = await api.get('/draft/works');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export { createWork, getAllWorks, getWorkById, updateWork, createDraftWork, getAllDraftWorks };

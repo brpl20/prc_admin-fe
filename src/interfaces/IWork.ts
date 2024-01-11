@@ -60,6 +60,8 @@ interface IAttributesProps {
 
   description: string;
   data: any;
+
+  draftWork: any;
 }
 
 interface IProfile_customersDataProps {

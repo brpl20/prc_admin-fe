@@ -44,6 +44,7 @@ import {
   Autocomplete,
 } from '@mui/material';
 import { useRouter } from 'next/router';
+import { getAllDraftWorks } from '@/services/works';
 
 interface Option {
   value: string;
@@ -83,6 +84,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   const [openFileSnackbar, setOpenFileSnackbar] = useState(false);
 
   const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
+  const [draftWorksList, setDraftWorksList] = useState<any[]>([]);
 
   const [processNumber, setProcessNumber] = useState<string>('');
   const [selectedProcedures, setSelectedProcedures] = useState<string[]>([]);
@@ -96,6 +98,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   const [gainProjection, setGainProjection] = useState<number>();
   const [otherDescription, setOtherDescription] = useState<string>('');
   const [customerSelectedList, setCustomerSelectedList] = useState<ICustomerProps[]>([]);
+  const [selectedDraftWork, setSelectedDraftWork] = useState<any>(null);
 
   const renderDragMessage = (isDragActive: boolean) => {
     if (!isDragActive) {
@@ -209,6 +212,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
         number: processNumber,
         procedures: selectedProcedures,
         subject: selectedSubject,
+        draftWork: selectedDraftWork,
       };
 
       switch (selectedSubject) {
@@ -286,6 +290,10 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
 
     if (data) {
       const parsedData = JSON.parse(data);
+
+      if (parsedData.draftWork) {
+        setSelectedDraftWork(parsedData.draftWork);
+      }
 
       if (parsedData.profile_customer_ids) {
         handleCustomersSelected([
@@ -428,7 +436,13 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
       setCustomersList(response.data);
     };
 
+    const getDraftWorks = async () => {
+      const response = await getAllDraftWorks();
+      setDraftWorksList(response.data);
+    };
+
     getCustomers();
+    getDraftWorks();
   }, []);
 
   useEffect(() => {
@@ -624,6 +638,52 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                 {'* Apenas para casos em que já existe o processo.'}
               </Typography>
             </Flex>
+
+            <Flex style={{ flexDirection: 'column' }}>
+              <Flex
+                style={{
+                  flexDirection: 'row',
+                  marginBottom: '8px',
+                  alignItems: 'center',
+                  marginTop: '16px',
+                }}
+              >
+                <Typography variant="h6">{'Pré-Definição'}</Typography>
+                <CustomTooltip
+                  title="Selecione uma opção para preencher automaticamente o formulário com dados anteriores, simplificando o processo de cadastro."
+                  placement="right"
+                >
+                  <span
+                    aria-label="Pré-Definição"
+                    style={{
+                      display: 'flex',
+                    }}
+                  >
+                    <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
+                  </span>
+                </CustomTooltip>
+                {errors.procedure && selectedProcedures.length <= 0 && (
+                  <label className="flagError">{'*'}</label>
+                )}
+              </Flex>
+
+              <Autocomplete
+                limitTags={1}
+                id="multiple-limit-tags"
+                options={draftWorksList}
+                getOptionLabel={option => option && option.attributes && option.attributes.name}
+                renderInput={params => (
+                  <TextField placeholder="Selecione uma Pré-definição" {...params} size="small" />
+                )}
+                sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
+                noOptionsText="Nenhuma Pré-definição Encontrada"
+                onChange={(event, draftWork) => {
+                  setSelectedDraftWork(draftWork);
+                }}
+                value={selectedDraftWork}
+                disabled={route.pathname == '/cadastrar' ? false : true}
+              />
+            </Flex>
           </span>
 
           {/* Procedure - title */}
@@ -636,11 +696,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
             }}
           >
             <Typography variant="h6">{'Procedimento'}</Typography>
-            <CustomTooltip
-              title="Selecione um tipo de procedimento.
-            Em caso de multiplos procedimentos será gerado um documento para todos."
-              placement="right"
-            >
+            <CustomTooltip title="Selecione um tipo de procedimento." placement="right">
               <span
                 aria-label="Procedimento"
                 style={{

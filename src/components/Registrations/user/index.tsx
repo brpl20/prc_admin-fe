@@ -54,6 +54,7 @@ interface FormData {
   role: string;
   civil_status: string;
   birth: string;
+  origin: string;
 
   cep: string;
   address: string;
@@ -200,6 +201,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
       if (contactData.emailInputFields.some(field => field.email.trim() === '')) {
         throw new Error('E-mail não pode estar vazio.');
       }
+      if (!formData.origin) throw new Error('O campo Origin é obrigatório.');
       if (!formData.officeId) throw new Error('O campo Escritório é obrigatório.');
       if (!formData.bank_name) throw new Error('O campo Banco é obrigatório.');
       if (!formData.agency) throw new Error('O campo Agência é obrigatório.');
@@ -577,6 +579,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
           role: attributes.role ? attributes.role : '',
           civil_status: attributes.civil_status ? attributes.civil_status : '',
           birth: attributes.birth ? attributes.birth : '',
+          origin: attributes.origin ? attributes.origin : '',
         });
 
         const office = officesList.find(office => office.id == attributes.office_id);
@@ -857,6 +860,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                   flex: 1,
                 }}
               >
+                {renderInputField('origin', 'Origin', 'Informe a Origin', !!errors.origin)}
                 <Flex style={{ gap: '24px', width: '50%' }}>
                   <Flex style={{ flexDirection: 'column', flex: 1 }}>
                     <Typography variant="h6" sx={{ marginBottom: '8px' }}>

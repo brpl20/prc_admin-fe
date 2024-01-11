@@ -206,6 +206,63 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
   }));
 
   useEffect(() => {
+    const handleDraftWork = () => {
+      const draftWork = workForm.draftWork;
+
+      if (draftWork.id) {
+        if (draftWork.attributes) {
+          const attributes = draftWork.attributes;
+
+          if (attributes.honorary) {
+            if (attributes.honorary.honorary_type) {
+              setHonoraryType(attributes.honorary.honorary_type);
+            }
+
+            if (attributes.honorary.fixed_honorary_value) {
+              setValueOfFixed(
+                `R$ ${parseFloat(attributes.honorary.fixed_honorary_value)
+                  .toFixed(2)
+                  .replace('.', ',')
+                  .replace(/\d(?=(\d{3})+,)/g, '$&.')}`,
+              );
+            }
+
+            if (attributes.honorary.percent_honorary_value) {
+              setValueOfPercent(attributes.honorary.percent_honorary_value);
+            }
+
+            if (attributes.honorary.parcelling) {
+              setParcelling(attributes.honorary.parcelling);
+            }
+
+            if (attributes.honorary.parcelling_value) {
+              setNumberOfInstallments(`${attributes.honorary.parcelling_value}x`);
+            }
+
+            if (attributes.honorary.parcelling) {
+              setParcelling(true);
+            }
+
+            if (attributes.honorary.honorary_type.search('work') >= 0) {
+              setIsVisibleOptionsArea(true);
+            }
+
+            if (attributes.honorary.honorary_type.search('success') >= 0) {
+              setIsVisibleOptionsArea(true);
+            }
+
+            if (attributes.honorary.honorary_type.search('both') >= 0) {
+              setIsVisibleOptionsArea(true);
+            }
+
+            if (attributes.honorary.honorary_type.search('bonus') >= 0) {
+              setIsVisibleOptionsArea(false);
+            }
+          }
+        }
+      }
+    };
+
     const handleDataForm = () => {
       const attributes = workForm.data.attributes;
 
@@ -247,6 +304,10 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
 
     if (workForm.data) {
       handleDataForm();
+    }
+
+    if (workForm.draftWork && workForm.draftWork.id) {
+      handleDraftWork();
     }
   }, [workForm]);
 

@@ -108,6 +108,21 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
   }, []);
 
   useEffect(() => {
+    const handleDraftWork = () => {
+      const draftWork = workForm.draftWork;
+
+      if (draftWork.id) {
+        if (draftWork.attributes) {
+          const attributes = draftWork.attributes;
+
+          if (attributes.powers) {
+            const power_ids = attributes.powers.map((item: any) => item.id);
+            setPowersSelected(power_ids);
+          }
+        }
+      }
+    };
+
     const handleDataForm = () => {
       const attributes = workForm.data.attributes;
 
@@ -119,6 +134,10 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
 
     if (workForm.data) {
       handleDataForm();
+    }
+
+    if (workForm.draftWork && workForm.draftWork.id) {
+      handleDraftWork();
     }
   }, [workForm, allPowers]);
 
