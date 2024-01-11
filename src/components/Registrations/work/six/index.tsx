@@ -147,6 +147,30 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
   }));
 
   useEffect(() => {
+    const handleDraftWork = () => {
+      const draftWork = workForm.draftWork;
+
+      if (draftWork.id) {
+        if (draftWork.attributes) {
+          const attributes = draftWork.attributes;
+
+          if (attributes.documents) {
+            const documents_types = attributes.documents.map(
+              (document: any) => document.document_type,
+            );
+
+            setDocumentsProduced(documents_types);
+          }
+
+          if (attributes.pending_documents) {
+            const pending_documents = attributes.pending_documents.map((document: any) => document);
+
+            setPendingDocuments(pending_documents);
+          }
+        }
+      }
+    };
+
     const handleDataForm = () => {
       const attributes = workForm.data.attributes;
 
@@ -173,6 +197,10 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
 
     if (workForm.data) {
       handleDataForm();
+    }
+
+    if (workForm.draftWork && workForm.draftWork.id) {
+      handleDraftWork();
     }
   }, [workForm]);
 

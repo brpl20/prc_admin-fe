@@ -132,6 +132,44 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
   };
 
   useEffect(() => {
+    const handleDraftWork = () => {
+      const draftWork = workForm.draftWork;
+
+      if (draftWork.id) {
+        if (draftWork.attributes) {
+          const attributes = draftWork.attributes;
+
+          if (attributes.recommendations) {
+            if (attributes.recommendations[0].percentage) {
+              handlePercentage(attributes.recommendations[0].percentage);
+            }
+
+            if (attributes.recommendations[0].commission) {
+              setCommission(
+                `R$ ${parseFloat(attributes.recommendations[0].commission)
+                  .toFixed(2)
+                  .replace('.', ',')
+                  .replace(/\d(?=(\d{3})+,)/g, '$&.')}`,
+              );
+            }
+
+            if (attributes.recommendations[0].profile_customer_id) {
+              if (customersList.length === 0) {
+                return;
+              }
+
+              const customer = customersList.find(
+                customer => customer.id == attributes.recommendations[0].profile_customer_id,
+              );
+
+              setCostumerId(customer?.id);
+              setSelectedCustomer(customer);
+            }
+          }
+        }
+      }
+    };
+
     const handleDataForm = () => {
       const attributes = workForm.data.attributes;
 
@@ -168,6 +206,10 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
     if (workForm.data) {
       handleDataForm();
+    }
+
+    if (workForm.draftWork && workForm.draftWork.id) {
+      handleDraftWork();
     }
   }, [workForm, customersList]);
 

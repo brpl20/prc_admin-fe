@@ -261,6 +261,26 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   };
 
   useEffect(() => {
+    const handleDraftWork = () => {
+      const draftWork = workForm.draftWork;
+
+      if (draftWork.id) {
+        if (draftWork.attributes) {
+          const attributes = draftWork.attributes;
+
+          const office_ids = attributes.offices.map((item: any) => item.id);
+
+          const officesSelected = offices.filter((office: any) => office_ids == office.id);
+
+          setOfficesSelected(officesSelected);
+
+          const lawyers = attributes.profile_admins.map((item: any) => item.id);
+
+          setSelectedLawyers(lawyers);
+        }
+      }
+    };
+
     const handleDataForm = () => {
       const attributes = workForm.data.attributes;
 
@@ -296,6 +316,10 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
 
     if (workForm.data) {
       handleDataForm();
+    }
+
+    if (workForm.draftWork && workForm.draftWork.id) {
+      handleDraftWork();
     }
   }, [workForm, offices]);
 
