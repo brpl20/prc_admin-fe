@@ -120,6 +120,10 @@ const Works = () => {
     return name.split(' ')[0];
   };
 
+  const handleDetails = (work: IWorksListProps) => {
+    Router.push(`/detalhes?type=trabalho&id=${work.id}`);
+  };
+
   useEffect(() => {
     getAdmins();
   }, []);
@@ -321,7 +325,12 @@ const Works = () => {
                     editable: false,
                     renderCell: (params: any) => (
                       <Box width={'100%'} display={'flex'} justifyContent={'space-around'}>
-                        <MdVisibility size={22} color={colors.icons} />
+                        <MdVisibility
+                          size={22}
+                          color={colors.icons}
+                          cursor={'pointer'}
+                          onClick={() => handleDetails(params.row)}
+                        />
                         <MdModeEdit
                           size={22}
                           color={colors.icons}
