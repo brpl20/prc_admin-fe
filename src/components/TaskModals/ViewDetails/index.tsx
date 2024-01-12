@@ -19,7 +19,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
         style={{
           width: '80vw',
           maxWidth: '1140px',
-          height: '80vh',
+          height: 'min-content',
           maxHeight: '600px',
           overflow: 'auto',
           padding: '0px',
@@ -36,7 +36,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
               justifyContent: 'space-between',
             }}
           >
-            <Title style={{ fontSize: '32px' }}>{'Informações sobre a Tarefa'}</Title>
+            <Title style={{ fontSize: '26px' }}>{'Informações sobre a Tarefa'}</Title>
             <MdClose size={26} cursor="pointer" onClick={onClose} />
           </div>
         </Box>
@@ -46,7 +46,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '32px',
+              gap: '20px',
               padding: '20px 0px',
               height: '100%',
               overflow: 'auto',
@@ -55,7 +55,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
                 gap: '18px',
                 padding: '0 32px',
               }}
@@ -176,7 +176,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
                 gap: '18px',
                 padding: '0 32px',
               }}
@@ -262,29 +262,6 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
                   {details.status ? details.status : 'Não Informado'}
                 </span>
               </Flex>
-              <Flex
-                style={{
-                  flexDirection: 'column',
-                  gap: '8px',
-                  alignItems: 'flex-start',
-                  width: '200px',
-                }}
-              >
-                <span
-                  style={{
-                    color: '#344054',
-                    fontSize: '20px',
-                    fontWeight: '500',
-                  }}
-                ></span>
-                <span
-                  style={{
-                    fontSize: '18px',
-                    color: '#344054',
-                    fontWeight: '400',
-                  }}
-                ></span>
-              </Flex>
             </div>
 
             <Flex
@@ -311,7 +288,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
                   color: '#344054',
                   fontWeight: '400',
                   width: '100%',
-                  height: '160px',
+                  height: '120px',
                   resize: 'none',
                   overflow: 'auto',
                   padding: '10px',
