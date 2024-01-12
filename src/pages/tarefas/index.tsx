@@ -129,13 +129,13 @@ const Tasks = () => {
           <TaskModal isOpen={isOpenTaskModal} onClose={handleCloseModal} dataToEdit={paramsRow} />
         ) : null}
 
-        {isOpenDetailsModal ? (
+        {isOpenDetailsModal && (
           <ViewDetailsModal
             isOpen={isOpenDetailsModal}
             onClose={handleCloseModal}
             details={paramsRow}
           />
-        ) : null}
+        )}
         <Container>
           <PageTitle showTitle={showTitle}>{'Tarefas'}</PageTitle>
 
