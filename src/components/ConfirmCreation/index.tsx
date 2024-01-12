@@ -128,7 +128,7 @@ const ConfirmCreation = ({ isOpen, onClose, isLoading, handleSave, editMode }: I
           <Box width={'100%'} height={'1px'} bgcolor={colors.quartiary} />
 
           <Box mt={'20px'}>
-            {typeRegistration === 'cadastro' && router.pathname.includes('trabalho') ? (
+            {router.asPath.includes('trabalho') && router.asPath.includes('cadastrar') ? (
               <>
                 <Typography variant="subtitle1">
                   {'Gostaria de salvar essas informações para facilitar lançamentos futuros?'}
