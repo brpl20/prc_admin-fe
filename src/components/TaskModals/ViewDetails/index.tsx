@@ -14,13 +14,18 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
   };
 
   return (
-    <Modal open={isOpen} style={{ overflowY: 'auto' }}>
+    <Modal open={isOpen}>
       <Content
         style={{
           width: '80vw',
           maxWidth: '1140px',
+          height: '80vh',
+          maxHeight: '600px',
+          overflow: 'auto',
           padding: '0px',
           borderRadius: '4px',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         <Box sx={{ borderBottom: '1px solid #C0C0C0' }}>
@@ -43,6 +48,8 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
               flexDirection: 'column',
               gap: '32px',
               padding: '20px 0px',
+              height: '100%',
+              overflow: 'auto',
             }}
           >
             <div
@@ -286,6 +293,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
                 gap: '8px',
                 alignItems: 'flex-start',
                 padding: '0px 32px',
+                height: '100%',
               }}
             >
               <span
@@ -303,10 +311,11 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
                   color: '#344054',
                   fontWeight: '400',
                   width: '100%',
-                  height: '165px',
+                  height: '160px',
+                  resize: 'none',
+                  overflow: 'auto',
                   padding: '10px',
                   borderRadius: '4px',
-                  resize: 'none',
                 }}
                 disabled
               >
@@ -317,10 +326,8 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
         </Box>
 
         <Box
-          width="100%"
           display="flex"
           justifyContent="end"
-          mt={3}
           sx={{ padding: '20px 32px', borderTop: '1px solid #C0C0C0' }}
         >
           <Button

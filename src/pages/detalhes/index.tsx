@@ -51,9 +51,9 @@ const Details = () => {
             <h1
               style={{
                 color: colors.primary,
-                fontSize: '32px',
+                fontSize: '26px',
                 fontWeight: '500',
-                marginBottom: '20px',
+                margin: '0 0 20px',
               }}
             >
               Dados do Cliente
@@ -64,9 +64,9 @@ const Details = () => {
             <h1
               style={{
                 color: colors.primary,
-                fontSize: '32px',
+                fontSize: '26px',
                 fontWeight: '500',
-                marginBottom: '20px',
+                margin: '0 0 20px',
               }}
             >
               Descrição do Escritório
@@ -77,9 +77,9 @@ const Details = () => {
             <h1
               style={{
                 color: colors.primary,
-                fontSize: '32px',
+                fontSize: '26px',
                 fontWeight: '500',
-                marginBottom: '20px',
+                margin: '0 0 20px',
               }}
             >
               Descrição do Usuário
@@ -90,9 +90,9 @@ const Details = () => {
             <h1
               style={{
                 color: colors.primary,
-                fontSize: '32px',
+                fontSize: '26px',
                 fontWeight: '500',
-                marginBottom: '20px',
+                margin: '0 0 20px',
               }}
             >
               Informações sobre o Trabalho
