@@ -2,7 +2,7 @@ import { getCustomerById } from '@/services/customers';
 import { useEffect, useState } from 'react';
 
 import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
-import { cnpjMask, cpfMask, phoneMask, rgMask } from '@/utils/masks';
+import { cnpjMask, cpfMask, rgMask } from '@/utils/masks';
 import { FiMinusCircle } from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
 import { Box, Button, CircularProgress } from '@mui/material';
