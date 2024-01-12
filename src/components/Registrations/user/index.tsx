@@ -257,6 +257,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
           role: formData.role,
           status: 'active',
           oab: '0000',
+          origin: formData.origin,
         };
 
         const id = dataToEdit.data.id;
@@ -281,6 +282,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
           office_id: formData.officeId,
           role: formData.role,
           status: 'active',
+          origin: formData.origin,
           addresses_attributes: [
             {
               description: formData.description,
@@ -855,13 +857,15 @@ const User = ({ pageTitle, dataToEdit }: props) => {
             <Box style={{ flex: 1 }}>
               <Box
                 display={'flex'}
+                flexDirection={'column'}
                 gap={'16px'}
                 style={{
                   flex: 1,
                 }}
               >
                 {renderInputField('origin', 'Origin', 'Informe a Origin', !!errors.origin)}
-                <Flex style={{ gap: '24px', width: '50%' }}>
+                <Flex style={{ gap: '24px' }}>
+                  {renderSelectField('Tipo do Usuário', 'role', UserRegisterTypesOptions)}
                   <Flex style={{ flexDirection: 'column', flex: 1 }}>
                     <Typography variant="h6" sx={{ marginBottom: '8px' }}>
                       {'Escritório'}
@@ -938,23 +942,22 @@ const User = ({ pageTitle, dataToEdit }: props) => {
             </Box>
           </Flex>
 
-          {!isEditing && (
-            <>
-              <Divider />
+          <Divider />
 
-              <Flex>
-                <Box width={'210px'}>
-                  <Typography variant="h6" sx={{ marginRight: 'auto' }}>
-                    {'Acesso ao Sistema'}
-                  </Typography>
-                </Box>
+          <Flex>
+            <Box width={'210px'}>
+              <Typography variant="h6" sx={{ marginRight: 'auto' }}>
+                {'Acesso ao Sistema'}
+              </Typography>
+            </Box>
 
-                <Box style={{ flex: 1 }}>
-                  <Flex style={{ gap: '24px' }}>
-                    {renderInputField('email', 'E-mail', 'Informe seu e-mail', !!errors.email)}
-                    {renderSelectField('Tipo do Usuário', 'role', UserRegisterTypesOptions)}
-                  </Flex>
+            <Box style={{ flex: 1 }}>
+              <Flex style={{ gap: '24px' }}>
+                {renderInputField('email', 'E-mail', 'Informe seu e-mail', !!errors.email)}
+              </Flex>
 
+              {!isEditing && (
+                <>
                   <Flex style={{ gap: '24px', marginTop: '16px' }}>
                     <Flex style={{ flexDirection: 'column', flex: 1 }}>
                       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
@@ -1016,10 +1019,10 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                       {'As senhas devem ter pelo menos um número.'}
                     </Typography>
                   </Flex>
-                </Box>
-              </Flex>
-            </>
-          )}
+                </>
+              )}
+            </Box>
+          </Flex>
 
           <Divider />
 

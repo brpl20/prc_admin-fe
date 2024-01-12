@@ -128,17 +128,23 @@ const ConfirmCreation = ({ isOpen, onClose, isLoading, handleSave, editMode }: I
           <Box width={'100%'} height={'1px'} bgcolor={colors.quartiary} />
 
           <Box mt={'20px'}>
-            {
-              <Typography variant="subtitle1">
-                {'Gostaria de salvar essas informações para facilitar lançamentos futuros?'}
-              </Typography>
-            }
+            {typeRegistration === 'cadastro' && router.pathname.includes('trabalho') ? (
+              <>
+                <Typography variant="subtitle1">
+                  {'Gostaria de salvar essas informações para facilitar lançamentos futuros?'}
+                </Typography>
 
-            {
-              <Box mt={'8px'} mb={'8px'}>
-                <IOSSwitch checked={isSwitchOn} onChange={handleSwitchChange} />
-              </Box>
-            }
+                <Box mt={'8px'} mb={'8px'}>
+                  <IOSSwitch checked={isSwitchOn} onChange={handleSwitchChange} />
+                </Box>
+              </>
+            ) : (
+              <>
+                <Typography variant="subtitle1">{`Você tem certeza que deseja finalizar ${
+                  editMode ? 'a' : 'o'
+                } ${typeRegistration}?`}</Typography>
+              </>
+            )}
 
             <InputContainer showInput={isSwitchOn}>
               <Box mt={'16px'}>

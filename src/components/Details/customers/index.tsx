@@ -1,21 +1,11 @@
 import { getCustomerById } from '@/services/customers';
 import { useEffect, useState } from 'react';
 
-import {
-  Title,
-  ButtonShowData,
-  ContainerDetails,
-  Flex,
-  Box,
-  DetailsWrapper,
-  BoxInfo,
-  GridInfo,
-  ButtonShowContact,
-} from '../styles';
+import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
 import { cnpjMask, cpfMask, phoneMask, rgMask } from '@/utils/masks';
 import { FiMinusCircle } from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
-import { CircularProgress } from '@mui/material';
+import { Box, Button, CircularProgress } from '@mui/material';
 
 interface PersonalDataProps {
   id: string | string[];
@@ -1550,6 +1540,22 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
           </DetailsWrapper>
         </div>
       )}
+
+      <Box width="100%" display="flex" justifyContent="end" mt={3}>
+        <Button
+          color="primary"
+          variant="outlined"
+          sx={{
+            width: '100px',
+            height: '36px',
+          }}
+          onClick={() => {
+            window.location.href = '/clientes';
+          }}
+        >
+          {'Fechar'}
+        </Button>
+      </Box>
     </div>
   );
 };

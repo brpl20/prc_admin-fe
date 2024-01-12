@@ -26,6 +26,8 @@ const Details = () => {
             ? 'Dados do Cliente'
             : params.includes('escritorio')
             ? 'Descrição do Escritório'
+            : params.includes('trabalho')
+            ? 'Informações sobre o Trabalho'
             : 'Descrição do Usuário',
         );
       } else if (window.scrollY <= 32) {
@@ -81,6 +83,19 @@ const Details = () => {
               }}
             >
               Descrição do Usuário
+            </h1>
+          )}
+
+          {params.includes('trabalho') && (
+            <h1
+              style={{
+                color: colors.primary,
+                fontSize: '32px',
+                fontWeight: '500',
+                marginBottom: '20px',
+              }}
+            >
+              Informações sobre o Trabalho
             </h1>
           )}
 

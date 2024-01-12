@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
 import { cpfMask, rgMask } from '@/utils/masks';
-import { CircularProgress } from '@mui/material';
+import { Box, Button, CircularProgress } from '@mui/material';
 import { getAdminByID } from '@/services/admins';
 import { getAllOffices } from '@/services/offices';
 import { FiMinusCircle } from 'react-icons/fi';
@@ -89,6 +89,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
           mother_name: data.data.attributes.mother_name ? data.data.attributes.mother_name : '',
           nationality: data.data.attributes.nationality ? data.data.attributes.nationality : '',
           office_id: data.data.attributes.office_id ? data.data.attributes.office_id : '',
+          origin: data.data.attributes.origin ? data.data.attributes.origin : '',
         };
 
         setUserData(newData);
@@ -1058,7 +1059,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          Origin
+                          {userData.origin ? userData.origin : 'Não Informado'}
                         </span>
                       </Flex>
                       <Flex
@@ -1569,6 +1570,22 @@ export default function UserDetails({ id }: UserDetailsProps) {
           </DetailsWrapper>
         </div>
       )}
+
+      <Box width="100%" display="flex" justifyContent="end" mt={3}>
+        <Button
+          color="primary"
+          variant="outlined"
+          sx={{
+            width: '100px',
+            height: '36px',
+          }}
+          onClick={() => {
+            window.location.href = '/usuarios';
+          }}
+        >
+          {'Fechar'}
+        </Button>
+      </Box>
     </div>
   );
 }

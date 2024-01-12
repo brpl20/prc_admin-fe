@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { Container } from './styles';
 import OfficeDetails from './offices';
 import UserDetails from './users';
+import WorkDetails from './works';
 
 interface DetailsProps {
   params: string | string[];
@@ -37,6 +38,12 @@ const Details = ({ params }: DetailsProps) => {
       {params.includes('usuario') && (
         <>
           <UserDetails id={id} />
+        </>
+      )}
+
+      {params.includes('trabalho') && (
+        <>
+          <WorkDetails id={id} />
         </>
       )}
     </Container>
