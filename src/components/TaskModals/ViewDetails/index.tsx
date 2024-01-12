@@ -304,6 +304,9 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
                   fontWeight: '400',
                   width: '100%',
                   height: '165px',
+                  padding: '10px',
+                  borderRadius: '4px',
+                  resize: 'none',
                 }}
                 disabled
               >
