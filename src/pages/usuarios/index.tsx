@@ -176,7 +176,7 @@ const Admins = () => {
                         : admin.attributes.role === 'paralegal'
                         ? 'Paralegal'
                         : admin.attributes.role === 'trainee'
-                        ? 'Trainee'
+                        ? 'Estagiário'
                         : admin.attributes.role === 'secretary'
                         ? 'Secretário(a)'
                         : admin.attributes.role === 'excounter'

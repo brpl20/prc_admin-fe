@@ -82,39 +82,31 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
   const handleSubmitForm = () => {
     try {
-      if (!selectedCustomer) {
-        throw new Error('Selecione um cliente');
-      }
+      let data = {
+        ...workForm,
+      };
 
-      let data = {};
-
-      if (route.asPath.includes('alterar')) {
-        data = {
-          ...workForm,
-          recommendations_attributes: [
-            {
-              id: workForm.data.attributes.recommendations[0].id,
-              profile_customer_id: selectedCustomer?.id,
-              percentage: `${percentage}`,
-              commission: commission
-                ? Number(commission.replace('R$', '').replace('.', '').replace(',', '.'))
-                : 0,
-            },
-          ],
-        };
-      } else {
-        data = {
-          ...workForm,
-          recommendations_attributes: [
-            {
-              profile_customer_id: selectedCustomer?.id,
-              percentage: `${percentage}`,
-              commission: commission
-                ? Number(commission.replace('R$', '').replace('.', '').replace(',', '.'))
-                : 0,
-            },
-          ],
-        };
+      if (route.asPath.includes('alterar') && selectedCustomer) {
+        data.recommendations_attributes = [
+          {
+            id: workForm.data.attributes.recommendations[0].id,
+            profile_customer_id: selectedCustomer.id,
+            percentage: `${percentage}`,
+            commission: commission
+              ? Number(commission.replace('R$', '').replace('.', '').replace(',', '.'))
+              : 0,
+          },
+        ];
+      } else if (selectedCustomer) {
+        data.recommendations_attributes = [
+          {
+            profile_customer_id: selectedCustomer.id,
+            percentage: `${percentage}`,
+            commission: commission
+              ? Number(commission.replace('R$', '').replace('.', '').replace(',', '.'))
+              : '',
+          },
+        ];
       }
 
       setWorkForm(data);
@@ -353,7 +345,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
                     value={percentage}
                     onChange={(e: any) => {
                       const value = e.target.value ? e.target.value : '';
-                      setPercentage(percentMask(value));
+                      setPercentage(value ? percentMask(value) : '');
                     }}
                   />
                 </Input>

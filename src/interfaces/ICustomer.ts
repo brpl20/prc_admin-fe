@@ -72,6 +72,7 @@ interface IAttributesProps {
   default_email: string;
   emails_attributes: any;
   data: any;
+  representor?: any;
 
   cep?: any;
   address?: any;
@@ -80,6 +81,8 @@ interface IAttributesProps {
   number?: any;
   description?: any;
   neighborhood?: any;
+  represent_attributes?: any;
+  represent?: any;
 }
 
 interface IRelationshipsProps {

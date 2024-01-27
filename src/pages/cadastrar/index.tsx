@@ -49,7 +49,7 @@ const Registration = () => {
         <Representative pageTitle={'Cadastro de Representante'} />
       )}
 
-      {params === 'usuario' && <User pageTitle={'Cadastro de Usuário'} />}
+      {params === 'usuario' && <User pageTitle={'Cadastro de Usuário Pessoa Física'} />}
 
       {params === 'escritorio' && <Office pageTitle={'Cadastro de Escritório'} />}
 

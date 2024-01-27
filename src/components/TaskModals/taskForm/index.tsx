@@ -20,7 +20,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { z } from 'zod';
-import { getAllWorks } from '@/services/works';
+import { getAllWorks, getWorkByCustomerId } from '@/services/works';
 import { IModalProps } from '@/interfaces/IModal';
 import { getAllCustomers } from '@/services/customers';
 import { createTask, getTaskById, updateTask } from '@/services/tasks';
@@ -33,16 +33,6 @@ import { MdClose } from 'react-icons/md';
 import { getAdmins } from '@/services/admins';
 import { useRouter } from 'next/router';
 
-const schema = z.object({
-  description: z.string().min(1).max(255),
-  status: z.string().min(1).max(255),
-  priority: z.string().min(1).max(255),
-  comments: z.string().min(1).max(255),
-  profile_customer_id: z.string().min(1).max(255),
-  profile_admin_id: z.string().min(1).max(255),
-  work_id: z.string().min(1).max(255),
-});
-
 interface FormData {
   description: string;
   deadline: Dayjs;
@@ -53,6 +43,14 @@ interface FormData {
   profile_admin_id: string;
   work_id: string;
 }
+
+const taskSchema = z.object({
+  description: z.string().nonempty({ message: 'Descrição é obrigatória' }),
+  status: z.string().nonempty({ message: 'Status é obrigatório' }),
+  priority: z.string().nonempty({ message: 'Prioridade é obrigatória' }),
+  profile_customer_id: z.string().nonempty({ message: 'Cliente é obrigatório' }),
+  profile_admin_id: z.string().nonempty({ message: 'Responsável é obrigatório' }),
+});
 
 const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
   const currentDate = dayjs();
@@ -71,12 +69,13 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
 
   const [loading, setLoading] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({} as any);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
 
   const [workList, setWorkList] = useState<any[]>([]);
+  const [worksByCustomer, setworksByCustomer] = useState<any[]>([]);
   const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
   const [responsibleList, setResponsibleList] = useState<any[]>([]);
 
@@ -88,9 +87,18 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
   };
 
   const handleFormError = (error: any) => {
-    setMessage(error.message);
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+    setErrors(errorObject);
   };
 
   const resetForm = () => {
@@ -110,13 +118,14 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
     setLoading(true);
 
     try {
-      if (!formData.description) throw new Error('Descrição é obrigatório');
-      if (!formData.profile_customer_id) throw new Error('Cliente é obrigatório');
-      if (!formData.profile_admin_id) throw new Error('Responsável é obrigatório');
-      if (!formData.work_id) throw new Error('Trabalho é obrigatório');
-      if (!formData.deadline) throw new Error('Prazo de Entrega é obrigatório');
-      if (!formData.status) throw new Error('Status é obrigatório');
-      if (!formData.priority) throw new Error('Prioridade é obrigatório');
+      taskSchema.parse({
+        description: formData.description,
+        status: formData.status,
+        priority: formData.priority,
+        profile_customer_id: formData.profile_customer_id,
+        profile_admin_id: formData.profile_admin_id,
+        work_id: formData.work_id,
+      });
 
       const date = formData.deadline ? formData.deadline.format('DD/MM/YYYY') : null;
 
@@ -183,6 +192,19 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
   useEffect(() => {
     getData();
   }, []);
+
+  useEffect(() => {
+    const getworksByCustomer = async () => {
+      if (formData.profile_customer_id) {
+        const works = await getWorkByCustomerId(formData.profile_customer_id);
+        const data = works.data;
+        const idsArray = data.map((item: any) => item.id);
+        setworksByCustomer(idsArray);
+      }
+    };
+
+    getworksByCustomer();
+  }, [formData.profile_customer_id]);
 
   useEffect(() => {
     const handleEdit = async (id: any) => {
@@ -271,6 +293,7 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
                         value={formData.description || ''}
                         onChange={e => handleSelectChange('description', e.target.value)}
                         placeholder="Informe a Descrição da Tarefa"
+                        error={!!errors.description}
                       />
                     </Input>
                   </Flex>
@@ -299,9 +322,38 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
                       isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
                       onChange={(event, value) => handleSelectChange('profile_customer_id', value)}
                       renderInput={params => (
-                        <TextField {...params} placeholder={'Informe o Cliente'} size="small" />
+                        <TextField
+                          {...params}
+                          placeholder={'Informe o Cliente'}
+                          size="small"
+                          error={!!errors.profile_customer_id}
+                        />
                       )}
                       noOptionsText={`Nenhum Cliente Encontrado`}
+                    />
+                  </Flex>
+
+                  <Flex className="inputContainer">
+                    <Flex>
+                      <Typography mb={'8px'} variant="h6">
+                        {'Trabalho'}
+                      </Typography>
+                    </Flex>
+
+                    <Autocomplete
+                      disablePortal={true}
+                      autoComplete
+                      options={worksByCustomer}
+                      value={formData.work_id || ''}
+                      getOptionLabel={(option: any) => option}
+                      renderInput={params => (
+                        <TextField {...params} size="small" placeholder="Selecione um Trabalho" />
+                      )}
+                      noOptionsText="Nenhum Trabalho Encontrado"
+                      onChange={(event, value) => {
+                        handleSelectChange('work_id', value);
+                      }}
+                      disabled={formData.profile_customer_id ? false : true}
                     />
                   </Flex>
 
@@ -329,32 +381,14 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
                       isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
                       onChange={(event, value) => handleSelectChange('profile_admin_id', value)}
                       renderInput={params => (
-                        <TextField {...params} placeholder={'Informe o Responsável'} size="small" />
+                        <TextField
+                          {...params}
+                          placeholder={'Informe o Responsável'}
+                          size="small"
+                          error={!!errors.profile_admin_id}
+                        />
                       )}
                       noOptionsText={`Nenhum Responsável Encontrado`}
-                    />
-                  </Flex>
-
-                  <Flex className="inputContainer">
-                    <Flex>
-                      <Typography mb={'8px'} variant="h6">
-                        {'Trabalho'}
-                      </Typography>
-                    </Flex>
-
-                    <Autocomplete
-                      disablePortal={true}
-                      autoComplete
-                      options={workList}
-                      value={formData.work_id || ''}
-                      getOptionLabel={(option: any) => option}
-                      renderInput={params => (
-                        <TextField {...params} size="small" placeholder="Selecione um Trabalho" />
-                      )}
-                      noOptionsText="Nenhum Trabalho Encontrado"
-                      onChange={(event, value) => {
-                        handleSelectChange('work_id', value);
-                      }}
                     />
                   </Flex>
 

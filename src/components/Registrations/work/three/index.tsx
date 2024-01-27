@@ -13,6 +13,7 @@ import { Box, LinearProgress, Typography } from '@mui/material';
 import { WorkContext } from '@/contexts/WorkContext';
 import { getAllPowers } from '@/services/powers';
 import { Notification } from '@/components';
+import { z } from 'zod';
 export interface IRefWorkStepThreeProps {
   handleSubmitForm: () => void;
 }
@@ -21,10 +22,15 @@ interface IStepThreeProps {
   nextStep: () => void;
 }
 
+const stepThreeSchema = z.object({
+  power_ids: z.array(z.number()).nonempty(),
+});
+
 const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThreeProps> = (
   { nextStep },
   ref,
 ) => {
+  const [errors, setErrors] = useState({} as any);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -41,9 +47,7 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
 
   const handleSubmitForm = () => {
     try {
-      if (powersSelected.length === 0) {
-        throw new Error('Selecione pelo menos um poder');
-      }
+      stepThreeSchema.parse({ power_ids: powersSelected });
 
       if (powersSelected.length > 0) {
         const data = {
@@ -62,9 +66,18 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
   };
 
   const handleFormError = (error: any) => {
-    setMessage(error.message);
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+    setErrors(errorObject);
   };
 
   const verifyDataLocalStorage = async () => {
@@ -157,7 +170,13 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
       )}
 
       <Box>
-        <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+        <Typography
+          variant="h6"
+          sx={{ margin: '8px' }}
+          style={{
+            color: powersSelected.length <= 0 ? '#FF0000' : 'black',
+          }}
+        >
           {'Poderes'}
         </Typography>
         <Box sx={{ height: 400, width: '100%' }}>

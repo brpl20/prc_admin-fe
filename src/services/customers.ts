@@ -19,8 +19,12 @@ const createCustomer = async (data: any) => {
 };
 
 const updateProfileCustomer = async (id: string, data: any) => {
+  const payload = {
+    profile_customer: data,
+    regenerate_documents: true,
+  };
   try {
-    const response = await api.put(`/profile_customers/${id}`, data);
+    const response = await api.put(`/profile_customers/${id}`, payload);
     return response.data;
   } catch (error) {
     throw error;
