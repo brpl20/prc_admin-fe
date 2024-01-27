@@ -37,6 +37,7 @@ import { MdOutlineInfo, MdOutlineArrowDropUp, MdOutlineArrowDropDown } from 'rea
 
 import CustomTooltip from '@/components/Tooltip';
 import { Notification } from '@/components';
+import { z } from 'zod';
 
 export interface IRefWorkStepFourProps {
   handleSubmitForm: () => void;
@@ -55,12 +56,18 @@ interface FormData {
   physical_lawyer: string;
 }
 
+const stepFourSchema = z.object({
+  office_ids: z.array(z.string()).nonempty(),
+  profile_admin_ids: z.array(z.number()).nonempty(),
+});
+
 const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourProps> = (
   { nextStep },
   ref,
 ) => {
   const { ['admin_id']: admin_id } = parseCookies();
   const [openSubTable, setOpenSubTable] = useState(true);
+  const [errors, setErrors] = useState({} as any);
 
   const { workForm, setWorkForm } = useContext(WorkContext);
   const [allLawyers, SetAllLawyers] = useState<any>([]);
@@ -92,17 +99,11 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
 
   const handleSubmitForm = () => {
     try {
-      if (officesSelected.length === 0) {
-        throw new Error('Selecione pelo menos um escritório');
-      }
-
-      if (selectedLawyers.length === 0) {
-        throw new Error('Selecione pelo menos um advogado');
-      }
-
       const updatedFormData = { ...formData };
       updatedFormData.lawyers = selectedLawyers;
       const officesIDs = officesSelected.map((office: any) => office.id);
+
+      stepFourSchema.parse({ office_ids: officesIDs, profile_admin_ids: selectedLawyers });
 
       const data = {
         ...workForm,
@@ -126,9 +127,18 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   };
 
   const handleFormError = (error: any) => {
-    setMessage(error.message);
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+    setErrors(errorObject);
   };
 
   const saveDataLocalStorage = (data: any) => {
@@ -440,7 +450,12 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               options={offices}
               getOptionLabel={option => option.attributes.name}
               renderInput={params => (
-                <TextField placeholder="Selecione um Escritório" {...params} size="small" />
+                <TextField
+                  placeholder="Selecione um Escritório"
+                  {...params}
+                  size="small"
+                  error={!!errors.office_ids}
+                />
               )}
               sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
               noOptionsText="Nenhum Escritório Encontrado"
@@ -630,7 +645,10 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
             display={'flex'}
             alignItems={'center'}
             variant="h6"
-            style={{ height: '40px' }}
+            style={{
+              color: selectedLawyers.length <= 0 ? '#FF0000' : 'black',
+              height: '40px',
+            }}
           >
             {'Advogados'}
           </Typography>

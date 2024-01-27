@@ -8,17 +8,20 @@ import React, {
   useImperativeHandle,
 } from 'react';
 
-import { Flex, colors } from '@/styles/globals';
+import { DescriptionText, Flex, colors } from '@/styles/globals';
 import { IoAddCircleOutline } from 'react-icons/io5';
 import { Container, ColumnContainer } from '../styles';
 import { animateScroll as scroll } from 'react-scroll';
 import { z } from 'zod';
 
-import { ICustomerProps } from '@/interfaces/ICustomer';
-import { getAllCustomers } from '@/services/customers';
 import { CustomerContext } from '@/contexts/CustomerContext';
-import { TextField, Box, Autocomplete, Typography } from '@mui/material';
+import { TextField, Box, Autocomplete, Typography, Button } from '@mui/material';
 import { Notification } from '@/components';
+import { getAllAdmins } from '@/services/admins';
+import { IAdminProps } from '@/interfaces/IAdmin';
+import { getAllCustomers } from '@/services/customers';
+import RepresentativeModal from '../../representative/representativeModal';
+import { MdOutlineAddCircle } from 'react-icons/md';
 
 export interface IRefPJCustomerStepTwoProps {
   handleSubmitForm: () => void;
@@ -30,30 +33,25 @@ interface IStepTwoProps {
 }
 
 const stepTwoSchema = z.object({
-  phones_attributes: z.array(
-    z.object({
-      phone_number: z.string().optional(),
-    }),
-  ),
-  emails_attributes: z.array(
-    z.object({
-      email: z.string().optional(),
-    }),
-  ),
+  profile_admin: z.string().nonempty('Representante Obrigatório'),
+  phone_number: z.string().nonempty('Telefone Obrigatório'),
+  email: z.string().nonempty('Email Obrigatório'),
 });
 
 const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IStepTwoProps> = (
   { nextStep, editMode },
   ref,
 ) => {
+  const [isModalRegisterRepresentativeOpen, setIsModalRegisterRepresentativeOpen] = useState(false);
+  const [isRepresentativeFinished, setIsRepresentativeFinished] = useState(false);
+  const [errors, setErrors] = useState({} as any);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
-  const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<ICustomerProps | null>(null);
+  const [customersList, setCustomersList] = useState<any[]>([]);
+  const [profileAdmin, setProfileAdmin] = useState('' as any);
 
-  const [customerId, setCustomerId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     phoneInputFields: [{ phone_number: '' }],
     emailInputFields: [{ email: '' }],
@@ -114,8 +112,13 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     if (data) {
       const parsedData = JSON.parse(data);
 
-      if (parsedData.represent_attributes)
-        setCustomerId(parsedData.represent_attributes.profile_admin_id);
+      const customer = customersList.find(
+        customer => customer.id == parsedData.represent_attributes.profile_admin_id,
+      );
+
+      if (customer) {
+        setProfileAdmin(customer);
+      }
 
       if (parsedData.phones_attributes) {
         setFormData(prevData => ({
@@ -139,20 +142,16 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
 
   const handleSubmitForm = () => {
     try {
-      if (!customerId) throw new Error('Representante não pode estar vazio.');
-
-      if (formData.phoneInputFields.some(field => field.phone_number.trim() === '')) {
-        throw new Error('Telefone não pode estar vazio.');
-      }
-
-      if (formData.emailInputFields.some(field => field.email.trim() === '')) {
-        throw new Error('E-mail não pode estar vazio.');
-      }
+      stepTwoSchema.parse({
+        profile_admin: profileAdmin?.id,
+        phone_number: formData.phoneInputFields[0].phone_number,
+        email: formData.emailInputFields[0].email,
+      });
 
       if (editMode) {
         const data = {
           represent_attributes: {
-            profile_admin_id: customerId,
+            profile_admin_id: Number(profileAdmin?.id),
           },
           phones_attributes: formData.phoneInputFields,
           emails_attributes: formData.emailInputFields,
@@ -160,12 +159,10 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
 
         customerForm.data.attributes.represent_attributes = {
           ...customerForm.data.attributes.represent,
-          profile_admin_id: customerId,
+          profile_admin_id: Number(profileAdmin?.id),
         };
         customerForm.data.attributes.phones_attributes = formData.phoneInputFields;
         customerForm.data.attributes.emails_attributes = formData.emailInputFields;
-
-        stepTwoSchema.parse(customerForm.data.attributes);
 
         saveDataLocalStorage(data);
         setCustomerForm(customerForm);
@@ -176,13 +173,11 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
       const data = {
         ...customerForm,
         represent_attributes: {
-          profile_admin_id: customerId,
+          profile_admin_id: Number(profileAdmin?.id),
         },
         phones_attributes: formData.phoneInputFields,
         emails_attributes: formData.emailInputFields,
       };
-
-      stepTwoSchema.parse(data);
 
       saveDataLocalStorage(data);
       setCustomerForm(data);
@@ -196,18 +191,27 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     }
   };
 
-  const handleSelectedCustomer = (customerId: any) => {
-    if (customerId) {
-      setCustomerId(Number(customerId.id));
-    } else {
-      setCustomerId(null);
-    }
-  };
-
   const handleFormError = (error: any) => {
-    setMessage(error.message);
+    const newErrors = error.formErrors.fieldErrors;
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+    setErrors(errorObject);
+  };
+
+  const handleSelectedCustomer = (admin: IAdminProps) => {
+    if (admin) {
+      setProfileAdmin(admin);
+    } else {
+      setProfileAdmin('');
+    }
   };
 
   useImperativeHandle(ref, () => ({
@@ -216,19 +220,30 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
 
   useEffect(() => {
     const getCustomers = async () => {
-      const response = await getAllCustomers();
-      setCustomersList(response.data);
+      const allCustomers = await getAllCustomers();
+      const response = allCustomers.data;
+
+      const representors = response.filter(
+        (customer: any) => customer.attributes.customer_type === 'representative',
+      );
+      setCustomersList(representors);
     };
 
     getCustomers();
-  }, []);
+  }, [isRepresentativeFinished]);
 
   useEffect(() => {
     const handleDataForm = () => {
       const attributes = customerForm.data.attributes;
 
       if (attributes) {
-        setCustomerId(attributes.represent ? attributes.represent.profile_admin_id : null);
+        const customer = customersList.find(
+          customer => customer.id == attributes.represent.profile_admin_id,
+        );
+
+        if (customer) {
+          setProfileAdmin(customer);
+        }
 
         setFormData(prevData => ({
           ...prevData,
@@ -245,19 +260,11 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     if (customerForm.data) {
       handleDataForm();
     }
-  }, [customerForm]);
-
-  useEffect(() => {
-    if (customerId && customersList.length > 0) {
-      const customer = customersList.find(customer => Number(customer.id) === customerId);
-
-      customer ? setSelectedCustomer(customer) : setSelectedCustomer(null);
-    }
-  }, [customerId, customersList]);
+  }, [customerForm, customersList]);
 
   useEffect(() => {
     verifyDataLocalStorage();
-  }, []);
+  }, [customersList]);
 
   return (
     <>
@@ -270,23 +277,61 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
         />
       )}
 
+      {isModalRegisterRepresentativeOpen && (
+        <RepresentativeModal
+          pageTitle="Cadastro de Representante"
+          isOpen={isModalRegisterRepresentativeOpen}
+          handleClose={() => setIsModalRegisterRepresentativeOpen(false)}
+          handleRegistrationFinished={() => setIsRepresentativeFinished(true)}
+        />
+      )}
+
       <Container>
         <Box maxWidth={'600px'}>
-          <Flex style={{ flexDirection: 'column', flex: 1, marginBottom: '16px' }}>
-            <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-              {'Representante'}
-            </Typography>
-            <Autocomplete
-              options={customersList}
-              value={selectedCustomer || null}
-              getOptionLabel={option => option.attributes.name || ''}
-              renderInput={params => (
-                <TextField placeholder="Selecione um Representante" {...params} size="small" />
-              )}
-              sx={{ backgroundColor: 'white', zIndex: 1 }}
-              noOptionsText="Nenhum Representante Encontrado"
-              onChange={(event, value) => handleSelectedCustomer(value)}
-            />
+          <Flex
+            style={{
+              gap: '16px',
+              marginBottom: '16px',
+            }}
+          >
+            <Flex style={{ flexDirection: 'column', flex: 1, maxWidth: '292px' }}>
+              <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+                {'Representante'}
+              </Typography>
+              <Autocomplete
+                limitTags={1}
+                options={customersList}
+                getOptionLabel={option => option?.attributes?.name ?? ''}
+                renderInput={params => (
+                  <TextField placeholder="Selecione um Representante" {...params} size="small" />
+                )}
+                sx={{ backgroundColor: 'white', zIndex: 1 }}
+                noOptionsText="Nenhum Cliente Encontrado"
+                onChange={(event, value) => handleSelectedCustomer(value as IAdminProps)}
+                value={profileAdmin || null}
+              />
+            </Flex>
+            <Flex>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setIsModalRegisterRepresentativeOpen(true)}
+                sx={{
+                  backgroundColor: colors.quartiary,
+                  color: colors.white,
+                  width: '292px',
+                  marginTop: 'auto',
+                  '&:hover': {
+                    backgroundColor: colors.quartiaryHover,
+                  },
+                }}
+              >
+                <DescriptionText style={{ cursor: 'pointer' }} className="ml-8">
+                  {'Adicionar Representante'}
+                </DescriptionText>
+                <MdOutlineAddCircle size={20} />
+              </Button>
+            </Flex>
           </Flex>
           <Flex style={{ gap: '16px' }}>
             <ColumnContainer>
@@ -315,6 +360,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                         handleInputChange(index, e.target.value, 'phoneInputFields')
                       }
                       autoComplete="off"
+                      error={!!errors.phone_number}
                     />
                     {index === formData.phoneInputFields.length - 1 && (
                       <IoAddCircleOutline
@@ -354,6 +400,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                         handleInputChange(index, e.target.value, 'emailInputFields')
                       }
                       autoComplete="off"
+                      error={!!errors.email}
                     />
                     {index === formData.emailInputFields.length - 1 && (
                       <IoAddCircleOutline

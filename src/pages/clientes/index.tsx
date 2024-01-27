@@ -1,3 +1,5 @@
+import styles from './style.module.css';
+
 import React, { useEffect, useState, useContext } from 'react';
 import { withAuth } from '@/middleware/withAuth';
 import Router, { useRouter } from 'next/router';
@@ -42,6 +44,16 @@ import { cnpjMask, cpfMask, phoneMask } from '@/utils/masks';
 import { CustomerContext } from '@/contexts/CustomerContext';
 
 const Customers = () => {
+  const getRowClassName = (params: any) => {
+    return params.row.type === 'Pessoa Física'
+      ? styles.physicalPerson
+      : params.row.type === 'Pessoa Jurídica'
+      ? styles.legalPerson
+      : params.row.type === 'Contador'
+      ? styles.counter
+      : styles.representative;
+  };
+
   const { setCustomerForm } = useContext(CustomerContext);
 
   const { showTitle, setShowTitle, setPageTitle } = useContext(PageTitleContext);
@@ -283,6 +295,7 @@ const Customers = () => {
                 disableColumnMenu
                 disableRowSelectionOnClick
                 loading={isLoading}
+                getRowClassName={getRowClassName}
                 slots={{
                   noRowsOverlay: () =>
                     isLoading ? (

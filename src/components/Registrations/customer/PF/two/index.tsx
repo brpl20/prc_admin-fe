@@ -16,6 +16,7 @@ import { CustomerContext } from '@/contexts/CustomerContext';
 import { getCEPDetails } from '@/services/brasilAPI';
 import { TextField, Typography } from '@mui/material';
 import { cepMask } from '@/utils/masks';
+import { z } from 'zod';
 
 export interface IRefPFCustomerStepTwoProps {
   handleSubmitForm: () => void;
@@ -35,6 +36,15 @@ interface FormData {
   description: string;
   neighborhood: string;
 }
+
+const stepTwoSchema = z.object({
+  cep: z.string().nonempty({ message: 'CEP é obrigatório' }),
+  address: z.string().nonempty({ message: 'Endereço é obrigatório' }),
+  state: z.string().nonempty({ message: 'Estado é obrigatório' }),
+  city: z.string().nonempty({ message: 'Cidade é obrigatório' }),
+  number: z.string().nonempty({ message: 'Número é obrigatório' }),
+  neighborhood: z.string().nonempty({ message: 'Bairro é obrigatório' }),
+});
 
 const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IStepTwoProps> = (
   { nextStep, editMode },
@@ -113,39 +123,19 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
         ],
       });
 
-      if (formData.cep === '') {
-        throw new Error('Informe o CEP');
-      }
-
-      if (formData.address === '') {
-        throw new Error('Informe o Endereço');
-      }
-      if (formData.number === '') {
-        throw new Error('Informe o Número');
-      }
-
-      if (formData.description === '') {
-        throw new Error('Informe o Complemento');
-      }
-
-      if (formData.neighborhood === '') {
-        throw new Error('Informe o Bairro');
-      }
-
-      if (formData.city === '') {
-        throw new Error('Informe a Cidade');
-      }
-
-      if (formData.state === '') {
-        throw new Error('Informe o Estado');
-      }
+      stepTwoSchema.parse({
+        cep: formData.cep,
+        address: formData.address,
+        state: formData.state,
+        city: formData.city,
+        number: formData.number?.toString(),
+        neighborhood: formData.neighborhood,
+      });
 
       if (editMode) {
         customerForm.data.attributes.addresses_attributes = [
           {
-            id: customerForm.data.attributes.addresses[0].id
-              ? customerForm.data.attributes.addresses[0].id
-              : '',
+            id: customerForm?.data?.attributes?.addresses[0]?.id ?? '',
             description: formData.description,
             zip_code: formData.cep,
             street: formData.address,
@@ -192,9 +182,19 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
   }));
 
   const handleFormError = (error: any) => {
-    setMessage(error.message);
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+
+    setErrors(errorObject);
   };
 
   const renderInputField = (
@@ -202,7 +202,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
     name: keyof FormData,
     placeholderValue: string,
     widthValue: string,
-    error: boolean,
+    error?: boolean,
   ) => (
     <Flex style={{ flexDirection: 'column', width: `${widthValue}` }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
@@ -311,14 +311,14 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
             )}
             {renderInputField('Número', 'number', 'N.º', '140px', !!errors.address)}
           </Flex>
+          {renderInputField('Complemento', 'description', 'Informe o Complemento', '100%')}
           {renderInputField(
-            'Complemento',
-            'description',
-            'Informe o Complemento',
+            'Bairro',
+            'neighborhood',
+            'Informe o Bairro',
             '100%',
-            !!errors.state,
+            !!errors.neighborhood,
           )}
-          {renderInputField('Bairro', 'neighborhood', 'Informe o Bairro', '100%', !!errors.state)}
           {renderInputField('Cidade', 'city', 'Informe a Cidade', '100%', !!errors.city)}
           {renderInputField('Estado', 'state', 'Informe o Estado', '100%', !!errors.state)}
         </ColumnContainer>

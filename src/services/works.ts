@@ -31,6 +31,15 @@ const getWorkById = async (id: string) => {
   }
 };
 
+const getWorkByCustomerId = async (id: string) => {
+  try {
+    const response = await api.get(`/works?customer_id=${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const updateWork = async (id: string, data: any) => {
   const payload = {
     work: data,
@@ -63,4 +72,12 @@ const getAllDraftWorks = async () => {
   }
 };
 
-export { createWork, getAllWorks, getWorkById, updateWork, createDraftWork, getAllDraftWorks };
+export {
+  createWork,
+  getAllWorks,
+  getWorkById,
+  updateWork,
+  createDraftWork,
+  getAllDraftWorks,
+  getWorkByCustomerId,
+};

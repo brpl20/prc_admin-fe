@@ -14,6 +14,7 @@ import { Container, ColumnContainer } from '../styles';
 import { Box, TextField, Typography } from '@mui/material';
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { Notification } from '@/components';
+import { z } from 'zod';
 
 export interface IRefPFCustomerStepThreeProps {
   handleSubmitForm: () => void;
@@ -24,10 +25,16 @@ interface IStepThreeProps {
   editMode: boolean;
 }
 
+const stepThreeSchema = z.object({
+  phone_number: z.string().nonempty('Telefone Obrigatório'),
+  email: z.string().nonempty('Email Obrigatório'),
+});
+
 const PFCustomerStepThree: ForwardRefRenderFunction<
   IRefPFCustomerStepThreeProps,
   IStepThreeProps
 > = ({ nextStep, editMode }, ref) => {
+  const [errors, setErrors] = useState({} as any);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
@@ -113,20 +120,27 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
   };
 
   const handleFormError = (error: any) => {
-    setMessage(error.message);
+    const newErrors = error.formErrors.fieldErrors;
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+
+    setErrors(errorObject);
   };
 
   const handleSubmitForm = () => {
     try {
-      if (formData.phoneInputFields.some(field => field.phone_number.trim() === '')) {
-        throw new Error('Telefone não pode estar vazio.');
-      }
-
-      if (formData.emailInputFields.some(field => field.email.trim() === '')) {
-        throw new Error('E-mail não pode estar vazio.');
-      }
+      stepThreeSchema.parse({
+        phone_number: formData.phoneInputFields[0].phone_number,
+        email: formData.emailInputFields[0].email,
+      });
 
       if (editMode) {
         delete customerForm.data.attributes.phones;
@@ -227,6 +241,7 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
                         handleInputChange(index, e.target.value, 'phoneInputFields')
                       }
                       autoComplete="off"
+                      error={!!errors.phone_number}
                     />
                     {index === formData.phoneInputFields.length - 1 && (
                       <IoAddCircleOutline
@@ -268,6 +283,7 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
                         handleInputChange(index, e.target.value, 'emailInputFields')
                       }
                       autoComplete="off"
+                      error={!!errors.email}
                     />
                     {index === formData.emailInputFields.length - 1 && (
                       <IoAddCircleOutline

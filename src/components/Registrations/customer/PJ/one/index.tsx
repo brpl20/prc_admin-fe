@@ -41,6 +41,11 @@ interface FormData {
   neighborhood: string;
 }
 
+const stepOneSchema = z.object({
+  name: z.string().nonempty('Nome é obrigatório.'),
+  cnpj: z.string().nonempty('CNPJ é obrigatório.'),
+});
+
 const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IStepOneProps> = (
   { nextStep, editMode },
   ref,
@@ -92,15 +97,10 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
 
   const handleSubmitForm = () => {
     try {
-      if (!formData.name) throw new Error('Nome é obrigatório.');
-      if (!formData.cnpj) throw new Error('CNPJ é obrigatório.');
-      if (!formData.cep) throw new Error('CEP é obrigatório.');
-      if (!formData.street) throw new Error('Endereço é obrigatório.');
-      if (!formData.state) throw new Error('Estado é obrigatório.');
-      if (!formData.city) throw new Error('Cidade é obrigatório.');
-      if (!formData.number) throw new Error('Número é obrigatório.');
-      if (!formData.neighborhood) throw new Error('Bairro é obrigatório.');
-      if (!formData.description) throw new Error('Complemento é obrigatório.');
+      stepOneSchema.parse({
+        name: formData.name,
+        cnpj: formData.cnpj,
+      });
 
       const data = {
         name: formData.name,
@@ -140,7 +140,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
 
         customerForm.data.attributes.addresses_attributes = [
           {
-            id: customerForm.data.attributes.addresses[0].id,
+            id: customerForm?.data?.attributes?.addresses[0]?.id,
             zip_code: formData.cep,
             street: formData.street,
             state: formData.state,
@@ -214,9 +214,18 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
   }));
 
   const handleFormError = (error: any) => {
-    setMessage(error.message);
+    const newErrors = error.formErrors.fieldErrors;
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+    setErrors(errorObject);
   };
 
   const renderInputField = (

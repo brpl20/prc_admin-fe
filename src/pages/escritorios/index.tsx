@@ -224,7 +224,7 @@ const Offices = () => {
                         <LinearProgress />
                       </Box>
                     ) : (
-                      <Typography variant="h6">{'Nenhum cliente encontrado'}</Typography>
+                      <Typography variant="h6">{'Nenhum Escritório encontrado'}</Typography>
                     ),
                 }}
                 rows={

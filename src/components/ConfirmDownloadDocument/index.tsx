@@ -25,7 +25,13 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
   const handleClose = () => {
     onClose();
 
-    route.push('/trabalhos');
+    if (route.asPath.includes('trabalho')) {
+      route.push('/trabalhos');
+    }
+
+    if (route.asPath.includes('cliente')) {
+      route.push('/clientes');
+    }
   };
 
   return (
@@ -90,7 +96,7 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
                       : document.document_type === 'waiver'
                       ? 'Termo de Renúncia'
                       : 'Declaração de Carência'
-                    : ''}
+                    : 'Procuração Simples'}
                 </Typography>
               </div>
             ))}

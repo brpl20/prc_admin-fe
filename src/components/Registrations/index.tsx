@@ -143,8 +143,22 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
         if (pageTitle.search('terar') !== -1) {
           const id = router.query.id as string;
           if (id) {
-            await updateProfileCustomer(id, customerForm.data.attributes);
-            Router.push('/clientes');
+            const res = await updateProfileCustomer(id, customerForm.data.attributes);
+
+            const url = res.data.attributes.customer_files;
+
+            if (url && url.length > 0) {
+              setUrlsDocuments(url);
+
+              setOpenModal(false);
+
+              setOpenDownloadModal(true);
+            } else {
+              setOpenModal(false);
+
+              router.push('/clientes');
+            }
+
             setCustomerForm({});
             return;
           }
@@ -167,10 +181,19 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
 
         customerForm.customer_id = customer.data.id;
 
-        await createProfileCustomer(customerForm);
+        const res = await createProfileCustomer(customerForm);
 
-        Router.push('/clientes');
-        setCustomerForm({});
+        const url = res.data.attributes.customer_files;
+
+        if (url && url.length > 0) {
+          setUrlsDocuments(url);
+
+          setOpenModal(false);
+
+          setOpenDownloadModal(true);
+        }
+
+        return;
       } catch (error: any) {
         const message = error.request.response ? JSON.parse(error.request.response).errors[0] : '';
         setMessage(message.code);

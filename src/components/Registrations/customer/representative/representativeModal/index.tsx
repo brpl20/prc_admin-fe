@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, useEffect, useContext } from 'react';
+import { useState, ChangeEvent, useEffect, useContext } from 'react';
 import { IoAddCircleOutline } from 'react-icons/io5';
 
 import {
@@ -12,6 +12,7 @@ import {
   MenuItem,
   Autocomplete,
   CircularProgress,
+  Modal,
 } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
 
@@ -19,7 +20,7 @@ import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { gendersOptions, civilStatusOptions, nationalityOptions } from '@/utils/constants';
 
-import { Container, Title } from './styles';
+import { Container } from '../styles';
 import { colors, ContentContainer } from '@/styles/globals';
 
 import dayjs, { Dayjs } from 'dayjs';
@@ -37,9 +38,7 @@ import {
 import { animateScroll as scroll } from 'react-scroll';
 
 import Router, { useRouter } from 'next/router';
-import { cpfMask, rgMask } from '@/utils/masks';
-import { getAllAdmins } from '@/services/admins';
-import { IAdminProps } from '@/interfaces/IAdmin';
+import { cpfMask } from '@/utils/masks';
 import { z } from 'zod';
 import { ICustomerProps } from '@/interfaces/ICustomer';
 
@@ -57,10 +56,13 @@ interface FormData {
 
 interface props {
   pageTitle: string;
+  isOpen: boolean;
+  handleClose: () => void;
+  handleRegistrationFinished: () => void;
 }
 
 const representativeSchema = z.object({
-  represent_id: z.string().nonempty({ message: 'Selecione o Representado.' }),
+  represent_id: z.string(),
   name: z.string().nonempty({ message: 'Preencha o campo Nome.' }),
   last_name: z.string().nonempty({ message: 'Preencha o campo Sobrenome.' }),
   CPF: z.string().nonempty({ message: 'Preencha o campo CPF.' }),
@@ -72,7 +74,12 @@ const representativeSchema = z.object({
   email: z.string().nonempty('Email Obrigatório'),
 });
 
-const Representative = ({ pageTitle }: props) => {
+const RepresentativeModal = ({
+  pageTitle,
+  isOpen,
+  handleClose,
+  handleRegistrationFinished,
+}: props) => {
   const [errors, setErrors] = useState({} as any);
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
@@ -210,7 +217,7 @@ const Representative = ({ pageTitle }: props) => {
 
         const res = await createProfileCustomer(newData);
 
-        Router.push('/clientes');
+        handleClose();
         resetValues();
       }
     } catch (error: any) {
@@ -240,62 +247,33 @@ const Representative = ({ pageTitle }: props) => {
         email: contactData.emailInputFields[0].email,
       });
 
-      if (route.pathname.includes('alterar')) {
-        const data = {
-          capacity: 'able',
-          profession: 'representative',
-          customer_type: 'representative',
-          cpf: formData.CPF,
-          rg: formData.RG,
-          gender: formData.gender,
-          nationality: formData.nationality,
-          name: formData.name,
-          last_name: formData.last_name,
-          birth: formData.birth,
-          civil_status: formData.civil_status,
-          phones_attributes: contactData.phoneInputFields,
-          emails_attributes: contactData.emailInputFields,
-          represent_attributes: {
-            id: customerForm?.data?.attributes?.represent?.id,
-            representor_id: formData.represent_id ? Number(formData.represent_id) : '',
-          },
-        };
+      const data = {
+        capacity: 'able',
+        profession: 'representative',
+        customer_type: 'representative',
+        cpf: formData.CPF.replace(/\D/g, ''),
+        rg: formData.RG.replace(/\D/g, ''),
+        gender: formData.gender,
+        nationality: formData.nationality,
+        name: formData.name,
+        last_name: formData.last_name,
+        birth: formData.birth,
+        civil_status: formData.civil_status,
+        phones_attributes: contactData.phoneInputFields,
+        emails_attributes: contactData.emailInputFields,
+        represent_attributes: {
+          representor_id: formData.represent_id ? Number(formData.represent_id) : '',
+        },
+      };
 
-        const id = customerForm.data.id;
+      const res = await completeRegistration(data);
 
-        await updateProfileCustomer(id, data);
-
-        Router.push('/clientes');
-        resetValues();
-      } else {
-        const data = {
-          capacity: 'able',
-          profession: 'representative',
-          customer_type: 'representative',
-          cpf: formData.CPF.replace(/\D/g, ''),
-          rg: formData.RG.replace(/\D/g, ''),
-          gender: formData.gender,
-          nationality: formData.nationality,
-          name: formData.name,
-          last_name: formData.last_name,
-          birth: formData.birth,
-          civil_status: formData.civil_status,
-          phones_attributes: contactData.phoneInputFields,
-          emails_attributes: contactData.emailInputFields,
-          represent_attributes: {
-            representor_id: formData.represent_id ? Number(formData.represent_id) : '',
-          },
-        };
-
-        const res = await completeRegistration(data);
-
-        if (res == undefined) {
-          return;
-        }
-
-        Router.push('/clientes');
-        resetValues();
+      if (res == undefined) {
+        return;
       }
+
+      handleClose();
+      resetValues();
     } catch (error: any) {
       handleFormError(error);
 
@@ -305,6 +283,7 @@ const Representative = ({ pageTitle }: props) => {
       });
     } finally {
       setLoading(false);
+      handleRegistrationFinished();
     }
   };
 
@@ -542,275 +521,270 @@ const Representative = ({ pageTitle }: props) => {
         />
       )}
 
-      <Container>
-        <Box
-          display={'flex'}
-          alignItems={'center'}
-          justifyContent={'space-between'}
-          sx={{
-            marginBottom: '24px',
-            maxWidth: '1600px',
+      <Modal open={isOpen} style={{ overflowY: 'auto', marginLeft: 'auto' }}>
+        <Container
+          style={{
+            marginLeft: '84px',
+            borderRadius: '4px',
           }}
         >
-          <Title>{`${pageTitle}`}</Title>
-        </Box>
-
-        <ContentContainer>
-          <form>
-            <Box display={'flex'} flexDirection={'column'} gap={'16px'}>
-              <Flex>
-                <Box width={'300px'}>
-                  <Typography variant="h6" sx={{ marginRight: 'auto' }}>
-                    {'Selecione o Representado'}
-                  </Typography>
-                </Box>
-                <Box style={{ flex: 1 }}>
-                  <Box width={'50%'} pr={'15.5px'}>
-                    <Autocomplete
-                      disablePortal={true}
-                      autoComplete
-                      options={customersList}
-                      getOptionLabel={option => option?.attributes?.name ?? ''}
-                      onChange={(event, value) => {
-                        if (value) {
-                          handleCustomerChange('represent_id', value.id);
-                        } else {
-                          handleCustomerChange('represent_id', '');
+          <ContentContainer>
+            <form>
+              <Box display={'flex'} flexDirection={'column'} gap={'16px'}>
+                <Flex>
+                  <Box width={'300px'}>
+                    <Typography variant="h6" sx={{ marginRight: 'auto' }}>
+                      {'Selecione o Representado'}
+                    </Typography>
+                  </Box>
+                  <Box style={{ flex: 1 }}>
+                    <Box width={'50%'} pr={'15.5px'}>
+                      <Autocomplete
+                        disablePortal={true}
+                        autoComplete
+                        options={customersList}
+                        getOptionLabel={option => option?.attributes?.name ?? ''}
+                        onChange={(event, value) => {
+                          if (value) {
+                            handleCustomerChange('represent_id', value.id);
+                          } else {
+                            handleCustomerChange('represent_id', '');
+                          }
+                        }}
+                        value={
+                          formData.represent_id
+                            ? customersList.find(customer => customer.id == formData.represent_id)
+                            : null
                         }
+                        renderInput={params => (
+                          <TextField
+                            {...params}
+                            value={formData.represent_id}
+                            placeholder="Selecione um Cliente"
+                            size="small"
+                            error={!!errors.represent_id}
+                          />
+                        )}
+                        noOptionsText="Nenhum Cliente Encontrado"
+                      />
+                    </Box>
+                  </Box>
+                </Flex>
+
+                <Divider />
+
+                <Flex>
+                  <Box width={'300px'}>
+                    <Typography variant="h6" sx={{ marginRight: 'auto' }}>
+                      {'Dados do Representante'}
+                    </Typography>
+                  </Box>
+
+                  <Flex style={{ gap: '16px', flexDirection: 'column', flex: 1 }}>
+                    <Flex
+                      style={{
+                        flex: 1,
+                        gap: '32px',
                       }}
-                      value={
-                        formData.represent_id
-                          ? customersList.find(customer => customer.id == formData.represent_id)
-                          : null
-                      }
-                      renderInput={params => (
-                        <TextField
-                          {...params}
-                          value={formData.represent_id}
-                          placeholder="Selecione um Cliente"
-                          size="small"
-                          error={!!errors.represent_id}
-                        />
+                    >
+                      {renderInputField('name', 'Nome', 'Nome do Representante', !!errors.name)}
+                      {renderInputField(
+                        'last_name',
+                        'Sobrenome',
+                        'Sobrenome do Representante',
+                        !!errors.last_name,
                       )}
-                      noOptionsText="Nenhum Cliente Encontrado"
-                    />
-                  </Box>
-                </Box>
-              </Flex>
-
-              <Divider />
-
-              <Flex>
-                <Box width={'300px'}>
-                  <Typography variant="h6" sx={{ marginRight: 'auto' }}>
-                    {'Dados do Representante'}
-                  </Typography>
-                </Box>
-
-                <Flex style={{ gap: '16px', flexDirection: 'column', flex: 1 }}>
-                  <Flex
-                    style={{
-                      flex: 1,
-                      gap: '32px',
-                    }}
-                  >
-                    {renderInputField('name', 'Nome', 'Nome do Representante', !!errors.name)}
-                    {renderInputField(
-                      'last_name',
-                      'Sobrenome',
-                      'Sobrenome do Representante',
-                      !!errors.last_name,
-                    )}
-                  </Flex>
-
-                  <Flex style={{ gap: '32px' }}>
-                    {renderInputField('CPF', 'CPF', 'Informe o CPF', !!errors.CPF)}
-                    {renderInputField('RG', 'RG', 'Informe o RG', !!errors.RG)}
-                  </Flex>
-
-                  <Flex style={{ gap: '24px' }}>
-                    <Flex style={{ flexDirection: 'column', flex: 1 }}>
-                      <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <Flex>
-                          <Typography mb={'8px'} variant="h6">
-                            {'Data de Nascimento'}
-                          </Typography>
-                        </Flex>
-                        <DatePicker
-                          sx={{
-                            '& .MuiInputBase-root': {
-                              height: '40px',
-                            },
-                          }}
-                          format="DD/MM/YYYY"
-                          value={selectedDate}
-                          onChange={handleBirthDate}
-                        />
-                      </LocalizationProvider>
                     </Flex>
-                    {renderSelectField(
-                      'Naturalidade',
-                      'nationality',
-                      nationalityOptions,
-                      !!errors.nationality,
-                    )}
-                  </Flex>
 
-                  <Flex
-                    style={{
-                      flex: 1,
-                      gap: '32px',
-                    }}
-                  >
-                    {renderSelectField('Gênero', 'gender', gendersOptions, !!errors.gender)}
-                    {renderSelectField(
-                      'Estado Civil',
-                      'civil_status',
-                      civilStatusOptions,
-                      !!errors.civil_status,
-                    )}
+                    <Flex style={{ gap: '32px' }}>
+                      {renderInputField('CPF', 'CPF', 'Informe o CPF', !!errors.CPF)}
+                      {renderInputField('RG', 'RG', 'Informe o RG', !!errors.RG)}
+                    </Flex>
+
+                    <Flex style={{ gap: '24px' }}>
+                      <Flex style={{ flexDirection: 'column', flex: 1 }}>
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                          <Flex>
+                            <Typography mb={'8px'} variant="h6">
+                              {'Data de Nascimento'}
+                            </Typography>
+                          </Flex>
+                          <DatePicker
+                            sx={{
+                              '& .MuiInputBase-root': {
+                                height: '40px',
+                              },
+                            }}
+                            format="DD/MM/YYYY"
+                            value={selectedDate}
+                            onChange={handleBirthDate}
+                          />
+                        </LocalizationProvider>
+                      </Flex>
+                      {renderSelectField(
+                        'Naturalidade',
+                        'nationality',
+                        nationalityOptions,
+                        !!errors.nationality,
+                      )}
+                    </Flex>
+
+                    <Flex
+                      style={{
+                        flex: 1,
+                        gap: '32px',
+                      }}
+                    >
+                      {renderSelectField('Gênero', 'gender', gendersOptions, !!errors.gender)}
+                      {renderSelectField(
+                        'Estado Civil',
+                        'civil_status',
+                        civilStatusOptions,
+                        !!errors.civil_status,
+                      )}
+                    </Flex>
                   </Flex>
                 </Flex>
-              </Flex>
 
-              <Divider />
+                <Divider />
 
-              <Flex>
-                <Box width={'300px'}>
-                  <Typography variant="h6" sx={{ marginRight: 'auto' }}>
-                    {'Contato'}
-                  </Typography>
-                </Box>
-
-                <Flex style={{ gap: '32px', flex: 1 }}>
-                  <Box
-                    style={{
-                      flex: 1,
-                    }}
-                  >
-                    <Typography style={{ marginBottom: '8px' }} variant="h6">
-                      {'Telefone'}
+                <Flex>
+                  <Box width={'300px'}>
+                    <Typography variant="h6" sx={{ marginRight: 'auto' }}>
+                      {'Contato'}
                     </Typography>
-                    {contactData.phoneInputFields.map((inputValue, index) => (
-                      <Flex
-                        key={index}
-                        style={{
-                          flexDirection: 'column',
-                          marginBottom: '8px',
-                          gap: '6px',
-                        }}
-                      >
-                        <TextField
-                          id="outlined-basic"
-                          variant="outlined"
-                          fullWidth
-                          name="phone"
-                          size="small"
-                          placeholder="Informe o Telefone"
-                          value={inputValue.phone_number || ''}
-                          onChange={(e: any) =>
-                            handleContactChange(index, e.target.value, 'phoneInputFields')
-                          }
-                          autoComplete="off"
-                          error={!!errors.phone_number}
-                        />
-                        {index === contactData.phoneInputFields.length - 1 && (
-                          <IoAddCircleOutline
-                            style={{ marginLeft: 'auto', cursor: 'pointer' }}
-                            onClick={() => handleAddInput('phoneInputFields')}
-                            color={colors.quartiary}
-                            size={20}
-                          />
-                        )}
-                      </Flex>
-                    ))}
                   </Box>
 
-                  <Box
-                    style={{
-                      flex: 1,
-                    }}
-                  >
-                    <Typography style={{ marginBottom: '8px' }} variant="h6">
-                      {'E-mail'}
-                    </Typography>
-                    {contactData.emailInputFields.map((inputValue, index) => (
-                      <Flex
-                        key={index}
-                        style={{
-                          flexDirection: 'column',
-                          marginBottom: '8px',
-                          gap: '6px',
-                        }}
-                      >
-                        <TextField
-                          id="outlined-basic"
-                          variant="outlined"
-                          fullWidth
-                          name="email"
-                          size="small"
-                          style={{ flex: 1 }}
-                          placeholder="Informe o Email"
-                          value={inputValue.email}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleContactChange(index, e.target.value, 'emailInputFields')
-                          }
-                          error={!!errors.email}
-                          autoComplete="off"
-                        />
-                        {index === contactData.emailInputFields.length - 1 && (
-                          <IoAddCircleOutline
-                            style={{ marginLeft: 'auto', cursor: 'pointer' }}
-                            onClick={() => handleAddInput('emailInputFields')}
-                            color={colors.quartiary}
-                            size={20}
+                  <Flex style={{ gap: '32px', flex: 1 }}>
+                    <Box
+                      style={{
+                        flex: 1,
+                      }}
+                    >
+                      <Typography style={{ marginBottom: '8px' }} variant="h6">
+                        {'Telefone'}
+                      </Typography>
+                      {contactData.phoneInputFields.map((inputValue, index) => (
+                        <Flex
+                          key={index}
+                          style={{
+                            flexDirection: 'column',
+                            marginBottom: '8px',
+                            gap: '6px',
+                          }}
+                        >
+                          <TextField
+                            id="outlined-basic"
+                            variant="outlined"
+                            fullWidth
+                            name="phone"
+                            size="small"
+                            placeholder="Informe o Telefone"
+                            value={inputValue.phone_number || ''}
+                            onChange={(e: any) =>
+                              handleContactChange(index, e.target.value, 'phoneInputFields')
+                            }
+                            autoComplete="off"
+                            error={!!errors.phone_number}
                           />
-                        )}
-                      </Flex>
-                    ))}
-                  </Box>
+                          {index === contactData.phoneInputFields.length - 1 && (
+                            <IoAddCircleOutline
+                              style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                              onClick={() => handleAddInput('phoneInputFields')}
+                              color={colors.quartiary}
+                              size={20}
+                            />
+                          )}
+                        </Flex>
+                      ))}
+                    </Box>
+
+                    <Box
+                      style={{
+                        flex: 1,
+                      }}
+                    >
+                      <Typography style={{ marginBottom: '8px' }} variant="h6">
+                        {'E-mail'}
+                      </Typography>
+                      {contactData.emailInputFields.map((inputValue, index) => (
+                        <Flex
+                          key={index}
+                          style={{
+                            flexDirection: 'column',
+                            marginBottom: '8px',
+                            gap: '6px',
+                          }}
+                        >
+                          <TextField
+                            id="outlined-basic"
+                            variant="outlined"
+                            fullWidth
+                            name="email"
+                            size="small"
+                            style={{ flex: 1 }}
+                            placeholder="Informe o Email"
+                            value={inputValue.email}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                              handleContactChange(index, e.target.value, 'emailInputFields')
+                            }
+                            error={!!errors.email}
+                            autoComplete="off"
+                          />
+                          {index === contactData.emailInputFields.length - 1 && (
+                            <IoAddCircleOutline
+                              style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                              onClick={() => handleAddInput('emailInputFields')}
+                              color={colors.quartiary}
+                              size={20}
+                            />
+                          )}
+                        </Flex>
+                      ))}
+                    </Box>
+                  </Flex>
                 </Flex>
-              </Flex>
+              </Box>
+            </form>
+
+            <Divider />
+
+            <Box width={'100%'} display={'flex'} justifyContent={'end'} mt={'16px'}>
+              <Button
+                color="primary"
+                variant="outlined"
+                sx={{
+                  width: '100px',
+                  height: '36px',
+                }}
+                onClick={() => {
+                  resetValues();
+                  handleClose();
+                }}
+              >
+                {'Cancelar'}
+              </Button>
+              <Button
+                variant="contained"
+                sx={{
+                  width: '100px',
+                  height: '36px',
+                  color: colors.white,
+                  marginLeft: '16px',
+                }}
+                color="secondary"
+                onClick={() => {
+                  handleSubmitForm();
+                }}
+              >
+                {loading ? <CircularProgress size={20} sx={{ color: colors.white }} /> : 'Salvar'}
+              </Button>
             </Box>
-          </form>
-
-          <Divider />
-
-          <Box width={'100%'} display={'flex'} justifyContent={'end'} mt={'16px'}>
-            <Button
-              color="primary"
-              variant="outlined"
-              sx={{
-                width: '100px',
-                height: '36px',
-              }}
-              onClick={() => {
-                resetValues();
-                Router.push('/clientes');
-              }}
-            >
-              {'Cancelar'}
-            </Button>
-            <Button
-              variant="contained"
-              sx={{
-                width: '100px',
-                height: '36px',
-                color: colors.white,
-                marginLeft: '16px',
-              }}
-              color="secondary"
-              onClick={() => {
-                handleSubmitForm();
-              }}
-            >
-              {loading ? <CircularProgress size={20} sx={{ color: colors.white }} /> : 'Salvar'}
-            </Button>
-          </Box>
-        </ContentContainer>
-      </Container>
+          </ContentContainer>
+        </Container>
+      </Modal>
     </>
   );
 };
 
-export default Representative;
+export default RepresentativeModal;

@@ -13,6 +13,7 @@ import { CustomerContext } from '@/contexts/CustomerContext';
 
 import { Box, TextField, Typography } from '@mui/material';
 import { Notification } from '@/components';
+import { z } from 'zod';
 
 export interface IRefPFCustomerStepFiveProps {
   handleSubmitForm: () => void;
@@ -31,10 +32,18 @@ interface FormData {
   inss_password: string;
 }
 
+const stepFiveSchema = z.object({
+  profession: z.string().nonempty('Profissão é obrigatório'),
+  company: z.string().nonempty('Empresa é obrigatório'),
+  number_benefit: z.string().nonempty('Número de Benefício é obrigatório'),
+  mother_name: z.string().nonempty('Nome da Mãe é obrigatório'),
+});
+
 const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, IStepFiveProps> = (
   { nextStep, editMode },
   ref,
 ) => {
+  const [errors, setErrors] = useState({} as any);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
@@ -86,9 +95,19 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
   }));
 
   const handleFormError = (error: any) => {
-    setMessage(error.message);
+    const newErrors = error.formErrors.fieldErrors;
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+
+    setErrors(errorObject);
   };
 
   const handleSubmitForm = () => {
@@ -103,8 +122,12 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
     });
 
     try {
-      if (!formData.profession) throw new Error('Informe a Profissão');
-      if (!formData.inss_password) throw new Error('Informe a senha do INSS');
+      stepFiveSchema.parse({
+        profession: formData.profession,
+        company: formData.company,
+        number_benefit: formData.number_benefit,
+        mother_name: formData.mother_name,
+      });
 
       if (editMode) {
         customerForm.data.attributes.profession = formData.profession;
@@ -136,7 +159,12 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
     }
   };
 
-  const renderInputField = (label: string, name: keyof FormData, placeholderValue: string) => (
+  const renderInputField = (
+    label: string,
+    name: keyof FormData,
+    placeholderValue: string,
+    error?: boolean,
+  ) => (
     <Flex style={{ flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
@@ -152,6 +180,7 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
         autoComplete="off"
         placeholder={`${placeholderValue}`}
         onChange={handleInputChange}
+        error={error && !formData[name]}
       />
     </Flex>
   );
@@ -193,17 +222,32 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
       <Container>
         <Box maxWidth={'812px'} display={'flex'} flexDirection={'column'} gap={'16px'}>
           <Flex style={{ gap: '24px' }}>
-            {renderInputField('Profissão', 'profession', 'Informe a Profissão')}
-            {renderInputField('Empresa Atual', 'company', 'Informe a Empersa Atual')}
+            {renderInputField(
+              'Profissão',
+              'profession',
+              'Informe a Profissão',
+              !!errors.profession,
+            )}
+            {renderInputField(
+              'Empresa Atual',
+              'company',
+              'Informe a Empersa Atual',
+              !!errors.company,
+            )}
           </Flex>
 
           <Flex style={{ gap: '24px' }}>
-            {renderInputField('Número de Benefício', 'number_benefit', '000.00000-00-0')}
+            {renderInputField(
+              'Número de Benefício',
+              'number_benefit',
+              '000.00000-00-0',
+              !!errors.number_benefit,
+            )}
             {renderInputField('NIT', 'nit', '000.00000-00-0')}
           </Flex>
 
           <Flex style={{ gap: '24px' }}>
-            {renderInputField('Nome da Mãe', 'mother_name', 'Informe o Nome')}
+            {renderInputField('Nome da Mãe', 'mother_name', 'Informe o Nome', !!errors.mother_name)}
             {renderInputField('Senha do meu INSS', 'inss_password', 'Informe a Senha')}
           </Flex>
         </Box>

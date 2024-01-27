@@ -65,8 +65,11 @@ interface IStepOneProps {
   nextStep: () => void;
 }
 
-const schema = z.object({
-  subject: z.string().nonempty('Campo obrigatório'),
+const stepOneSchema = z.object({
+  profile_customer_ids: z.array(z.string()).nonempty(),
+  number: z.string(),
+  procedures: z.array(z.string()).nonempty(),
+  subject: z.string().nonempty(),
 });
 
 const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps> = (
@@ -181,30 +184,12 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
 
   const handleSubmitForm = () => {
     try {
-      if (selectedSubject === '') {
-        throw new Error('Preencha o Assunto.');
-      }
-
-      if (processNumber === '') {
-        throw new Error('Preencha o Número do Processo.');
-      }
-
-      if (selectedProcedures.length <= 0) {
-        throw new Error('Preencha o Procedimento.');
-      }
-
-      if (
-        selectedArea === '' &&
-        selectedSubject !== 'others' &&
-        selectedSubject !== 'administrative_subject' &&
-        selectedSubject !== 'criminal' &&
-        selectedSubject !== 'tributary_pis'
-      ) {
-        setMessage('Preencha a Área.');
-        setType('error');
-        setOpenSnackbar(true);
-        return;
-      }
+      stepOneSchema.parse({
+        profile_customer_ids: customerSelectedList.map(customer => customer.id),
+        number: processNumber,
+        procedures: selectedProcedures,
+        subject: selectedSubject,
+      });
 
       let data: any = {
         ...workForm,
@@ -280,9 +265,18 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   };
 
   const handleFormError = (error: any) => {
-    setMessage(error.message);
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+    setErrors(errorObject);
   };
 
   const verifyDataLocalStorage = async () => {
@@ -608,7 +602,12 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                 options={customersList}
                 getOptionLabel={option => option && option.attributes && option.attributes.name}
                 renderInput={params => (
-                  <TextField placeholder="Selecione um Cliente" {...params} size="small" />
+                  <TextField
+                    placeholder="Selecione um Cliente"
+                    {...params}
+                    size="small"
+                    error={!!errors.profile_customer_ids}
+                  />
                 )}
                 sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
                 noOptionsText="Nenhum Cliente Encontrado"
@@ -632,6 +631,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                   onChange={(event: ChangeEvent<HTMLInputElement>) =>
                     setProcessNumber(event.target.value)
                   }
+                  error={!!errors.number}
                 />
               </InputContainer>
               <Typography variant="caption" sx={{ marginTop: '4px' }} gutterBottom>
@@ -695,7 +695,14 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
               marginTop: '16px',
             }}
           >
-            <Typography variant="h6">{'Procedimento'}</Typography>
+            <Typography
+              variant="h6"
+              style={{
+                color: selectedProcedures.length <= 0 ? '#FF0000' : 'black',
+              }}
+            >
+              {'Procedimento'}
+            </Typography>
             <CustomTooltip title="Selecione um tipo de procedimento." placement="right">
               <span
                 aria-label="Procedimento"
@@ -762,7 +769,21 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
           <Flex style={{ flexDirection: 'row', marginTop: '16px', flex: 1 }}>
             <Box width={'400px'}>
               <Flex>
-                <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+                <Typography
+                  variant="h6"
+                  sx={{ marginBottom: '8px' }}
+                  style={{
+                    color:
+                      selectedProcedures.length <= 0 &&
+                      selectedArea === '' &&
+                      selectedSubject !== 'others' &&
+                      selectedSubject !== 'administrative_subject' &&
+                      selectedSubject !== 'criminal' &&
+                      selectedSubject !== 'tributary_pis'
+                        ? '#FF0000'
+                        : 'black',
+                  }}
+                >
                   {'Assunto'}
                 </Typography>
                 {errors.subject && selectedSubject === '' && (
