@@ -89,7 +89,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
       if (route.asPath.includes('alterar') && selectedCustomer) {
         data.recommendations_attributes = [
           {
-            id: workForm.data.attributes.recommendations[0].id,
+            id: workForm.data.attributes.recommendations?.[0]?.id,
             profile_customer_id: selectedCustomer.id,
             percentage: `${percentage}`,
             commission: commission
@@ -167,31 +167,21 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
       if (attributes) {
         if (attributes.recommendations) {
-          if (attributes.recommendations[0].percentage) {
-            handlePercentage(attributes.recommendations[0].percentage);
-          }
+          handlePercentage(attributes.recommendations_attributes?.[0]?.percentage ?? '');
 
-          if (attributes.recommendations[0].commission) {
-            setCommission(
-              `R$ ${parseFloat(attributes.recommendations[0].commission)
-                .toFixed(2)
-                .replace('.', ',')
-                .replace(/\d(?=(\d{3})+,)/g, '$&.')}`,
-            );
-          }
+          setCommission(
+            `R$ ${parseFloat(attributes.recommendations?.[0]?.commission ?? 0)
+              .toFixed(2)
+              .replace('.', ',')
+              .replace(/\d(?=(\d{3})+,)/g, '$&.')}`,
+          );
 
-          if (attributes.recommendations[0].profile_customer_id) {
-            if (customersList.length === 0) {
-              return;
-            }
+          const customer = customersList.find(
+            customer => customer.id == attributes.recommendations?.[0]?.profile_customer_id,
+          );
 
-            const customer = customersList.find(
-              customer => customer.id == attributes.recommendations[0].profile_customer_id,
-            );
-
-            setCostumerId(customer?.id);
-            setSelectedCustomer(customer);
-          }
+          setCostumerId(customer?.id);
+          setSelectedCustomer(customer);
         }
       }
     };
@@ -216,9 +206,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
       if (data) {
         const parsedData = JSON.parse(data);
 
-        if (parsedData.recommendations_attributes[0].percentage) {
-          handlePercentage(parsedData.recommendations_attributes[0].percentage);
-        }
+        handlePercentage(parsedData.recommendations_attributes?.[0].percentage ?? '');
 
         if (parsedData.recommendations_attributes[0].commission) {
           setCommission(

@@ -71,7 +71,6 @@ interface IStepOneProps {
 
 const stepOneSchema = z.object({
   profile_customer_ids: z.array(z.string()).nonempty(),
-  number: z.string(),
   procedures: z.array(z.string()).nonempty(),
   subject: z.string().nonempty(),
 });
@@ -191,7 +190,6 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
     try {
       stepOneSchema.parse({
         profile_customer_ids: customerSelectedList.map(customer => customer.id),
-        number: processNumber,
         procedures: selectedProcedures,
         subject: selectedSubject,
       });
