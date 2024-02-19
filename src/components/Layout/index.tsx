@@ -40,6 +40,9 @@ import { Container, SelectContainer, Flex, MenuItem, CloseDropdown, TitleWrapper
 
 import Logo from '../../assets/logo-white.png';
 import Profile from '../../assets/Profile.png';
+import { getAllAdmins } from '@/services/admins';
+import { UserContext } from '@/contexts/UserContext';
+import { useSession } from 'next-auth/react';
 
 const drawerWidth = 224;
 
@@ -119,6 +122,7 @@ const Layout = ({ children }: ILayoutProps) => {
   const { asPath } = useRouter();
   const { handleLogout } = useContext(AuthContext);
   const { showTitle, pageTitle } = useContext(PageTitleContext);
+  const { data: session } = useSession();
 
   const supportsLocalStorage = typeof window !== 'undefined' && window.localStorage;
   const storedOpenSidebar = supportsLocalStorage ? localStorage.getItem('openSidebar') : null;
@@ -126,6 +130,7 @@ const Layout = ({ children }: ILayoutProps) => {
 
   const [openSidebar, setOpenSidebar] = useState(initialSidebarState);
   const [openUserMenu, setOpenUserMenu] = useState(false);
+  const [isUserCounter, setIsUserCounter] = useState(true);
 
   const handleDrawerOpen = () => {
     setOpenSidebar(true);
@@ -302,22 +307,24 @@ const Layout = ({ children }: ILayoutProps) => {
                 </MenuItem>
               </ActiveLink>
 
-              <ActiveLink href="/escritorios">
-                <MenuItem
-                  sx={{
-                    backgroundColor:
-                      asPath === '/escritorios' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                  }}
-                >
-                  <MdAccountBalance size={24} className="icon" />
-                  {openSidebar && (
-                    <>
-                      <Typography fontWeight="regular">{'Escritório'}</Typography>
-                      <MdOutlineArrowRight size={24} className="arrow" />
-                    </>
-                  )}
-                </MenuItem>
-              </ActiveLink>
+              {session?.role === 'counter' ? null : (
+                <ActiveLink href="/escritorios">
+                  <MenuItem
+                    sx={{
+                      backgroundColor:
+                        asPath === '/escritorios' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                    }}
+                  >
+                    <MdAccountBalance size={24} className="icon" />
+                    {openSidebar && (
+                      <>
+                        <Typography fontWeight="regular">{'Escritório'}</Typography>
+                        <MdOutlineArrowRight size={24} className="arrow" />
+                      </>
+                    )}
+                  </MenuItem>
+                </ActiveLink>
+              )}
 
               {/* <ActiveLink href="/reports">
                 <MenuItem

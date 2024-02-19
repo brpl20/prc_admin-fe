@@ -26,7 +26,7 @@ const UserRegisterTypesOptions = [
   { label: 'Paralegal', value: 'paralegal' },
   { label: 'Estagiário', value: 'trainee' },
   { label: 'Secretário(a)', value: 'secretary' },
-  { label: 'Contador(a)', value: 'excounter' },
+  { label: 'Contador(a)', value: 'counter' },
 ];
 
 const gendersOptions = [

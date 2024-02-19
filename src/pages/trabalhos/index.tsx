@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { withAuth } from '@/middleware/withAuth';
 import Link from 'next/link';
 
 import { getAllWorks } from '@/services/works';
@@ -401,4 +400,4 @@ const Works = () => {
   );
 };
 
-export default withAuth(Works);
+export default Works;

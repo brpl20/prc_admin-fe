@@ -1,6 +1,5 @@
 import React, { useContext, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { withAuth } from '@/middleware/withAuth';
 
 import dynamic from 'next/dynamic';
 import { Footer } from '@/components';
@@ -10,10 +9,13 @@ import User from '@/components/Registrations/user';
 import Office from '@/components/Registrations/office';
 import { workSteps, PFCustomerSteps, PJCustomerSteps } from '@/utils/constants';
 import Representative from '@/components/Registrations/customer/representative';
+import { useSession } from 'next-auth/react';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Registration = () => {
+  const { data: session } = useSession();
+
   const router = useRouter();
   const params = router.query.type;
 
@@ -23,7 +25,11 @@ const Registration = () => {
         <RegistrationScreen
           registrationType={'trabalho'}
           pageTitle={'Cadastro de Trabalho'}
-          titleSteps={workSteps}
+          titleSteps={
+            session?.role === 'counter'
+              ? ['Procedimento/Assunto', 'Honorários', 'Informações Adicionais']
+              : workSteps
+          }
         />
       )}
 
@@ -58,4 +64,4 @@ const Registration = () => {
   );
 };
 
-export default withAuth(Registration);
+export default Registration;

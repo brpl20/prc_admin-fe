@@ -1,6 +1,5 @@
 import React, { useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
-import { withAuth } from '@/middleware/withAuth';
 
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 
@@ -114,4 +113,4 @@ const Details = () => {
   );
 };
 
-export default withAuth(Details);
+export default Details;

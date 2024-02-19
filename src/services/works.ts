@@ -1,4 +1,4 @@
-import { api } from './api';
+import api from './api';
 
 const createWork = async (data: any) => {
   const payload = {

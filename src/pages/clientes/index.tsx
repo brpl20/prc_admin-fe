@@ -1,7 +1,6 @@
 import styles from './style.module.css';
 
 import React, { useEffect, useState, useContext } from 'react';
-import { withAuth } from '@/middleware/withAuth';
 import Router, { useRouter } from 'next/router';
 import Link from 'next/link';
 
@@ -42,6 +41,7 @@ import { ICustomerProps } from '@/interfaces/ICustomer';
 import { cnpjMask, cpfMask, phoneMask } from '@/utils/masks';
 
 import { CustomerContext } from '@/contexts/CustomerContext';
+import { getSession } from 'next-auth/react';
 
 const Customers = () => {
   const getRowClassName = (params: any) => {
@@ -434,4 +434,12 @@ const Customers = () => {
   );
 };
 
-export default withAuth(Customers);
+export default Customers;
+
+export const getServerSideProps = async (ctx: any) => {
+  const session = await getSession(ctx);
+
+  return {
+    props: {},
+  };
+};

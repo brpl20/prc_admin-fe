@@ -38,6 +38,7 @@ import WorkStepFour, { IRefWorkStepFourProps } from './work/four';
 import WorkStepFive, { IRefWorkStepFiveProps } from './work/five';
 import WorkStepSix, { IRefWorkStepSixProps } from './work/six';
 import ConfirmDownloadDocument from '../ConfirmDownloadDocument';
+import { useSession } from 'next-auth/react';
 
 interface IRegistrationProps {
   registrationType: string;
@@ -46,6 +47,8 @@ interface IRegistrationProps {
 }
 
 const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegistrationProps) => {
+  const { data: session } = useSession();
+
   const PFcustomerStepOneRef = useRef<IRefPFCustomerStepOneProps>(null);
   const PFcustomerStepTwoRef = useRef<IRefPFCustomerStepTwoProps>(null);
   const PFcustomerStepThreeRef = useRef<IRefPFCustomerStepThreeProps>(null);
@@ -78,7 +81,6 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [openDownloadModal, setOpenDownloadModal] = useState(false);
-  const [downloadDocument, setDownloadDocument] = useState(false);
   const [urlsDocuments, setUrlsDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -255,9 +257,18 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
 
         return;
       } catch (error: any) {
-        setMessage(error.response && error.response.data && error.response.data.name[0]);
-        setTypeMessage('error');
-        setOpenSnackbar(true);
+        const errorMessages = error?.response.data.errors || [];
+        errorMessages.forEach((message: { code: string }) => {
+          if (message.code) {
+            setMessage(message.code);
+            setTypeMessage('error');
+            setOpenSnackbar(true);
+          } else {
+            setMessage('Erro ao criar trabalho');
+            setTypeMessage('error');
+            setOpenSnackbar(true);
+          }
+        });
       }
     }
   };
@@ -289,20 +300,47 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
   const handleNext = () => {
     let newSkipped = skipped;
 
-    setActiveStep(activeStep + 1);
+    setActiveStep(prevActiveStep => {
+      if (
+        session?.role === 'counter' &&
+        router.asPath.includes('trabalho') &&
+        prevActiveStep === 5
+      ) {
+        return 5;
+      }
+      return prevActiveStep + 1;
+    });
 
     if (isStepSkipped(currentStep)) {
       newSkipped = new Set<number>(newSkipped.values());
       newSkipped.delete(currentStep);
     }
 
-    setCurrentStep(prevActiveStep => prevActiveStep + 1);
+    setCurrentStep(prevActiveStep => {
+      if (
+        session?.role === 'counter' &&
+        router.asPath.includes('trabalho') &&
+        prevActiveStep === 1
+      ) {
+        return 5;
+      }
+      return prevActiveStep + 1;
+    });
     setSkipped(newSkipped);
     scrollToTop();
   };
 
   const handleBack = () => {
-    setCurrentStep(prevActiveStep => prevActiveStep - 1);
+    setCurrentStep(prevActiveStep => {
+      if (
+        session?.role === 'counter' &&
+        router.asPath.includes('trabalho') &&
+        prevActiveStep === 5
+      ) {
+        return 1;
+      }
+      return prevActiveStep - 1;
+    });
     scrollToTop();
   };
 
@@ -314,7 +352,11 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
   };
 
   const handlePreviousStep = () => {
-    setActiveStep(activeStep - 1);
+    setActiveStep(prevActiveStep =>
+      session?.role === 'counter' && router.asPath.includes('trabalho') && prevActiveStep === 5
+        ? 1
+        : prevActiveStep - 1,
+    );
     handleBack();
   };
 
@@ -624,15 +666,15 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
 
                   {currentStep === 1 && <WorkStepTwo ref={workStepTwoRef} nextStep={handleNext} />}
 
-                  {currentStep === 2 && (
+                  {session?.role != 'counter' && currentStep === 2 && (
                     <WorkStepThree ref={workStepThreeRef} nextStep={handleNext} />
                   )}
 
-                  {currentStep === 3 && (
+                  {session?.role != 'counter' && currentStep === 3 && (
                     <WorkStepFour ref={workStepFourRef} nextStep={handleNext} />
                   )}
 
-                  {currentStep === 4 && (
+                  {session?.role != 'counter' && currentStep === 4 && (
                     <WorkStepFive ref={workStepFiveRef} nextStep={handleNext} />
                   )}
 
