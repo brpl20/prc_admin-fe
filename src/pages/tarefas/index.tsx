@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { withAuth } from '@/middleware/withAuth';
 
 import { getAllTasks } from '@/services/tasks';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
@@ -333,4 +332,4 @@ const Tasks = () => {
   );
 };
 
-export default withAuth(Tasks);
+export default Tasks;

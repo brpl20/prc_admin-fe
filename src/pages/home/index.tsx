@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { withAuth } from '@/middleware/withAuth';
 
 import { Container } from '@/styles/globals';
 import {} from 'react-icons/md';
@@ -31,4 +30,4 @@ const Home = () => {
   );
 };
 
-export default withAuth(Home);
+export default Home;

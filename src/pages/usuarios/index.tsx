@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { withAuth } from '@/middleware/withAuth';
 import Router from 'next/router';
 
 import { getAllAdmins } from '@/services/admins';
@@ -23,9 +22,12 @@ import { Footer } from '@/components';
 import { IAdminProps } from '@/interfaces/IAdmin';
 
 import dynamic from 'next/dynamic';
+import { getSession, useSession } from 'next-auth/react';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Admins = () => {
+  const { data: session } = useSession();
+
   const { showTitle, setShowTitle, setPageTitle } = useContext(PageTitleContext);
 
   const [searchFor, setSearchFor] = useState<string>('name');
@@ -140,26 +142,28 @@ const Admins = () => {
                     <MdSearch size={25} />
                   </Input>
                 </Box>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => {
-                    Router.push('/cadastrar?type=usuario');
-                  }}
-                  sx={{
-                    backgroundColor: colors.quartiary,
-                    color: colors.white,
-                    height: 36,
-                    '&:hover': {
-                      backgroundColor: colors.quartiaryHover,
-                    },
-                  }}
-                >
-                  <DescriptionText style={{ cursor: 'pointer' }} className="ml-8">
-                    {'Adicionar'}
-                  </DescriptionText>
-                  <MdOutlineAddCircle size={20} />
-                </Button>
+                {session?.role === 'counter' ? null : (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => {
+                      Router.push('/cadastrar?type=usuario');
+                    }}
+                    sx={{
+                      backgroundColor: colors.quartiary,
+                      color: colors.white,
+                      height: 36,
+                      '&:hover': {
+                        backgroundColor: colors.quartiaryHover,
+                      },
+                    }}
+                  >
+                    <DescriptionText style={{ cursor: 'pointer' }} className="ml-8">
+                      {'Adicionar'}
+                    </DescriptionText>
+                    <MdOutlineAddCircle size={20} />
+                  </Button>
+                )}
               </Box>
             </Box>
             <Box mt={'20px'} sx={{ height: 450 }}>
@@ -179,7 +183,7 @@ const Admins = () => {
                         ? 'Estagiário'
                         : admin.attributes.role === 'secretary'
                         ? 'Secretário(a)'
-                        : admin.attributes.role === 'excounter'
+                        : admin.attributes.role === 'counter'
                         ? 'Contador(a)'
                         : '',
                     name: `${admin.attributes.name} ${admin.attributes.last_name}`,
@@ -253,4 +257,12 @@ const Admins = () => {
   );
 };
 
-export default withAuth(Admins);
+export default Admins;
+
+export const getServerSideProps = async (ctx: any) => {
+  const session = await getSession(ctx);
+
+  return {
+    props: {},
+  };
+};

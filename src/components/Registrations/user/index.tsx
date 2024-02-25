@@ -40,6 +40,7 @@ import { IOfficeProps } from '@/interfaces/IOffice';
 import Router from 'next/router';
 import { cepMask, cpfMask } from '@/utils/masks';
 import { z } from 'zod';
+import { useSession } from 'next-auth/react';
 
 interface FormData {
   officeId: string;
@@ -101,6 +102,8 @@ const userSchema = z.object({
 });
 
 const User = ({ pageTitle, dataToEdit }: props) => {
+  const { data: session } = useSession();
+
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -529,8 +532,10 @@ const User = ({ pageTitle, dataToEdit }: props) => {
       setOfficesList(response.data);
     };
 
-    getOffices();
-  }, []);
+    if (session?.role != 'counter') {
+      getOffices();
+    }
+  }, [session]);
 
   useEffect(() => {
     const updateScrollPosition = () => {
@@ -908,31 +913,39 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                   {renderSelectField(
                     'Tipo do Usuário',
                     'role',
-                    UserRegisterTypesOptions,
+                    session?.role === 'counter'
+                      ? UserRegisterTypesOptions.filter(option => option.value === 'counter')
+                      : UserRegisterTypesOptions,
                     !!errors.userType,
                   )}
-                  <Flex style={{ flexDirection: 'column', flex: 1 }}>
-                    <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                      {'Escritório'}
-                    </Typography>
+                  {session?.role != 'counter' && (
+                    <Flex style={{ flexDirection: 'column', flex: 1 }}>
+                      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+                        {'Escritório'}
+                      </Typography>
 
-                    <Autocomplete
-                      disablePortal={true}
-                      autoComplete
-                      options={officesList}
-                      getOptionLabel={option =>
-                        option && option.attributes ? option.attributes.name : ''
-                      }
-                      renderInput={params => (
-                        <TextField placeholder="Selecione um Escritório" {...params} size="small" />
-                      )}
-                      noOptionsText="Nenhum Escritório Encontrado"
-                      onChange={(event, value) => {
-                        handleSelectedOffice(value);
-                      }}
-                      value={selectedOffice}
-                    />
-                  </Flex>
+                      <Autocomplete
+                        disablePortal={true}
+                        autoComplete
+                        options={officesList}
+                        getOptionLabel={option =>
+                          option && option.attributes ? option.attributes.name : ''
+                        }
+                        renderInput={params => (
+                          <TextField
+                            placeholder="Selecione um Escritório"
+                            {...params}
+                            size="small"
+                          />
+                        )}
+                        noOptionsText="Nenhum Escritório Encontrado"
+                        onChange={(event, value) => {
+                          handleSelectedOffice(value);
+                        }}
+                        value={selectedOffice}
+                      />
+                    </Flex>
+                  )}
                 </Flex>
               </Box>
             </Box>

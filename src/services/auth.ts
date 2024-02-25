@@ -1,4 +1,4 @@
-import { api } from './api';
+import api from './api';
 import { ISignInRequestData } from '@/interfaces/IAuth';
 
 const signInRequest = async (data: ISignInRequestData) => {

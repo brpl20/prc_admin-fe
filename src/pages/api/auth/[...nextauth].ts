@@ -1,5 +1,7 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { signInRequest } from '@/services/auth';
 
 interface GoogleProviderConfig {
   clientId: string;
@@ -7,22 +9,47 @@ interface GoogleProviderConfig {
 }
 
 export default NextAuth({
+  secret: process.env.NEXTAUTH_SECRET,
+
   providers: [
+    CredentialsProvider({
+      name: 'Credentials',
+      credentials: {
+        email: { label: 'E-mail', type: 'email' },
+        password: { label: 'Senha', type: 'password' },
+      },
+      async authorize(credentials): Promise<any> {
+        if (!credentials?.email || !credentials.password) return null;
+
+        const user = await signInRequest({
+          email: credentials.email,
+          password: credentials.password,
+        });
+
+        if (user) {
+          return user;
+        } else {
+          return null;
+        }
+      },
+    }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     } as GoogleProviderConfig),
   ],
   callbacks: {
-    async jwt({ token, account }) {
-      if (account) {
-        token.accessToken = account.access_token;
-      }
-      return token;
+    jwt: ({ token, user }) => {
+      return user ? { ...token, user } : token;
     },
-    async session({ session, token }: any) {
-      session.accessToken = token.accessToken;
+    session: ({ session, token }: any) => {
+      if (token?.user) {
+        return token.user;
+      }
       return session;
     },
+  },
+  session: {
+    maxAge: 60 * 60 * 24, // 24 hours
   },
 });

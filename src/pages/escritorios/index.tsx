@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { withAuth } from '@/middleware/withAuth';
-import Router from 'next/router';
+import Router, { useRouter } from 'next/router';
 
 import { getAllOffices } from '@/services/offices';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
+import { AuthContext } from '@/contexts/AuthContext';
 
 import {
   colors,
@@ -30,6 +30,8 @@ import dynamic from 'next/dynamic';
 import { Footer } from '@/components';
 import { IOfficeProps } from '@/interfaces/IOffice';
 import { cnpjMask } from '@/utils/masks';
+import { getAllAdmins } from '@/services/admins';
+import { getSession } from 'next-auth/react';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 interface IOfficesProps {
@@ -44,10 +46,13 @@ interface IOfficesProps {
 const Offices = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { showTitle, setShowTitle, setPageTitle } = useContext(PageTitleContext);
+  const { user } = useContext(AuthContext);
 
   const [searchFor, setSearchFor] = useState<string>('name');
   const [officesList, setOfficesList] = useState<IOfficeProps[]>([]);
   const [officesListFiltered, setOfficesListFiltered] = useState<IOfficeProps[]>([]);
+  const [userType, setUserType] = useState<string>('');
+  const router = useRouter();
 
   const getRowClassName = (params: any) => {
     return params.rowIndex % 2 === 0 ? 'even-row' : 'odd-row';
@@ -93,6 +98,24 @@ const Offices = () => {
   };
 
   useEffect(() => {
+    const getUserType = async () => {
+      const response = await getAllAdmins();
+      const admins = response.data;
+
+      const admin = admins.find((admin: any) => admin.attributes.email == user.email);
+
+      if (admin?.attributes?.role == 'counter') {
+        setUserType('counter');
+        router.push('/home');
+      }
+    };
+
+    if (user) {
+      getUserType();
+    }
+  }, [user, router]);
+
+  useEffect(() => {
     const getOffices = async () => {
       setIsLoading(true);
       const response = await getAllOffices();
@@ -101,8 +124,10 @@ const Offices = () => {
       setIsLoading(false);
     };
 
-    getOffices();
-  }, []);
+    if (userType && userType !== 'counter') {
+      getOffices();
+    }
+  }, [userType]);
 
   useEffect(() => {
     const updateScrollPosition = () => {
@@ -318,4 +343,21 @@ const Offices = () => {
   );
 };
 
-export default withAuth(Offices);
+export default Offices;
+
+export const getServerSideProps = async (ctx: any) => {
+  const session = await getSession(ctx);
+
+  if (session?.role === 'counter') {
+    return {
+      redirect: {
+        destination: '/home',
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
+};

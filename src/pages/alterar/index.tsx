@@ -1,6 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { withAuth } from '@/middleware/withAuth';
 
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { WorkContext } from '@/contexts/WorkContext';
@@ -116,4 +115,4 @@ const Registration = () => {
   );
 };
 
-export default withAuth(Registration);
+export default Registration;
