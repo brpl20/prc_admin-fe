@@ -25,11 +25,7 @@ const Registration = () => {
         <RegistrationScreen
           registrationType={'trabalho'}
           pageTitle={'Cadastro de Trabalho'}
-          titleSteps={
-            session?.role === 'counter'
-              ? ['Procedimento/Assunto', 'Honorários', 'Informações Adicionais']
-              : workSteps
-          }
+          titleSteps={workSteps}
         />
       )}
 
@@ -55,7 +51,7 @@ const Registration = () => {
         <Representative pageTitle={'Cadastro de Representante'} />
       )}
 
-      {params === 'usuario' && <User pageTitle={'Cadastro de Usuário Pessoa Física'} />}
+      {params === 'usuario' && <User pageTitle={'Cadastro de Usuário'} />}
 
       {params === 'escritorio' && <Office pageTitle={'Cadastro de Escritório'} />}
 

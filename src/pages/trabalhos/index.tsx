@@ -1,3 +1,5 @@
+import { jwtDecode } from 'jwt-decode';
+
 import React, { useEffect, useState, useContext } from 'react';
 import Link from 'next/link';
 
@@ -24,6 +26,7 @@ import { Footer } from '@/components';
 import dynamic from 'next/dynamic';
 import Router from 'next/router';
 import { IAdminProps } from '@/interfaces/IAdmin';
+import { useSession } from 'next-auth/react';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Works = () => {
@@ -35,6 +38,18 @@ const Works = () => {
   const [worksList, setWorksList] = useState<IWorksListProps[]>([]);
   const [worksListListFiltered, setWorksListFiltered] = useState<IWorksListProps[]>([]);
   const [allLawyers, SetAllLawyers] = useState<any>([]);
+  const [adminId, setAdminId] = useState<number>(0);
+
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if (session) {
+      const token: any = jwtDecode(session.token);
+      if (token) {
+        setAdminId(token.admin_id);
+      }
+    }
+  }, [session]);
 
   const handleSearch = (search: string) => {
     const regex = new RegExp(search, 'i');
@@ -311,6 +326,7 @@ const Works = () => {
                       requestProcess: work.attributes.number,
                       responsible: responsible,
                       partner: partner,
+                      created_by_id: work.attributes.created_by_id,
                     };
                   })
                 }
@@ -330,12 +346,19 @@ const Works = () => {
                           cursor={'pointer'}
                           onClick={() => handleDetails(params.row)}
                         />
-                        <MdModeEdit
-                          size={22}
-                          color={colors.icons}
-                          cursor={'pointer'}
-                          onClick={() => handleEdit(params.row)}
-                        />
+                        <button
+                          style={{
+                            backgroundColor: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                          }}
+                          disabled={params.row.created_by_id !== adminId}
+                          onClick={() => {
+                            handleEdit(params.row);
+                          }}
+                        >
+                          <MdModeEdit size={22} color={colors.icons} cursor={'pointer'} />
+                        </button>
                         <MdArchive size={22} color={colors.icons} cursor={'pointer'} />
                       </Box>
                     ),

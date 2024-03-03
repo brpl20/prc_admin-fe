@@ -120,7 +120,7 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
   };
 
   const handleFormError = (error: any) => {
-    const newErrors = error.formErrors.fieldErrors;
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
     setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
@@ -131,7 +131,6 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
         errorObject[field] = newErrors[field][0] as string;
       }
     }
-
     setErrors(errorObject);
   };
 

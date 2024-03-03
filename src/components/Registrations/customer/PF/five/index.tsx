@@ -95,7 +95,7 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
   }));
 
   const handleFormError = (error: any) => {
-    const newErrors = error.formErrors.fieldErrors;
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
     setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
@@ -106,7 +106,6 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
         errorObject[field] = newErrors[field][0] as string;
       }
     }
-
     setErrors(errorObject);
   };
 

@@ -32,6 +32,7 @@ import Notification from '../../Notification';
 import { MdClose } from 'react-icons/md';
 import { getAdmins } from '@/services/admins';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 
 interface FormData {
   description: string;
@@ -53,6 +54,7 @@ const taskSchema = z.object({
 });
 
 const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
+  const { data: session } = useSession();
   const currentDate = dayjs();
   const router = useRouter();
 

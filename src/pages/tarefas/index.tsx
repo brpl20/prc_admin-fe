@@ -21,6 +21,8 @@ import { DataGrid } from '@mui/x-data-grid';
 
 import { Footer, TaskModal, ViewDetailsModal } from '@/components';
 import dynamic from 'next/dynamic';
+import { getSession, useSession } from 'next-auth/react';
+import { jwtDecode } from 'jwt-decode';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Tasks = () => {
@@ -34,6 +36,18 @@ const Tasks = () => {
   const [searchFor, setSearchFor] = useState<string>('description');
   const [tasksList, setTasksList] = useState<ITaskProps[]>([]);
   const [filteredTasksList, setFilteredTasksList] = useState<ITaskProps[]>([]);
+  const [adminId, setAdminId] = useState<number>(0);
+
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if (session) {
+      const token: any = jwtDecode(session.token);
+      if (token) {
+        setAdminId(token.admin_id);
+      }
+    }
+  }, [session]);
 
   const getRowClassName = (params: any) => {
     const status = params.row.status;
@@ -229,6 +243,7 @@ const Tasks = () => {
                         responsible: task.attributes.responsible,
                         priority: task.attributes.priority,
                         comment: task.attributes.comment,
+                        created_by_id: task.attributes.created_by_id,
                         deadline: format(new Date(task.attributes.deadline), 'dd MMMM yyyy'),
                         status:
                           task.attributes.status === 'pending'
@@ -253,11 +268,19 @@ const Tasks = () => {
                           cursor="pointer"
                           onClick={() => handleOpenToViewDetails(params.row)}
                         />
-                        <MdModeEdit
-                          size={20}
-                          cursor="pointer"
-                          onClick={() => handleOpenToEdit(params.row)}
-                        />
+                        <button
+                          style={{
+                            backgroundColor: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                          }}
+                          disabled={params.row.created_by_id !== adminId}
+                          onClick={() => {
+                            handleOpenToEdit(params.row);
+                          }}
+                        >
+                          <MdModeEdit size={22} color={colors.icons} cursor={'pointer'} />
+                        </button>
                       </Box>
                     ),
                   },
@@ -333,3 +356,20 @@ const Tasks = () => {
 };
 
 export default Tasks;
+
+export const getServerSideProps = async (ctx: any) => {
+  const session = await getSession(ctx);
+
+  if (session?.role === 'counter' || session?.role === 'secretary') {
+    return {
+      redirect: {
+        destination: '/home',
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
+};

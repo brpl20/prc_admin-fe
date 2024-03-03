@@ -15,6 +15,7 @@ interface IAttributesProps {
   administrative_services: string;
   responsible_lawyer: number;
   partner_lawyer: number;
+  created_by_id: number;
 
   laborite_areas: string;
   labor_claim: string;

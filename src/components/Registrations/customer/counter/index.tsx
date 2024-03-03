@@ -48,12 +48,7 @@ interface props {
 const counterSchema = z.object({
   name: z.string().nonempty('Nome é obrigatório'),
   last_name: z.string().nonempty('Sobrenome é obrigatório'),
-  gender: z.string().nonempty('Gênero é obrigatório'),
   accountant_id: z.string().nonempty('Registro Profissional é obrigatório'),
-  civil_status: z.string().nonempty('Estado Civil é obrigatório'),
-  capacity: z.string().nonempty('Capacidade é obrigatório'),
-  cpf: z.string().nonempty('CPF é obrigatório'),
-  rg: z.string().nonempty('RG é obrigatório'),
   phone_number: z.string().nonempty('Telefone Obrigatório'),
   email: z.string().nonempty('Email Obrigatório'),
 });
@@ -70,8 +65,6 @@ const Counter = ({ pageTitle }: props) => {
   const [message, setMessage] = useState('');
   const [type, setType] = useState<'success' | 'error'>('success');
   const [openSnackbar, setOpenSnackbar] = useState(false);
-
-  const [typeMessage, setTypeMessage] = useState<'success' | 'error'>('success');
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -221,17 +214,17 @@ const Counter = ({ pageTitle }: props) => {
       const data = {
         name: formData.name,
         last_name: formData.last_name,
-        gender: formData.gender,
+        gender: 'male',
         accountant_id: Number(formData.accountant_id),
         customer_type: 'counter',
         phones_attributes: contactData.phoneInputFields,
         emails_attributes: contactData.emailInputFields,
         capacity: 'able',
-        cpf: formData.cpf,
+        cpf: '0000000000',
         nationality: 'brazilian',
         profession: 'counter',
-        civil_status: formData.civil_status,
-        rg: formData.rg,
+        civil_status: 'single',
+        rg: '000000',
       };
 
       if (pageTitle.search('terar') !== -1) {
@@ -285,11 +278,20 @@ const Counter = ({ pageTitle }: props) => {
   };
 
   const handleFormError = (error: any) => {
-    const newErrors = error.formErrors.fieldErrors;
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
+    const codeErrors = error?.response?.data?.errors;
     setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
+
+    if (codeErrors && codeErrors.length > 0) {
+      codeErrors.forEach((error: any) => {
+        setMessage(error.code);
+        setType('error');
+        setOpenSnackbar(true);
+      });
+    }
 
     for (const field in newErrors) {
       if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
@@ -391,8 +393,12 @@ const Counter = ({ pageTitle }: props) => {
         });
 
         setContactData({
-          phoneInputFields: attributes.phones ? attributes.phones : [{ phone_number: '' }],
-          emailInputFields: attributes.emails ? attributes.emails : [{ email: '' }],
+          phoneInputFields:
+            attributes.phones && attributes.phones.length > 0
+              ? attributes.phones
+              : [{ phone_number: '' }],
+          emailInputFields:
+            attributes.emails && attributes.emails.length > 0 ? attributes.emails : [{ email: '' }],
         });
       }
     };
@@ -498,11 +504,6 @@ const Counter = ({ pageTitle }: props) => {
                     flex: 1,
                   }}
                 >
-                  <Flex style={{ gap: '24px' }}>
-                    {renderInputField('cpf', 'CPF', 'CPF do Contador', !!errors.cpf)}
-                    {renderInputField('rg', 'RG', 'RG do Contador', !!errors.rg)}
-                  </Flex>
-
                   <Flex
                     style={{
                       gap: '32px',
@@ -523,15 +524,6 @@ const Counter = ({ pageTitle }: props) => {
                       )}
                     </Box>
                   </Flex>
-                  <Box display={'flex'} gap={4} mt={'24px'}>
-                    {renderSelectField('Gênero', 'gender', gendersOptions, !!errors.gender)}
-                    {renderSelectField(
-                      'Estado Civil',
-                      'civil_status',
-                      civilStatusOptions,
-                      !!errors.civil_status,
-                    )}
-                  </Box>
                 </Flex>
               </Flex>
 

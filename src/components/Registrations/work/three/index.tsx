@@ -121,9 +121,7 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
       setLoading(false);
     };
 
-    if (session?.role != 'counter') {
-      getPowers();
-    }
+    getPowers();
   }, []);
 
   useEffect(() => {

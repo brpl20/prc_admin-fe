@@ -192,7 +192,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
   };
 
   const handleFormError = (error: any) => {
-    const newErrors = error.formErrors.fieldErrors;
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
     setMessage('Preencha todos os campos obrigatórios.');
     setType('error');

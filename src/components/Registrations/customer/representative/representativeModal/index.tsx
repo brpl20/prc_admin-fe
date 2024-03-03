@@ -403,64 +403,6 @@ const RepresentativeModal = ({
   };
 
   useEffect(() => {
-    const handleDataForm = () => {
-      const attributes = customerForm.data.attributes;
-
-      if (attributes) {
-        const name = attributes.name ? attributes.name : '';
-        const last_name = attributes.last_name ? attributes.last_name : '';
-        const cpf = attributes.cpf ? cpfMask(attributes.cpf) : '';
-        const rg = attributes.rg ? attributes.rg : '';
-        const gender = attributes.gender ? attributes.gender : '';
-        const civil_status = attributes.civil_status ? attributes.civil_status : '';
-        const nationality = attributes.nationality ? attributes.nationality : '';
-        const birth = attributes.birth ? attributes.birth.split('-').reverse().join('/') : '';
-        const represent_id =
-          attributes.represent && attributes.represent.representor_id
-            ? attributes.represent.representor_id
-            : '';
-
-        setFormData({
-          name: name,
-          represent_id: represent_id,
-          last_name: last_name,
-          CPF: cpf,
-          RG: rg,
-          gender: gender,
-          civil_status: civil_status,
-          nationality: nationality,
-          birth: birth,
-        });
-
-        const phones =
-          attributes.phones && attributes.phones.length > 0
-            ? attributes.phones
-            : [{ phone_number: '' }];
-
-        const emails =
-          attributes.emails && attributes.emails.length > 0 ? attributes.emails : [{ email: '' }];
-
-        setContactData({
-          phoneInputFields: phones,
-          emailInputFields: emails,
-        });
-
-        if (attributes.birth) {
-          setSelectedDate(dayjs(attributes.birth));
-        }
-
-        if (attributes.represent) {
-          handleCustomerChange('represent_id', attributes.represent.representor_id);
-        }
-      }
-    };
-
-    if (customerForm.data) {
-      handleDataForm();
-    }
-  }, [customerForm, customersList]);
-
-  useEffect(() => {
     const getAdmins = async () => {
       const response: {
         data: ICustomerProps[];

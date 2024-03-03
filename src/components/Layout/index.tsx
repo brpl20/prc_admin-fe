@@ -273,41 +273,45 @@ const Layout = ({ children }: ILayoutProps) => {
                 </MenuItem>
               </ActiveLink>
 
-              <ActiveLink href="/tarefas">
-                <MenuItem
-                  sx={{
-                    backgroundColor:
-                      asPath === '/tarefas' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                  }}
-                >
-                  <MdOutlineFormatListNumbered size={24} className="icon" />
-                  {openSidebar && (
-                    <>
-                      <Typography fontWeight="regular">{'Tarefas'}</Typography>
-                      <MdOutlineArrowRight size={24} className="arrow" />
-                    </>
-                  )}
-                </MenuItem>
-              </ActiveLink>
+              {session?.role === 'secretary' || session?.role === 'counter' ? null : (
+                <ActiveLink href="/tarefas">
+                  <MenuItem
+                    sx={{
+                      backgroundColor:
+                        asPath === '/tarefas' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                    }}
+                  >
+                    <MdOutlineFormatListNumbered size={24} className="icon" />
+                    {openSidebar && (
+                      <>
+                        <Typography fontWeight="regular">{'Tarefas'}</Typography>
+                        <MdOutlineArrowRight size={24} className="arrow" />
+                      </>
+                    )}
+                  </MenuItem>
+                </ActiveLink>
+              )}
 
-              <ActiveLink href="/usuarios">
-                <MenuItem
-                  sx={{
-                    backgroundColor:
-                      asPath === '/usuarios' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                  }}
-                >
-                  <MdPerson size={24} className="icon" />
-                  {openSidebar && (
-                    <>
-                      <Typography fontWeight="regular">{'Usuários'}</Typography>
-                      <MdOutlineArrowRight size={24} className="arrow" />
-                    </>
-                  )}
-                </MenuItem>
-              </ActiveLink>
+              {session?.role === 'counter' || session?.role === 'secretary' ? null : (
+                <ActiveLink href="/usuarios">
+                  <MenuItem
+                    sx={{
+                      backgroundColor:
+                        asPath === '/usuarios' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                    }}
+                  >
+                    <MdPerson size={24} className="icon" />
+                    {openSidebar && (
+                      <>
+                        <Typography fontWeight="regular">{'Usuários'}</Typography>
+                        <MdOutlineArrowRight size={24} className="arrow" />
+                      </>
+                    )}
+                  </MenuItem>
+                </ActiveLink>
+              )}
 
-              {session?.role === 'counter' ? null : (
+              {session?.role === 'counter' || session?.role === 'secretary' ? null : (
                 <ActiveLink href="/escritorios">
                   <MenuItem
                     sx={{

@@ -16,6 +16,7 @@ import { getAllBanks } from '@/services/brasilAPI';
 import { Box, TextField, Typography, Autocomplete } from '@mui/material';
 import { Notification } from '@/components';
 import { z } from 'zod';
+import { useSession } from 'next-auth/react';
 
 export interface IRefPFCustomerStepFourProps {
   handleSubmitForm: () => void;
@@ -46,6 +47,7 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
   { nextStep, editMode },
   ref,
 ) => {
+  const { data: session } = useSession();
   const [errors, setErrors] = useState({} as any);
   const [bankList, setBankList] = useState([] as any[]);
   const [selectedBank, setSelectedBank] = useState(null);
@@ -106,7 +108,7 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
   };
 
   const handleFormError = (error: any) => {
-    const newErrors = error.formErrors.fieldErrors;
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
     setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
@@ -117,7 +119,6 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
         errorObject[field] = newErrors[field][0] as string;
       }
     }
-
     setErrors(errorObject);
   };
 
@@ -196,19 +197,37 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
       </Typography>
-      <TextField
-        id="outlined-basic"
-        variant="outlined"
-        fullWidth
-        name={name}
-        size="small"
-        sx={{ flex: 1 }}
-        value={formData[name] ? formData[name] : ''}
-        autoComplete="off"
-        error={error && !formData[name]}
-        placeholder={`${placeholderValue}`}
-        onChange={handleInputChange}
-      />
+      {(!editMode || session?.role !== 'trainee') && (
+        <TextField
+          id="outlined-basic"
+          variant="outlined"
+          fullWidth
+          name={name}
+          size="small"
+          sx={{ flex: 1 }}
+          value={formData[name] ? formData[name] : ''}
+          autoComplete="off"
+          error={error && !formData[name]}
+          placeholder={`${placeholderValue}`}
+          onChange={handleInputChange}
+          disabled={editMode && session?.role === 'secretary'}
+        />
+      )}
+      {editMode && session?.role === 'trainee' && (
+        <TextField
+          id="outlined-basic"
+          variant="outlined"
+          fullWidth
+          name={name}
+          size="small"
+          sx={{ flex: 1 }}
+          autoComplete="off"
+          error={error && !formData[name]}
+          placeholder={`${placeholderValue}`}
+          onChange={handleInputChange}
+          disabled={true}
+        />
+      )}
     </Flex>
   );
 
@@ -307,10 +326,11 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
           <Autocomplete
             limitTags={1}
             id="multiple-limit-tags"
-            value={selectedBank ? selectedBank : ''}
+            value={!editMode || session?.role !== 'trainee' ? selectedBank : null}
             options={bankList}
             getOptionLabel={option => (option.name ? option.name : '')}
             onChange={handleBankChange}
+            disabled={editMode && session?.role === 'secretary'}
             renderInput={params => (
               <TextField
                 placeholder="Selecione um Banco"

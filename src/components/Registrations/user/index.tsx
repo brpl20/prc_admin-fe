@@ -99,6 +99,11 @@ const userSchema = z.object({
   account: z.string().nonempty({ message: 'O campo Conta é obrigatório.' }),
   pix: z.string().nonempty({ message: 'O campo Chave Pix é obrigatório.' }),
   userEmail: z.string().nonempty({ message: 'O campo E-mail é obrigatório.' }),
+  city: z.string().nonempty({ message: 'O campo Cidade é obrigatório.' }),
+  state: z.string().nonempty({ message: 'O campo Estado é obrigatório.' }),
+  address: z.string().nonempty({ message: 'O campo Endereço é obrigatório.' }),
+  number: z.number().min(1, { message: 'O campo Número é obrigatório.' }),
+  cep: z.string().nonempty({ message: 'O campo CEP é obrigatório.' }),
 });
 
 const User = ({ pageTitle, dataToEdit }: props) => {
@@ -126,7 +131,16 @@ const User = ({ pageTitle, dataToEdit }: props) => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
 
-  const [formData, setFormData] = useState<FormData>({} as FormData);
+  const [formData, setFormData] = useState<FormData>({
+    officeId: '',
+    name: '',
+    last_name: '',
+    cpf: '',
+    rg: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  } as FormData);
   const [contactData, setContactData] = useState({
     phoneInputFields: [{ phone_number: '' }],
     emailInputFields: [{ email: '' }],
@@ -178,9 +192,23 @@ const User = ({ pageTitle, dataToEdit }: props) => {
       const newInputFields = [...prevData[inputArrayName]];
 
       if (inputArrayName === 'phoneInputFields') {
-        newInputFields[index] = { phone_number: value };
+        if (newInputFields[index]) {
+          newInputFields[index] = {
+            ...newInputFields[index],
+            phone_number: value,
+          };
+        } else {
+          newInputFields.push({ phone_number: value });
+        }
       } else if (inputArrayName === 'emailInputFields') {
-        newInputFields[index] = { email: value };
+        if (newInputFields[index]) {
+          newInputFields[index] = {
+            ...newInputFields[index],
+            email: value,
+          };
+        } else {
+          newInputFields.push({ email: value });
+        }
       }
 
       return {
@@ -213,6 +241,12 @@ const User = ({ pageTitle, dataToEdit }: props) => {
         pix: formData.pix,
         userEmail: formData.email,
         password: formData.password,
+        city: formData.city,
+        state: formData.state,
+        address: formData.address,
+        number: formData.number ? Number(formData.number) : '',
+        cep: formData.cep,
+        systemEmail: formData.email,
       });
 
       if (!isEditing && formData.password === '') {
@@ -295,12 +329,13 @@ const User = ({ pageTitle, dataToEdit }: props) => {
           role: formData.role,
           status: 'active',
           origin: formData.origin,
+          office_id: formData.officeId,
           addresses_attributes: [
             {
               description: formData.description,
               zip_code: formData.cep,
               street: formData.address,
-              number: formData.number,
+              number: formData.number ? Number(formData.number) : '',
               neighborhood: formData.neighborhood,
               city: formData.city,
               state: formData.state,
@@ -379,6 +414,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
         autoComplete="off"
         placeholder={`${placeholderText}`}
         onChange={handleInputChange}
+        type={name === 'number' ? 'number' : 'text'}
       />
     </Flex>
   );
@@ -582,9 +618,6 @@ const User = ({ pageTitle, dataToEdit }: props) => {
               pix: '',
             };
 
-        const phones = attributes.phones ? attributes.phones : [{ phone_number: '' }];
-        const emails = attributes.emails ? attributes.emails : [{ email: '' }];
-
         handleBankChange(bankAccounts.bank_name);
 
         setFormData({
@@ -623,8 +656,12 @@ const User = ({ pageTitle, dataToEdit }: props) => {
         setSelectedOffice(office as IOfficeProps);
 
         setContactData({
-          phoneInputFields: phones,
-          emailInputFields: emails,
+          phoneInputFields:
+            attributes.phones && attributes.phones.length > 0
+              ? attributes.phones
+              : [{ phone_number: '' }],
+          emailInputFields:
+            attributes.emails && attributes.emails.length > 0 ? attributes.emails : [{ email: '' }],
         });
 
         setSelectedDate(dayjs(attributes.birth));
@@ -776,12 +813,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                       {renderInputField('number', 'Número', 'N.º', !!errors.address)}
                     </Box>
                   </Flex>
-                  {renderInputField(
-                    'description',
-                    'Complemento',
-                    'Informe o Estado',
-                    !!errors.state,
-                  )}
+                  {renderInputField('description', 'Complemento', 'Informe o Complemento')}
                 </Box>
 
                 <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
@@ -820,6 +852,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                       }}
                     >
                       <TextField
+                        id="outlined-basic"
                         variant="outlined"
                         fullWidth
                         name="phone"
@@ -1016,7 +1049,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
 
             <Box style={{ flex: 1 }}>
               <Flex style={{ gap: '24px' }}>
-                {renderInputField('email', 'E-mail', 'Informe seu e-mail', !!errors.email)}
+                {renderInputField('email', 'E-mail', 'Informe seu e-mail', !!errors.userEmail)}
               </Flex>
 
               {!isEditing && (
@@ -1028,7 +1061,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                       </Typography>
                       <TextField
                         variant="outlined"
-                        error={errors.password}
+                        error={passwordIsValid}
                         fullWidth
                         name="password"
                         size="small"
