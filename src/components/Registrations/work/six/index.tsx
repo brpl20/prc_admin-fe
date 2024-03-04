@@ -24,18 +24,9 @@ import {
   Checkbox,
   TextField,
   TextareaAutosize,
-  List,
-  ListItem,
-  Autocomplete,
-  Select,
-  FormControl,
-  InputLabel,
-  MenuItem,
 } from '@mui/material';
 import CustomTooltip from '@/components/Tooltip';
 import { useRouter } from 'next/router';
-import { getAllAdmins } from '@/services/admins';
-import { getAllCustomers } from '@/services/customers';
 
 export interface IRefWorkStepSixProps {
   handleSubmitForm: () => void;
@@ -57,40 +48,12 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
 
-  const arrayPendingDocuments = [
-    {
-      value: 'rg',
-      label: 'Documento de Identidade',
-    },
-    {
-      value: 'proof_of_address',
-      label: 'Comprovante de Residência',
-    },
-    {
-      value: 'inss_password',
-      label: 'Senha do Meu INSS',
-    },
-    {
-      value: 'medical_documents',
-      label: 'Documentos Médicos',
-    },
-    {
-      value: 'rural_documents',
-      label: 'Documentos Rurais',
-    },
-    {
-      value: 'copy_of_requirements',
-      label: 'Cópia de Requerimento(s)',
-    },
-  ];
   const [documentsProduced, setDocumentsProduced] = useState<string[]>([]);
   const [pendingDocuments, setPendingDocuments] = useState([] as any);
   const [gradesInGeneral, setGradesInGeneral] = useState<string>('');
   const [otherDocuments, setOtherDocuments] = useState<string>('');
   const [folder, setFolder] = useState('');
   const router = useRouter();
-  const [allCustomers, setAllCustomers] = useState([] as any);
-  const [filteredProfileCustomers, setFilteredProfileCustomers] = useState([] as any);
 
   const handleDocumentsProducedSelection = (event: ChangeEvent<HTMLInputElement>) => {
     const { value, checked } = event.target;
@@ -102,29 +65,20 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
     }
   };
 
-  const handleDocumentsPendingSelection = (customerId: string, document: any) => {
-    document.map((doc: any) => {
-      const pendingDocument = {
-        description: doc.value,
-        profile_customer_id: customerId,
+  const handleDocumentsPendingSelection = (event: ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = event.target;
+
+    if (checked) {
+      const document = {
+        description: value,
+        profile_customer_id: workForm.profile_customer_ids.toString(),
       };
-
-      const documentExists = pendingDocuments.some(
-        (doc: any) =>
-          doc.description === pendingDocument.description && doc.profile_customer_id === customerId,
+      setPendingDocuments((prevSelected: any) => [...prevSelected, document]);
+    } else {
+      setPendingDocuments((prevSelected: any) =>
+        prevSelected.filter((document: any) => document.description !== value),
       );
-
-      if (documentExists) {
-        const filteredDocuments = pendingDocuments.filter(
-          (doc: any) =>
-            doc.description !== pendingDocument.description ||
-            doc.profile_customer_id !== customerId,
-        );
-        setPendingDocuments(filteredDocuments);
-      } else {
-        setPendingDocuments([...pendingDocuments, pendingDocument] as any);
-      }
-    });
+    }
   };
 
   const handleSubmitForm = () => {
@@ -133,18 +87,10 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
         throw new Error('Selecione pelo menos um documento a ser produzido');
       }
 
-      let documentsProducedArray = [] as any;
-
-      workForm.profile_customer_ids.map((profile: any) => {
-        documentsProducedArray = documentsProducedArray.concat(
-          documentsProduced.map((document: any) => {
-            return {
-              document_type: document,
-              profile_customer_id: profile,
-            };
-          }),
-        );
-      });
+      const transformObjects = documentsProduced.map(document => ({
+        document_type: document,
+        profile_customer_id: workForm.profile_customer_ids.toString(),
+      }));
 
       let data = {};
 
@@ -154,12 +100,14 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
             return {
               id: document.id,
               document_type: document.document_type,
+              profile_customer_id: workForm.profile_customer_ids.toString(),
               url: document.url,
             };
           } else {
             if (typeof document === 'string') {
               return {
                 document_type: document,
+                profile_customer_id: workForm.profile_customer_ids.toString(),
               };
             }
           }
@@ -176,7 +124,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
       } else {
         data = {
           ...workForm,
-          documents_attributes: documentsProducedArray,
+          documents_attributes: transformObjects,
           pending_documents_attributes: pendingDocuments,
           extra_pending_document: otherDocuments,
           folder: folder,
@@ -207,17 +155,6 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
     handleSubmitForm,
   }));
 
-  const getCustomers = async () => {
-    const response: {
-      data: any;
-    } = await getAllCustomers();
-    setAllCustomers(response.data);
-  };
-
-  useEffect(() => {
-    getCustomers();
-  }, []);
-
   useEffect(() => {
     const handleDraftWork = () => {
       const draftWork = workForm.draftWork;
@@ -235,7 +172,9 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
           }
 
           if (attributes.pending_documents) {
-            setPendingDocuments(attributes.pending_documents);
+            const pending_documents = attributes.pending_documents.map((document: any) => document);
+
+            setPendingDocuments(pending_documents);
           }
         }
       }
@@ -264,7 +203,9 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
         }
 
         if (attributes.pending_documents) {
-          setPendingDocuments(attributes.pending_documents);
+          const pending_documents = attributes.pending_documents.map((document: any) => document);
+
+          setPendingDocuments(pending_documents);
         }
       }
     };
@@ -310,16 +251,6 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
     verifyDataLocalStorage();
   }, []);
 
-  useEffect(() => {
-    const filteredCustomersArray = workForm.profile_customer_ids.map((profile: any) => {
-      return allCustomers.filter((admin: any) => admin.id == profile);
-    });
-
-    const filteredCustomers = [].concat(...filteredCustomersArray);
-
-    setFilteredProfileCustomers(filteredCustomers);
-  }, [allCustomers, workForm]);
-
   return (
     <Container>
       {openSnackbar && (
@@ -337,11 +268,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
             flexDirection: 'column',
           }}
         >
-          <Flex
-            style={{
-              flexDirection: 'column',
-            }}
-          >
+          <Flex>
             {/* Documents Produced */}
             <Box mr={'32px'}>
               <Flex
@@ -437,184 +364,305 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                     marginRight: '0px',
                   }}
                 />
+
+                {/* <FormControlLabel
+                  control={
+                    <Checkbox
+                      value="termOfResidence"
+                      checked={
+                        documentsProduced.includes('termOfResidence') ||
+                        documentsProduced
+                          .map((document: any) => document.document_type)
+                          .includes('termOfResidence')
+                      }
+                      onChange={handleDocumentsProducedSelection}
+                    />
+                  }
+                  label="Termo de Residência"
+                  style={{
+                    marginRight: '0px',
+                  }}
+                /> */}
+                {/* 
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      value="ruralDeclaration"
+                      checked={
+                        documentsProduced.includes('ruralDeclaration') ||
+                        documentsProduced
+                          .map((document: any) => document.document_type)
+                          .includes('ruralDeclaration')
+                      }
+                      onChange={handleDocumentsProducedSelection}
+                    />
+                  }
+                  label="Declaração Rural"
+                  style={{
+                    marginRight: '0px',
+                  }}
+                /> */}
               </Flex>
             </Box>
 
-            <Flex
-              style={{
-                flexDirection: 'column',
-                gap: '40px',
-              }}
-            >
-              {filteredProfileCustomers.map((customer: any) => {
-                return (
-                  <Flex
-                    key={customer.id}
-                    style={{
-                      flexDirection: 'column',
-                    }}
+            {/* Pending Documents */}
+            <Box>
+              <Flex
+                style={{
+                  marginBottom: '8px',
+                }}
+              >
+                <Flex
+                  style={{
+                    alignItems: 'center',
+                  }}
+                >
+                  <Typography
+                    display={'flex'}
+                    alignItems={'center'}
+                    variant="h6"
+                    style={{ height: '40px' }}
                   >
-                    <Flex
+                    {'Documentos Pendentes'}
+                  </Typography>
+                  <CustomTooltip
+                    title="Lista de documentos que o cliente deve fornecer ao escritório. Fique atento e notifique o cliente caso estes documentos não sejam entregues ao escritório."
+                    placement="right"
+                  >
+                    <span
                       style={{
-                        marginTop: '16px',
-                        flexDirection: 'column',
-                        marginBottom: '20px',
+                        display: 'flex',
                       }}
                     >
-                      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                        {`Cliente`}
-                      </Typography>
+                      <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
+                    </span>
+                  </CustomTooltip>
 
-                      <span>{customer.attributes.name}</span>
-                    </Flex>
+                  {errors.pending_documents_attributes && pendingDocuments.length <= 0 && (
+                    <label className="flagError">{'*'}</label>
+                  )}
+                </Flex>
+              </Flex>
 
-                    <Flex
-                      style={{
-                        gap: '20px',
-                      }}
-                    >
-                      <Box flexDirection={'column'} width={'50%'}>
-                        <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                          {'Documentos Pendentes'}
-                        </Typography>
+              <Flex
+                style={{
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      value="rg"
+                      checked={
+                        pendingDocuments.includes('rg') ||
+                        pendingDocuments.map((document: any) => document.description).includes('rg')
+                      }
+                      onChange={handleDocumentsPendingSelection}
+                    />
+                  }
+                  label="Documento de Identidade"
+                />
 
-                        <Autocomplete
-                          multiple
-                          id="multiple-limit-tags"
-                          options={arrayPendingDocuments}
-                          getOptionLabel={option => option.label}
-                          filterSelectedOptions
-                          value={pendingDocuments
-                            .filter((doc: any) => doc.profile_customer_id == customer.id)
-                            .map((doc: any) => {
-                              return arrayPendingDocuments.find(
-                                (document: any) => document.value === doc.description,
-                              );
-                            })}
-                          onChange={(event: any, newValue: any) => {
-                            handleDocumentsPendingSelection(customer.id, newValue);
-                          }}
-                          renderInput={params => (
-                            <TextField
-                              placeholder="Selecione um ou mais documentos pendentes"
-                              {...params}
-                              size="small"
-                              variant="outlined"
-                            />
-                          )}
-                          noOptionsText="Nenhum documento pendente"
-                          sx={{
-                            '& .MuiAutocomplete-tag': {
-                              height: '22px',
-                              fontSize: '12px',
-                            },
-                          }}
-                        />
-                      </Box>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      value="proof_of_address"
+                      checked={
+                        pendingDocuments.includes('proof_of_address') ||
+                        pendingDocuments
+                          .map((document: any) => document.description)
+                          .includes('proof_of_address')
+                      }
+                      onChange={handleDocumentsPendingSelection}
+                    />
+                  }
+                  label="Comprovante de Residência"
+                />
 
-                      <Box flexDirection={'column'} width={'50%'}>
-                        <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                          {'Outros Documentos Pendentes ou Pendências'}
-                        </Typography>
-                        <InputContainer>
-                          <TextField
-                            label="Documento ou Pendência"
-                            id="outlined-basic"
-                            autoComplete="off"
-                            variant="outlined"
-                            size="small"
-                            style={{ width: '100%' }}
-                            onChange={e => setOtherDocuments(e.target.value)}
-                            value={otherDocuments}
-                          />
-                        </InputContainer>
-                      </Box>
-                    </Flex>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      value="inss_password"
+                      checked={
+                        pendingDocuments.includes('inss_password') ||
+                        pendingDocuments
+                          .map((document: any) => document.description)
+                          .includes('inss_password')
+                      }
+                      onChange={handleDocumentsPendingSelection}
+                    />
+                  }
+                  label="Senha do Meu INSS"
+                  style={{
+                    marginRight: '0px',
+                  }}
+                />
 
-                    {/* Other Documents */}
-                    <Box mt={'16px'} display={'flex'} gap={'20px'}>
-                      <Box flexDirection={'column'} flex={1}>
-                        <Flex style={{ flexDirection: 'column' }}>
-                          <Flex
-                            style={{
-                              alignItems: 'center',
-                            }}
-                          >
-                            <Typography display={'flex'} alignItems={'center'} variant="h6">
-                              {'Pasta'}
-                            </Typography>
-                            <CustomTooltip title="Pasta do Cliente." placement="right">
-                              <span
-                                style={{
-                                  display: 'flex',
-                                }}
-                              >
-                                <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
-                              </span>
-                            </CustomTooltip>
-                          </Flex>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      value="medical_documents"
+                      checked={
+                        pendingDocuments.includes('medical_documents') ||
+                        pendingDocuments
+                          .map((document: any) => document.description)
+                          .includes('medical_documents')
+                      }
+                      onChange={handleDocumentsPendingSelection}
+                    />
+                  }
+                  label="Documentos Médicos"
+                  style={{
+                    marginRight: '0px',
+                  }}
+                />
 
-                          <InputContainer>
-                            <TextField
-                              label="Nome da Pasta"
-                              id="outlined-basic"
-                              autoComplete="off"
-                              variant="outlined"
-                              size="small"
-                              style={{ width: '100%' }}
-                              onChange={e => setFolder(e.target.value)}
-                              value={folder}
-                            />
-                          </InputContainer>
-                        </Flex>
-                      </Box>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      value="rural_documents"
+                      checked={
+                        pendingDocuments.includes('rural_documents') ||
+                        pendingDocuments
+                          .map((document: any) => document.description)
+                          .includes('rural_documents')
+                      }
+                      onChange={handleDocumentsPendingSelection}
+                    />
+                  }
+                  label="Documentos Rurais"
+                  style={{
+                    marginRight: '0px',
+                  }}
+                />
 
-                      <Box flex={1}>
-                        <Flex
-                          style={{
-                            alignItems: 'center',
-                          }}
-                        >
-                          <Typography display={'flex'} alignItems={'center'} variant="h6">
-                            {'Notas em Geral Sobre o Caso'}
-                          </Typography>
-                          <CustomTooltip
-                            title="Notas, entrevista com o cliente e informações úteis para o desenvolvimento do caso para a equipe."
-                            placement="right"
-                          >
-                            <span
-                              style={{
-                                display: 'flex',
-                              }}
-                            >
-                              <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
-                            </span>
-                          </CustomTooltip>
-                        </Flex>
-
-                        <TextareaAutosize
-                          style={{
-                            width: '100%',
-                            height: '40px',
-                            resize: 'none',
-                            padding: '4px',
-                            font: 'inherit',
-                            borderRadius: '4px',
-                            border: '1px solid #c5c5c5',
-                          }}
-                          value={gradesInGeneral}
-                          onChange={e => setGradesInGeneral(e.target.value)}
-                          className="comment-input"
-                        />
-                      </Box>
-                    </Box>
-                  </Flex>
-                );
-              })}
-            </Flex>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      value="copy_of_requirements"
+                      checked={
+                        pendingDocuments.includes('copy_of_requirements') ||
+                        pendingDocuments
+                          .map((document: any) => document.description)
+                          .includes('copy_of_requirements')
+                      }
+                      onChange={handleDocumentsPendingSelection}
+                    />
+                  }
+                  label="Cópia de Requerimento(s)"
+                  style={{
+                    marginRight: '0px',
+                  }}
+                />
+              </Flex>
+            </Box>
           </Flex>
         </Flex>
       </>
+      {/* Other Documents */}
+      <Box mt={'16px'} display={'flex'} justifyContent={'space-between'} gap={'16px'}>
+        <Box flexDirection={'column'} flex={1}>
+          <Box flexDirection={'column'}>
+            <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+              {'Outros Documentos Pendentes ou Pendências'}
+            </Typography>
+            <InputContainer>
+              <TextField
+                label="Documento ou Pendência"
+                id="outlined-basic"
+                autoComplete="off"
+                variant="outlined"
+                size="small"
+                style={{ width: '100%' }}
+                onChange={e => setOtherDocuments(e.target.value)}
+                value={otherDocuments}
+              />
+            </InputContainer>
+          </Box>
+
+          <Flex style={{ marginTop: '16px', flexDirection: 'column' }}>
+            <Flex
+              style={{
+                alignItems: 'center',
+              }}
+            >
+              <Typography
+                display={'flex'}
+                alignItems={'center'}
+                variant="h6"
+                style={{ height: '40px' }}
+              >
+                {'Pasta'}
+              </Typography>
+              <CustomTooltip title="Pasta do Cliente." placement="right">
+                <span
+                  style={{
+                    display: 'flex',
+                  }}
+                >
+                  <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
+                </span>
+              </CustomTooltip>
+            </Flex>
+
+            <InputContainer>
+              <TextField
+                label="Nome da Pasta"
+                id="outlined-basic"
+                autoComplete="off"
+                variant="outlined"
+                size="small"
+                style={{ width: '100%' }}
+                onChange={e => setFolder(e.target.value)}
+                value={folder}
+              />
+            </InputContainer>
+          </Flex>
+        </Box>
+
+        <Box flex={1}>
+          <Flex
+            style={{
+              alignItems: 'center',
+            }}
+          >
+            <Typography
+              display={'flex'}
+              alignItems={'center'}
+              variant="h6"
+              style={{ height: '40px' }}
+            >
+              {'Notas em Geral Sobre o Caso'}
+            </Typography>
+            <CustomTooltip
+              title="Notas, entrevista com o cliente e informações úteis para o desenvolvimento do caso para a equipe."
+              placement="right"
+            >
+              <span
+                style={{
+                  display: 'flex',
+                }}
+              >
+                <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
+              </span>
+            </CustomTooltip>
+          </Flex>
+
+          <TextareaAutosize
+            style={{
+              width: '100%',
+              height: '136px',
+              resize: 'none',
+              padding: '4px',
+              font: 'inherit',
+            }}
+            value={gradesInGeneral}
+            onChange={e => setGradesInGeneral(e.target.value)}
+            className="comment-input"
+          />
+        </Box>
+      </Box>
     </Container>
   );
 };
