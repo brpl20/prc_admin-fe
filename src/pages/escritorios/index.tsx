@@ -19,7 +19,6 @@ import {
   MdSearch,
   MdVisibility,
   MdModeEdit,
-  MdArchive,
   MdGavel,
 } from 'react-icons/md';
 
@@ -284,8 +283,6 @@ const Offices = () => {
                           cursor={'pointer'}
                           onClick={() => handleEdit(params.row)}
                         />
-                        <MdGavel size={22} color={colors.icons} />
-                        <MdArchive size={22} color={colors.icons} />
                       </Box>
                     ),
                   },

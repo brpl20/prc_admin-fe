@@ -17,7 +17,7 @@ import {
   Container,
   ContentContainer,
 } from '@/styles/globals';
-import { MdOutlineAddCircle, MdSearch, MdVisibility, MdModeEdit, MdArchive } from 'react-icons/md';
+import { MdOutlineAddCircle, MdSearch, MdVisibility, MdModeEdit } from 'react-icons/md';
 
 import { Box, Button, Typography, LinearProgress } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
@@ -359,7 +359,7 @@ const Works = () => {
                         >
                           <MdModeEdit size={22} color={colors.icons} cursor={'pointer'} />
                         </button>
-                        <MdArchive size={22} color={colors.icons} cursor={'pointer'} />
+                       
                       </Box>
                     ),
                   },

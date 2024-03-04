@@ -23,7 +23,6 @@ import {
   MdSearch,
   MdVisibility,
   MdModeEdit,
-  MdArchive,
   MdGavel,
   MdKeyboardArrowDown,
   MdKeyboardArrowRight,
@@ -420,8 +419,6 @@ const Customers = () => {
                           cursor={'pointer'}
                           onClick={() => handleEdit(params.row)}
                         />
-                        <MdGavel size={22} color={colors.icons} />
-                        <MdArchive size={22} color={colors.icons} />
                       </Box>
                     ),
                   },

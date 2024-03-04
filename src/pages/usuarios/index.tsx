@@ -13,7 +13,7 @@ import {
   ContentContainer,
 } from '@/styles/globals';
 
-import { MdOutlineAddCircle, MdSearch, MdModeEdit, MdArchive, MdVisibility } from 'react-icons/md';
+import { MdOutlineAddCircle, MdSearch, MdModeEdit, MdVisibility } from 'react-icons/md';
 
 import { Box, Button, Typography } from '@mui/material';
 import { DataGrid, GridRowParams } from '@mui/x-data-grid';
@@ -212,7 +212,6 @@ const Admins = () => {
                           cursor={'pointer'}
                           onClick={() => handleEdit(params.row)}
                         />
-                        <MdArchive size={22} color={colors.icons} />
                       </Box>
                     ),
                   },
