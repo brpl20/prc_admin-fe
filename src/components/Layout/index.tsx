@@ -43,6 +43,7 @@ import Profile from '../../assets/Profile.png';
 import { getAllAdmins } from '@/services/admins';
 import { UserContext } from '@/contexts/UserContext';
 import { useSession } from 'next-auth/react';
+import { jwtDecode } from 'jwt-decode';
 
 const drawerWidth = 224;
 
@@ -146,6 +147,17 @@ const Layout = ({ children }: ILayoutProps) => {
     }
   }, [openSidebar]);
 
+  const [adminId, setAdminId] = useState<number>(0);
+
+  useEffect(() => {
+    if (session) {
+      const token: any = jwtDecode(session.token);
+      if (token) {
+        setAdminId(token.admin_id);
+      }
+    }
+  }, [session]);
+
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
@@ -187,7 +199,7 @@ const Layout = ({ children }: ILayoutProps) => {
             </Flex>
             {openUserMenu && (
               <Flex className="selectItemsContainer">
-                <Link href={'/clientes'}>
+                <Link href={`/alterar?type=usuario&id=${adminId}`}>
                   <Box className={'item'}>
                     <AiOutlineUser size={20} />
                     <Typography variant="subtitle2"> {'Conta'} </Typography>
@@ -221,7 +233,7 @@ const Layout = ({ children }: ILayoutProps) => {
 
           <Flex color={colors.white} sx={{ width: '100%' }}>
             <Stack spacing="8" sx={{ width: '100%' }}>
-              <ActiveLink href="/home">
+              {/* <ActiveLink href="/home">
                 <MenuItem
                   sx={{
                     backgroundColor:
@@ -236,7 +248,7 @@ const Layout = ({ children }: ILayoutProps) => {
                     </>
                   )}
                 </MenuItem>
-              </ActiveLink>
+              </ActiveLink> */}
 
               <ActiveLink href="/clientes">
                 <MenuItem

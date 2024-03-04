@@ -762,7 +762,6 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                     sx={{ marginBottom: '8px' }}
                     style={{
                       color:
-                        selectedProcedures.length <= 0 &&
                         selectedArea === '' &&
                         selectedSubject !== 'others' &&
                         selectedSubject !== 'administrative_subject' &&

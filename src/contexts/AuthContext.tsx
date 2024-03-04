@@ -4,10 +4,10 @@ import { useSession } from 'next-auth/react';
 import jwt from 'jsonwebtoken';
 
 import { signInRequest, loginWithGoogle, logoutRequest } from '../services/auth';
-import { api } from '@/services/api';
 import Router from 'next/router';
 
 import { IAuthContextType, IUser, ISignInData } from '@/interfaces/IAuth';
+import api from '@/services/api';
 
 export const AuthContext = createContext({} as IAuthContextType);
 
@@ -30,7 +30,7 @@ export function AuthProvider({ children }: any) {
     setCookie(undefined, 'nextauth.isAuth', 'true');
     api.defaults.headers['Authorization'] = `Bearer ${token}`;
 
-    Router.push('/home');
+    Router.push('/clientes');
   };
 
   async function localAuthentication({ email, password }: ISignInData) {

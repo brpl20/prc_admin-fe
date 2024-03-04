@@ -63,7 +63,7 @@ const Home = () => {
       });
 
       if (response?.status === 200) {
-        router.push('/home');
+        router.push('/clientes');
       }
 
       if (response?.status === 401) {

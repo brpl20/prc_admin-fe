@@ -6,6 +6,7 @@ import { cnpjMask, cpfMask, rgMask } from '@/utils/masks';
 import { FiMinusCircle } from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
 import { Box, Button, CircularProgress } from '@mui/material';
+import { useSession } from 'next-auth/react';
 
 interface PersonalDataProps {
   id: string | string[];
@@ -63,6 +64,8 @@ interface PersonalData {
 }
 
 const PersonalData = ({ id, type }: PersonalDataProps) => {
+  const { data: session } = useSession();
+
   const [personalData, setPersonalData] = useState({} as PersonalData);
   const [personalDataIsOpen, setPersonalDataIsOpen] = useState(true);
   const [addressIsOpen, setAddressIsOpen] = useState(true);
@@ -1066,221 +1069,228 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
               }}
             >
               <>
-                <Flex
-                  style={{
-                    padding: '20px 32px 20px 32px',
-                    borderBottom: '1px solid #C0C0C0',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '22px',
-                      fontWeight: '500',
-                      color: '#344054',
-                    }}
-                  >
-                    Dados Bancários
-                  </span>
-                  <ButtonShowContact>
-                    {bankIsOpen ? (
-                      <FiMinusCircle
-                        size={24}
-                        color="#344054"
-                        onClick={() => setBankIsOpen(!bankIsOpen)}
-                      />
-                    ) : (
-                      <GoPlusCircle
-                        size={24}
-                        color="#344054"
-                        onClick={() => setBankIsOpen(!bankIsOpen)}
-                      />
-                    )}
-                  </ButtonShowContact>
-                </Flex>
-                {bankIsOpen && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '18px',
-                      paddingBottom: '20px',
-                    }}
-                  >
-                    <div
+                {session?.role != 'trainee' && (
+                  <>
+                    <Flex
                       style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: '18px',
-                        padding: '0 32px',
+                        padding: '20px 32px 20px 32px',
+                        borderBottom: '1px solid #C0C0C0',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
                       }}
                     >
-                      <Flex
+                      <span
                         style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '300px',
+                          fontSize: '22px',
+                          fontWeight: '500',
+                          color: '#344054',
                         }}
                       >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Banco
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {personalData.bank_accounts[0] && personalData.bank_accounts[0].bank_name
-                            ? personalData.bank_accounts[0].bank_name
-                            : 'Não Informado'}
-                        </span>
-                      </Flex>
-                      <Flex
+                        Dados Bancários
+                      </span>
+                      <ButtonShowContact>
+                        {bankIsOpen ? (
+                          <FiMinusCircle
+                            size={24}
+                            color="#344054"
+                            onClick={() => setBankIsOpen(!bankIsOpen)}
+                          />
+                        ) : (
+                          <GoPlusCircle
+                            size={24}
+                            color="#344054"
+                            onClick={() => setBankIsOpen(!bankIsOpen)}
+                          />
+                        )}
+                      </ButtonShowContact>
+                    </Flex>
+                    {bankIsOpen && (
+                      <div
                         style={{
+                          display: 'flex',
                           flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
+                          gap: '18px',
+                          paddingBottom: '20px',
                         }}
                       >
-                        <span
+                        <div
                           style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                            gap: '18px',
+                            padding: '0 32px',
                           }}
                         >
-                          Agência
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {personalData.bank_accounts[0] && personalData.bank_accounts[0].agency
-                            ? personalData.bank_accounts[0].agency
-                            : 'Não Informado'}
-                        </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Operação
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {personalData.bank_accounts[0] && personalData.bank_accounts[0].operation
-                            ? personalData.bank_accounts[0].operation
-                            : 'Não Informado'}
-                        </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Conta
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {personalData.bank_accounts[0] && personalData.bank_accounts[0].account
-                            ? personalData.bank_accounts[0].account
-                            : 'Não Informado'}
-                        </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      ></Flex>
-                    </div>
+                          <Flex
+                            style={{
+                              flexDirection: 'column',
+                              gap: '8px',
+                              alignItems: 'flex-start',
+                              width: '300px',
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: '#344054',
+                                fontSize: '20px',
+                                fontWeight: '500',
+                              }}
+                            >
+                              Banco
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '18px',
+                                color: '#344054',
+                                fontWeight: '400',
+                              }}
+                            >
+                              {personalData.bank_accounts[0] &&
+                              personalData.bank_accounts[0].bank_name
+                                ? personalData.bank_accounts[0].bank_name
+                                : 'Não Informado'}
+                            </span>
+                          </Flex>
+                          <Flex
+                            style={{
+                              flexDirection: 'column',
+                              gap: '8px',
+                              alignItems: 'flex-start',
+                              width: '220px',
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: '#344054',
+                                fontSize: '20px',
+                                fontWeight: '500',
+                              }}
+                            >
+                              Agência
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '18px',
+                                color: '#344054',
+                                fontWeight: '400',
+                              }}
+                            >
+                              {personalData.bank_accounts[0] && personalData.bank_accounts[0].agency
+                                ? personalData.bank_accounts[0].agency
+                                : 'Não Informado'}
+                            </span>
+                          </Flex>
+                          <Flex
+                            style={{
+                              flexDirection: 'column',
+                              gap: '8px',
+                              alignItems: 'flex-start',
+                              width: '220px',
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: '#344054',
+                                fontSize: '20px',
+                                fontWeight: '500',
+                              }}
+                            >
+                              Operação
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '18px',
+                                color: '#344054',
+                                fontWeight: '400',
+                              }}
+                            >
+                              {personalData.bank_accounts[0] &&
+                              personalData.bank_accounts[0].operation
+                                ? personalData.bank_accounts[0].operation
+                                : 'Não Informado'}
+                            </span>
+                          </Flex>
+                          <Flex
+                            style={{
+                              flexDirection: 'column',
+                              gap: '8px',
+                              alignItems: 'flex-start',
+                              width: '220px',
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: '#344054',
+                                fontSize: '20px',
+                                fontWeight: '500',
+                              }}
+                            >
+                              Conta
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '18px',
+                                color: '#344054',
+                                fontWeight: '400',
+                              }}
+                            >
+                              {personalData.bank_accounts[0] &&
+                              personalData.bank_accounts[0].account
+                                ? personalData.bank_accounts[0].account
+                                : 'Não Informado'}
+                            </span>
+                          </Flex>
+                          <Flex
+                            style={{
+                              flexDirection: 'column',
+                              gap: '8px',
+                              alignItems: 'flex-start',
+                              width: '220px',
+                            }}
+                          ></Flex>
+                        </div>
 
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: '18px',
-                        padding: '0 32px',
-                      }}
-                    >
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '300px',
-                        }}
-                      >
-                        <span
+                        <div
                           style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                            gap: '18px',
+                            padding: '0 32px',
                           }}
                         >
-                          Pix
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {personalData.bank_accounts[0] && personalData.bank_accounts[0].pix
-                            ? personalData.bank_accounts[0].pix
-                            : 'Não Informado'}
-                        </span>
-                      </Flex>
-                    </div>
-                  </div>
+                          <Flex
+                            style={{
+                              flexDirection: 'column',
+                              gap: '8px',
+                              alignItems: 'flex-start',
+                              width: '300px',
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: '#344054',
+                                fontSize: '20px',
+                                fontWeight: '500',
+                              }}
+                            >
+                              Pix
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '18px',
+                                color: '#344054',
+                                fontWeight: '400',
+                              }}
+                            >
+                              {personalData.bank_accounts[0] && personalData.bank_accounts[0].pix
+                                ? personalData.bank_accounts[0].pix
+                                : 'Não Informado'}
+                            </span>
+                          </Flex>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             </ContainerDetails>
