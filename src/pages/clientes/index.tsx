@@ -44,6 +44,29 @@ import { CustomerContext } from '@/contexts/CustomerContext';
 import { getSession } from 'next-auth/react';
 
 const Customers = () => {
+  const legend = [
+    {
+      id: 1,
+      name: 'Pessoa Jurídica',
+      color: '#29A74466',
+    },
+    {
+      id: 2,
+      name: 'Pessoa Física',
+      color: '#E83F5B66',
+    },
+    {
+      id: 3,
+      name: 'Contador',
+      color: '#FEC03233',
+    },
+    {
+      id: 4,
+      name: 'Representante Legal',
+      color: '#1D79FB66',
+    },
+  ];
+
   const getRowClassName = (params: any) => {
     return params.row.type === 'Pessoa Física'
       ? styles.physicalPerson
@@ -290,6 +313,33 @@ const Customers = () => {
                 </SelectContainer>
               </Box>
             </Box>
+            {
+              <Flex
+                style={{
+                  marginTop: '26px',
+                  gap: '40px',
+                }}
+              >
+                {legend.map((item, index) => (
+                  <Flex
+                    key={index}
+                    style={{
+                      gap: '10px',
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        backgroundColor: item.color,
+                      }}
+                    />
+                    <Typography variant="subtitle2">{item.name}</Typography>
+                  </Flex>
+                ))}
+              </Flex>
+            }
             <Box mt={'20px'} sx={{ height: 450 }}>
               <DataGrid
                 disableColumnMenu

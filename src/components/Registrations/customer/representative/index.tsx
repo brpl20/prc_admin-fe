@@ -37,7 +37,7 @@ import {
 import { animateScroll as scroll } from 'react-scroll';
 
 import Router, { useRouter } from 'next/router';
-import { cpfMask, rgMask } from '@/utils/masks';
+import { cepMask, cpfMask, rgMask } from '@/utils/masks';
 import { getAllAdmins } from '@/services/admins';
 import { IAdminProps } from '@/interfaces/IAdmin';
 import { z } from 'zod';
@@ -53,6 +53,13 @@ interface FormData {
   civil_status: string;
   nationality: string;
   birth: Dayjs | string;
+  cep: string;
+  street: string;
+  number: string;
+  description: string;
+  neighborhood: string;
+  city: string;
+  state: string;
 }
 
 interface props {
@@ -70,6 +77,13 @@ const representativeSchema = z.object({
   nationality: z.string().nonempty('Naturalidade é obrigatório'),
   phone_number: z.string().nonempty('Telefone Obrigatório'),
   email: z.string().nonempty('Email Obrigatório'),
+  cep: z.string().nonempty({ message: 'Preencha o campo CEP.' }),
+  street: z.string().nonempty({ message: 'Preencha o campo Endereço.' }),
+  number: z.string().nonempty({ message: 'Preencha o campo Número.' }),
+  description: z.string(),
+  neighborhood: z.string().nonempty({ message: 'Preencha o campo Bairro.' }),
+  city: z.string().nonempty({ message: 'Preencha o campo Cidade.' }),
+  state: z.string().nonempty({ message: 'Preencha o campo Estado.' }),
 });
 
 const Representative = ({ pageTitle }: props) => {
@@ -101,6 +115,13 @@ const Representative = ({ pageTitle }: props) => {
     civil_status: '',
     nationality: '',
     birth: currentDate,
+    cep: '',
+    street: '',
+    number: '',
+    description: '',
+    neighborhood: '',
+    city: '',
+    state: '',
   });
 
   const [contactData, setContactData] = useState({
@@ -119,6 +140,13 @@ const Representative = ({ pageTitle }: props) => {
       civil_status: '',
       nationality: '',
       birth: currentDate,
+      cep: '',
+      street: '',
+      number: '',
+      description: '',
+      neighborhood: '',
+      city: '',
+      state: '',
     });
     setContactData({
       phoneInputFields: [{ phone_number: '' }],
@@ -132,6 +160,14 @@ const Representative = ({ pageTitle }: props) => {
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
+
+    if (name === 'cep') {
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: cepMask(value),
+      }));
+      return;
+    }
 
     if (name === 'CPF') {
       setFormData(prevData => ({
@@ -238,6 +274,13 @@ const Representative = ({ pageTitle }: props) => {
         civil_status: formData.civil_status,
         phone_number: contactData.phoneInputFields[0].phone_number,
         email: contactData.emailInputFields[0].email,
+        cep: formData.cep,
+        street: formData.street,
+        number: formData.number,
+        neighborhood: formData.neighborhood,
+        city: formData.city,
+        state: formData.state,
+        description: formData.description,
       });
 
       if (route.pathname.includes('alterar')) {
@@ -259,6 +302,18 @@ const Representative = ({ pageTitle }: props) => {
             id: customerForm?.data?.attributes?.represent?.id,
             representor_id: formData.represent_id ? Number(formData.represent_id) : '',
           },
+          addresses_attributes: [
+            {
+              id: customerForm?.data?.attributes?.addresses[0]?.id ?? '',
+              zip_code: formData.cep.replace(/\D/g, ''),
+              street: formData.street,
+              number: formData.number,
+              description: formData.description,
+              neighborhood: formData.neighborhood,
+              city: formData.city,
+              state: formData.state,
+            },
+          ],
         };
 
         const id = customerForm.data.id;
@@ -285,6 +340,17 @@ const Representative = ({ pageTitle }: props) => {
           represent_attributes: {
             representor_id: formData.represent_id ? Number(formData.represent_id) : '',
           },
+          addresses_attributes: [
+            {
+              zip_code: formData.cep.replace(/\D/g, ''),
+              street: formData.street,
+              number: formData.number,
+              description: formData.description,
+              neighborhood: formData.neighborhood,
+              city: formData.city,
+              state: formData.state,
+            },
+          ],
         };
 
         const res = await completeRegistration(data);
@@ -436,14 +502,11 @@ const Representative = ({ pageTitle }: props) => {
         const civil_status = attributes.civil_status ? attributes.civil_status : '';
         const nationality = attributes.nationality ? attributes.nationality : '';
         const birth = attributes.birth ? attributes.birth.split('-').reverse().join('/') : '';
-        const represent_id =
-          attributes.represent && attributes.represent.representor_id
-            ? attributes.represent.representor_id
-            : '';
+        const represent_id = attributes.represent?.representor_id.toString() ?? '';
 
         setFormData({
           name: name,
-          represent_id: represent_id,
+          represent_id: represent_id.toString(),
           last_name: last_name,
           CPF: cpf,
           RG: rg,
@@ -451,19 +514,22 @@ const Representative = ({ pageTitle }: props) => {
           civil_status: civil_status,
           nationality: nationality,
           birth: birth,
+          cep: attributes.addresses[0]?.zip_code ?? '',
+          street: attributes.addresses[0]?.street ?? '',
+          number: attributes.addresses[0]?.number ?? '',
+          description: attributes.addresses[0]?.description ?? '',
+          neighborhood: attributes.addresses[0]?.neighborhood ?? '',
+          city: attributes.addresses[0]?.city ?? '',
+          state: attributes.addresses[0]?.state ?? '',
         });
 
-        const phones =
-          attributes.phones && attributes.phones.length > 0
-            ? attributes.phones
-            : [{ phone_number: '' }];
-
-        const emails =
-          attributes.emails && attributes.emails.length > 0 ? attributes.emails : [{ email: '' }];
-
         setContactData({
-          phoneInputFields: phones,
-          emailInputFields: emails,
+          phoneInputFields:
+            attributes.phones && attributes.phones.length > 0
+              ? attributes.phones
+              : [{ phone_number: '' }],
+          emailInputFields:
+            attributes.emails && attributes.emails.length > 0 ? attributes.emails : [{ email: '' }],
         });
 
         if (attributes.birth) {
@@ -471,7 +537,10 @@ const Representative = ({ pageTitle }: props) => {
         }
 
         if (attributes.represent) {
-          handleCustomerChange('represent_id', attributes.represent.representor_id);
+          handleCustomerChange(
+            'represent_id',
+            attributes.represent.representor_id.toString() ?? '',
+          );
         }
       }
     };
@@ -670,6 +739,45 @@ const Representative = ({ pageTitle }: props) => {
                       !!errors.civil_status,
                     )}
                   </Flex>
+                </Flex>
+              </Flex>
+
+              <Divider />
+
+              <Flex>
+                <Box width={'300px'}>
+                  <Typography variant="h6" sx={{ marginRight: 'auto' }}>
+                    {'Endereço'}
+                  </Typography>
+                </Box>
+
+                <Flex style={{ gap: '32px', flex: 1 }}>
+                  <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
+                    {renderInputField('cep', 'CEP', 'Informe o CEP', !!errors.cep)}
+                    <Flex style={{ gap: '16px' }}>
+                      {renderInputField(
+                        'street',
+                        'Endereço',
+                        'Informe o Endereço',
+
+                        !!errors.street,
+                      )}
+                      <Box maxWidth={'30%'}>
+                        {renderInputField('number', 'Número', 'N.º', !!errors.number)}
+                      </Box>
+                    </Flex>
+                    {renderInputField('description', 'Complemento', 'Informe o Estado')}
+                  </Box>
+                  <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
+                    {renderInputField(
+                      'neighborhood',
+                      'Bairro',
+                      'Informe o Estado',
+                      !!errors.neighborhood,
+                    )}
+                    {renderInputField('city', 'Cidade', 'Informe a Cidade', !!errors.city)}
+                    {renderInputField('state', 'Estado', 'Informe o Estado', !!errors.state)}
+                  </Box>
                 </Flex>
               </Flex>
 

@@ -11,6 +11,7 @@ interface IAttributesProps {
   responsible: string;
   work_number: number;
   customer?: string;
+  created_by_id: number;
 }
 
 interface IRelationshipsProps {

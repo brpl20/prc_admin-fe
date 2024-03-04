@@ -262,6 +262,15 @@ export default Admins;
 export const getServerSideProps = async (ctx: any) => {
   const session = await getSession(ctx);
 
+  if (session?.role === 'counter' || session?.role === 'secretary') {
+    return {
+      redirect: {
+        destination: '/home',
+        permanent: false,
+      },
+    };
+  }
+
   return {
     props: {},
   };

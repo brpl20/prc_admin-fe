@@ -124,9 +124,7 @@ const Offices = () => {
       setIsLoading(false);
     };
 
-    if (userType && userType !== 'counter') {
-      getOffices();
-    }
+    getOffices();
   }, [userType]);
 
   useEffect(() => {
@@ -348,7 +346,7 @@ export default Offices;
 export const getServerSideProps = async (ctx: any) => {
   const session = await getSession(ctx);
 
-  if (session?.role === 'counter') {
+  if (session?.role === 'counter' || session?.role === 'secretary') {
     return {
       redirect: {
         destination: '/home',

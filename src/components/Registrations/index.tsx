@@ -297,50 +297,70 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
     });
   };
 
+  // const handleNext = () => {
+  //   let newSkipped = skipped;
+
+  //   setActiveStep(prevActiveStep => {
+  //     if (
+  //       session?.role === 'counter' &&
+  //       router.asPath.includes('trabalho') &&
+  //       prevActiveStep === 5
+  //     ) {
+  //       return 5;
+  //     }
+  //     return prevActiveStep + 1;
+  //   });
+
+  //   if (isStepSkipped(currentStep)) {
+  //     newSkipped = new Set<number>(newSkipped.values());
+  //     newSkipped.delete(currentStep);
+  //   }
+
+  //   setCurrentStep(prevActiveStep => {
+  //     if (
+  //       session?.role === 'counter' &&
+  //       router.asPath.includes('trabalho') &&
+  //       prevActiveStep === 1
+  //     ) {
+  //       return 5;
+  //     }
+  //     return prevActiveStep + 1;
+  //   });
+  //   setSkipped(newSkipped);
+  //   scrollToTop();
+  // };
+
+  // const handleBack = () => {
+  //   setCurrentStep(prevActiveStep => {
+  //     if (
+  //       session?.role === 'counter' &&
+  //       router.asPath.includes('trabalho') &&
+  //       prevActiveStep === 5
+  //     ) {
+  //       return 1;
+  //     }
+  //     return prevActiveStep - 1;
+  //   });
+  //   scrollToTop();
+  // };
+
   const handleNext = () => {
     let newSkipped = skipped;
 
-    setActiveStep(prevActiveStep => {
-      if (
-        session?.role === 'counter' &&
-        router.asPath.includes('trabalho') &&
-        prevActiveStep === 5
-      ) {
-        return 5;
-      }
-      return prevActiveStep + 1;
-    });
+    setActiveStep(activeStep + 1);
 
     if (isStepSkipped(currentStep)) {
       newSkipped = new Set<number>(newSkipped.values());
       newSkipped.delete(currentStep);
     }
 
-    setCurrentStep(prevActiveStep => {
-      if (
-        session?.role === 'counter' &&
-        router.asPath.includes('trabalho') &&
-        prevActiveStep === 1
-      ) {
-        return 5;
-      }
-      return prevActiveStep + 1;
-    });
+    setCurrentStep(prevActiveStep => prevActiveStep + 1);
     setSkipped(newSkipped);
     scrollToTop();
   };
 
   const handleBack = () => {
-    setCurrentStep(prevActiveStep => {
-      if (
-        session?.role === 'counter' &&
-        router.asPath.includes('trabalho') &&
-        prevActiveStep === 5
-      ) {
-        return 1;
-      }
-      return prevActiveStep - 1;
-    });
+    setCurrentStep(prevActiveStep => prevActiveStep - 1);
     scrollToTop();
   };
 
@@ -351,12 +371,17 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
     return `${currentWidth}%`;
   };
 
+  // const handlePreviousStep = () => {
+  //   setActiveStep(prevActiveStep =>
+  //     session?.role === 'counter' && router.asPath.includes('trabalho') && prevActiveStep === 5
+  //       ? 1
+  //       : prevActiveStep - 1,
+  //   );
+  //   handleBack();
+  // };
+
   const handlePreviousStep = () => {
-    setActiveStep(prevActiveStep =>
-      session?.role === 'counter' && router.asPath.includes('trabalho') && prevActiveStep === 5
-        ? 1
-        : prevActiveStep - 1,
-    );
+    setActiveStep(activeStep - 1);
     handleBack();
   };
 
@@ -666,7 +691,19 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
 
                   {currentStep === 1 && <WorkStepTwo ref={workStepTwoRef} nextStep={handleNext} />}
 
-                  {session?.role != 'counter' && currentStep === 2 && (
+                  {currentStep === 2 && (
+                    <WorkStepThree ref={workStepThreeRef} nextStep={handleNext} />
+                  )}
+
+                  {currentStep === 3 && (
+                    <WorkStepFour ref={workStepFourRef} nextStep={handleNext} />
+                  )}
+
+                  {currentStep === 4 && (
+                    <WorkStepFive ref={workStepFiveRef} nextStep={handleNext} />
+                  )}
+
+                  {/* {session?.role != 'counter' && currentStep === 2 && (
                     <WorkStepThree ref={workStepThreeRef} nextStep={handleNext} />
                   )}
 
@@ -676,7 +713,7 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
 
                   {session?.role != 'counter' && currentStep === 4 && (
                     <WorkStepFive ref={workStepFiveRef} nextStep={handleNext} />
-                  )}
+                  )} */}
 
                   {currentStep === 5 && (
                     <WorkStepSix
