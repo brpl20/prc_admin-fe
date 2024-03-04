@@ -53,7 +53,7 @@ const Customers = () => {
     {
       id: 2,
       name: 'Pessoa Física',
-      color: '#E83F5B66',
+      color: '#fa768c66',
     },
     {
       id: 3,

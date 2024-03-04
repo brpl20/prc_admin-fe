@@ -265,7 +265,7 @@ export const getServerSideProps = async (ctx: any) => {
   if (session?.role === 'counter' || session?.role === 'secretary') {
     return {
       redirect: {
-        destination: '/home',
+        destination: '/clientes',
         permanent: false,
       },
     };

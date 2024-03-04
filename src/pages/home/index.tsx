@@ -9,6 +9,7 @@ import { Footer } from '@/components';
 import { Box, Typography } from '@mui/material';
 
 import dynamic from 'next/dynamic';
+import { getSession } from 'next-auth/react';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Home = () => {
@@ -31,3 +32,12 @@ const Home = () => {
 };
 
 export default Home;
+
+export const getServerSideProps = async (ctx: any) => {
+  return {
+    redirect: {
+      destination: '/clientes',
+      permanent: false,
+    },
+  };
+};
