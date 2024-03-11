@@ -1,101 +1,312 @@
-import React, { useState } from 'react';
-import { Box, Modal, Button, Typography, Tooltip } from '@mui/material';
-import { Content, Title, BoxContent } from './styles';
-import { MdClose, MdOutlineContentCopy, MdOutlineCheck } from 'react-icons/md';
-import { colors } from '@/styles/globals';
+import { Box, Modal, Button } from '@mui/material';
+import { Content, Title } from './styles';
+import { MdClose } from 'react-icons/md';
+import { Flex } from '@/styles/globals';
 
 const ViewDetails = ({ isOpen, onClose, details }: any) => {
-  const [copiedText, setCopiedText] = useState('');
+  const handleDeadline = (deadline: string) => {
+    const date = new Date(deadline);
+    const day = date.getDate() + 1;
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
 
-  const handleCopyClick = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedText(text);
-
-    setTimeout(() => {
-      setCopiedText('');
-    }, 2000);
-  };
-
-  const renderCopyIcon = (text: string) => {
-    return copiedText === text && copiedText ? (
-      <MdOutlineCheck size={16} color={colors.green} />
-    ) : (
-      <Tooltip title={'Copiar'}>
-        <MdOutlineContentCopy
-          size={16}
-          cursor={'pointer'}
-          color={colors.secondary}
-          onClick={() => {
-            handleCopyClick(text);
-          }}
-        />
-      </Tooltip>
-    );
-  };
-
-  const renderDetailRow = (label: string, value: string, isLongText = false) => {
-    return (
-      <Box display="flex" alignItems="center" justifyContent="space-between" mt={2}>
-        <Typography color={colors.black} variant="h6">
-          {label}
-        </Typography>
-        <BoxContent>
-          {value && (
-            <>
-              {isLongText ? (
-                <Box style={{ maxHeight: '100px', overflowY: 'auto' }}>
-                  <Typography variant="subtitle1">{value}</Typography>
-                </Box>
-              ) : (
-                <>
-                  <Typography variant="subtitle1">{value}</Typography>
-                  {renderCopyIcon(value)}
-                </>
-              )}
-            </>
-          )}
-        </BoxContent>
-      </Box>
-    );
+    return `${day < 10 ? '0' + day : day}/${month < 10 ? '0' + month : month}/${year}`;
   };
 
   return (
-    <Modal open={isOpen} style={{ overflowY: 'auto' }}>
-      <Content>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Title style={{ fontSize: '28px' }}>{'Detalhes da Tarefa'}</Title>
-          <MdClose size={26} cursor="pointer" onClick={onClose} />
+    <Modal open={isOpen}>
+      <Content
+        style={{
+          width: '80vw',
+          maxWidth: '1140px',
+          height: 'min-content',
+          maxHeight: '600px',
+          overflow: 'auto',
+          padding: '0px',
+          borderRadius: '4px',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <Box sx={{ borderBottom: '1px solid #C0C0C0' }}>
+          <div
+            style={{
+              padding: '20px 32px',
+              display: 'flex',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Title style={{ fontSize: '26px' }}>{'Informações sobre a Tarefa'}</Title>
+            <MdClose size={26} cursor="pointer" onClick={onClose} />
+          </div>
         </Box>
 
-        <Box display="flex" justifyContent="space-between">
-          <Box width="48%">
-            {renderDetailRow('Descrição', details.description)}
-            {renderDetailRow('Cliente', details.customer)}
-            {renderDetailRow('Responsável', details.responsible)}
-            {renderDetailRow('Trabalho', details.work)}
-          </Box>
-          <Box width="48%">
-            {renderDetailRow('Prazo de Entrega', details.deadline)}
-            {renderDetailRow('Prioridade', details.priority)}
-            {renderDetailRow('Status', details.status)}
-          </Box>
+        <Box>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              padding: '20px 0px',
+              height: '100%',
+              overflow: 'auto',
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: '18px',
+                padding: '0 32px',
+              }}
+            >
+              <Flex
+                style={{
+                  flexDirection: 'column',
+                  gap: '8px',
+                  alignItems: 'flex-start',
+                  width: '200px',
+                }}
+              >
+                <span
+                  style={{
+                    color: '#344054',
+                    fontSize: '20px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Descrição
+                </span>
+                <span
+                  style={{
+                    fontSize: '18px',
+                    color: '#344054',
+                    fontWeight: '400',
+                  }}
+                >
+                  {details.description ? details.description : 'Não Informado'}
+                </span>
+              </Flex>
+              <Flex
+                style={{
+                  flexDirection: 'column',
+                  gap: '8px',
+                  alignItems: 'flex-start',
+                  width: '300px',
+                }}
+              >
+                <span
+                  style={{
+                    color: '#344054',
+                    fontSize: '20px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Cliente
+                </span>
+                <span
+                  style={{
+                    fontSize: '18px',
+                    color: '#344054',
+                    fontWeight: '400',
+                  }}
+                >
+                  {details.customer ? details.customer : 'Não Informado'}
+                </span>
+              </Flex>
+              <Flex
+                style={{
+                  flexDirection: 'column',
+                  gap: '8px',
+                  alignItems: 'flex-start',
+                  width: '200px',
+                }}
+              >
+                <span
+                  style={{
+                    color: '#344054',
+                    fontSize: '20px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Prioridade
+                </span>
+                <span
+                  style={{
+                    fontSize: '18px',
+                    color: '#344054',
+                    fontWeight: '400',
+                  }}
+                >
+                  {details.priority
+                    ? details.priority === '1'
+                      ? 'Normal'
+                      : 'Alta'
+                    : 'Não Informado'}
+                </span>
+              </Flex>
+              <Flex
+                style={{
+                  flexDirection: 'column',
+                  gap: '8px',
+                  alignItems: 'flex-start',
+                  width: '200px',
+                }}
+              >
+                <span
+                  style={{
+                    color: '#344054',
+                    fontSize: '20px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Prazo de Entrega
+                </span>
+                <span
+                  style={{
+                    fontSize: '18px',
+                    color: '#344054',
+                    fontWeight: '400',
+                  }}
+                >
+                  {details.deadline ? handleDeadline(details.deadline) : 'Não Informado'}
+                </span>
+              </Flex>
+            </div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: '18px',
+                padding: '0 32px',
+              }}
+            >
+              <Flex
+                style={{
+                  flexDirection: 'column',
+                  gap: '8px',
+                  alignItems: 'flex-start',
+                  width: '200px',
+                }}
+              >
+                <span
+                  style={{
+                    color: '#344054',
+                    fontSize: '20px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Responsável
+                </span>
+                <span
+                  style={{
+                    fontSize: '18px',
+                    color: '#344054',
+                    fontWeight: '400',
+                  }}
+                >
+                  {details.responsible ? details.responsible : 'Não Informado'}
+                </span>
+              </Flex>
+              <Flex
+                style={{
+                  flexDirection: 'column',
+                  gap: '8px',
+                  alignItems: 'flex-start',
+                  width: '300px',
+                }}
+              >
+                <span
+                  style={{
+                    color: '#344054',
+                    fontSize: '20px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Trabalho
+                </span>
+                <span
+                  style={{
+                    fontSize: '18px',
+                    color: '#344054',
+                    fontWeight: '400',
+                  }}
+                >
+                  {details.work ? details.work : 'Não Informado'}
+                </span>
+              </Flex>
+              <Flex
+                style={{
+                  flexDirection: 'column',
+                  gap: '8px',
+                  alignItems: 'flex-start',
+                  width: '200px',
+                }}
+              >
+                <span
+                  style={{
+                    color: '#344054',
+                    fontSize: '20px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Status
+                </span>
+                <span
+                  style={{
+                    fontSize: '18px',
+                    color: '#344054',
+                    fontWeight: '400',
+                  }}
+                >
+                  {details.status ? details.status : 'Não Informado'}
+                </span>
+              </Flex>
+            </div>
+
+            <Flex
+              style={{
+                flexDirection: 'column',
+                gap: '8px',
+                alignItems: 'flex-start',
+                padding: '0px 32px',
+                height: '100%',
+              }}
+            >
+              <span
+                style={{
+                  color: '#344054',
+                  fontSize: '20px',
+                  fontWeight: '500',
+                }}
+              >
+                Comentários
+              </span>
+              <textarea
+                style={{
+                  fontSize: '18px',
+                  color: '#344054',
+                  fontWeight: '400',
+                  width: '100%',
+                  height: '120px',
+                  resize: 'none',
+                  overflow: 'auto',
+                  padding: '10px',
+                  borderRadius: '4px',
+                }}
+                disabled
+              >
+                {details.comment ? details.comment : 'Não Informado'}
+              </textarea>
+            </Flex>
+          </div>
         </Box>
 
-        <Box mt={3}>
-          <Typography variant="h6">{'Comentários'}</Typography>
-
-          <BoxContent>
-            {details.comment && (
-              <>
-                <Box style={{ maxHeight: '100px', overflowY: 'auto' }}>
-                  <Typography variant="subtitle1">{details.comment}</Typography>
-                </Box>
-              </>
-            )}
-          </BoxContent>
-        </Box>
-
-        <Box width="100%" display="flex" justifyContent="end" mt={3}>
+        <Box
+          display="flex"
+          justifyContent="end"
+          sx={{ padding: '20px 32px', borderTop: '1px solid #C0C0C0' }}
+        >
           <Button
             color="primary"
             variant="outlined"

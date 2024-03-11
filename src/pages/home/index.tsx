@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { withAuth } from '@/middleware/withAuth';
 
 import { Container } from '@/styles/globals';
 import {} from 'react-icons/md';
@@ -10,6 +9,7 @@ import { Footer } from '@/components';
 import { Box, Typography } from '@mui/material';
 
 import dynamic from 'next/dynamic';
+import { getSession } from 'next-auth/react';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Home = () => {
@@ -31,4 +31,13 @@ const Home = () => {
   );
 };
 
-export default withAuth(Home);
+export default Home;
+
+export const getServerSideProps = async (ctx: any) => {
+  return {
+    redirect: {
+      destination: '/clientes',
+      permanent: false,
+    },
+  };
+};

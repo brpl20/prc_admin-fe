@@ -1,53 +1,158 @@
-import { Box, Modal, Typography, Button, CircularProgress } from '@mui/material';
+import { Box, Modal, Typography, Button } from '@mui/material';
+import { BsDownload } from 'react-icons/bs';
+import { IoCheckmarkOutline } from 'react-icons/io5';
 
 import { colors } from '@/styles/globals';
 
 import { MdClose } from 'react-icons/md';
 import { Content, Title } from './styles';
 import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import { getAllCustomers, getCustomerById } from '@/services/customers';
 
 interface IConfirmDownloadDocumentProps {
   isOpen: boolean;
   onClose: () => void;
-  handleConfirm: () => void;
+  documents: any[];
 }
 
-const ConfirmDownloadDocument = ({
-  isOpen,
-  onClose,
-  handleConfirm,
-}: IConfirmDownloadDocumentProps) => {
+const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloadDocumentProps) => {
   const route = useRouter();
+
+  const [downloadedDocuments, setDownloadedDocuments] = useState<Array<boolean>>(
+    Array(documents.length).fill(false),
+  );
+
+  const [documentsPerCustomer, setDocumentsPerCustomer] = useState<any>({});
+  const [customerNames, setCustomerNames] = useState<Array<string>>([]);
+
+  useEffect(() => {
+    const documentsPerCustomer = documents.reduce((acc, document) => {
+      if (!acc[document.profile_customer_id]) {
+        acc[document.profile_customer_id] = [];
+      }
+
+      acc[document.profile_customer_id].push(document);
+
+      return acc;
+    }, {});
+
+    setDocumentsPerCustomer(documentsPerCustomer);
+  }, [documents]);
+
+  const getCustomerName = async (customerId: string) => {
+    const customer = await getCustomerById(customerId);
+
+    return customer?.data?.attributes?.name;
+  };
+
+  useEffect(() => {
+    const fetchCustomerNames = async () => {
+      const names = await Promise.all(
+        Object.keys(documentsPerCustomer).map(async customerId => {
+          const name = await getCustomerName(customerId);
+          return `${name}`;
+        }),
+      );
+      setCustomerNames(names);
+    };
+
+    fetchCustomerNames();
+  }, [documentsPerCustomer]);
 
   const handleClose = () => {
     onClose();
 
-    route.push('/trabalhos');
-  };
+    if (route.asPath.includes('trabalho')) {
+      route.push('/trabalhos');
+    }
 
-  const handleConfirmDownload = () => {
-    handleConfirm();
-    onClose();
-
-    route.push('/trabalhos');
+    if (route.asPath.includes('cliente')) {
+      route.push('/clientes');
+    }
   };
 
   return (
     <Modal open={isOpen} onClose={onClose} style={{ overflowY: 'auto' }}>
       <Content>
         <Box display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
-          <Title style={{ fontSize: '28px' }}>{'Confirmação'}</Title>
+          <Title style={{ fontSize: '28px' }}>{'Arquivos para Download'}</Title>
           <Box sx={{ cursor: 'pointer' }} onClick={onClose}>
-            <MdClose size={26} />
+            <MdClose size={26} onClick={handleClose} />
           </Box>
         </Box>
         <Box width={'100%'} height={'1px'} bgcolor={colors.quartiary} />
 
-        <Box mt={'20px'}>
-          <Typography variant="subtitle1">
-            {`Você tem certeza que deseja baixar os Documentos ?`}
-          </Typography>
-        </Box>
+        {
+          <Box
+            sx={{
+              height: '300px',
+              overflow: 'auto',
+            }}
+          >
+            {customerNames.map((customerName, index) => (
+              <Box mt={'20px'} key={index}>
+                <Typography
+                  variant="subtitle1"
+                  style={{
+                    fontWeight: '500',
+                    fontSize: '20px',
+                    color: '#26B99A',
+                  }}
+                >
+                  {customerName}
+                </Typography>
+                {documentsPerCustomer[Object.keys(documentsPerCustomer)[index]].map(
+                  (document: any, index: number) => (
+                    <div
+                      key={document.url}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle1"
+                        style={{
+                          fontWeight: '400',
+                          fontSize: '18px',
+                          color: colors.black,
+                          display: 'flex',
+                          alignItems: 'center',
+                          cursor: 'pointer',
+                          gap: '8px',
+                        }}
+                        onClick={() => {
+                          window.open(document.url, '_blank');
+                          setDownloadedDocuments(prev => ({
+                            ...prev,
+                            [document.url]: true,
+                          }));
+                        }}
+                      >
+                        {downloadedDocuments[document.url] ? (
+                          <IoCheckmarkOutline size={20} color={colors.green} />
+                        ) : (
+                          <BsDownload size={20} color={colors.primary} />
+                        )}
+                        {document.document_type
+                          ? document.document_type === 'procuration'
+                            ? 'Procuração'
+                            : document.document_type === 'waiver'
+                            ? 'Termo de Renúncia'
+                            : document.document_type === 'deficiency_statement'
+                            ? 'Declaração de Carência'
+                            : 'Contrato'
+                          : 'Procuração Simples'}
+                      </Typography>
+                    </div>
+                  ),
+                )}
+              </Box>
+            ))}
+          </Box>
+        }
 
         <Box width={'100%'} display={'flex'} justifyContent={'end'} mt={'20px'}>
           <Button
@@ -59,21 +164,7 @@ const ConfirmDownloadDocument = ({
             }}
             onClick={handleClose}
           >
-            {'Cancelar'}
-          </Button>
-          <Button
-            variant="contained"
-            sx={{
-              width: '100px',
-              height: '36px',
-              color: colors.white,
-              textTransform: 'none',
-              marginLeft: '16px',
-            }}
-            color="secondary"
-            onClick={handleConfirmDownload}
-          >
-            {'Baixar'}
+            {'Fechar'}
           </Button>
         </Box>
       </Content>

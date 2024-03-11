@@ -40,6 +40,10 @@ import { Container, SelectContainer, Flex, MenuItem, CloseDropdown, TitleWrapper
 
 import Logo from '../../assets/logo-white.png';
 import Profile from '../../assets/Profile.png';
+import { getAllAdmins } from '@/services/admins';
+import { UserContext } from '@/contexts/UserContext';
+import { useSession } from 'next-auth/react';
+import { jwtDecode } from 'jwt-decode';
 
 const drawerWidth = 224;
 
@@ -119,6 +123,7 @@ const Layout = ({ children }: ILayoutProps) => {
   const { asPath } = useRouter();
   const { handleLogout } = useContext(AuthContext);
   const { showTitle, pageTitle } = useContext(PageTitleContext);
+  const { data: session } = useSession();
 
   const supportsLocalStorage = typeof window !== 'undefined' && window.localStorage;
   const storedOpenSidebar = supportsLocalStorage ? localStorage.getItem('openSidebar') : null;
@@ -126,6 +131,7 @@ const Layout = ({ children }: ILayoutProps) => {
 
   const [openSidebar, setOpenSidebar] = useState(initialSidebarState);
   const [openUserMenu, setOpenUserMenu] = useState(false);
+  const [isUserCounter, setIsUserCounter] = useState(true);
 
   const handleDrawerOpen = () => {
     setOpenSidebar(true);
@@ -140,6 +146,17 @@ const Layout = ({ children }: ILayoutProps) => {
       localStorage.setItem('openSidebar', openSidebar.toString());
     }
   }, [openSidebar]);
+
+  const [adminId, setAdminId] = useState<number>(0);
+
+  useEffect(() => {
+    if (session) {
+      const token: any = jwtDecode(session.token);
+      if (token) {
+        setAdminId(token.admin_id);
+      }
+    }
+  }, [session]);
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -182,7 +199,7 @@ const Layout = ({ children }: ILayoutProps) => {
             </Flex>
             {openUserMenu && (
               <Flex className="selectItemsContainer">
-                <Link href={'/clientes'}>
+                <Link href={`/alterar?type=usuario&id=${adminId}`}>
                   <Box className={'item'}>
                     <AiOutlineUser size={20} />
                     <Typography variant="subtitle2"> {'Conta'} </Typography>
@@ -216,7 +233,7 @@ const Layout = ({ children }: ILayoutProps) => {
 
           <Flex color={colors.white} sx={{ width: '100%' }}>
             <Stack spacing="8" sx={{ width: '100%' }}>
-              <ActiveLink href="/home">
+              {/* <ActiveLink href="/home">
                 <MenuItem
                   sx={{
                     backgroundColor:
@@ -231,7 +248,7 @@ const Layout = ({ children }: ILayoutProps) => {
                     </>
                   )}
                 </MenuItem>
-              </ActiveLink>
+              </ActiveLink> */}
 
               <ActiveLink href="/clientes">
                 <MenuItem
@@ -268,56 +285,62 @@ const Layout = ({ children }: ILayoutProps) => {
                 </MenuItem>
               </ActiveLink>
 
-              <ActiveLink href="/tarefas">
-                <MenuItem
-                  sx={{
-                    backgroundColor:
-                      asPath === '/tarefas' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                  }}
-                >
-                  <MdOutlineFormatListNumbered size={24} className="icon" />
-                  {openSidebar && (
-                    <>
-                      <Typography fontWeight="regular">{'Tarefas'}</Typography>
-                      <MdOutlineArrowRight size={24} className="arrow" />
-                    </>
-                  )}
-                </MenuItem>
-              </ActiveLink>
+              {session?.role === 'secretary' || session?.role === 'counter' ? null : (
+                <ActiveLink href="/tarefas">
+                  <MenuItem
+                    sx={{
+                      backgroundColor:
+                        asPath === '/tarefas' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                    }}
+                  >
+                    <MdOutlineFormatListNumbered size={24} className="icon" />
+                    {openSidebar && (
+                      <>
+                        <Typography fontWeight="regular">{'Tarefas'}</Typography>
+                        <MdOutlineArrowRight size={24} className="arrow" />
+                      </>
+                    )}
+                  </MenuItem>
+                </ActiveLink>
+              )}
 
-              <ActiveLink href="/usuarios">
-                <MenuItem
-                  sx={{
-                    backgroundColor:
-                      asPath === '/usuarios' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                  }}
-                >
-                  <MdPerson size={24} className="icon" />
-                  {openSidebar && (
-                    <>
-                      <Typography fontWeight="regular">{'Usuários'}</Typography>
-                      <MdOutlineArrowRight size={24} className="arrow" />
-                    </>
-                  )}
-                </MenuItem>
-              </ActiveLink>
+              {session?.role === 'counter' || session?.role === 'secretary' ? null : (
+                <ActiveLink href="/usuarios">
+                  <MenuItem
+                    sx={{
+                      backgroundColor:
+                        asPath === '/usuarios' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                    }}
+                  >
+                    <MdPerson size={24} className="icon" />
+                    {openSidebar && (
+                      <>
+                        <Typography fontWeight="regular">{'Usuários'}</Typography>
+                        <MdOutlineArrowRight size={24} className="arrow" />
+                      </>
+                    )}
+                  </MenuItem>
+                </ActiveLink>
+              )}
 
-              <ActiveLink href="/escritorios">
-                <MenuItem
-                  sx={{
-                    backgroundColor:
-                      asPath === '/escritorios' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                  }}
-                >
-                  <MdAccountBalance size={24} className="icon" />
-                  {openSidebar && (
-                    <>
-                      <Typography fontWeight="regular">{'Escritório'}</Typography>
-                      <MdOutlineArrowRight size={24} className="arrow" />
-                    </>
-                  )}
-                </MenuItem>
-              </ActiveLink>
+              {session?.role === 'counter' || session?.role === 'secretary' ? null : (
+                <ActiveLink href="/escritorios">
+                  <MenuItem
+                    sx={{
+                      backgroundColor:
+                        asPath === '/escritorios' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                    }}
+                  >
+                    <MdAccountBalance size={24} className="icon" />
+                    {openSidebar && (
+                      <>
+                        <Typography fontWeight="regular">{'Escritório'}</Typography>
+                        <MdOutlineArrowRight size={24} className="arrow" />
+                      </>
+                    )}
+                  </MenuItem>
+                </ActiveLink>
+              )}
 
               {/* <ActiveLink href="/reports">
                 <MenuItem

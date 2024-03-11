@@ -24,7 +24,8 @@ import {
   Divider,
 } from '@/styles/login';
 import { colors } from '@/styles/globals';
-import { useSession, signIn } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/router';
 
 const UserSchema = z.object({
   email: z
@@ -37,7 +38,7 @@ const UserSchema = z.object({
 type UserDataForm = z.infer<typeof UserSchema>;
 
 const Home = () => {
-  const { data: session } = useSession();
+  const router = useRouter();
 
   const {
     register,
@@ -46,7 +47,6 @@ const Home = () => {
   } = useForm<UserDataForm>({
     resolver: zodResolver(UserSchema),
   });
-  const { localAuthentication } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState('');
@@ -54,14 +54,29 @@ const Home = () => {
 
   async function handleSignIn(data: any) {
     setLoading(true);
-    try {
-      await localAuthentication(data);
-    } catch (error: any) {
-      setErrorMessage(error.message);
-      setOpenSnackbar(true);
-    }
 
-    setLoading(false);
+    try {
+      const response = await signIn('credentials', {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
+
+      if (response?.status === 200) {
+        router.push('/clientes');
+      }
+
+      if (response?.status === 401) {
+        setErrorMessage('Usuário ou senha inválidos');
+        setOpenSnackbar(true);
+      }
+    } catch (error: any) {
+      setErrorMessage('Erro ao fazer login');
+      setOpenSnackbar(true);
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -75,9 +90,7 @@ const Home = () => {
           <Image priority width={200} height={150} src={Logo} alt="Logo" />
         </Box>
 
-        <Typography sx={{ marginBottom: '16px', fontSize: '28px' }}>
-          {'Seja bem-vindo!'}
-        </Typography>
+        <Typography sx={{ marginBottom: '16px', fontSize: '28px' }}>{'Seja bem-vindo!'}</Typography>
 
         <GoogleLoginButton onClick={() => signIn('google')}>
           <Image src={Google} alt="Logo" width={20} priority />
@@ -123,22 +136,12 @@ const Home = () => {
               />
             </Box>
           </Box>
-          <Box
-            display={'flex'}
-            justifyContent={'flex-end'}
-            textAlign={'center'}
-          >
+          <Box display={'flex'} justifyContent={'flex-end'} textAlign={'center'}>
             <Link href="#">
-              <Typography variant="subtitle2">
-                {'Esqueceu sua senha?'}
-              </Typography>
+              <Typography variant="subtitle2">{'Esqueceu sua senha?'}</Typography>
             </Link>
           </Box>
-          <Box
-            display={'flex'}
-            justifyContent={'center'}
-            sx={{ marginTop: '8px' }}
-          >
+          <Box display={'flex'} justifyContent={'center'} sx={{ marginTop: '8px' }}>
             <Button
               isLoading={loading}
               type="submit"
@@ -149,16 +152,9 @@ const Home = () => {
               {loading ? 'Carregando...' : 'Entrar'}
             </Button>
           </Box>
-          <Box
-            display={'flex'}
-            justifyContent={'center'}
-            textAlign={'center'}
-            gap={1}
-          >
+          <Box display={'flex'} justifyContent={'center'} textAlign={'center'} gap={1}>
             <Link href="#">
-              <Typography variant="subtitle1">
-                {'Não tem uma conta?'}
-              </Typography>
+              <Typography variant="subtitle1">{'Não tem uma conta?'}</Typography>
             </Link>
             <Typography variant="subtitle1" fontWeight={'bold'}>
               {'Cadastrar.'}

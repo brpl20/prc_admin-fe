@@ -1,6 +1,5 @@
-import React, { useState, ChangeEvent, useEffect, useContext } from 'react';
+import { useState, ChangeEvent, useEffect, useContext } from 'react';
 import { IoAddCircleOutline } from 'react-icons/io5';
-import { MdOutlineAddCircle } from 'react-icons/md';
 
 import {
   TextField,
@@ -12,14 +11,15 @@ import {
   Select,
   MenuItem,
   Autocomplete,
+  CircularProgress,
 } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
 
 import { PageTitleContext } from '@/contexts/PageTitleContext';
-import { societyType } from '@/utils/constants';
+import { accountingType, societyType } from '@/utils/constants';
 
 import { Container, Title, DateContainer } from './styles';
-import { colors, ContentContainer, DescriptionText } from '@/styles/globals';
+import { colors, ContentContainer } from '@/styles/globals';
 
 import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -28,17 +28,16 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { Flex, Divider } from '@/styles/globals';
 
-import { ICustomerProps } from '@/interfaces/ICustomer';
-import { getAllCustomers } from '@/services/customers';
-import { createOfficeType, getAllOfficeTypes } from '@/services/offices';
+import { getAllOfficeTypes } from '@/services/offices';
 import { getCEPDetails } from '@/services/brasilAPI';
 import { createOffice, updateOffice } from '@/services/offices';
 
 import Router from 'next/router';
 import { cepMask, cnpjMask } from '@/utils/masks';
 
-import OfficeTypeModal from './officeTypeModal';
 import { IAdminPropsAttributes } from '@/interfaces/IAdmin';
+import { getAllAdmins } from '@/services/admins';
+import { z } from 'zod';
 
 interface FormData {
   name: string;
@@ -56,6 +55,7 @@ interface FormData {
   neighborhood: string;
   webSite: string;
   responsible_lawyer: string;
+  accounting_type: string;
 }
 
 interface props {
@@ -63,12 +63,28 @@ interface props {
   dataToEdit?: any;
 }
 
+const officeSchema = z.object({
+  name: z.string().nonempty({ message: 'Informe o Nome do Escritório' }),
+  office_type: z.string().nonempty({ message: 'Selecione o Tipo de Escritório' }),
+  oab: z.string().nonempty({ message: 'Informe o Identificador OAB' }),
+  cnpj_cpf: z.string().nonempty({ message: 'Informe o CNPJ/CPF' }),
+  society_type: z.string().nonempty({ message: 'Informe o Tipo de Sociedade' }),
+  cep: z.string().nonempty({ message: 'Informe o CEP' }),
+  address: z.string().nonempty({ message: 'Informe o Endereço' }),
+  state: z.string().nonempty({ message: 'Informe o Estado' }),
+  city: z.string().nonempty({ message: 'Informe a Cidade' }),
+  number: z.string().nonempty({ message: 'Informe o Número' }),
+  neighborhood: z.string().nonempty({ message: 'Informe o Bairro' }),
+  accounting_type: z.string().nonempty({ message: 'Selecione o Enquadramento Contábil' }),
+  phone: z.string().nonempty({ message: 'Informe o Telefone' }),
+  email: z.string().nonempty({ message: 'Informe o Email' }),
+});
+
 const Office = ({ pageTitle, dataToEdit }: props) => {
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
-  const [openOfficeTypeModal, setOpenOfficeTypeModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
+  const [adminsList, setAdminsList] = useState<IAdminPropsAttributes[]>([]);
   const [officeTypes, setOfficeTypes] = useState<any[]>([]);
   const [selectedOfficeType, setSelectedOfficeType] = useState<any>({});
   const [selectedSocialType, setSelectedSocialType] = useState<any>({});
@@ -79,8 +95,9 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
   const [selectedDate, setSelectedDate] = useState(currentDate);
 
   const [message, setMessage] = useState('');
+  const [errors, setErrors] = useState({} as any);
+  const [type, setType] = useState<'success' | 'error'>('success');
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [typeMessage, setTypeMessage] = useState<'success' | 'error'>('success');
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -98,6 +115,7 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
     neighborhood: '',
     webSite: '',
     responsible_lawyer: '',
+    accounting_type: '',
   });
   const [contactData, setContactData] = useState({
     phoneInputFields: [{ phone_number: '' }],
@@ -147,31 +165,24 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
   };
 
   const handleSubmitForm = async () => {
+    setLoading(true);
     try {
-      if (selectedOfficeType.id === undefined) throw new Error('Selecione o Tipo de Escritório');
-      if (!formData.name) throw new Error('Informe o Nome do Escritório');
-      if (!formData.oab) throw new Error('Informe o Identificador OAB');
-      if (!formData.cnpj_cpf) throw new Error('Informe o CNPJ/CPF');
-      if (!formData.society_type) throw new Error('Informe o Tipo de Sociedade');
-      if (selectedDate === undefined) throw new Error('Informe a Data de Função Exp. OAB');
-      if (!formData.cep) throw new Error('Informe o CEP');
-      if (!formData.address) throw new Error('Informe o Endereço');
-      if (!formData.state) throw new Error('Informe o Estado');
-      if (!formData.city) throw new Error('Informe a Cidade');
-      if (!formData.number) throw new Error('Informe o Número');
-      if (!formData.neighborhood) throw new Error('Informe o Bairro');
-      if (!formData.webSite) throw new Error('Informe o Site');
-      if (contactData.phoneInputFields.some(field => field.phone_number.trim() === '')) {
-        throw new Error('Telefone não pode estar vazio.');
-      }
-
-      if (contactData.emailInputFields.some(field => field.email.trim() === '')) {
-        throw new Error('E-mail não pode estar vazio.');
-      }
-
-      if (!formData.responsible_lawyer) {
-        throw new Error('Selecione o Responsável pelo Escritório');
-      }
+      officeSchema.parse({
+        name: formData.name,
+        office_type: selectedOfficeType.id,
+        oab: formData.oab,
+        cnpj_cpf: formData.cnpj_cpf,
+        society_type: formData.society_type,
+        cep: formData.cep,
+        address: formData.address,
+        state: formData.state,
+        city: formData.city,
+        number: formData.number.toString(),
+        neighborhood: formData.neighborhood,
+        accounting_type: formData.accounting_type,
+        phone: contactData.phoneInputFields[0].phone_number,
+        email: contactData.emailInputFields[0].email,
+      });
 
       const office = {
         name: formData.name,
@@ -190,6 +201,7 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
         state: formData.state,
         office_type_id: selectedOfficeType.id,
         responsible_lawyer_id: Number(formData.responsible_lawyer),
+        accounting_type: formData.accounting_type,
 
         emails_attributes: contactData.emailInputFields,
         phones_attributes: contactData.phoneInputFields,
@@ -205,40 +217,17 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
       }
     } catch (err) {
       handleFormError(err);
-    }
-  };
-
-  const handleCreateOfficeType = async (description: string) => {
-    const data = {
-      office_type: {
-        description,
-      },
-    };
-
-    try {
-      await createOfficeType(data);
-      setOpenOfficeTypeModal(false);
-      getOfficeTypes();
-
-      setMessage('Tipo de Escritório criado com sucesso!');
-      setTypeMessage('success');
-      setOpenSnackbar(true);
-    } catch (error: any) {
-      if (error.response.status === 422) {
-        setMessage('Tipo de Escritório já existe!');
-        setTypeMessage('error');
-        setOpenSnackbar(true);
-        return;
-      }
-      setMessage(error.message);
-      setTypeMessage('error');
-      setOpenSnackbar(true);
     } finally {
       setLoading(false);
     }
   };
 
-  const renderInputField = (name: keyof FormData, title: string, placeholderText: string) => (
+  const renderInputField = (
+    name: keyof FormData,
+    title: string,
+    placeholderText: string,
+    error?: boolean,
+  ) => (
     <Flex style={{ flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {title}
@@ -259,6 +248,7 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
         autoComplete="off"
         placeholder={`${placeholderText}`}
         onChange={handleInputChange}
+        error={error && !formData[name]}
       />
     </Flex>
   );
@@ -267,6 +257,7 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
     label: string,
     name: keyof FormData,
     options: { label: string; value: string }[],
+    error?: boolean,
   ) => (
     <Flex style={{ flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
@@ -279,6 +270,7 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
           label={`Selecione ${label}`}
           value={formData[name] || ''}
           onChange={handleSelectChange}
+          error={error && !formData[name]}
         >
           {options.map(option => (
             <MenuItem key={option.value} value={option.value}>
@@ -334,9 +326,9 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
     }));
   };
 
-  const getCustomers = async () => {
-    const response = await getAllCustomers();
-    setCustomersList(response.data);
+  const getAdmins = async () => {
+    const response = await getAllAdmins();
+    setAdminsList(response.data);
   };
 
   const getOfficeTypes = async () => {
@@ -345,13 +337,22 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
   };
 
   const handleFormError = (error: any) => {
-    setMessage(error.message);
-    setTypeMessage('error');
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
+    setType('error');
     setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+    setErrors(errorObject);
   };
 
   useEffect(() => {
-    getCustomers();
+    getAdmins();
 
     getOfficeTypes();
   }, []);
@@ -388,7 +389,7 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
           }));
         } catch (error: any) {
           setMessage('CEP inválido.');
-          setTypeMessage('error');
+          setType('error');
           setOpenSnackbar(true);
         }
       }
@@ -427,13 +428,14 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
           webSite: form.site,
           neighborhood: form.neighborhood,
           responsible_lawyer: form.responsible_lawyer_id,
+          accounting_type: form.accounting_type,
         }));
 
-        setSelectedOfficeType({
-          attributes: {
-            description: form.office_type_description,
-          },
-        });
+        const office = officeTypes.find(
+          (office: any) => office.attributes.description === form.office_type_description,
+        );
+
+        setSelectedOfficeType(office);
 
         const foundation_date = form.foundation ? dayjs(form.foundation) : dayjs();
 
@@ -460,7 +462,7 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
         handleDataForm();
       }
     }
-  }, [dataToEdit, customersList]);
+  }, [dataToEdit, adminsList, officeTypes]);
 
   return (
     <>
@@ -468,7 +470,7 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
         <Notification
           open={openSnackbar}
           message={message}
-          severity={typeMessage}
+          severity={type}
           onClose={() => setOpenSnackbar(false)}
         />
       )}
@@ -480,14 +482,6 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
           editMode={isEditing}
           onClose={handleCloseModal}
           handleSave={handleSubmitForm}
-        />
-      )}
-
-      {openOfficeTypeModal && (
-        <OfficeTypeModal
-          isOpen={openOfficeTypeModal}
-          onClose={() => setOpenOfficeTypeModal(false)}
-          handleSave={handleCreateOfficeType}
         />
       )}
 
@@ -539,6 +533,7 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
                           placeholder="Selecione o Tipo de Escritório"
                           {...params}
                           size="small"
+                          error={!!errors.office_type}
                         />
                       )}
                       sx={{ backgroundColor: 'white', zIndex: 1, width: '49%' }}
@@ -547,27 +542,6 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
                         value ? setSelectedOfficeType(value) : setSelectedOfficeType('');
                       }}
                     />
-                    <Flex style={{ flex: 1 }}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => setOpenOfficeTypeModal(true)}
-                        sx={{
-                          backgroundColor: colors.quartiary,
-                          color: colors.white,
-                          width: '172px',
-                          marginTop: 'auto',
-                          '&:hover': {
-                            backgroundColor: colors.quartiaryHover,
-                          },
-                        }}
-                      >
-                        <DescriptionText style={{ cursor: 'pointer' }} className="ml-8">
-                          {'Adicionar Tipo'}
-                        </DescriptionText>
-                        <MdOutlineAddCircle size={20} />
-                      </Button>
-                    </Flex>
                   </Flex>
                 </Box>
               </Box>
@@ -592,16 +566,21 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
                   }}
                 >
                   <Flex style={{ gap: '24px' }}>
-                    {renderInputField('name', 'Nome', 'Nome do Escritório')}
-                    {renderInputField('oab', 'OAB', 'Identificador OAB')}
+                    {renderInputField('name', 'Nome', 'Nome do Escritório', !!errors.name)}
+                    {renderInputField('oab', 'OAB/CRC', 'Identificador OAB/CRC', !!errors.oab)}
                   </Flex>
 
                   <Flex style={{ gap: '24px' }}>
-                    {renderInputField('cnpj_cpf', 'CNPJ/CPF', 'Informe o CPF')}
-                    {renderSelectField('Tipo da Sociedade', 'society_type', societyType)}
+                    {renderInputField('cnpj_cpf', 'CNPJ', 'Informe o CNPJ', !!errors.cnpj_cpf)}
+                    {renderSelectField(
+                      'Tipo da Sociedade',
+                      'society_type',
+                      societyType,
+                      !!errors.society_type,
+                    )}
                   </Flex>
 
-                  <Flex style={{ gap: '24px', width: '50%', marginRight: '24px' }}>
+                  <Flex style={{ gap: '24px' }}>
                     <DateContainer>
                       <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <Flex>
@@ -622,6 +601,12 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
                         />
                       </LocalizationProvider>
                     </DateContainer>
+                    {renderSelectField(
+                      'Enquadramento Contábil',
+                      'accounting_type',
+                      accountingType,
+                      !!errors.accounting_type,
+                    )}
                   </Flex>
                 </Box>
               </Box>
@@ -638,18 +623,35 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
 
               <Box display={'flex'} gap={'24px'} flex={1}>
                 <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                  {renderInputField('cep', 'CEP', 'Informe o CEP')}
+                  {renderInputField('cep', 'CEP', 'Informe o CEP', !!errors.cep)}
                   <Flex style={{ gap: '16px' }}>
-                    {renderInputField('address', 'Endereço', 'Informe o Endereço')}
-                    <Box maxWidth={'30%'}>{renderInputField('number', 'Número', 'N.º')}</Box>
+                    {renderInputField(
+                      'address',
+                      'Endereço',
+                      'Informe o Endereço',
+                      !!errors.address,
+                    )}
+                    <Box maxWidth={'30%'}>
+                      {renderInputField('number', 'Número', 'N.º', !!errors.number)}
+                    </Box>
                   </Flex>
-                  {renderInputField('description', 'Complemento', 'Informe o Complemento')}
+                  {renderInputField(
+                    'description',
+                    'Complemento',
+                    'Informe o Complemento',
+                    !!errors.description,
+                  )}
                 </Box>
 
                 <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                  {renderInputField('neighborhood', 'Bairro', 'Informe o Estado')}
-                  {renderInputField('city', 'Cidade', 'Informe a Cidade')}
-                  {renderInputField('state', 'Estado', 'Informe o Estado')}
+                  {renderInputField(
+                    'neighborhood',
+                    'Bairro',
+                    'Informe o Estado',
+                    !!errors.neighborhood,
+                  )}
+                  {renderInputField('city', 'Cidade', 'Informe a Cidade', !!errors.city)}
+                  {renderInputField('state', 'Estado', 'Informe o Estado', !!errors.state)}
                 </Box>
               </Box>
             </Flex>
@@ -693,6 +695,7 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
                           handleContactChange(index, e.target.value, 'phoneInputFields')
                         }
                         autoComplete="off"
+                        error={!!errors.phone}
                       />
                       {index === contactData.phoneInputFields.length - 1 && (
                         <IoAddCircleOutline
@@ -735,7 +738,7 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                           handleContactChange(index, e.target.value, 'emailInputFields')
                         }
-                        error={!/^\S+@\S+\.\S+$/.test(inputValue.email) && inputValue.email !== ''}
+                        error={!!errors.email}
                         autoComplete="off"
                       />
                       {index === contactData.emailInputFields.length - 1 && (
@@ -775,7 +778,7 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
                   {renderInputField('webSite', 'Site', 'Informe o Site')}
                   <Flex style={{ flexDirection: 'column', flex: 1, marginBottom: '16px' }}>
                     <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                      {'Responsavel pelo Escritório'}
+                      {'Sócio Administrador'}
                     </Typography>
 
                     <Autocomplete
@@ -783,12 +786,12 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
                       id="multiple-limit-tags"
                       value={
                         formData.responsible_lawyer
-                          ? customersList.find(
+                          ? adminsList.find(
                               (lawyer: any) => lawyer.id == formData.responsible_lawyer,
                             )
                           : ''
                       }
-                      options={customersList}
+                      options={adminsList}
                       getOptionLabel={(option: any) =>
                         option && option.attributes ? option.attributes.name : ''
                       }
@@ -836,9 +839,9 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
                 marginLeft: '16px',
               }}
               color="secondary"
-              onClick={() => setOpenModal(true)}
+              onClick={() => handleSubmitForm()}
             >
-              {'Salvar'}
+              {loading ? <CircularProgress size={20} sx={{ color: colors.white }} /> : 'Salvar'}
             </Button>
           </Box>
         </ContentContainer>

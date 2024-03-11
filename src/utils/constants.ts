@@ -24,9 +24,9 @@ const userTypeOptions = [
 const UserRegisterTypesOptions = [
   { label: 'Advogado', value: 'lawyer' },
   { label: 'Paralegal', value: 'paralegal' },
-  { label: 'Trainee', value: 'trainee' },
+  { label: 'Estagiário', value: 'trainee' },
   { label: 'Secretário(a)', value: 'secretary' },
-  { label: 'Contador(a)', value: 'excounter' },
+  { label: 'Contador(a)', value: 'counter' },
 ];
 
 const gendersOptions = [
@@ -86,9 +86,15 @@ const officeType = [
 ];
 
 const societyType = [
-  { label: 'Company', value: 'company' },
+  { label: 'Unipessoal', value: 'unipessoal' },
   { label: 'Sociedade Simples', value: 'sole_proprietorship' },
   { label: 'Sociedade Empresária', value: 'individual' },
+];
+
+const accountingType = [
+  { label: 'Simples', value: 'simple' },
+  { label: 'Lucro Presumido', value: 'presumed_profit' },
+  { label: 'Lucro Real', value: 'real_profit' },
 ];
 
 const PJCustomerSteps = ['Dados da Empresa', 'Contato', 'Dados Bancários', 'Arquivos'];
@@ -106,4 +112,5 @@ export {
   officeType,
   societyType,
   UserRegisterTypesOptions,
+  accountingType,
 };

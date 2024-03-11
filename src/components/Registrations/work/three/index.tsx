@@ -13,6 +13,8 @@ import { Box, LinearProgress, Typography } from '@mui/material';
 import { WorkContext } from '@/contexts/WorkContext';
 import { getAllPowers } from '@/services/powers';
 import { Notification } from '@/components';
+import { z } from 'zod';
+import { useSession } from 'next-auth/react';
 export interface IRefWorkStepThreeProps {
   handleSubmitForm: () => void;
 }
@@ -21,10 +23,17 @@ interface IStepThreeProps {
   nextStep: () => void;
 }
 
+const stepThreeSchema = z.object({
+  power_ids: z.array(z.number()).nonempty(),
+});
+
 const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThreeProps> = (
   { nextStep },
   ref,
 ) => {
+  const { data: session } = useSession();
+
+  const [errors, setErrors] = useState({} as any);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -34,6 +43,7 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
 
   const [powersSelected, setPowersSelected] = useState<number[]>([]);
   const [allPowers, setAllPowers] = useState<any>([]);
+  const [filteredPowers, setFilteredPowers] = useState<any>([]);
 
   const getRowClassName = (params: any) => {
     return params.rowIndex % 2 === 0 ? 'even-row' : 'odd-row';
@@ -41,9 +51,7 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
 
   const handleSubmitForm = () => {
     try {
-      if (powersSelected.length === 0) {
-        throw new Error('Selecione pelo menos um poder');
-      }
+      stepThreeSchema.parse({ power_ids: powersSelected });
 
       if (powersSelected.length > 0) {
         const data = {
@@ -62,9 +70,18 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
   };
 
   const handleFormError = (error: any) => {
-    setMessage(error.message);
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+    setErrors(errorObject);
   };
 
   const verifyDataLocalStorage = async () => {
@@ -108,6 +125,21 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
   }, []);
 
   useEffect(() => {
+    const handleDraftWork = () => {
+      const draftWork = workForm.draftWork;
+
+      if (draftWork.id) {
+        if (draftWork.attributes) {
+          const attributes = draftWork.attributes;
+
+          if (attributes.powers) {
+            const power_ids = attributes.powers.map((item: any) => item.id);
+            setPowersSelected(power_ids);
+          }
+        }
+      }
+    };
+
     const handleDataForm = () => {
       const attributes = workForm.data.attributes;
 
@@ -120,11 +152,81 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
     if (workForm.data) {
       handleDataForm();
     }
+
+    if (workForm.draftWork && workForm.draftWork.id) {
+      handleDraftWork();
+    }
   }, [workForm, allPowers]);
 
   useEffect(() => {
     verifyDataLocalStorage();
   }, [allPowers]);
+
+  useEffect(() => {
+    const subject = workForm.subject;
+    const procedures = workForm.procedures;
+
+    if (allPowers && allPowers.length > 0) {
+      const powersToAdd = [];
+
+      if (procedures.includes('administrative')) {
+        if (subject === 'administrative_subject') {
+          const powers = allPowers.filter((item: any) => item?.category === 'admgeneral');
+          powersToAdd.push(...powers);
+        }
+
+        if (subject === 'social_security') {
+          const powers = allPowers.filter((item: any) => item?.category === 'admspecificprev');
+          powersToAdd.push(...powers);
+        }
+
+        if (subject === 'tributary') {
+          const powers = allPowers.filter((item: any) => item?.category === 'admspecifictributary');
+          powersToAdd.push(...powers);
+        }
+      }
+
+      if (procedures.includes('judicial')) {
+        const generalPowers = allPowers.filter((item: any) => item?.category === 'lawgeneral');
+        powersToAdd.push(...generalPowers);
+
+        if (subject === 'social_security') {
+          const powers = allPowers.filter((item: any) => item?.category === 'lawsprev');
+          powersToAdd.push(...powers);
+        }
+
+        if (subject === 'criminal') {
+          const powers = allPowers.filter((item: any) => item?.category === 'lawspecificcrime');
+          powersToAdd.push(...powers);
+        }
+      }
+
+      if (procedures.includes('extrajudicial')) {
+        const powers = allPowers.filter((item: any) => item?.category === 'extrajudicial');
+        powersToAdd.push(...powers);
+      }
+
+      setFilteredPowers(powersToAdd);
+    }
+  }, [allPowers, workForm]);
+
+  useEffect(() => {
+    const dataStorage = localStorage.getItem('WORK/Three');
+
+    if (dataStorage) {
+      const parsedData = JSON.parse(dataStorage);
+
+      const subject = parsedData.subject ? parsedData.subject : '';
+      const procedures = parsedData.procedures ? parsedData.procedures : [];
+
+      const newSubject = workForm.subject ? workForm.subject : '';
+      const newProcedures = workForm.procedures ? workForm.procedures : [];
+
+      if (subject !== newSubject || procedures !== newProcedures) {
+        setPowersSelected([]);
+      }
+    }
+  }, [workForm]);
 
   return (
     <>
@@ -138,11 +240,17 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
       )}
 
       <Box>
-        <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+        <Typography
+          variant="h6"
+          sx={{ margin: '8px' }}
+          style={{
+            color: powersSelected.length <= 0 ? '#FF0000' : 'black',
+          }}
+        >
           {'Poderes'}
         </Typography>
         <Box sx={{ height: 400, width: '100%' }}>
-          {allPowers ? (
+          {allPowers && filteredPowers ? (
             <DataGrid
               disableColumnMenu
               checkboxSelection
@@ -169,7 +277,7 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
                     <Typography variant="h6">{'Nenhum Poder Encontrado'}</Typography>
                   ),
               }}
-              rows={allPowers.map((item: any) => ({
+              rows={filteredPowers.map((item: any) => ({
                 id: item.id,
                 description: item.description,
               }))}

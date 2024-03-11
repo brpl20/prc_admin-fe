@@ -16,6 +16,7 @@ import { CustomerContext } from '@/contexts/CustomerContext';
 import { getAllBanks } from '@/services/brasilAPI';
 import { Box, TextField, Typography, Autocomplete } from '@mui/material';
 import { Notification } from '@/components';
+import { z } from 'zod';
 
 export interface IRefPJCustomerStepThreeProps {
   handleSubmitForm: () => void;
@@ -34,10 +35,19 @@ interface FormData {
   pix: string;
 }
 
+const stepThreeSchema = z.object({
+  bank: z.string().nonempty('Banco é obrigatório'),
+  agency: z.string().nonempty('Agência é obrigatório'),
+  operation: z.string().nonempty('Operação é obrigatório'),
+  account: z.string().nonempty('Conta é obrigatório'),
+  pix: z.string().nonempty('Chave Pix é obrigatório'),
+});
+
 const PJCustomerStepThree: ForwardRefRenderFunction<
   IRefPJCustomerStepThreeProps,
   IStepThreeProps
 > = ({ nextStep, editMode }, ref) => {
+  const [errors, setErrors] = useState({} as any);
   const [bankList, setBankList] = useState([] as any[]);
   const [selectedBank, setSelectedBank] = useState(null);
   const [message, setMessage] = useState('');
@@ -115,11 +125,13 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
     });
 
     try {
-      if (!formData.bank) throw new Error('Selecione um banco');
-      if (!formData.agency) throw new Error('Informe a agência');
-      if (!formData.op) throw new Error('Informe a operação');
-      if (!formData.account) throw new Error('Informe a conta');
-      if (!formData.pix) throw new Error('Informe a chave pix');
+      stepThreeSchema.parse({
+        bank: formData.bank,
+        agency: formData.agency,
+        operation: formData.op,
+        account: formData.account,
+        pix: formData.pix,
+      });
 
       if (editMode) {
         const bankAccount = customerForm.data.attributes.bank_accounts;
@@ -168,9 +180,18 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
   };
 
   const handleFormError = (error: any) => {
-    setMessage(error.message);
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+    setErrors(errorObject);
   };
 
   const renderInputField = (
@@ -178,6 +199,7 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
     name: keyof FormData,
     placeholderValue: string,
     widthValue: string,
+    error?: boolean,
   ) => (
     <Flex style={{ flexDirection: 'column', width: `${widthValue}` }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
@@ -194,6 +216,7 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
         autoComplete="off"
         placeholder={`${placeholderValue}`}
         onChange={handleInputChange}
+        error={error && !formData[name]}
       />
     </Flex>
   );
@@ -287,10 +310,15 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
             id="multiple-limit-tags"
             value={selectedBank}
             options={bankList}
-            getOptionLabel={option => (option.name ? option.name : '')}
+            getOptionLabel={option => option?.name ?? ''}
             onChange={handleBankChange}
             renderInput={params => (
-              <TextField placeholder="Selecione um Banco" {...params} size="small" />
+              <TextField
+                placeholder="Selecione um Banco"
+                {...params}
+                size="small"
+                error={!!errors.bank}
+              />
             )}
             sx={{ backgroundColor: 'white', zIndex: 1 }}
             noOptionsText="Nenhum Banco Encontrado"
@@ -298,12 +326,14 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
         </Box>
 
         <Flex style={{ gap: '16px' }}>
-          {renderInputField('Agência', 'agency', 'Número da agencia', '100%')}
-          {renderInputField('Operação', 'op', 'Op.', '100px')}
-          {renderInputField('Conta', 'account', 'Número da conta', '100%')}
+          {renderInputField('Agência', 'agency', 'Número da agencia', '100%', !!errors.agency)}
+          {renderInputField('Operação', 'op', 'Op.', '100px', !!errors.operation)}
+          {renderInputField('Conta', 'account', 'Número da conta', '100%', !!errors.account)}
         </Flex>
 
-        <Box>{renderInputField('Cadastrar Chave Pix', 'pix', 'Informe a chave', '100%')}</Box>
+        <Box>
+          {renderInputField('Cadastrar Chave Pix', 'pix', 'Informe a chave', '100%', !!errors.pix)}
+        </Box>
       </Container>
     </>
   );

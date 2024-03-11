@@ -9,7 +9,7 @@ import React, {
 
 import { parseCookies } from 'nookies';
 import { getAllAdmins } from '@/services/admins';
-import { getOfficeById } from '@/services/offices';
+import { getAllOffices, getOfficeById } from '@/services/offices';
 import { getOfficesWithLaws } from '@/services/offices';
 
 import { WorkContext } from '@/contexts/WorkContext';
@@ -37,6 +37,7 @@ import { MdOutlineInfo, MdOutlineArrowDropUp, MdOutlineArrowDropDown } from 'rea
 
 import CustomTooltip from '@/components/Tooltip';
 import { Notification } from '@/components';
+import { z } from 'zod';
 
 export interface IRefWorkStepFourProps {
   handleSubmitForm: () => void;
@@ -55,12 +56,18 @@ interface FormData {
   physical_lawyer: string;
 }
 
+const stepFourSchema = z.object({
+  office_ids: z.array(z.string()).nonempty(),
+  profile_admin_ids: z.array(z.number()).nonempty(),
+});
+
 const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourProps> = (
   { nextStep },
   ref,
 ) => {
   const { ['admin_id']: admin_id } = parseCookies();
   const [openSubTable, setOpenSubTable] = useState(true);
+  const [errors, setErrors] = useState({} as any);
 
   const { workForm, setWorkForm } = useContext(WorkContext);
   const [allLawyers, SetAllLawyers] = useState<any>([]);
@@ -92,17 +99,11 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
 
   const handleSubmitForm = () => {
     try {
-      if (officesSelected.length === 0) {
-        throw new Error('Selecione pelo menos um escritório');
-      }
-
-      if (selectedLawyers.length === 0) {
-        throw new Error('Selecione pelo menos um advogado');
-      }
-
       const updatedFormData = { ...formData };
       updatedFormData.lawyers = selectedLawyers;
       const officesIDs = officesSelected.map((office: any) => office.id);
+
+      stepFourSchema.parse({ office_ids: officesIDs, profile_admin_ids: selectedLawyers });
 
       const data = {
         ...workForm,
@@ -126,9 +127,18 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   };
 
   const handleFormError = (error: any) => {
-    setMessage(error.message);
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+    setErrors(errorObject);
   };
 
   const saveDataLocalStorage = (data: any) => {
@@ -151,8 +161,8 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
         setOfficesSelected(officesSelected);
       }
 
-      if (parsedData.office_lawyers) {
-        setSelectedLawyers(parsedData.office_lawyers);
+      if (parsedData.profile_admin_ids) {
+        setSelectedLawyers(parsedData.profile_admin_ids);
       }
 
       if (parsedData.physical_lawyer) {
@@ -215,42 +225,20 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
     SetAllLawyers(response.data);
   };
 
-  const getOfficeDetails = async () => {
-    if (admin_id) {
-      const response = await getOfficeById(admin_id);
-      const admins = response.data.attributes.profile_admins;
+  useEffect(() => {
+    if (allLawyers) {
+      const trainees = allLawyers.filter((lawyer: any) => lawyer.attributes.role == 'trainee');
+      SetTrainee(trainees);
 
-      let traineeAUX: IAdminPropsAttributes[] = [];
-      let paralegalAUX: IAdminPropsAttributes[] = [];
-      let responsibleLawyerAUX: IAdminPropsAttributes[] = [];
+      const paralegals = allLawyers.filter((lawyer: any) => lawyer.attributes.role == 'paralegal');
 
-      admins.forEach((admin: IAdminPropsAttributes) => {
-        switch (admin.role) {
-          case 'lawyer':
-            responsibleLawyerAUX.push(admin);
-            break;
-          case 'paralegal':
-            paralegalAUX.push(admin);
-            break;
-          case 'trainee':
-            traineeAUX.push(admin);
-            break;
-          default:
-            break;
-        }
-      });
-
-      SetTrainee(traineeAUX);
-      SetInitialService(admins);
-      SetParalegal(paralegalAUX);
-      SetResponsibleLawyer(responsibleLawyerAUX);
+      SetParalegal(paralegals);
     }
-  };
+  }, [allLawyers]);
 
   useEffect(() => {
     getOffices();
     getAdmins();
-    getOfficeDetails();
   }, []);
 
   const handleSelectChange = (field: string, value: any) => {
@@ -261,6 +249,26 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   };
 
   useEffect(() => {
+    const handleDraftWork = () => {
+      const draftWork = workForm.draftWork;
+
+      if (draftWork.id) {
+        if (draftWork.attributes) {
+          const attributes = draftWork.attributes;
+
+          const office_ids = attributes.offices.map((item: any) => item.id);
+
+          const officesSelected = offices.filter((office: any) => office_ids == office.id);
+
+          setOfficesSelected(officesSelected);
+
+          const lawyers = attributes.profile_admins.map((item: any) => item.id);
+
+          setSelectedLawyers(lawyers);
+        }
+      }
+    };
+
     const handleDataForm = () => {
       const attributes = workForm.data.attributes;
 
@@ -296,6 +304,10 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
 
     if (workForm.data) {
       handleDataForm();
+    }
+
+    if (workForm.draftWork && workForm.draftWork.id) {
+      handleDraftWork();
     }
   }, [workForm, offices]);
 
@@ -438,7 +450,12 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               options={offices}
               getOptionLabel={option => option.attributes.name}
               renderInput={params => (
-                <TextField placeholder="Selecione um Escritório" {...params} size="small" />
+                <TextField
+                  placeholder="Selecione um Escritório"
+                  {...params}
+                  size="small"
+                  error={!!errors.office_ids}
+                />
               )}
               sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
               noOptionsText="Nenhum Escritório Encontrado"
@@ -492,14 +509,16 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               id="multiple-limit-tags"
               value={
                 formData.responsible_lawyer
-                  ? responsibleLawyer.find(
+                  ? allLawyers.find(
                       (lawyer: IAdminPropsAttributes) =>
                         lawyer.id.toString() == formData.responsible_lawyer,
                     )
                   : ''
               }
-              options={responsibleLawyer}
-              getOptionLabel={(option: any) => (option && option.name ? option.name : '')}
+              options={allLawyers}
+              getOptionLabel={(option: any) =>
+                option && option.attributes.name ? option.attributes.name : ''
+              }
               onChange={(event, value) => handleSelectChange('responsible_lawyer', value)}
               renderInput={params => (
                 <TextField {...params} placeholder={'Informe o Responsável'} size="small" />
@@ -519,14 +538,16 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               id="multiple-limit-tags"
               value={
                 formData.initial_atendee
-                  ? initialService.find(
+                  ? allLawyers.find(
                       (lawyer: IAdminPropsAttributes) =>
                         lawyer.id.toString() == formData.initial_atendee,
                     )
                   : ''
               }
-              options={initialService}
-              getOptionLabel={(option: any) => (option && option.name ? option.name : '')}
+              options={allLawyers}
+              getOptionLabel={(option: any) =>
+                option && option.attributes.name ? option.attributes.name : ''
+              }
               onChange={(event, value) => handleSelectChange('initial_atendee', value)}
               renderInput={params => (
                 <TextField {...params} placeholder={'Informe o Responsavel'} size="small" />
@@ -574,10 +595,16 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               limitTags={1}
               id="multiple-limit-tags"
               value={
-                formData.intern ? trainee.find((lawyer: any) => lawyer.id == formData.intern) : ''
+                formData.intern
+                  ? allLawyers.find(
+                      (lawyer: IAdminPropsAttributes) => lawyer.id.toString() == formData.intern,
+                    )
+                  : ''
               }
               options={trainee}
-              getOptionLabel={(option: any) => (option && option.name ? option.name : '')}
+              getOptionLabel={(option: any) =>
+                option && option.attributes.name ? option.attributes.name : ''
+              }
               onChange={(event, value) => handleSelectChange('intern', value)}
               renderInput={params => (
                 <TextField {...params} placeholder={'Selecione um Estagiário'} size="small" />
@@ -597,11 +624,13 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               id="multiple-limit-tags"
               value={
                 formData.bachelor
-                  ? paralegal.find((lawyer: any) => lawyer.id == formData.bachelor)
+                  ? allLawyers.find((lawyer: any) => lawyer.id == formData.bachelor)
                   : ''
               }
               options={paralegal}
-              getOptionLabel={(option: any) => (option && option.name ? option.name : '')}
+              getOptionLabel={(option: any) =>
+                option && option.attributes.name ? option.attributes.name : ''
+              }
               onChange={(event, value) => handleSelectChange('bachelor', value)}
               renderInput={params => (
                 <TextField {...params} placeholder={'Selecione um Paralegal'} size="small" />
@@ -616,7 +645,10 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
             display={'flex'}
             alignItems={'center'}
             variant="h6"
-            style={{ height: '40px' }}
+            style={{
+              color: selectedLawyers.length <= 0 ? '#FF0000' : 'black',
+              height: '40px',
+            }}
           >
             {'Advogados'}
           </Typography>

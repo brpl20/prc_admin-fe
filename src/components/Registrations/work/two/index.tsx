@@ -28,6 +28,7 @@ import {
 } from '@mui/material';
 import { moneyMask, percentMask } from '@/utils/masks';
 import { useRouter } from 'next/router';
+import { z } from 'zod';
 
 const instalmentOptions = [
   '1x',
@@ -51,6 +52,10 @@ export interface IRefWorkStepTwoProps {
 interface IStepTwoProps {
   nextStep: () => void;
 }
+
+const stepTwoSchema = z.object({
+  honoraryType: z.string().nonempty(),
+});
 
 const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps> = (
   { nextStep },
@@ -93,61 +98,87 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
   };
 
   const handleSubmitForm = () => {
-    let honorary_attributes = {} as any;
-
-    if (route.asPath.includes('alterar')) {
-      honorary_attributes = {
-        id:
-          workForm.data.attributes.honorary && workForm.data.attributes.honorary.id
-            ? workForm.data.attributes.honorary.id
-            : '',
-        fixed_honorary_value: valueOfFixed?.replace('R$ ', '').replace('.', '').replace(',', '.'),
-        percent_honorary_value: valueOfPercent?.toString(),
-        parcelling: parcelling,
-        parcelling_value: numberOfInstallments.replace('x', ''),
-        honorary_type: honoraryType,
-      };
-    }
-
-    if (!route.asPath.includes('alterar')) {
-      honorary_attributes = {
-        fixed_honorary_value: valueOfFixed?.replace('R$ ', '').replace('.', '').replace(',', '.'),
-        percent_honorary_value: valueOfPercent?.toString(),
-        parcelling: parcelling,
-        parcelling_value: numberOfInstallments.replace('x', ''),
-        honorary_type: honoraryType,
-      };
-    }
-
-    const data = {
-      ...workForm,
-      honorary_attributes: honorary_attributes,
-    } as any;
-
     try {
+      stepTwoSchema.parse({
+        honoraryType: honoraryType,
+      });
+
+      if (honoraryType === 'success' && valueOfPercent === '') {
+        throw new Error('Preencha todos os campos obrigatórios.');
+      }
+
+      if (honoraryType === 'work' && valueOfFixed === '') {
+        throw new Error('Preencha todos os campos obrigatórios.');
+      }
+
+      if (
+        (honoraryType === 'both' && valueOfFixed === '') ||
+        (honoraryType === 'both' && valueOfPercent === '')
+      ) {
+        throw new Error('Preencha todos os campos obrigatórios.');
+      }
+
+      if (parcelling && numberOfInstallments === '') {
+        throw new Error('Preencha todos os campos obrigatórios.');
+      }
+
+      let honorary_attributes = {} as any;
+
+      if (route.asPath.includes('alterar')) {
+        honorary_attributes = {
+          id:
+            workForm.data.attributes.honorary && workForm.data.attributes.honorary.id
+              ? workForm.data.attributes.honorary.id
+              : '',
+          fixed_honorary_value: valueOfFixed?.replace('R$ ', '').replace('.', '').replace(',', '.'),
+          percent_honorary_value: valueOfPercent?.toString(),
+          parcelling: parcelling,
+          parcelling_value: numberOfInstallments.replace('x', ''),
+          honorary_type: honoraryType,
+        };
+      }
+
+      if (!route.asPath.includes('alterar')) {
+        honorary_attributes = {
+          fixed_honorary_value: valueOfFixed?.replace('R$ ', '').replace('.', '').replace(',', '.'),
+          percent_honorary_value: valueOfPercent?.toString(),
+          parcelling: parcelling,
+          parcelling_value: numberOfInstallments.replace('x', ''),
+          honorary_type: honoraryType,
+        };
+      }
+
+      const data = {
+        ...workForm,
+        honorary_attributes: honorary_attributes,
+      } as any;
+
       setWorkForm(data);
       saveDataLocalStorage(data);
       nextStep();
     } catch (error: any) {
-      const newErrors = error.formErrors.fieldErrors;
-      const errorObject: { [key: string]: string } = {};
-
-      setMessage('Preencha todos os campos obrigatórios.');
-      setType('error');
-      setOpenSnackbar(true);
-
-      for (const field in newErrors) {
-        if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
-          errorObject[field] = newErrors[field][0] as string;
-        }
-      }
-      setErrors(errorObject);
+      handleFormError(error);
     }
 
     scroll.scrollToTop({
       duration: 500,
       smooth: 'easeInOutQuart',
     });
+  };
+
+  const handleFormError = (error: any) => {
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
+    setType('error');
+    setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+    setErrors(errorObject);
   };
 
   const verifyDataLocalStorage = async () => {
@@ -206,6 +237,63 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
   }));
 
   useEffect(() => {
+    const handleDraftWork = () => {
+      const draftWork = workForm.draftWork;
+
+      if (draftWork.id) {
+        if (draftWork.attributes) {
+          const attributes = draftWork.attributes;
+
+          if (attributes.honorary) {
+            if (attributes.honorary.honorary_type) {
+              setHonoraryType(attributes.honorary.honorary_type);
+            }
+
+            if (attributes.honorary.fixed_honorary_value) {
+              setValueOfFixed(
+                `R$ ${parseFloat(attributes.honorary.fixed_honorary_value)
+                  .toFixed(2)
+                  .replace('.', ',')
+                  .replace(/\d(?=(\d{3})+,)/g, '$&.')}`,
+              );
+            }
+
+            if (attributes.honorary.percent_honorary_value) {
+              setValueOfPercent(attributes.honorary.percent_honorary_value);
+            }
+
+            if (attributes.honorary.parcelling) {
+              setParcelling(attributes.honorary.parcelling);
+            }
+
+            if (attributes.honorary.parcelling_value) {
+              setNumberOfInstallments(`${attributes.honorary.parcelling_value}x`);
+            }
+
+            if (attributes.honorary.parcelling) {
+              setParcelling(true);
+            }
+
+            if (attributes.honorary.honorary_type.search('work') >= 0) {
+              setIsVisibleOptionsArea(true);
+            }
+
+            if (attributes.honorary.honorary_type.search('success') >= 0) {
+              setIsVisibleOptionsArea(true);
+            }
+
+            if (attributes.honorary.honorary_type.search('both') >= 0) {
+              setIsVisibleOptionsArea(true);
+            }
+
+            if (attributes.honorary.honorary_type.search('bonus') >= 0) {
+              setIsVisibleOptionsArea(false);
+            }
+          }
+        }
+      }
+    };
+
     const handleDataForm = () => {
       const attributes = workForm.data.attributes;
 
@@ -248,6 +336,10 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
     if (workForm.data) {
       handleDataForm();
     }
+
+    if (workForm.draftWork && workForm.draftWork.id) {
+      handleDraftWork();
+    }
   }, [workForm]);
 
   useEffect(() => {
@@ -274,7 +366,13 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
         >
           <Flex style={{ flexDirection: 'column', width: '400px' }}>
             <Flex>
-              <Typography variant="h6" sx={{ marginBottom: '8px', fontSize: '1.1rem' }}>
+              <Typography
+                variant="h6"
+                sx={{ marginBottom: '8px', fontSize: '1.1rem' }}
+                style={{
+                  color: honoraryType === '' ? '#FF0000' : 'black',
+                }}
+              >
                 {'Honorários de Trabalho ou Êxito'}
               </Typography>
               {errors.honoraryType && honoraryType === '' && (
@@ -487,7 +585,13 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
               {honoraryType == 'work' && (
                 <FormControl>
                   <Box>
-                    <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ marginBottom: '8px' }}
+                      style={{
+                        color: valueOfFixed === '' ? '#FF0000' : 'black',
+                      }}
+                    >
                       {'Valor de Honorários Fixos'}
                     </Typography>
                     <Flex style={{ flexDirection: 'column' }}>
@@ -510,7 +614,14 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                     <>
                       {parcelling ? (
                         <Box sx={{ marginTop: '16px' }}>
-                          <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+                          <Typography
+                            variant="h6"
+                            sx={{ marginBottom: '8px' }}
+                            style={{
+                              color:
+                                parcelling && numberOfInstallments === '' ? '#FF0000' : 'black',
+                            }}
+                          >
                             {'Parcelamento'}
                           </Typography>
                           <Flex style={{ flexDirection: 'column' }}>
@@ -555,7 +666,14 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
               {honoraryType == 'success' && (
                 <FormControl>
                   <Box>
-                    <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ marginBottom: '8px' }}
+                      style={{
+                        color:
+                          honoraryType === 'success' && valueOfPercent === '' ? '#FF0000' : 'black',
+                      }}
+                    >
                       {'Valor de Honorários Percentuais'}
                     </Typography>
                     <Flex style={{ flexDirection: 'column' }}>
@@ -625,7 +743,14 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                     <>
                       {parcelling ? (
                         <Box mt={'16px'}>
-                          <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+                          <Typography
+                            variant="h6"
+                            sx={{ marginBottom: '8px' }}
+                            style={{
+                              color:
+                                parcelling && numberOfInstallments === '' ? '#FF0000' : 'black',
+                            }}
+                          >
                             {'Parcelamento'}
                           </Typography>
                           <Flex style={{ flexDirection: 'column' }}>

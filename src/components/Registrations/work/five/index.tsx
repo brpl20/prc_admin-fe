@@ -82,39 +82,31 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
   const handleSubmitForm = () => {
     try {
-      if (!selectedCustomer) {
-        throw new Error('Selecione um cliente');
-      }
+      let data = {
+        ...workForm,
+      };
 
-      let data = {};
-
-      if (route.asPath.includes('alterar')) {
-        data = {
-          ...workForm,
-          recommendations_attributes: [
-            {
-              id: workForm.data.attributes.recommendations[0].id,
-              profile_customer_id: selectedCustomer?.id,
-              percentage: `${percentage}`,
-              commission: commission
-                ? Number(commission.replace('R$', '').replace('.', '').replace(',', '.'))
-                : 0,
-            },
-          ],
-        };
-      } else {
-        data = {
-          ...workForm,
-          recommendations_attributes: [
-            {
-              profile_customer_id: selectedCustomer?.id,
-              percentage: `${percentage}`,
-              commission: commission
-                ? Number(commission.replace('R$', '').replace('.', '').replace(',', '.'))
-                : 0,
-            },
-          ],
-        };
+      if (route.asPath.includes('alterar') && selectedCustomer) {
+        data.recommendations_attributes = [
+          {
+            id: workForm.data.attributes.recommendations?.[0]?.id,
+            profile_customer_id: selectedCustomer.id,
+            percentage: `${percentage}`,
+            commission: commission
+              ? Number(commission.replace('R$', '').replace('.', '').replace(',', '.'))
+              : 0,
+          },
+        ];
+      } else if (selectedCustomer) {
+        data.recommendations_attributes = [
+          {
+            profile_customer_id: selectedCustomer.id,
+            percentage: `${percentage}`,
+            commission: commission
+              ? Number(commission.replace('R$', '').replace('.', '').replace(',', '.'))
+              : '',
+          },
+        ];
       }
 
       setWorkForm(data);
@@ -132,42 +124,74 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
   };
 
   useEffect(() => {
+    const handleDraftWork = () => {
+      const draftWork = workForm.draftWork;
+
+      if (draftWork.id) {
+        if (draftWork.attributes) {
+          const attributes = draftWork.attributes;
+
+          if (attributes.recommendations) {
+            if (attributes.recommendations[0].percentage) {
+              handlePercentage(attributes.recommendations[0].percentage);
+            }
+
+            if (attributes.recommendations[0].commission) {
+              setCommission(
+                `R$ ${parseFloat(attributes.recommendations[0].commission)
+                  .toFixed(2)
+                  .replace('.', ',')
+                  .replace(/\d(?=(\d{3})+,)/g, '$&.')}`,
+              );
+            }
+
+            if (attributes.recommendations[0].profile_customer_id) {
+              if (customersList.length === 0) {
+                return;
+              }
+
+              const customer = customersList.find(
+                customer => customer.id == attributes.recommendations[0].profile_customer_id,
+              );
+
+              setCostumerId(customer?.id);
+              setSelectedCustomer(customer);
+            }
+          }
+        }
+      }
+    };
+
     const handleDataForm = () => {
       const attributes = workForm.data.attributes;
 
       if (attributes) {
         if (attributes.recommendations) {
-          if (attributes.recommendations[0].percentage) {
-            handlePercentage(attributes.recommendations[0].percentage);
-          }
+          handlePercentage(attributes.recommendations_attributes?.[0]?.percentage ?? '');
 
-          if (attributes.recommendations[0].commission) {
-            setCommission(
-              `R$ ${parseFloat(attributes.recommendations[0].commission)
-                .toFixed(2)
-                .replace('.', ',')
-                .replace(/\d(?=(\d{3})+,)/g, '$&.')}`,
-            );
-          }
+          setCommission(
+            `R$ ${parseFloat(attributes.recommendations?.[0]?.commission ?? 0)
+              .toFixed(2)
+              .replace('.', ',')
+              .replace(/\d(?=(\d{3})+,)/g, '$&.')}`,
+          );
 
-          if (attributes.recommendations[0].profile_customer_id) {
-            if (customersList.length === 0) {
-              return;
-            }
+          const customer = customersList.find(
+            customer => customer.id == attributes.recommendations?.[0]?.profile_customer_id,
+          );
 
-            const customer = customersList.find(
-              customer => customer.id == attributes.recommendations[0].profile_customer_id,
-            );
-
-            setCostumerId(customer?.id);
-            setSelectedCustomer(customer);
-          }
+          setCostumerId(customer?.id);
+          setSelectedCustomer(customer);
         }
       }
     };
 
     if (workForm.data) {
       handleDataForm();
+    }
+
+    if (workForm.draftWork && workForm.draftWork.id) {
+      handleDraftWork();
     }
   }, [workForm, customersList]);
 
@@ -182,9 +206,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
       if (data) {
         const parsedData = JSON.parse(data);
 
-        if (parsedData.recommendations_attributes[0].percentage) {
-          handlePercentage(parsedData.recommendations_attributes[0].percentage);
-        }
+        handlePercentage(parsedData.recommendations_attributes?.[0].percentage ?? '');
 
         if (parsedData.recommendations_attributes[0].commission) {
           setCommission(
@@ -311,7 +333,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
                     value={percentage}
                     onChange={(e: any) => {
                       const value = e.target.value ? e.target.value : '';
-                      setPercentage(percentMask(value));
+                      setPercentage(value ? percentMask(value) : '');
                     }}
                   />
                 </Input>

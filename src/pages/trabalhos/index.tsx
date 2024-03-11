@@ -1,5 +1,6 @@
+import { jwtDecode } from 'jwt-decode';
+
 import React, { useEffect, useState, useContext } from 'react';
-import { withAuth } from '@/middleware/withAuth';
 import Link from 'next/link';
 
 import { getAllWorks } from '@/services/works';
@@ -16,7 +17,7 @@ import {
   Container,
   ContentContainer,
 } from '@/styles/globals';
-import { MdOutlineAddCircle, MdSearch, MdVisibility, MdModeEdit, MdArchive } from 'react-icons/md';
+import { MdOutlineAddCircle, MdSearch, MdVisibility, MdModeEdit } from 'react-icons/md';
 
 import { Box, Button, Typography, LinearProgress } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
@@ -25,6 +26,7 @@ import { Footer } from '@/components';
 import dynamic from 'next/dynamic';
 import Router from 'next/router';
 import { IAdminProps } from '@/interfaces/IAdmin';
+import { useSession } from 'next-auth/react';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Works = () => {
@@ -36,6 +38,18 @@ const Works = () => {
   const [worksList, setWorksList] = useState<IWorksListProps[]>([]);
   const [worksListListFiltered, setWorksListFiltered] = useState<IWorksListProps[]>([]);
   const [allLawyers, SetAllLawyers] = useState<any>([]);
+  const [adminId, setAdminId] = useState<number>(0);
+
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if (session) {
+      const token: any = jwtDecode(session.token);
+      if (token) {
+        setAdminId(token.admin_id);
+      }
+    }
+  }, [session]);
 
   const handleSearch = (search: string) => {
     const regex = new RegExp(search, 'i');
@@ -118,6 +132,10 @@ const Works = () => {
 
   const getFirstName = (name: string) => {
     return name.split(' ')[0];
+  };
+
+  const handleDetails = (work: IWorksListProps) => {
+    Router.push(`/detalhes?type=trabalho&id=${work.id}`);
   };
 
   useEffect(() => {
@@ -308,6 +326,7 @@ const Works = () => {
                       requestProcess: work.attributes.number,
                       responsible: responsible,
                       partner: partner,
+                      created_by_id: work.attributes.created_by_id,
                     };
                   })
                 }
@@ -321,14 +340,26 @@ const Works = () => {
                     editable: false,
                     renderCell: (params: any) => (
                       <Box width={'100%'} display={'flex'} justifyContent={'space-around'}>
-                        <MdVisibility size={22} color={colors.icons} />
-                        <MdModeEdit
+                        <MdVisibility
                           size={22}
                           color={colors.icons}
                           cursor={'pointer'}
-                          onClick={() => handleEdit(params.row)}
+                          onClick={() => handleDetails(params.row)}
                         />
-                        <MdArchive size={22} color={colors.icons} cursor={'pointer'} />
+                        <button
+                          style={{
+                            backgroundColor: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                          }}
+                          disabled={params.row.created_by_id !== adminId}
+                          onClick={() => {
+                            handleEdit(params.row);
+                          }}
+                        >
+                          <MdModeEdit size={22} color={colors.icons} cursor={'pointer'} />
+                        </button>
+                       
                       </Box>
                     ),
                   },
@@ -392,4 +423,4 @@ const Works = () => {
   );
 };
 
-export default withAuth(Works);
+export default Works;

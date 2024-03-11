@@ -1,5 +1,6 @@
+import styles from './style.module.css';
+
 import React, { useEffect, useState, useContext } from 'react';
-import { withAuth } from '@/middleware/withAuth';
 import Router, { useRouter } from 'next/router';
 import Link from 'next/link';
 
@@ -22,7 +23,6 @@ import {
   MdSearch,
   MdVisibility,
   MdModeEdit,
-  MdArchive,
   MdGavel,
   MdKeyboardArrowDown,
   MdKeyboardArrowRight,
@@ -40,8 +40,42 @@ import { ICustomerProps } from '@/interfaces/ICustomer';
 import { cnpjMask, cpfMask, phoneMask } from '@/utils/masks';
 
 import { CustomerContext } from '@/contexts/CustomerContext';
+import { getSession } from 'next-auth/react';
 
 const Customers = () => {
+  const legend = [
+    {
+      id: 1,
+      name: 'Pessoa Jurídica',
+      color: '#29A74466',
+    },
+    {
+      id: 2,
+      name: 'Pessoa Física',
+      color: '#fa768c66',
+    },
+    {
+      id: 3,
+      name: 'Contador',
+      color: '#FEC03233',
+    },
+    {
+      id: 4,
+      name: 'Representante Legal',
+      color: '#1D79FB66',
+    },
+  ];
+
+  const getRowClassName = (params: any) => {
+    return params.row.type === 'Pessoa Física'
+      ? styles.physicalPerson
+      : params.row.type === 'Pessoa Jurídica'
+      ? styles.legalPerson
+      : params.row.type === 'Contador'
+      ? styles.counter
+      : styles.representative;
+  };
+
   const { setCustomerForm } = useContext(CustomerContext);
 
   const { showTitle, setShowTitle, setPageTitle } = useContext(PageTitleContext);
@@ -278,11 +312,39 @@ const Customers = () => {
                 </SelectContainer>
               </Box>
             </Box>
+            {
+              <Flex
+                style={{
+                  marginTop: '26px',
+                  gap: '40px',
+                }}
+              >
+                {legend.map((item, index) => (
+                  <Flex
+                    key={index}
+                    style={{
+                      gap: '10px',
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        backgroundColor: item.color,
+                      }}
+                    />
+                    <Typography variant="subtitle2">{item.name}</Typography>
+                  </Flex>
+                ))}
+              </Flex>
+            }
             <Box mt={'20px'} sx={{ height: 450 }}>
               <DataGrid
                 disableColumnMenu
                 disableRowSelectionOnClick
                 loading={isLoading}
+                getRowClassName={getRowClassName}
                 slots={{
                   noRowsOverlay: () =>
                     isLoading ? (
@@ -320,7 +382,8 @@ const Customers = () => {
                     cpf:
                       (customer.attributes.cpf &&
                         customer.attributes.customer_type === 'physical_person') ||
-                      customer.attributes.customer_type === 'counter'
+                      customer.attributes.customer_type === 'counter' ||
+                      customer.attributes.customer_type === 'representative'
                         ? cpfMask(customer.attributes.cpf)
                         : customer.attributes.cnpj &&
                           customer.attributes.customer_type === 'legal_person'
@@ -356,8 +419,6 @@ const Customers = () => {
                           cursor={'pointer'}
                           onClick={() => handleEdit(params.row)}
                         />
-                        <MdGavel size={22} color={colors.icons} />
-                        <MdArchive size={22} color={colors.icons} />
                       </Box>
                     ),
                   },
@@ -420,4 +481,12 @@ const Customers = () => {
   );
 };
 
-export default withAuth(Customers);
+export default Customers;
+
+export const getServerSideProps = async (ctx: any) => {
+  const session = await getSession(ctx);
+
+  return {
+    props: {},
+  };
+};

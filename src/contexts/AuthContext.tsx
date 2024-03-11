@@ -1,17 +1,13 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, useContext } from 'react';
 import { setCookie, destroyCookie, parseCookies } from 'nookies';
 import { useSession } from 'next-auth/react';
 import jwt from 'jsonwebtoken';
 
-import {
-  signInRequest,
-  loginWithGoogle,
-  logoutRequest,
-} from '../services/auth';
-import { api } from '@/services/api';
+import { signInRequest, loginWithGoogle, logoutRequest } from '../services/auth';
 import Router from 'next/router';
 
 import { IAuthContextType, IUser, ISignInData } from '@/interfaces/IAuth';
+import api from '@/services/api';
 
 export const AuthContext = createContext({} as IAuthContextType);
 
@@ -21,7 +17,7 @@ export function AuthProvider({ children }: any) {
 
   const isAuthenticated = !!user;
 
-  const saveToken = (token: string) => {
+  const saveToken = async (token: string) => {
     const decodedToken = jwt.decode(token) as any;
     const { admin_id } = decodedToken;
 
@@ -33,7 +29,8 @@ export function AuthProvider({ children }: any) {
     setCookie(undefined, 'admin_id', admin_id);
     setCookie(undefined, 'nextauth.isAuth', 'true');
     api.defaults.headers['Authorization'] = `Bearer ${token}`;
-    Router.push('/home');
+
+    Router.push('/clientes');
   };
 
   async function localAuthentication({ email, password }: ISignInData) {
@@ -74,9 +71,7 @@ export function AuthProvider({ children }: any) {
   }, [session, status]);
 
   return (
-    <AuthContext.Provider
-      value={{ user, isAuthenticated, localAuthentication, handleLogout }}
-    >
+    <AuthContext.Provider value={{ user, isAuthenticated, localAuthentication, handleLogout }}>
       {children}
     </AuthContext.Provider>
   );

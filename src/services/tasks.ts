@@ -1,4 +1,4 @@
-import { api } from './api';
+import api from './api';
 
 const createTask = async (data: any) => {
   const payload = {

@@ -3,7 +3,6 @@ import type { AppProps } from 'next/app';
 
 import { theme } from '@/styles/globals';
 import { ThemeProvider } from '@mui/material/styles';
-import { AuthProvider } from '@/contexts/AuthContext';
 import WorkProvider from '@/contexts/WorkContext';
 import CustomerProvider from '@/contexts/CustomerContext';
 import PageTitleProvider from '@/contexts/PageTitleContext';
@@ -49,9 +48,7 @@ const StudioApp = (props: StudioAppProps) => {
           <CustomerProvider>
             <PageTitleProvider>
               <WorkProvider>
-                <AuthProvider>
-                  <Component {...pageProps} />
-                </AuthProvider>
+                <Component {...pageProps} />
               </WorkProvider>
             </PageTitleProvider>
           </CustomerProvider>

@@ -49,7 +49,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
   const [type, setType] = useState<'success' | 'error'>('success');
 
   const [documentsProduced, setDocumentsProduced] = useState<string[]>([]);
-  const [pendingDocuments, setPendingDocuments] = useState<string[]>([]);
+  const [pendingDocuments, setPendingDocuments] = useState([] as any);
   const [gradesInGeneral, setGradesInGeneral] = useState<string>('');
   const [otherDocuments, setOtherDocuments] = useState<string>('');
   const [folder, setFolder] = useState('');
@@ -65,13 +65,38 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
     }
   };
 
+  {
+    /*Retirar Documento e Adicionar novamente*/
+  }
+
+  // const handleDocumentsProducedSelection = (event: ChangeEvent<HTMLInputElement>) => {
+  //   const { value, checked } = event.target;
+
+  //   if (checked) {
+  //     setDocumentsProduced((prevSelected: any) => [...prevSelected, value]);
+  //   } else {
+  //     setDocumentsProduced((prevSelected: any) =>
+  //       prevSelected.filter((document: any) => {
+  //         const documentType = document.document_type ? document.document_type : document;
+  //         return documentType !== value;
+  //       }),
+  //     );
+  //   }
+  // };
+
   const handleDocumentsPendingSelection = (event: ChangeEvent<HTMLInputElement>) => {
     const { value, checked } = event.target;
 
     if (checked) {
-      setPendingDocuments(prevSelected => [...prevSelected, value]);
+      const document = {
+        description: value,
+        profile_customer_id: workForm.profile_customer_ids.toString(),
+      };
+      setPendingDocuments((prevSelected: any) => [...prevSelected, document]);
     } else {
-      setPendingDocuments(prevSelected => prevSelected.filter(document => document !== value));
+      setPendingDocuments((prevSelected: any) =>
+        prevSelected.filter((document: any) => document.description !== value),
+      );
     }
   };
 
@@ -81,20 +106,70 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
         throw new Error('Selecione pelo menos um documento a ser produzido');
       }
 
-      const transformObjects = documentsProduced.map(document => ({
-        document_type: document,
-      }));
+      let documentsProducedArray = [] as any;
+
+      workForm.profile_customer_ids.map((profile: any) => {
+        documentsProducedArray = documentsProducedArray.concat(
+          documentsProduced.map((document: any) => {
+            return {
+              document_type: document,
+              profile_customer_id: profile,
+            };
+          }),
+        );
+      });
 
       let data = {};
 
       if (router.pathname.includes('alterar')) {
-        const transformObjects = documentsProduced.map(document => ({
-          document_type: document,
-        }));
+        let newProducedDocumentsArray = [] as any;
+
+        let documentTypesSet = new Set();
+
+        documentsProduced.forEach((document: any) => {
+          if (document.document_type) {
+            documentTypesSet.add(document.document_type);
+          }
+        });
+
+        const customersWithoutDocument = workForm.profile_customer_ids.filter((profile: any) => {
+          return !documentsProduced.some(
+            (document: any) => document.profile_customer_id == profile,
+          );
+        });
+
+        documentsProduced.map((document: any) => {
+          if (!document.id) {
+            workForm.profile_customer_ids.map((profile: any) => {
+              newProducedDocumentsArray.push({
+                document_type: document,
+                profile_customer_id: profile,
+              });
+            });
+          }
+
+          if (document.id) {
+            newProducedDocumentsArray.push({
+              id: document.id,
+              document_type: document.document_type,
+              profile_customer_id: document.profile_customer_id,
+              url: document.url,
+            });
+          }
+        });
+
+        customersWithoutDocument.map((profile: any) => {
+          documentTypesSet.forEach((document: any) => {
+            newProducedDocumentsArray.push({
+              document_type: document,
+              profile_customer_id: profile,
+            });
+          });
+        });
 
         data = {
           ...workForm,
-          documents_attributes: transformObjects,
+          documents_attributes: newProducedDocumentsArray,
           pending_documents_attributes: pendingDocuments,
           extra_pending_document: otherDocuments,
           folder: folder,
@@ -103,7 +178,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
       } else {
         data = {
           ...workForm,
-          documents_attributes: transformObjects,
+          documents_attributes: documentsProducedArray,
           pending_documents_attributes: pendingDocuments,
           extra_pending_document: otherDocuments,
           folder: folder,
@@ -112,6 +187,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
       }
 
       setWorkForm(data);
+
       saveDataLocalStorage(data);
       confirmation();
     } catch (err) {
@@ -134,6 +210,30 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
   }));
 
   useEffect(() => {
+    const handleDraftWork = () => {
+      const draftWork = workForm.draftWork;
+
+      if (draftWork.id) {
+        if (draftWork.attributes) {
+          const attributes = draftWork.attributes;
+
+          if (attributes.documents) {
+            const documents_types = attributes.documents.map(
+              (document: any) => document.document_type,
+            );
+
+            setDocumentsProduced(documents_types);
+          }
+
+          if (attributes.pending_documents) {
+            const pending_documents = attributes.pending_documents.map((document: any) => document);
+
+            setPendingDocuments(pending_documents);
+          }
+        }
+      }
+    };
+
     const handleDataForm = () => {
       const attributes = workForm.data.attributes;
 
@@ -141,12 +241,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
         if (attributes.documents) {
           const documents_types = attributes.documents.map((document: any) => document);
 
-          const uniqueDocuments = documents_types.filter(
-            (document: any, index: number, self: any) =>
-              index === self.findIndex((t: any) => t.document_type === document.document_type),
-          );
-
-          setDocumentsProduced(uniqueDocuments.map((document: any) => document.document_type));
+          setDocumentsProduced(documents_types);
         }
 
         if (attributes.extra_pending_document) {
@@ -160,11 +255,21 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
         if (attributes.note) {
           setGradesInGeneral(attributes.note);
         }
+
+        if (attributes.pending_documents) {
+          const pending_documents = attributes.pending_documents.map((document: any) => document);
+
+          setPendingDocuments(pending_documents);
+        }
       }
     };
 
     if (workForm.data) {
       handleDataForm();
+    }
+
+    if (workForm.draftWork && workForm.draftWork.id) {
+      handleDraftWork();
     }
   }, [workForm]);
 
@@ -278,7 +383,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                   }
                   label="Procuração"
                 />
-                {/* 
+
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -312,9 +417,25 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                   style={{
                     marginRight: '0px',
                   }}
-                /> */}
+                />
 
                 <FormControlLabel
+                  control={
+                    <Checkbox
+                      value="honorary"
+                      checked={
+                        documentsProduced.includes('honorary') ||
+                        documentsProduced
+                          .map((document: any) => document.document_type)
+                          .includes('honorary')
+                      }
+                      onChange={handleDocumentsProducedSelection}
+                    />
+                  }
+                  label="Contrato"
+                />
+
+                {/* <FormControlLabel
                   control={
                     <Checkbox
                       value="termOfResidence"
@@ -331,8 +452,8 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                   style={{
                     marginRight: '0px',
                   }}
-                />
-
+                /> */}
+                {/* 
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -350,12 +471,12 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                   style={{
                     marginRight: '0px',
                   }}
-                />
+                /> */}
               </Flex>
             </Box>
 
             {/* Pending Documents */}
-            <Box>
+            {/* <Box>
               <Flex
                 style={{
                   marginBottom: '8px',
@@ -402,8 +523,11 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                 <FormControlLabel
                   control={
                     <Checkbox
-                      value="identityDocument"
-                      checked={pendingDocuments.includes('identityDocument')}
+                      value="rg"
+                      checked={
+                        pendingDocuments.includes('rg') ||
+                        pendingDocuments.map((document: any) => document.description).includes('rg')
+                      }
                       onChange={handleDocumentsPendingSelection}
                     />
                   }
@@ -413,8 +537,13 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                 <FormControlLabel
                   control={
                     <Checkbox
-                      value="proofOfAddress"
-                      checked={pendingDocuments.includes('proofOfAddress')}
+                      value="proof_of_address"
+                      checked={
+                        pendingDocuments.includes('proof_of_address') ||
+                        pendingDocuments
+                          .map((document: any) => document.description)
+                          .includes('proof_of_address')
+                      }
                       onChange={handleDocumentsPendingSelection}
                     />
                   }
@@ -424,8 +553,13 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                 <FormControlLabel
                   control={
                     <Checkbox
-                      value="myINSSPassword"
-                      checked={pendingDocuments.includes('myINSSPassword')}
+                      value="inss_password"
+                      checked={
+                        pendingDocuments.includes('inss_password') ||
+                        pendingDocuments
+                          .map((document: any) => document.description)
+                          .includes('inss_password')
+                      }
                       onChange={handleDocumentsPendingSelection}
                     />
                   }
@@ -438,8 +572,13 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                 <FormControlLabel
                   control={
                     <Checkbox
-                      value="medicalDocuments"
-                      checked={pendingDocuments.includes('medicalDocuments')}
+                      value="medical_documents"
+                      checked={
+                        pendingDocuments.includes('medical_documents') ||
+                        pendingDocuments
+                          .map((document: any) => document.description)
+                          .includes('medical_documents')
+                      }
                       onChange={handleDocumentsPendingSelection}
                     />
                   }
@@ -452,8 +591,13 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                 <FormControlLabel
                   control={
                     <Checkbox
-                      value="ruralDocuments"
-                      checked={pendingDocuments.includes('ruralDocuments')}
+                      value="rural_documents"
+                      checked={
+                        pendingDocuments.includes('rural_documents') ||
+                        pendingDocuments
+                          .map((document: any) => document.description)
+                          .includes('rural_documents')
+                      }
                       onChange={handleDocumentsPendingSelection}
                     />
                   }
@@ -466,8 +610,13 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                 <FormControlLabel
                   control={
                     <Checkbox
-                      value="copyOfApplication"
-                      checked={pendingDocuments.includes('copyOfApplication')}
+                      value="copy_of_requirements"
+                      checked={
+                        pendingDocuments.includes('copy_of_requirements') ||
+                        pendingDocuments
+                          .map((document: any) => document.description)
+                          .includes('copy_of_requirements')
+                      }
                       onChange={handleDocumentsPendingSelection}
                     />
                   }
@@ -477,7 +626,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                   }}
                 />
               </Flex>
-            </Box>
+            </Box> */}
           </Flex>
         </Flex>
       </>

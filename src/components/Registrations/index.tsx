@@ -11,7 +11,7 @@ import {
   createCustomer as createCustomerApi,
   updateProfileCustomer,
 } from '@/services/customers';
-import { createWork, updateWork } from '@/services/works';
+import { createDraftWork, createWork, updateWork } from '@/services/works';
 
 import { DescriptionText, ContentContainer, PageTitle } from '@/styles/globals';
 import { Container, Content } from './styles';
@@ -38,6 +38,7 @@ import WorkStepFour, { IRefWorkStepFourProps } from './work/four';
 import WorkStepFive, { IRefWorkStepFiveProps } from './work/five';
 import WorkStepSix, { IRefWorkStepSixProps } from './work/six';
 import ConfirmDownloadDocument from '../ConfirmDownloadDocument';
+import { useSession } from 'next-auth/react';
 
 interface IRegistrationProps {
   registrationType: string;
@@ -46,6 +47,8 @@ interface IRegistrationProps {
 }
 
 const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegistrationProps) => {
+  const { data: session } = useSession();
+
   const PFcustomerStepOneRef = useRef<IRefPFCustomerStepOneProps>(null);
   const PFcustomerStepTwoRef = useRef<IRefPFCustomerStepTwoProps>(null);
   const PFcustomerStepThreeRef = useRef<IRefPFCustomerStepThreeProps>(null);
@@ -78,7 +81,6 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [openDownloadModal, setOpenDownloadModal] = useState(false);
-  const [downloadDocument, setDownloadDocument] = useState(false);
   const [urlsDocuments, setUrlsDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -131,41 +133,34 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
     }
   };
 
-  const handleDownloadDocument = async () => {
-    try {
-      urlsDocuments.forEach((document: any) => {
-        if (document.url === null) {
-          return;
-        }
-
-        window.open(document.url, '_blank');
-
-        window.close();
-      });
-    } catch (error: any) {
-      setMessage(error.message);
-      setTypeMessage('error');
-      setOpenSnackbar(true);
-    } finally {
-      Router.push('/trabalhos');
-      setWorkForm({});
-    }
-  };
-
   const createCustomer = async (data: any) => {
     const response = await createCustomerApi(data);
 
     return response;
   };
 
-  const completeRegistration = async () => {
+  const completeRegistration = async (title: string) => {
     if (registrationType.search('liente') !== -1) {
       try {
         if (pageTitle.search('terar') !== -1) {
           const id = router.query.id as string;
           if (id) {
-            await updateProfileCustomer(id, customerForm.data.attributes);
-            Router.push('/clientes');
+            const res = await updateProfileCustomer(id, customerForm.data.attributes);
+
+            const url = res.data.attributes.customer_files;
+
+            if (url && url.length > 0) {
+              setUrlsDocuments(url);
+
+              setOpenModal(false);
+
+              setOpenDownloadModal(true);
+            } else {
+              setOpenModal(false);
+
+              router.push('/clientes');
+            }
+
             setCustomerForm({});
             return;
           }
@@ -188,10 +183,19 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
 
         customerForm.customer_id = customer.data.id;
 
-        await createProfileCustomer(customerForm);
+        const res = await createProfileCustomer(customerForm);
 
-        Router.push('/clientes');
-        setCustomerForm({});
+        const url = res.data.attributes.customer_files;
+
+        if (url && url.length > 0) {
+          setUrlsDocuments(url);
+
+          setOpenModal(false);
+
+          setOpenDownloadModal(true);
+        }
+
+        return;
       } catch (error: any) {
         const message = error.request.response ? JSON.parse(error.request.response).errors[0] : '';
         setMessage(message.code);
@@ -204,10 +208,23 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
           const id: any = router.query.id;
           const res = await updateWork(id, workForm);
 
+          if (title != '') {
+            const draftWork = {
+              draft_work: {
+                name: title,
+                work_id: res.data.id,
+              },
+            };
+
+            const responseDraft = await createDraftWork(draftWork);
+          }
+
           const url = res.data.attributes.documents;
 
           if (url) {
             setUrlsDocuments(url);
+
+            setOpenModal(false);
 
             setOpenDownloadModal(true);
           }
@@ -215,29 +232,51 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
           return;
         }
 
-        const res = await createWork(workForm);
+        const work = await createWork(workForm);
 
-        const url = res.data.attributes.documents;
+        if (title != '') {
+          const draftWork = {
+            draft_work: {
+              name: title,
+              work_id: work.data.id,
+            },
+          };
+
+          const responseDraft = await createDraftWork(draftWork);
+        }
+
+        const url = work.data.attributes.documents;
 
         if (url) {
           setUrlsDocuments(url);
+
+          setOpenModal(false);
 
           setOpenDownloadModal(true);
         }
 
         return;
       } catch (error: any) {
-        setMessage(error.message);
-        setTypeMessage('error');
-        setOpenSnackbar(true);
+        const errorMessages = error?.response.data.errors || [];
+        errorMessages.forEach((message: { code: string }) => {
+          if (message.code) {
+            setMessage(message.code);
+            setTypeMessage('error');
+            setOpenSnackbar(true);
+          } else {
+            setMessage('Erro ao criar trabalho');
+            setTypeMessage('error');
+            setOpenSnackbar(true);
+          }
+        });
       }
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (title: string) => {
     try {
       setLoading(true);
-      await completeRegistration();
+      await completeRegistration(title);
       setFinished(true);
     } catch (error: any) {
       setMessage(error.message);
@@ -257,6 +296,53 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
       smooth: 'easeInOutQuart',
     });
   };
+
+  // const handleNext = () => {
+  //   let newSkipped = skipped;
+
+  //   setActiveStep(prevActiveStep => {
+  //     if (
+  //       session?.role === 'counter' &&
+  //       router.asPath.includes('trabalho') &&
+  //       prevActiveStep === 5
+  //     ) {
+  //       return 5;
+  //     }
+  //     return prevActiveStep + 1;
+  //   });
+
+  //   if (isStepSkipped(currentStep)) {
+  //     newSkipped = new Set<number>(newSkipped.values());
+  //     newSkipped.delete(currentStep);
+  //   }
+
+  //   setCurrentStep(prevActiveStep => {
+  //     if (
+  //       session?.role === 'counter' &&
+  //       router.asPath.includes('trabalho') &&
+  //       prevActiveStep === 1
+  //     ) {
+  //       return 5;
+  //     }
+  //     return prevActiveStep + 1;
+  //   });
+  //   setSkipped(newSkipped);
+  //   scrollToTop();
+  // };
+
+  // const handleBack = () => {
+  //   setCurrentStep(prevActiveStep => {
+  //     if (
+  //       session?.role === 'counter' &&
+  //       router.asPath.includes('trabalho') &&
+  //       prevActiveStep === 5
+  //     ) {
+  //       return 1;
+  //     }
+  //     return prevActiveStep - 1;
+  //   });
+  //   scrollToTop();
+  // };
 
   const handleNext = () => {
     let newSkipped = skipped;
@@ -284,6 +370,15 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
     const currentWidth = (activeStep / (titleSteps.length - 1)) * maxWidth;
     return `${currentWidth}%`;
   };
+
+  // const handlePreviousStep = () => {
+  //   setActiveStep(prevActiveStep =>
+  //     session?.role === 'counter' && router.asPath.includes('trabalho') && prevActiveStep === 5
+  //       ? 1
+  //       : prevActiveStep - 1,
+  //   );
+  //   handleBack();
+  // };
 
   const handlePreviousStep = () => {
     setActiveStep(activeStep - 1);
@@ -391,10 +486,7 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
         <ConfirmDownloadDocument
           isOpen={openDownloadModal}
           onClose={() => setOpenDownloadModal(false)}
-          handleConfirm={() => {
-            setDownloadDocument(true);
-            handleDownloadDocument();
-          }}
+          documents={urlsDocuments}
         />
       )}
 
@@ -610,6 +702,18 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
                   {currentStep === 4 && (
                     <WorkStepFive ref={workStepFiveRef} nextStep={handleNext} />
                   )}
+
+                  {/* {session?.role != 'counter' && currentStep === 2 && (
+                    <WorkStepThree ref={workStepThreeRef} nextStep={handleNext} />
+                  )}
+
+                  {session?.role != 'counter' && currentStep === 3 && (
+                    <WorkStepFour ref={workStepFourRef} nextStep={handleNext} />
+                  )}
+
+                  {session?.role != 'counter' && currentStep === 4 && (
+                    <WorkStepFive ref={workStepFiveRef} nextStep={handleNext} />
+                  )} */}
 
                   {currentStep === 5 && (
                     <WorkStepSix

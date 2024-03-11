@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, useEffect, useContext } from 'react';
+import { useState, ChangeEvent, useEffect, useContext } from 'react';
 import { IoAddCircleOutline, IoCheckmark, IoClose } from 'react-icons/io5';
 
 import {
@@ -11,6 +11,7 @@ import {
   Select,
   MenuItem,
   Autocomplete,
+  CircularProgress,
 } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
 
@@ -19,7 +20,6 @@ import {
   gendersOptions,
   civilStatusOptions,
   nationalityOptions,
-  userTypeOptions,
   UserRegisterTypesOptions,
 } from '@/utils/constants';
 
@@ -36,10 +36,11 @@ import { getAllOffices } from '@/services/offices';
 import { getAllBanks } from '@/services/brasilAPI';
 import { createAdmin, updateAdmin } from '@/services/admins';
 import { IOfficeProps } from '@/interfaces/IOffice';
-import { animateScroll as scroll } from 'react-scroll';
 
 import Router from 'next/router';
-import { cepMask, cpfMask, rgMask } from '@/utils/masks';
+import { cepMask, cpfMask } from '@/utils/masks';
+import { z } from 'zod';
+import { useSession } from 'next-auth/react';
 
 interface FormData {
   officeId: string;
@@ -54,6 +55,7 @@ interface FormData {
   role: string;
   civil_status: string;
   birth: string;
+  origin: string;
 
   cep: string;
   address: string;
@@ -79,7 +81,34 @@ interface props {
   dataToEdit?: any;
 }
 
+const userSchema = z.object({
+  name: z.string().nonempty({ message: 'O campo Nome é obrigatório.' }),
+  last_name: z.string().nonempty({ message: 'O campo Sobrenome é obrigatório.' }),
+  cpf: z.string().nonempty({ message: 'O campo CPF é obrigatório.' }),
+  rg: z.string().nonempty({ message: 'O campo RG é obrigatório.' }),
+  mother_name: z.string().nonempty({ message: 'O campo Nome da Mãe é obrigatório.' }),
+  gender: z.string().nonempty({ message: 'O campo Gênero é obrigatório.' }),
+  civil_status: z.string().nonempty({ message: 'O campo Estado Civil é obrigatório.' }),
+  nationality: z.string().nonempty({ message: 'O campo Naturalidade é obrigatório.' }),
+  phone: z.string().nonempty({ message: 'O campo Telefone é obrigatório.' }),
+  email: z.string().nonempty({ message: 'O campo E-mail é obrigatório.' }),
+  userType: z.string().nonempty({ message: 'O campo Tipo do Usuário é obrigatório.' }),
+  bank_name: z.string().nonempty({ message: 'O campo Banco é obrigatório.' }),
+  agency: z.string().nonempty({ message: 'O campo Agência é obrigatório.' }),
+  op: z.string().nonempty({ message: 'O campo Operação é obrigatório.' }),
+  account: z.string().nonempty({ message: 'O campo Conta é obrigatório.' }),
+  pix: z.string().nonempty({ message: 'O campo Chave Pix é obrigatório.' }),
+  userEmail: z.string().nonempty({ message: 'O campo E-mail é obrigatório.' }),
+  city: z.string().nonempty({ message: 'O campo Cidade é obrigatório.' }),
+  state: z.string().nonempty({ message: 'O campo Estado é obrigatório.' }),
+  address: z.string().nonempty({ message: 'O campo Endereço é obrigatório.' }),
+  number: z.number().min(1, { message: 'O campo Número é obrigatório.' }),
+  cep: z.string().nonempty({ message: 'O campo CEP é obrigatório.' }),
+});
+
 const User = ({ pageTitle, dataToEdit }: props) => {
+  const { data: session } = useSession();
+
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -102,7 +131,16 @@ const User = ({ pageTitle, dataToEdit }: props) => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
 
-  const [formData, setFormData] = useState<FormData>({} as FormData);
+  const [formData, setFormData] = useState<FormData>({
+    officeId: '',
+    name: '',
+    last_name: '',
+    cpf: '',
+    rg: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  } as FormData);
   const [contactData, setContactData] = useState({
     phoneInputFields: [{ phone_number: '' }],
     emailInputFields: [{ email: '' }],
@@ -131,14 +169,6 @@ const User = ({ pageTitle, dataToEdit }: props) => {
       return;
     }
 
-    if (name === 'rg') {
-      setFormData(prevData => ({
-        ...prevData,
-        rg: rgMask(value),
-      }));
-      return;
-    }
-
     if (name === 'cep') {
       setFormData(prevData => ({
         ...prevData,
@@ -162,9 +192,23 @@ const User = ({ pageTitle, dataToEdit }: props) => {
       const newInputFields = [...prevData[inputArrayName]];
 
       if (inputArrayName === 'phoneInputFields') {
-        newInputFields[index] = { phone_number: value };
+        if (newInputFields[index]) {
+          newInputFields[index] = {
+            ...newInputFields[index],
+            phone_number: value,
+          };
+        } else {
+          newInputFields.push({ phone_number: value });
+        }
       } else if (inputArrayName === 'emailInputFields') {
-        newInputFields[index] = { email: value };
+        if (newInputFields[index]) {
+          newInputFields[index] = {
+            ...newInputFields[index],
+            email: value,
+          };
+        } else {
+          newInputFields.push({ email: value });
+        }
       }
 
       return {
@@ -178,41 +222,38 @@ const User = ({ pageTitle, dataToEdit }: props) => {
     setLoading(true);
 
     try {
-      if (!formData.name) throw new Error('O campo Nome é obrigatório.');
-      if (!formData.last_name) throw new Error('O campo Sobrenome é obrigatório.');
-      if (!formData.cpf) throw new Error('O campo CPF é obrigatório.');
-      if (!formData.rg) throw new Error('O campo RG é obrigatório.');
-      if (!selectedDate) throw new Error('O campo Data de Nascimento é obrigatório.');
-      if (!formData.mother_name) throw new Error('O campo Nome da Mãe é obrigatório.');
-      if (!formData.gender) throw new Error('O campo Gênero é obrigatório.');
-      if (!formData.civil_status) throw new Error('O campo Estado Civil é obrigatório.');
-      if (!formData.nationality) throw new Error('O campo Naturalidade é obrigatório.');
-      if (!formData.cep) throw new Error('O campo CEP é obrigatório.');
-      if (!formData.address) throw new Error('O campo Endereço é obrigatório.');
-      if (!formData.number) throw new Error('O campo Número é obrigatório.');
-      if (!formData.description) throw new Error('O campo Complemento é obrigatório.');
-      if (!formData.neighborhood) throw new Error('O campo Bairro é obrigatório.');
-      if (!formData.city) throw new Error('O campo Cidade é obrigatório.');
-      if (!formData.state) throw new Error('O campo Estado é obrigatório.');
-      if (contactData.phoneInputFields.some(field => field.phone_number.trim() === '')) {
-        throw new Error('Telefone não pode estar vazio.');
-      }
-      if (contactData.emailInputFields.some(field => field.email.trim() === '')) {
-        throw new Error('E-mail não pode estar vazio.');
-      }
-      if (!formData.officeId) throw new Error('O campo Escritório é obrigatório.');
-      if (!formData.bank_name) throw new Error('O campo Banco é obrigatório.');
-      if (!formData.agency) throw new Error('O campo Agência é obrigatório.');
-      if (!formData.op) throw new Error('O campo Operação é obrigatório.');
-      if (!formData.account) throw new Error('O campo Conta é obrigatório.');
-      if (!formData.pix) throw new Error('O campo Chave Pix é obrigatório.');
-      if (!formData.email) throw new Error('O campo E-mail é obrigatório.');
-      if (!formData.role) throw new Error('O campo Tipo do Usuário é obrigatório.');
-      if (!formData.password && !isEditing) throw new Error('O campo Senha é obrigatório.');
-      if (!formData.confirmPassword && !isEditing)
-        throw new Error('O campo Confirmar Senha é obrigatório.');
-      if (formData.password !== formData.confirmPassword && !isEditing) {
-        throw new Error('As senhas não coincidem.');
+      userSchema.parse({
+        name: formData.name,
+        last_name: formData.last_name,
+        cpf: formData.cpf,
+        rg: formData.rg,
+        mother_name: formData.mother_name,
+        gender: formData.gender,
+        civil_status: formData.civil_status,
+        nationality: formData.nationality,
+        phone: contactData.phoneInputFields[0].phone_number,
+        email: contactData.emailInputFields[0].email,
+        userType: formData.role,
+        bank_name: formData.bank_name,
+        agency: formData.agency,
+        op: formData.op,
+        account: formData.account,
+        pix: formData.pix,
+        userEmail: formData.email,
+        password: formData.password,
+        city: formData.city,
+        state: formData.state,
+        address: formData.address,
+        number: formData.number ? Number(formData.number) : '',
+        cep: formData.cep,
+        systemEmail: formData.email,
+      });
+
+      if (!isEditing && formData.password === '') {
+        setMessage('Senha obrigatória.');
+        setType('error');
+        setOpenSnackbar(true);
+        return;
       }
 
       let data = {};
@@ -221,9 +262,9 @@ const User = ({ pageTitle, dataToEdit }: props) => {
         dataToEdit.data.attributes.phones = contactData.phoneInputFields;
         dataToEdit.data.attributes.emails = contactData.emailInputFields;
 
-        const editData = {
+        let editData = {
           addresses_attributes: {
-            id: dataToEdit.data.attributes.addresses[0].id,
+            id: dataToEdit.data.attributes.addresses[0]?.id ?? '',
             description: formData.description,
             zip_code: formData.cep,
             street: formData.address,
@@ -233,7 +274,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
             state: formData.state,
           },
           bank_accounts_attributes: {
-            id: dataToEdit.data.attributes.bank_accounts[0].id,
+            id: dataToEdit.data.attributes.bank_accounts[0]?.id ?? '',
             bank_name: formData.bank_name,
             type_account: formData.op,
             agency: formData.agency,
@@ -251,11 +292,20 @@ const User = ({ pageTitle, dataToEdit }: props) => {
           civil_status: formData.civil_status,
           birth: selectedDate,
           mother_name: formData.mother_name,
-          office_id: formData.officeId,
           role: formData.role,
           status: 'active',
           oab: '0000',
+          origin: formData.origin,
         };
+
+        if (formData.officeId !== '') {
+          const newEditData = {
+            ...editData,
+            office_id: formData.officeId,
+          };
+
+          editData = newEditData;
+        }
 
         const id = dataToEdit.data.id;
 
@@ -276,15 +326,16 @@ const User = ({ pageTitle, dataToEdit }: props) => {
           civil_status: formData.civil_status,
           birth: selectedDate,
           mother_name: formData.mother_name,
-          office_id: formData.officeId,
           role: formData.role,
           status: 'active',
+          origin: formData.origin,
+          office_id: formData.officeId,
           addresses_attributes: [
             {
               description: formData.description,
               zip_code: formData.cep,
               street: formData.address,
-              number: formData.number,
+              number: formData.number ? Number(formData.number) : '',
               neighborhood: formData.neighborhood,
               city: formData.city,
               state: formData.state,
@@ -308,6 +359,15 @@ const User = ({ pageTitle, dataToEdit }: props) => {
           emails_attributes: contactData.emailInputFields,
         };
 
+        if (formData.officeId !== '') {
+          const newEditData = {
+            ...data,
+            office_id: formData.officeId,
+          };
+
+          data = newEditData;
+        }
+
         await createAdmin(data);
 
         Router.push('/usuarios');
@@ -320,16 +380,25 @@ const User = ({ pageTitle, dataToEdit }: props) => {
   };
 
   const handleFormError = (error: any) => {
-    setMessage(error.message);
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
+    const errorObject: { [key: string]: string } = {};
+    setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+        errorObject[field] = newErrors[field][0] as string;
+      }
+    }
+    setErrors(errorObject);
   };
 
   const renderInputField = (
     name: keyof FormData,
     title: string,
     placeholderText: string,
-    error: boolean,
+    error?: boolean,
   ) => (
     <Flex style={{ flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
@@ -345,6 +414,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
         autoComplete="off"
         placeholder={`${placeholderText}`}
         onChange={handleInputChange}
+        type={name === 'number' ? 'number' : 'text'}
       />
     </Flex>
   );
@@ -353,6 +423,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
     label: string,
     name: keyof FormData,
     options: { label: string; value: string }[],
+    error?: boolean,
   ) => (
     <Flex style={{ flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
@@ -365,6 +436,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
           label={`Selecione ${label}`}
           value={formData[name] || ''}
           onChange={handleSelectChange}
+          error={error && !formData[name]}
         >
           {options.map(option => (
             <MenuItem key={option.value} value={option.value}>
@@ -496,8 +568,10 @@ const User = ({ pageTitle, dataToEdit }: props) => {
       setOfficesList(response.data);
     };
 
-    getOffices();
-  }, []);
+    if (session?.role != 'counter') {
+      getOffices();
+    }
+  }, [session]);
 
   useEffect(() => {
     const updateScrollPosition = () => {
@@ -544,9 +618,6 @@ const User = ({ pageTitle, dataToEdit }: props) => {
               pix: '',
             };
 
-        const phones = attributes.phones ? attributes.phones : [{ phone_number: '' }];
-        const emails = attributes.emails ? attributes.emails : [{ email: '' }];
-
         handleBankChange(bankAccounts.bank_name);
 
         setFormData({
@@ -577,6 +648,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
           role: attributes.role ? attributes.role : '',
           civil_status: attributes.civil_status ? attributes.civil_status : '',
           birth: attributes.birth ? attributes.birth : '',
+          origin: attributes.origin ? attributes.origin : '',
         });
 
         const office = officesList.find(office => office.id == attributes.office_id);
@@ -584,8 +656,12 @@ const User = ({ pageTitle, dataToEdit }: props) => {
         setSelectedOffice(office as IOfficeProps);
 
         setContactData({
-          phoneInputFields: phones,
-          emailInputFields: emails,
+          phoneInputFields:
+            attributes.phones && attributes.phones.length > 0
+              ? attributes.phones
+              : [{ phone_number: '' }],
+          emailInputFields:
+            attributes.emails && attributes.emails.length > 0 ? attributes.emails : [{ email: '' }],
         });
 
         setSelectedDate(dayjs(attributes.birth));
@@ -696,9 +772,19 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                     gap: '24px',
                   }}
                 >
-                  {renderSelectField('Gênero', 'gender', gendersOptions)}
-                  {renderSelectField('Estado Civil', 'civil_status', civilStatusOptions)}
-                  {renderSelectField('Naturalidade', 'nationality', nationalityOptions)}
+                  {renderSelectField('Gênero', 'gender', gendersOptions, !!errors.gender)}
+                  {renderSelectField(
+                    'Estado Civil',
+                    'civil_status',
+                    civilStatusOptions,
+                    !!errors.civil_status,
+                  )}
+                  {renderSelectField(
+                    'Naturalidade',
+                    'nationality',
+                    nationalityOptions,
+                    !!errors.nationality,
+                  )}
                 </Flex>
               </Box>
             </Flex>
@@ -727,12 +813,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                       {renderInputField('number', 'Número', 'N.º', !!errors.address)}
                     </Box>
                   </Flex>
-                  {renderInputField(
-                    'description',
-                    'Complemento',
-                    'Informe o Estado',
-                    !!errors.state,
-                  )}
+                  {renderInputField('description', 'Complemento', 'Informe o Complemento')}
                 </Box>
 
                 <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
@@ -771,6 +852,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                       }}
                     >
                       <TextField
+                        id="outlined-basic"
                         variant="outlined"
                         fullWidth
                         name="phone"
@@ -781,6 +863,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                           handleContactChange(index, e.target.value, 'phoneInputFields')
                         }
                         autoComplete="off"
+                        error={!!errors.phone}
                       />
                       {index === contactData.phoneInputFields.length - 1 && (
                         <IoAddCircleOutline
@@ -822,7 +905,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                           handleContactChange(index, e.target.value, 'emailInputFields')
                         }
-                        error={!/^\S+@\S+\.\S+$/.test(inputValue.email) && inputValue.email !== ''}
+                        error={!!errors.email}
                         autoComplete="off"
                       />
                       {index === contactData.emailInputFields.length - 1 && (
@@ -852,34 +935,50 @@ const User = ({ pageTitle, dataToEdit }: props) => {
             <Box style={{ flex: 1 }}>
               <Box
                 display={'flex'}
+                flexDirection={'column'}
                 gap={'16px'}
                 style={{
                   flex: 1,
                 }}
               >
-                <Flex style={{ gap: '24px', width: '50%' }}>
-                  <Flex style={{ flexDirection: 'column', flex: 1 }}>
-                    <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                      {'Escritório'}
-                    </Typography>
+                {renderInputField('origin', 'Origin', 'Informe a Origin')}
+                <Flex style={{ gap: '24px' }}>
+                  {renderSelectField(
+                    'Tipo do Usuário',
+                    'role',
+                    session?.role === 'counter'
+                      ? UserRegisterTypesOptions.filter(option => option.value === 'counter')
+                      : UserRegisterTypesOptions,
+                    !!errors.userType,
+                  )}
+                  {session?.role != 'counter' && (
+                    <Flex style={{ flexDirection: 'column', flex: 1 }}>
+                      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+                        {'Escritório'}
+                      </Typography>
 
-                    <Autocomplete
-                      disablePortal={true}
-                      autoComplete
-                      options={officesList}
-                      getOptionLabel={option =>
-                        option && option.attributes ? option.attributes.name : ''
-                      }
-                      renderInput={params => (
-                        <TextField placeholder="Selecione um Escritório" {...params} size="small" />
-                      )}
-                      noOptionsText="Nenhum Escritório Encontrado"
-                      onChange={(event, value) => {
-                        handleSelectedOffice(value);
-                      }}
-                      value={selectedOffice}
-                    />
-                  </Flex>
+                      <Autocomplete
+                        disablePortal={true}
+                        autoComplete
+                        options={officesList}
+                        getOptionLabel={option =>
+                          option && option.attributes ? option.attributes.name : ''
+                        }
+                        renderInput={params => (
+                          <TextField
+                            placeholder="Selecione um Escritório"
+                            {...params}
+                            size="small"
+                          />
+                        )}
+                        noOptionsText="Nenhum Escritório Encontrado"
+                        onChange={(event, value) => {
+                          handleSelectedOffice(value);
+                        }}
+                        value={selectedOffice}
+                      />
+                    </Flex>
+                  )}
                 </Flex>
               </Box>
             </Box>
@@ -916,7 +1015,12 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                   formData.bank_name ? bankList.find(bank => bank.name == formData.bank_name) : null
                 }
                 renderInput={params => (
-                  <TextField placeholder="Selecione um Banco" {...params} size="small" />
+                  <TextField
+                    placeholder="Selecione um Banco"
+                    {...params}
+                    size="small"
+                    error={!!errors.bank_name}
+                  />
                 )}
                 sx={{ backgroundColor: 'white', zIndex: 1 }}
                 noOptionsText="Nenhum Banco Encontrado"
@@ -934,23 +1038,22 @@ const User = ({ pageTitle, dataToEdit }: props) => {
             </Box>
           </Flex>
 
-          {!isEditing && (
-            <>
-              <Divider />
+          <Divider />
 
-              <Flex>
-                <Box width={'210px'}>
-                  <Typography variant="h6" sx={{ marginRight: 'auto' }}>
-                    {'Acesso ao Sistema'}
-                  </Typography>
-                </Box>
+          <Flex>
+            <Box width={'210px'}>
+              <Typography variant="h6" sx={{ marginRight: 'auto' }}>
+                {'Acesso ao Sistema'}
+              </Typography>
+            </Box>
 
-                <Box style={{ flex: 1 }}>
-                  <Flex style={{ gap: '24px' }}>
-                    {renderInputField('email', 'E-mail', 'Informe seu e-mail', !!errors.email)}
-                    {renderSelectField('Tipo do Usuário', 'role', UserRegisterTypesOptions)}
-                  </Flex>
+            <Box style={{ flex: 1 }}>
+              <Flex style={{ gap: '24px' }}>
+                {renderInputField('email', 'E-mail', 'Informe seu e-mail', !!errors.userEmail)}
+              </Flex>
 
+              {!isEditing && (
+                <>
                   <Flex style={{ gap: '24px', marginTop: '16px' }}>
                     <Flex style={{ flexDirection: 'column', flex: 1 }}>
                       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
@@ -958,7 +1061,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                       </Typography>
                       <TextField
                         variant="outlined"
-                        error={errors.password}
+                        error={passwordIsValid}
                         fullWidth
                         name="password"
                         size="small"
@@ -975,7 +1078,7 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                       </Typography>
                       <TextField
                         variant="outlined"
-                        error={passwordError}
+                        error={passwordError || !!errors.password}
                         fullWidth
                         name="confirmPassword"
                         size="small"
@@ -1012,10 +1115,10 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                       {'As senhas devem ter pelo menos um número.'}
                     </Typography>
                   </Flex>
-                </Box>
-              </Flex>
-            </>
-          )}
+                </>
+              )}
+            </Box>
+          </Flex>
 
           <Divider />
 
@@ -1043,9 +1146,9 @@ const User = ({ pageTitle, dataToEdit }: props) => {
                 marginLeft: '16px',
               }}
               color="secondary"
-              onClick={() => setOpenModal(true)}
+              onClick={() => handleSubmitForm()}
             >
-              {'Salvar'}
+              {loading ? <CircularProgress size={20} sx={{ color: colors.white }} /> : 'Salvar'}
             </Button>
           </Box>
         </ContentContainer>

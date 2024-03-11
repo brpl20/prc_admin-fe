@@ -12,7 +12,6 @@ export const DetailsWrapper = styled.div`
   flex-direction: column;
   gap: 32px;
   background-color: #fff;
-  padding: 32px;
 `;
 
 export const ButtonShowData = styled.button`

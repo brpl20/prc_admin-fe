@@ -15,6 +15,8 @@ import {
   InputLabel,
   FormControl,
   Typography,
+  Autocomplete,
+  Button,
 } from '@mui/material';
 
 import { Container, BirthdayContainer } from '../styles';
@@ -26,7 +28,7 @@ import {
 } from '@/utils/constants';
 
 import { z } from 'zod';
-import { Flex } from '@/styles/globals';
+import { DescriptionText, Flex, colors } from '@/styles/globals';
 import Notification from '@/components/Notification';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
@@ -36,6 +38,11 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { cpfMask, rgMask } from '@/utils/masks';
+import { getAllAdmins } from '@/services/admins';
+import { getAllCustomers } from '@/services/customers';
+import CustomTooltip from '@/components/Tooltip';
+import { MdOutlineAddCircle, MdOutlineInfo } from 'react-icons/md';
+import RepresentativeModal from '../../representative/representativeModal';
 
 export interface IRefPFCustomerStepOneProps {
   handleSubmitForm: () => void;
@@ -56,6 +63,7 @@ interface FormData {
   gender: string;
   civil_status: string;
   capacity: string;
+  representor: any;
 }
 
 const stepOneSchema = z.object({
@@ -74,6 +82,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   { nextStep, editMode },
   ref,
 ) => {
+  const [isModalRegisterRepresentativeOpen, setIsModalRegisterRepresentativeOpen] = useState(false);
+  const [isRepresentativeFinished, setIsRepresentativeFinished] = useState(false);
   const currentDate = dayjs();
   const [errors, setErrors] = useState({} as any);
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
@@ -81,6 +91,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
 
+  const [representorsList, setRepresentorsList] = useState([] as any);
   const [selectedDate, setSelectedDate] = useState(currentDate);
   const [formData, setFormData] = useState<FormData>({
     name: customerForm.name,
@@ -92,7 +103,23 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     gender: customerForm.gender,
     civil_status: customerForm.civil_status,
     capacity: customerForm.capacity,
+    representor: {},
   });
+
+  useEffect(() => {
+    const getRepresentors = async () => {
+      const allCustomers = await getAllCustomers();
+      const response = allCustomers.data;
+
+      const representors = response.filter(
+        (customer: any) => customer.attributes.customer_type === 'representative',
+      );
+
+      setRepresentorsList(representors);
+    };
+
+    getRepresentors();
+  }, [isRepresentativeFinished]);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -101,14 +128,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       setFormData(prevData => ({
         ...prevData,
         cpf: cpfMask(value),
-      }));
-      return;
-    }
-
-    if (name === 'rg') {
-      setFormData(prevData => ({
-        ...prevData,
-        rg: rgMask(value),
       }));
       return;
     }
@@ -134,13 +153,10 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         gender: parsedData.gender,
         civil_status: parsedData.civil_status,
         capacity: parsedData.capacity,
+        representor: parsedData.representor,
       });
     }
   };
-
-  useEffect(() => {
-    verifyDataLocalStorage();
-  }, []);
 
   const saveDataLocalStorage = (data: any) => {
     localStorage.setItem('PF/One', JSON.stringify(data));
@@ -151,6 +167,13 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     setFormData(prevData => ({
       ...prevData,
       [name as string]: value,
+    }));
+  };
+
+  const handleRepresentorChange = (field: string, value: any) => {
+    setFormData(prevData => ({
+      ...prevData,
+      [field as string]: value,
     }));
   };
 
@@ -166,6 +189,16 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   const handleSubmitForm = () => {
     try {
       stepOneSchema.parse(formData);
+
+      if (
+        (!formData.representor?.id && formData.capacity === 'relatively') ||
+        (!formData.representor?.id && formData.capacity === 'unable')
+      ) {
+        setMessage('Selecione um representante.');
+        setType('error');
+        setOpenSnackbar(true);
+        return;
+      }
 
       const dateNow = new Date().toISOString().split('T')[0];
       const dateNowFormatted = dateNow.split('-').reverse().join('/');
@@ -186,6 +219,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         gender: formData.gender,
         civil_status: formData.civil_status,
         capacity: formData.capacity,
+        representor: formData.representor,
       });
 
       if (editMode) {
@@ -198,6 +232,10 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         customerForm.data.attributes.nationality = formData.nationality;
         customerForm.data.attributes.civil_status = formData.civil_status;
         customerForm.data.attributes.capacity = formData.capacity;
+        customerForm.data.attributes.represent_attributes = {
+          id: customerForm.data.attributes.represent?.id,
+          representor_id: formData.representor?.id,
+        };
 
         setCustomerForm(customerForm);
 
@@ -215,6 +253,9 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         customerForm.nationality = formData.nationality;
         customerForm.civil_status = formData.civil_status;
         customerForm.capacity = formData.capacity;
+        customerForm.represent_attributes = {
+          representor_id: formData.representor.id,
+        };
       }
 
       setCustomerForm(customerForm);
@@ -234,7 +275,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   }));
 
   const handleFormError = (error: any) => {
-    const newErrors = error.formErrors.fieldErrors;
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
     setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
@@ -247,6 +288,19 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     }
     setErrors(errorObject);
   };
+
+  const customTitleWithInfo = (title: string, tooltipText: string) => (
+    <Flex style={{ alignItems: 'center' }}>
+      <Typography display={'flex'} alignItems={'center'} variant="h6" style={{ height: '40px' }}>
+        {title}
+      </Typography>
+      <CustomTooltip title={tooltipText} placement="right">
+        <span style={{ display: 'flex' }}>
+          <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
+        </span>
+      </CustomTooltip>
+    </Flex>
+  );
 
   const renderInputField = (label: string, name: keyof FormData, error: boolean) => (
     <Flex style={{ flexDirection: 'column', flex: 1 }}>
@@ -301,19 +355,24 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       const attributes = customerForm.data.attributes;
 
       if (attributes) {
+        const representor = representorsList.find(
+          (customer: any) => customer.id == attributes.represent?.representor_id,
+        );
         setFormData(prevData => ({
           ...prevData,
           name: attributes.name,
           last_name: attributes.last_name,
           cpf: attributes.cpf ? cpfMask(attributes.cpf) : '',
-          rg: attributes.rg ? rgMask(attributes.rg) : '',
+          rg: attributes.rg ? attributes.rg : '',
           birth: attributes.birth,
           nationality: attributes.nationality,
           gender: attributes.gender,
           civil_status: attributes.civil_status,
           capacity: attributes.capacity,
+          representor: representor,
         }));
 
+        customerForm.represent = attributes.represent;
         setSelectedDate(dayjs(attributes.birth));
       }
     };
@@ -321,7 +380,20 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     if (customerForm.data) {
       handleDataForm();
     }
-  }, [customerForm]);
+  }, [customerForm, representorsList]);
+
+  useEffect(() => {
+    verifyDataLocalStorage();
+  }, [representorsList]);
+
+  useEffect(() => {
+    if (formData.capacity === 'relatively' || formData.capacity === 'unable') {
+      setFormData(prevData => ({
+        ...prevData,
+        representor: {},
+      }));
+    }
+  }, [formData.capacity]);
 
   return (
     <>
@@ -333,6 +405,16 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           onClose={() => setOpenSnackbar(false)}
         />
       )}
+
+      {isModalRegisterRepresentativeOpen && (
+        <RepresentativeModal
+          pageTitle="Cadastro de Representante"
+          isOpen={isModalRegisterRepresentativeOpen}
+          handleClose={() => setIsModalRegisterRepresentativeOpen(false)}
+          handleRegistrationFinished={() => setIsRepresentativeFinished(true)}
+        />
+      )}
+
       <Container>
         <form>
           <Box maxWidth={'812px'} display={'flex'} flexDirection={'column'} gap={'16px'}>
@@ -384,6 +466,63 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 
             {renderSelectField('Capacidade', 'capacity', capacityOptions, !!errors.capacity)}
           </Box>
+
+          {(formData.capacity === 'relatively' || formData.capacity === 'unable') && (
+            <Flex style={{ gap: '24px', maxWidth: '812px', marginTop: '24px' }}>
+              <Flex
+                style={{
+                  flexDirection: 'column',
+                  gap: '24px',
+                  width: '50%',
+                }}
+              >
+                <Flex className="inputContainer" style={{ flexDirection: 'column', width: '100%' }}>
+                  {customTitleWithInfo(
+                    'Representante',
+                    'Selecione quando necessário um Representante.',
+                  )}
+
+                  <Autocomplete
+                    limitTags={1}
+                    id="multiple-limit-tags"
+                    value={
+                      representorsList.find(
+                        (customer: any) => customer.id == formData.representor?.id,
+                      ) || null
+                    }
+                    options={representorsList}
+                    getOptionLabel={(option: any) => option?.attributes?.name ?? ''}
+                    onChange={(event, value) => handleRepresentorChange('representor', value)}
+                    renderInput={params => (
+                      <TextField {...params} placeholder={'Informe o Representante'} size="small" />
+                    )}
+                    noOptionsText={`Nenhum Representante Encontrado`}
+                  />
+                </Flex>
+              </Flex>
+              <Flex>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => setIsModalRegisterRepresentativeOpen(true)}
+                  sx={{
+                    backgroundColor: colors.quartiary,
+                    color: colors.white,
+                    width: '100%',
+                    marginTop: 'auto',
+                    '&:hover': {
+                      backgroundColor: colors.quartiaryHover,
+                    },
+                  }}
+                >
+                  <DescriptionText style={{ cursor: 'pointer' }} className="ml-8">
+                    {'Adicionar Representante'}
+                  </DescriptionText>
+                  <MdOutlineAddCircle size={20} />
+                </Button>
+              </Flex>
+            </Flex>
+          )}
         </form>
       </Container>
     </>
