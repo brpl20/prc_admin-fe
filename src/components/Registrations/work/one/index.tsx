@@ -98,12 +98,13 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File[] | null>(null);
+  const [tributaryArea, setTributaryArea] = useState<string>('');
   const [compensationsLastYears, setCompensationsLastYears] = useState('');
   const [officialCompensation, setOfficialCompensation] = useState('');
   const [hasALawsuit, setHasALawsuit] = useState('');
   const [gainProjection, setGainProjection] = useState<number>();
   const [otherDescription, setOtherDescription] = useState<string>('');
-  const [customerSelected, setCustomerSelected] = useState<any>(null);
+  const [customerSelectedList, setCustomerSelectedList] = useState<ICustomerProps[]>([]);
   const [selectedDraftWork, setSelectedDraftWork] = useState<any>(null);
 
   const renderDragMessage = (isDragActive: boolean) => {
@@ -143,6 +144,16 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
     event.preventDefault();
   };
 
+  const handleCustomersSelected = (customers: any) => {
+    const customerIds = customers.map((customer: any) => customer.id.toString());
+
+    const customersData = customersList.filter((customer: any) =>
+      customerIds.includes(customer.id),
+    );
+
+    setCustomerSelectedList(customersData);
+  };
+
   const handleProcedureSelection = (event: ChangeEvent<HTMLInputElement>) => {
     const { value, checked } = event.target;
 
@@ -178,14 +189,14 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   const handleSubmitForm = () => {
     try {
       stepOneSchema.parse({
-        profile_customer_ids: customerSelected ? [customerSelected.id] : [],
+        profile_customer_ids: customerSelectedList.map(customer => customer.id),
         procedures: selectedProcedures,
         subject: selectedSubject,
       });
 
       let data: any = {
         ...workForm,
-        profile_customer_ids: customerSelected ? [customerSelected.id] : [],
+        profile_customer_ids: customerSelectedList.map(customer => customer.id),
         number: processNumber,
         procedures: selectedProcedures,
         subject: selectedSubject,
@@ -282,10 +293,11 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
       }
 
       if (parsedData.profile_customer_ids) {
-        const customer = customersList.find(
-          (item: any) => item.id == parsedData.profile_customer_ids[0],
-        );
-        setCustomerSelected(customer);
+        handleCustomersSelected([
+          ...customersList.filter((customer: any) =>
+            parsedData.profile_customer_ids.includes(customer.id),
+          ),
+        ]);
       }
 
       if (parsedData.number) {
@@ -364,6 +376,14 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
 
         default:
           break;
+      }
+
+      if (parsedData.profile_customer_ids) {
+        handleCustomersSelected([
+          ...customersList.filter((customer: any) =>
+            parsedData.profile_customer_ids.includes(customer.id),
+          ),
+        ]);
       }
     }
   };
@@ -446,10 +466,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
         }
 
         if (attributes.profile_customers.length > 0) {
-          const customer = customersList.find(
-            (item: any) => item.id == attributes.profile_customers[0].id,
-          );
-          setCustomerSelected(customer);
+          handleCustomersSelected(attributes.profile_customers);
         }
 
         if (attributes.number) {
@@ -582,6 +599,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
               </Typography>
 
               <Autocomplete
+                multiple
                 limitTags={1}
                 id="multiple-limit-tags"
                 options={customersList}
@@ -596,10 +614,8 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                 )}
                 sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
                 noOptionsText="Nenhum Cliente Encontrado"
-                onChange={(event, customer) => {
-                  setCustomerSelected(customer);
-                }}
-                value={customerSelected}
+                onChange={(event, customers) => handleCustomersSelected(customers)}
+                value={customerSelectedList}
               />
             </Flex>
 
@@ -762,6 +778,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                     sx={{ marginBottom: '8px' }}
                     style={{
                       color:
+                        selectedProcedures.length <= 0 &&
                         selectedArea === '' &&
                         selectedSubject !== 'others' &&
                         selectedSubject !== 'administrative_subject' &&

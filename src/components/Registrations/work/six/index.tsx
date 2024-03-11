@@ -65,6 +65,25 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
     }
   };
 
+  {
+    /*Retirar Documento e Adicionar novamente*/
+  }
+
+  // const handleDocumentsProducedSelection = (event: ChangeEvent<HTMLInputElement>) => {
+  //   const { value, checked } = event.target;
+
+  //   if (checked) {
+  //     setDocumentsProduced((prevSelected: any) => [...prevSelected, value]);
+  //   } else {
+  //     setDocumentsProduced((prevSelected: any) =>
+  //       prevSelected.filter((document: any) => {
+  //         const documentType = document.document_type ? document.document_type : document;
+  //         return documentType !== value;
+  //       }),
+  //     );
+  //   }
+  // };
+
   const handleDocumentsPendingSelection = (event: ChangeEvent<HTMLInputElement>) => {
     const { value, checked } = event.target;
 
@@ -87,35 +106,70 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
         throw new Error('Selecione pelo menos um documento a ser produzido');
       }
 
-      const transformObjects = documentsProduced.map(document => ({
-        document_type: document,
-        profile_customer_id: workForm.profile_customer_ids.toString(),
-      }));
+      let documentsProducedArray = [] as any;
+
+      workForm.profile_customer_ids.map((profile: any) => {
+        documentsProducedArray = documentsProducedArray.concat(
+          documentsProduced.map((document: any) => {
+            return {
+              document_type: document,
+              profile_customer_id: profile,
+            };
+          }),
+        );
+      });
 
       let data = {};
 
       if (router.pathname.includes('alterar')) {
-        const transformObjects = documentsProduced.map((document: any) => {
+        let newProducedDocumentsArray = [] as any;
+
+        let documentTypesSet = new Set();
+
+        documentsProduced.forEach((document: any) => {
+          if (document.document_type) {
+            documentTypesSet.add(document.document_type);
+          }
+        });
+
+        const customersWithoutDocument = workForm.profile_customer_ids.filter((profile: any) => {
+          return !documentsProduced.some(
+            (document: any) => document.profile_customer_id == profile,
+          );
+        });
+
+        documentsProduced.map((document: any) => {
+          if (!document.id) {
+            workForm.profile_customer_ids.map((profile: any) => {
+              newProducedDocumentsArray.push({
+                document_type: document,
+                profile_customer_id: profile,
+              });
+            });
+          }
+
           if (document.id) {
-            return {
+            newProducedDocumentsArray.push({
               id: document.id,
               document_type: document.document_type,
-              profile_customer_id: workForm.profile_customer_ids.toString(),
+              profile_customer_id: document.profile_customer_id,
               url: document.url,
-            };
-          } else {
-            if (typeof document === 'string') {
-              return {
-                document_type: document,
-                profile_customer_id: workForm.profile_customer_ids.toString(),
-              };
-            }
+            });
           }
+        });
+
+        customersWithoutDocument.map((profile: any) => {
+          documentTypesSet.forEach((document: any) => {
+            newProducedDocumentsArray.push({
+              document_type: document,
+              profile_customer_id: profile,
+            });
+          });
         });
 
         data = {
           ...workForm,
-          documents_attributes: transformObjects,
+          documents_attributes: newProducedDocumentsArray,
           pending_documents_attributes: pendingDocuments,
           extra_pending_document: otherDocuments,
           folder: folder,
@@ -124,7 +178,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
       } else {
         data = {
           ...workForm,
-          documents_attributes: transformObjects,
+          documents_attributes: documentsProducedArray,
           pending_documents_attributes: pendingDocuments,
           extra_pending_document: otherDocuments,
           folder: folder,
@@ -365,6 +419,22 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                   }}
                 />
 
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      value="honorary"
+                      checked={
+                        documentsProduced.includes('honorary') ||
+                        documentsProduced
+                          .map((document: any) => document.document_type)
+                          .includes('honorary')
+                      }
+                      onChange={handleDocumentsProducedSelection}
+                    />
+                  }
+                  label="Contrato"
+                />
+
                 {/* <FormControlLabel
                   control={
                     <Checkbox
@@ -406,7 +476,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
             </Box>
 
             {/* Pending Documents */}
-            <Box>
+            {/* <Box>
               <Flex
                 style={{
                   marginBottom: '8px',
@@ -556,7 +626,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                   }}
                 />
               </Flex>
-            </Box>
+            </Box> */}
           </Flex>
         </Flex>
       </>
