@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
 import { cpfMask, moneyMask, rgMask } from '@/utils/masks';
-import { Box, Button, CircularProgress } from '@mui/material';
+import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { getAdminByID, getAllAdmins } from '@/services/admins';
 import { getAllOffices } from '@/services/offices';
 import { FiMinusCircle } from 'react-icons/fi';
@@ -10,6 +10,9 @@ import { GoPlusCircle } from 'react-icons/go';
 import { getWorkById } from '@/services/works';
 import { getAllCustomers } from '@/services/customers';
 import { BsDownload } from 'react-icons/bs';
+import { IoCheckmarkOutline } from 'react-icons/io5';
+
+import { colors } from '@/styles/globals';
 
 interface WorkDetailsProps {
   id: string | string[];
@@ -33,6 +36,14 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
   const [allOffices, setAllOffices] = useState<any[]>([]);
   const [allCustomers, setAllCustomers] = useState<any[]>([]);
   const [allAdmins, setAllAdmins] = useState<any[]>([]);
+
+  const [downloadedDocuments, setDownloadedDocuments] = useState<Array<boolean>>(
+    Array(workData?.attributes?.documents?.length).fill(false),
+  );
+
+  const [documentsPerCustomer, setDocumentsPerCustomer] = useState<any>({});
+
+  const [customerNames, setCustomerNames] = useState<Array<string>>([]);
 
   const getCustomers = async () => {
     const response: {
@@ -61,10 +72,41 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
     return admin ? admin.attributes.name : 'Não Informado';
   };
 
-  const getCustomerName = (id: number) => {
+  const getCustomerName = (id: number | string) => {
     const customer = allCustomers.find(customer => customer.id == id);
     return customer ? customer.attributes.name : 'Não Informado';
   };
+
+  useEffect(() => {
+    const documents = workData?.attributes?.documents;
+
+    const documentsPerCustomer = documents?.reduce((acc: any, document: any) => {
+      if (!acc[document.profile_customer_id]) {
+        acc[document.profile_customer_id] = [];
+      }
+
+      acc[document.profile_customer_id].push(document);
+
+      return acc;
+    }, {});
+
+    setDocumentsPerCustomer(documentsPerCustomer);
+  }, [workData?.attributes?.documents]);
+
+  useEffect(() => {
+    const fetchCustomerNames = async () => {
+      const names = await Promise.all(
+        Object.keys(documentsPerCustomer ?? {}).map(async customerId => {
+          const name = await getCustomerName(customerId);
+          console.log(name);
+          return `${name}`;
+        }),
+      );
+      setCustomerNames(names);
+    };
+
+    fetchCustomerNames();
+  }, [documentsPerCustomer]);
 
   const handleSubject = (subject: string) => {
     if (subject) {
@@ -1365,67 +1407,98 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                       paddingBottom: '20px',
                     }}
                   >
-                    <div
+                    <Flex
                       style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: '18px',
-                        padding: '0 32px',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        width: '100%',
                       }}
                     >
-                      <Flex
+                      <span
                         style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '300px',
+                          color: '#344054',
+                          fontSize: '20px',
+                          fontWeight: '500',
+                          padding: '0 32px',
                         }}
                       >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Documentos Gerados
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {workData.attributes && workData.attributes.documents
-                            ? workData.attributes.documents.map((document: any) => (
+                        Documentos Gerados
+                      </span>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '60px',
+                          width: '100%',
+                          flexWrap: 'wrap',
+                          fontSize: '18px',
+                          color: '#344054',
+                          fontWeight: '400',
+                          padding: '0 32px',
+                        }}
+                      >
+                        {customerNames.map((customerName, index) => (
+                          <Box key={index}>
+                            <Typography
+                              variant="subtitle1"
+                              style={{
+                                fontWeight: '500',
+                                fontSize: '20px',
+                                color: '#26B99A',
+                              }}
+                            >
+                              {customerName}
+                            </Typography>
+                            {documentsPerCustomer[Object.keys(documentsPerCustomer)[index]].map(
+                              (document: any, index: number) => (
                                 <div
-                                  key={document.id}
+                                  key={document.url}
                                   style={{
                                     display: 'flex',
-                                    cursor: 'pointer',
+                                    flexDirection: 'column',
                                     gap: '8px',
                                   }}
-                                  onClick={() => {
-                                    window.open(document.url, '_blank');
-                                  }}
                                 >
-                                  <BsDownload size={20} color="#2A3F54" />
-                                  <span>
-                                    {document.document_type === 'procuration'
-                                      ? 'Procuração'
-                                      : document.document_type === 'waiver'
-                                      ? 'Termo de Renúncia'
-                                      : document.document_type === 'deficiency_statement'
-                                      ? 'Declaração de Carência'
-                                      : ''}
-                                  </span>
+                                  <Typography
+                                    variant="subtitle1"
+                                    style={{
+                                      fontWeight: '400',
+                                      fontSize: '18px',
+                                      color: '#000',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      cursor: 'pointer',
+                                      gap: '8px',
+                                    }}
+                                    onClick={() => {
+                                      window.open(document.url, '_blank');
+                                      setDownloadedDocuments(prev => ({
+                                        ...prev,
+                                        [document.url]: true,
+                                      }));
+                                    }}
+                                  >
+                                    {downloadedDocuments[document.url] ? (
+                                      <IoCheckmarkOutline size={20} color={colors.green} />
+                                    ) : (
+                                      <BsDownload size={20} color={colors.primary} />
+                                    )}
+                                    {document.document_type
+                                      ? document.document_type === 'procuration'
+                                        ? 'Procuração'
+                                        : document.document_type === 'waiver'
+                                        ? 'Termo de Renúncia'
+                                        : document.document_type === 'deficiency_statement'
+                                        ? 'Declaração de Carência'
+                                        : 'Contrato'
+                                      : 'Procuração Simples'}
+                                  </Typography>
                                 </div>
-                              ))
-                            : 'Não há documentos gerados'}
-                        </span>
-                      </Flex>
-                    </div>
+                              ),
+                            )}
+                          </Box>
+                        ))}
+                      </div>
+                    </Flex>
 
                     <div
                       style={{
