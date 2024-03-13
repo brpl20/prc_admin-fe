@@ -270,33 +270,8 @@ const Works = () => {
                 disableColumnMenu
                 loading={isLoading}
                 disableRowSelectionOnClick
-                slots={{
-                  noRowsOverlay: () =>
-                    isLoading ? (
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          width: '100%',
-                          height: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <LinearProgress />
-                      </Box>
-                    ) : (
-                      <Typography
-                        variant="h6"
-                        style={{
-                          paddingLeft: '16px',
-                        }}
-                      >
-                        {'Nenhum trabalho encontrado'}
-                      </Typography>
-                    ),
+                components={{
+                  LoadingOverlay: LinearProgress,
                 }}
                 rows={
                   worksListListFiltered &&
@@ -359,7 +334,6 @@ const Works = () => {
                         >
                           <MdModeEdit size={22} color={colors.icons} cursor={'pointer'} />
                         </button>
-                       
                       </Box>
                     ),
                   },
@@ -405,6 +379,7 @@ const Works = () => {
                   pagination: { paginationModel: { pageSize: 10 } },
                 }}
                 localeText={{
+                  noRowsLabel: 'Nenhum trabalho encontrado',
                   MuiTablePagination: {
                     labelRowsPerPage: 'Linhas por página',
                     labelDisplayedRows(paginationInfo) {
