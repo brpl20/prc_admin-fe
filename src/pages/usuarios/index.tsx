@@ -15,7 +15,7 @@ import {
 
 import { MdOutlineAddCircle, MdSearch, MdModeEdit, MdVisibility } from 'react-icons/md';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, LinearProgress, Typography } from '@mui/material';
 import { DataGrid, GridRowParams } from '@mui/x-data-grid';
 
 import { Footer } from '@/components';
@@ -170,6 +170,9 @@ const Admins = () => {
               <DataGrid
                 disableColumnMenu
                 disableRowSelectionOnClick
+                components={{
+                  LoadingOverlay: LinearProgress,
+                }}
                 rows={
                   adminsListFiltered &&
                   adminsListFiltered.map((admin: IAdminProps) => ({

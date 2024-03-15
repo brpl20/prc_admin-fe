@@ -14,13 +14,7 @@ import {
   ContentContainer,
 } from '@/styles/globals';
 
-import {
-  MdOutlineAddCircle,
-  MdSearch,
-  MdVisibility,
-  MdModeEdit,
-  MdGavel,
-} from 'react-icons/md';
+import { MdOutlineAddCircle, MdSearch, MdVisibility, MdModeEdit, MdGavel } from 'react-icons/md';
 
 import { Box, Button, Typography, LinearProgress } from '@mui/material';
 import { DataGrid, GridRowParams } from '@mui/x-data-grid';
@@ -228,26 +222,8 @@ const Offices = () => {
                 disableColumnMenu
                 disableRowSelectionOnClick
                 loading={isLoading}
-                slots={{
-                  noRowsOverlay: () =>
-                    isLoading ? (
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          width: '100%',
-                          height: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <LinearProgress />
-                      </Box>
-                    ) : (
-                      <Typography variant="h6">{'Nenhum Escritório encontrado'}</Typography>
-                    ),
+                components={{
+                  LoadingOverlay: LinearProgress,
                 }}
                 rows={
                   officesListFiltered &&

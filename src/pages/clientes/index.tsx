@@ -345,26 +345,8 @@ const Customers = () => {
                 disableRowSelectionOnClick
                 loading={isLoading}
                 getRowClassName={getRowClassName}
-                slots={{
-                  noRowsOverlay: () =>
-                    isLoading ? (
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          width: '100%',
-                          height: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <LinearProgress />
-                      </Box>
-                    ) : (
-                      <Typography variant="h6">{'Nenhum cliente encontrado'}</Typography>
-                    ),
+                components={{
+                  LoadingOverlay: LinearProgress,
                 }}
                 rows={
                   customersListFiltered &&
@@ -463,6 +445,7 @@ const Customers = () => {
                   pagination: { paginationModel: { pageSize: 10 } },
                 }}
                 localeText={{
+                  noRowsLabel: 'Nenhum cliente encontrado',
                   MuiTablePagination: {
                     labelRowsPerPage: 'Linhas por página',
                     labelDisplayedRows(paginationInfo) {
