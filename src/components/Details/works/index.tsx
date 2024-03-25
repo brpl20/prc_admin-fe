@@ -98,7 +98,6 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
       const names = await Promise.all(
         Object.keys(documentsPerCustomer ?? {}).map(async customerId => {
           const name = await getCustomerName(customerId);
-          console.log(name);
           return `${name}`;
         }),
       );

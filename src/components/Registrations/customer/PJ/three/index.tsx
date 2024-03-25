@@ -36,11 +36,11 @@ interface FormData {
 }
 
 const stepThreeSchema = z.object({
-  bank: z.string().nonempty('Banco é obrigatório'),
-  agency: z.string().nonempty('Agência é obrigatório'),
-  operation: z.string().nonempty('Operação é obrigatório'),
-  account: z.string().nonempty('Conta é obrigatório'),
-  pix: z.string().nonempty('Chave Pix é obrigatório'),
+  bank: z.string(),
+  agency: z.string(),
+  operation: z.string(),
+  account: z.string(),
+  pix: z.string(),
 });
 
 const PJCustomerStepThree: ForwardRefRenderFunction<

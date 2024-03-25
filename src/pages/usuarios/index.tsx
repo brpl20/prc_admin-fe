@@ -82,10 +82,8 @@ const Admins = () => {
     const updateScrollPosition = () => {
       if (window.scrollY >= 49) {
         setShowTitle(true);
-        setPageTitle('Usuários');
       } else if (window.scrollY <= 32) {
         setShowTitle(false);
-        setPageTitle('');
       }
     };
 

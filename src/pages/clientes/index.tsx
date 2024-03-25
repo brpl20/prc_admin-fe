@@ -78,7 +78,7 @@ const Customers = () => {
 
   const { setCustomerForm } = useContext(CustomerContext);
 
-  const { showTitle, setShowTitle, setPageTitle } = useContext(PageTitleContext);
+  const { showTitle, setShowTitle } = useContext(PageTitleContext);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [openCreationMenu, setOpenCreationMenu] = useState<boolean>(false);
@@ -198,10 +198,8 @@ const Customers = () => {
     const updateScrollPosition = () => {
       if (window.scrollY >= 49) {
         setShowTitle(true);
-        setPageTitle('Clientes');
       } else if (window.scrollY <= 32) {
         setShowTitle(false);
-        setPageTitle('');
       }
     };
 

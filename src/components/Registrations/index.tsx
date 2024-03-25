@@ -38,17 +38,13 @@ import WorkStepFour, { IRefWorkStepFourProps } from './work/four';
 import WorkStepFive, { IRefWorkStepFiveProps } from './work/five';
 import WorkStepSix, { IRefWorkStepSixProps } from './work/six';
 import ConfirmDownloadDocument from '../ConfirmDownloadDocument';
-import { useSession } from 'next-auth/react';
 
 interface IRegistrationProps {
   registrationType: string;
-  pageTitle: string;
   titleSteps: string[];
 }
 
-const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegistrationProps) => {
-  const { data: session } = useSession();
-
+const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps) => {
   const PFcustomerStepOneRef = useRef<IRefPFCustomerStepOneProps>(null);
   const PFcustomerStepTwoRef = useRef<IRefPFCustomerStepTwoProps>(null);
   const PFcustomerStepThreeRef = useRef<IRefPFCustomerStepThreeProps>(null);
@@ -70,7 +66,9 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
 
   const { workForm, setWorkForm } = useContext(WorkContext);
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
-  const { showTitle, setShowTitle, setPageTitle } = useContext(PageTitleContext);
+  const { showTitle, setShowTitle, pageTitle } = useContext(PageTitleContext);
+
+  const route = useRouter();
 
   const [activeStep, setActiveStep] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
@@ -142,7 +140,7 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
   const completeRegistration = async (title: string) => {
     if (registrationType.search('liente') !== -1) {
       try {
-        if (pageTitle.search('terar') !== -1) {
+        if (route.asPath.includes('alterar')) {
           const id = router.query.id as string;
           if (id) {
             const res = await updateProfileCustomer(id, customerForm.data.attributes);
@@ -193,6 +191,10 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
           setOpenModal(false);
 
           setOpenDownloadModal(true);
+        } else {
+          setOpenModal(false);
+
+          router.push('/clientes');
         }
 
         return;
@@ -204,7 +206,7 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
       }
     } else if (registrationType.search('trabalho') !== -1) {
       try {
-        if (pageTitle.search('terar') !== -1) {
+        if (route.asPath.includes('alterar')) {
           const id: any = router.query.id;
           const res = await updateWork(id, workForm);
 
@@ -448,10 +450,8 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
     const updateScrollPosition = () => {
       if (window.scrollY >= 49) {
         setShowTitle(true);
-        setPageTitle(pageTitle);
       } else if (window.scrollY <= 32) {
         setShowTitle(false);
-        setPageTitle('');
       }
     };
 
@@ -463,12 +463,12 @@ const RegistrationScreen = ({ registrationType, pageTitle, titleSteps }: IRegist
   }, []);
 
   useEffect(() => {
-    if (pageTitle.search('terar') !== -1) {
+    if (router.asPath.includes('alterar')) {
       setIsEditing(true);
     } else {
       setIsEditing(false);
     }
-  }, [pageTitle]);
+  }, [router.asPath]);
 
   return (
     <>

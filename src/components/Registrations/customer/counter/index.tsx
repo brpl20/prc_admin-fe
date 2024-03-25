@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, useEffect, useContext } from 'react';
+import { useState, ChangeEvent, useEffect, useContext } from 'react';
 import { IoAddCircleOutline } from 'react-icons/io5';
 
 import {
@@ -24,10 +24,8 @@ import { Flex, Divider } from '@/styles/globals';
 import { createProfileCustomer, createCustomer, updateProfileCustomer } from '@/services/customers';
 import { animateScroll as scroll } from 'react-scroll';
 
-import Router from 'next/router';
-import { set } from 'date-fns';
-import { capacityOptions, civilStatusOptions, gendersOptions } from '@/utils/constants';
-import { cpfMask, rgMask } from '@/utils/masks';
+import Router, { useRouter } from 'next/router';
+import { cpfMask } from '@/utils/masks';
 import { z } from 'zod';
 
 interface FormData {
@@ -54,6 +52,7 @@ const counterSchema = z.object({
 });
 
 const Counter = ({ pageTitle }: props) => {
+  const route = useRouter();
   const [errors, setErrors] = useState({} as any);
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
@@ -412,10 +411,8 @@ const Counter = ({ pageTitle }: props) => {
     const updateScrollPosition = () => {
       if (window.scrollY >= 49) {
         setShowTitle(true);
-        setPageTitle(pageTitle);
       } else if (window.scrollY <= 32) {
         setShowTitle(false);
-        setPageTitle('');
       }
     };
 
@@ -433,6 +430,10 @@ const Counter = ({ pageTitle }: props) => {
       setIsEditing(false);
     }
   }, [pageTitle]);
+
+  useEffect(() => {
+    setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro de' : 'Alterar'} Contador`);
+  }, [route, setPageTitle]);
 
   return (
     <>

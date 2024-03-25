@@ -79,17 +79,12 @@ const Registration = () => {
   return (
     <Layout>
       {type === 'trabalho' && (
-        <RegistrationScreen
-          registrationType={'trabalho'}
-          pageTitle={'Alterar Trabalho'}
-          titleSteps={workSteps}
-        />
+        <RegistrationScreen registrationType={'trabalho'} titleSteps={workSteps} />
       )}
 
       {type === 'cliente/pessoa_fisica' && (
         <RegistrationScreen
           registrationType={'cliente/pessoa_fisica'}
-          pageTitle={'Alterar Pessoa Física'}
           titleSteps={PFCustomerSteps}
         />
       )}
@@ -97,7 +92,6 @@ const Registration = () => {
       {type === 'cliente/pessoa_juridica' && (
         <RegistrationScreen
           registrationType={'cliente/pessoa_juridica'}
-          pageTitle={'Alterar Pessoa Jurídica'}
           titleSteps={PJCustomerSteps}
         />
       )}
@@ -106,9 +100,9 @@ const Registration = () => {
 
       {type === 'cliente/representante' && <Representative pageTitle={'Alterar Representante'} />}
 
-      {type === 'usuario' && <User pageTitle={'Alterar Usuário'} dataToEdit={form} />}
+      {type === 'usuario' && <User dataToEdit={form} />}
 
-      {type === 'escritorio' && <Office pageTitle={'Alterar Escritório'} dataToEdit={form} />}
+      {type === 'escritorio' && <Office dataToEdit={form} />}
 
       <Footer />
     </Layout>

@@ -32,7 +32,7 @@ import { getAllOfficeTypes } from '@/services/offices';
 import { getCEPDetails } from '@/services/brasilAPI';
 import { createOffice, updateOffice } from '@/services/offices';
 
-import Router from 'next/router';
+import Router, { useRouter } from 'next/router';
 import { cepMask, cnpjMask } from '@/utils/masks';
 
 import { IAdminPropsAttributes } from '@/interfaces/IAdmin';
@@ -59,7 +59,6 @@ interface FormData {
 }
 
 interface props {
-  pageTitle: string;
   dataToEdit?: any;
 }
 
@@ -80,7 +79,9 @@ const officeSchema = z.object({
   email: z.string().nonempty({ message: 'Informe o Email' }),
 });
 
-const Office = ({ pageTitle, dataToEdit }: props) => {
+const Office = ({ dataToEdit }: props) => {
+  const route = useRouter();
+
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -89,7 +90,7 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
   const [selectedOfficeType, setSelectedOfficeType] = useState<any>({});
   const [selectedSocialType, setSelectedSocialType] = useState<any>({});
 
-  const { setShowTitle, setPageTitle } = useContext(PageTitleContext);
+  const { setShowTitle, setPageTitle, pageTitle } = useContext(PageTitleContext);
 
   const currentDate = dayjs();
   const [selectedDate, setSelectedDate] = useState(currentDate);
@@ -361,10 +362,8 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
     const updateScrollPosition = () => {
       if (window.scrollY >= 49) {
         setShowTitle(true);
-        setPageTitle(pageTitle);
       } else if (window.scrollY <= 32) {
         setShowTitle(false);
-        setPageTitle('');
       }
     };
 
@@ -463,6 +462,10 @@ const Office = ({ pageTitle, dataToEdit }: props) => {
       }
     }
   }, [dataToEdit, adminsList, officeTypes]);
+
+  useEffect(() => {
+    setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro de ' : 'Alterar'} Escritório`);
+  }, [route, setPageTitle]);
 
   return (
     <>
