@@ -36,11 +36,11 @@ interface FormData {
 }
 
 const stepFourSchema = z.object({
-  bank: z.string().nonempty('Banco é obrigatório'),
-  agency: z.string().nonempty('Agência é obrigatório'),
-  operation: z.string().nonempty('Operação é obrigatório'),
-  account: z.string().nonempty('Conta é obrigatório'),
-  pix: z.string().nonempty('Chave Pix é obrigatório'),
+  bank: z.string(),
+  agency: z.string(),
+  operation: z.string(),
+  account: z.string(),
+  pix: z.string(),
 });
 
 const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, IStepFourProps> = (
@@ -240,7 +240,10 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
       try {
         const response = await getAllBanks();
         const uniqueBanks = removeDuplicateBanks(response);
-        setBankList(uniqueBanks);
+        const filteredBanks = uniqueBanks.filter(
+          bank => bank.name !== 'Selic' && bank.name !== 'Bacen',
+        );
+        setBankList(filteredBanks);
       } catch (error: any) {}
     };
 

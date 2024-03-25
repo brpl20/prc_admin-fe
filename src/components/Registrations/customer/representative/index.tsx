@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, useEffect, useContext } from 'react';
+import { useState, ChangeEvent, useEffect, useContext } from 'react';
 import { IoAddCircleOutline } from 'react-icons/io5';
 
 import {
@@ -37,9 +37,7 @@ import {
 import { animateScroll as scroll } from 'react-scroll';
 
 import Router, { useRouter } from 'next/router';
-import { cepMask, cpfMask, rgMask } from '@/utils/masks';
-import { getAllAdmins } from '@/services/admins';
-import { IAdminProps } from '@/interfaces/IAdmin';
+import { cepMask, cpfMask } from '@/utils/masks';
 import { z } from 'zod';
 import { ICustomerProps } from '@/interfaces/ICustomer';
 
@@ -568,10 +566,8 @@ const Representative = ({ pageTitle }: props) => {
     const updateScrollPosition = () => {
       if (window.scrollY >= 49) {
         setShowTitle(true);
-        setPageTitle(pageTitle);
       } else if (window.scrollY <= 32) {
         setShowTitle(false);
-        setPageTitle('');
       }
     };
 
@@ -589,6 +585,10 @@ const Representative = ({ pageTitle }: props) => {
       setIsEditing(false);
     }
   }, [pageTitle]);
+
+  useEffect(() => {
+    setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro' : 'Alterar'} de Representante`);
+  }, [route, setPageTitle]);
 
   return (
     <>

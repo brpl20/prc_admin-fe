@@ -120,10 +120,24 @@ const Drawer = styled(MuiDrawer, {
 
 const Layout = ({ children }: ILayoutProps) => {
   const theme = useTheme();
-  const { asPath } = useRouter();
+  const { asPath, route } = useRouter();
   const { handleLogout } = useContext(AuthContext);
-  const { showTitle, pageTitle } = useContext(PageTitleContext);
   const { data: session } = useSession();
+
+  const { showTitle, pageTitle } = useContext(PageTitleContext);
+
+  const title =
+    route === '/clientes'
+      ? 'Clientes'
+      : route === '/trabalhos'
+      ? 'Trabalhos'
+      : route === '/tarefas'
+      ? 'Tarefas'
+      : route === '/usuarios'
+      ? 'Usuários'
+      : route === '/escritorios'
+      ? 'Escritórios'
+      : pageTitle;
 
   const supportsLocalStorage = typeof window !== 'undefined' && window.localStorage;
   const storedOpenSidebar = supportsLocalStorage ? localStorage.getItem('openSidebar') : null;
@@ -131,7 +145,6 @@ const Layout = ({ children }: ILayoutProps) => {
 
   const [openSidebar, setOpenSidebar] = useState(initialSidebarState);
   const [openUserMenu, setOpenUserMenu] = useState(false);
-  const [isUserCounter, setIsUserCounter] = useState(true);
 
   const handleDrawerOpen = () => {
     setOpenSidebar(true);
@@ -183,7 +196,7 @@ const Layout = ({ children }: ILayoutProps) => {
                 marginLeft: openSidebar ? '0px' : '45px',
               }}
             >
-              {pageTitle}
+              {title}
             </HeaderPageTitle>
           </TitleWrapper>
           <SelectContainer onClick={() => setOpenUserMenu(!openUserMenu)} isOpen={openUserMenu}>

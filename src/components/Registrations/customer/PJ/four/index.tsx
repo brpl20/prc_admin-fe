@@ -126,22 +126,22 @@ const PJCustomerStepFour: ForwardRefRenderFunction<IRefPJCustomerStepFourProps, 
           />
 
           <CheckBox
-            label="Emitir documentos"
+            label="Emitir procuração simples"
             name="issueDocuments"
             checked={checkedItems.issueDocuments}
             onChange={handleCheckboxChange}
           />
 
-          <CheckBox
+          {/* <CheckBox
             label="Enviar para assinatura"
             name="sendForSignature"
             checked={checkedItems.sendForSignature}
             onChange={handleCheckboxChange}
-          />
+          /> */}
         </Box>
       </Box>
 
-      <Box flex={1}>
+      {/* <Box flex={1}>
         <Flex style={{ flexDirection: 'column' }}>
           <Typography variant="h6" sx={{ marginBottom: '16px' }}>
             {'Upload de arquivos'}
@@ -200,7 +200,7 @@ const PJCustomerStepFour: ForwardRefRenderFunction<IRefPJCustomerStepFourProps, 
             )}
           </Box>
         </Flex>
-      </Box>
+      </Box> */}
     </Container>
   );
 };

@@ -17,7 +17,9 @@ import { Flex, Divider } from '@/styles/globals';
 import Notification from '@/components/Notification';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
+import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { cepMask, cnpjMask } from '@/utils/masks';
+import { useRouter } from 'next/router';
 
 export interface IRefPJCustomerStepOneProps {
   handleSubmitForm: () => void;
@@ -50,8 +52,10 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
   { nextStep, editMode },
   ref,
 ) => {
+  const route = useRouter();
   const [errors, setErrors] = useState({} as any);
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
+  const { setPageTitle } = useContext(PageTitleContext);
 
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -314,6 +318,10 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
       handleDataForm();
     }
   }, [customerForm]);
+
+  useEffect(() => {
+    setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro' : 'Alterar'} Pessoa Jurídica`);
+  }, [route, setPageTitle]);
 
   return (
     <>

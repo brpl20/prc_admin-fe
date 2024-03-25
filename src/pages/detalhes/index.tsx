@@ -31,7 +31,6 @@ const Details = () => {
         );
       } else if (window.scrollY <= 32) {
         setShowTitle(false);
-        setPageTitle('');
       }
     };
 
