@@ -420,10 +420,8 @@ const RepresentativeModal = ({
     const updateScrollPosition = () => {
       if (window.scrollY >= 49) {
         setShowTitle(true);
-        setPageTitle(pageTitle);
       } else if (window.scrollY <= 32) {
         setShowTitle(false);
-        setPageTitle('');
       }
     };
 
@@ -473,48 +471,6 @@ const RepresentativeModal = ({
           <ContentContainer>
             <form>
               <Box display={'flex'} flexDirection={'column'} gap={'16px'}>
-                <Flex>
-                  <Box width={'300px'}>
-                    <Typography variant="h6" sx={{ marginRight: 'auto' }}>
-                      {'Selecione o Representado'}
-                    </Typography>
-                  </Box>
-                  <Box style={{ flex: 1 }}>
-                    <Box width={'50%'} pr={'15.5px'}>
-                      <Autocomplete
-                        disablePortal={true}
-                        autoComplete
-                        options={customersList}
-                        getOptionLabel={option => option?.attributes?.name ?? ''}
-                        onChange={(event, value) => {
-                          if (value) {
-                            handleCustomerChange('represent_id', value.id);
-                          } else {
-                            handleCustomerChange('represent_id', '');
-                          }
-                        }}
-                        value={
-                          formData.represent_id
-                            ? customersList.find(customer => customer.id == formData.represent_id)
-                            : null
-                        }
-                        renderInput={params => (
-                          <TextField
-                            {...params}
-                            value={formData.represent_id}
-                            placeholder="Selecione um Cliente"
-                            size="small"
-                            error={!!errors.represent_id}
-                          />
-                        )}
-                        noOptionsText="Nenhum Cliente Encontrado"
-                      />
-                    </Box>
-                  </Box>
-                </Flex>
-
-                <Divider />
-
                 <Flex>
                   <Box width={'300px'}>
                     <Typography variant="h6" sx={{ marginRight: 'auto' }}>

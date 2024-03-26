@@ -1,4 +1,4 @@
-import React, {
+import {
   useState,
   useEffect,
   useContext,
@@ -10,14 +10,12 @@ import React, {
 } from 'react';
 
 import Dropzone from 'react-dropzone';
-import { animateScroll as scroll } from 'react-scroll';
 
-import { boolean, z } from 'zod';
+import { z } from 'zod';
 import CustomTooltip from '@/components/Tooltip';
 import { colors, Flex } from '@/styles/globals';
 import { MdOutlineInfo, MdDelete } from 'react-icons/md';
 
-import { AuthContext } from '@/contexts/AuthContext';
 import { WorkContext } from '@/contexts/WorkContext';
 import Notification from '@/components/Notification';
 
@@ -46,9 +44,8 @@ import {
 } from '@mui/material';
 import { useRouter } from 'next/router';
 import { getAllDraftWorks } from '@/services/works';
-import { getAllAdmins } from '@/services/admins';
-import { UserContext } from '@/contexts/UserContext';
 import { useSession } from 'next-auth/react';
+import { PageTitleContext } from '@/contexts/PageTitleContext';
 
 interface Option {
   value: string;
@@ -84,6 +81,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   const route = useRouter();
   const [isVisibleOptionsArea, setIsVisibleOptionsArea] = useState(false);
   const { workForm, setWorkForm } = useContext(WorkContext);
+  const { setShowTitle, setPageTitle } = useContext(PageTitleContext);
   const [errors, setErrors] = useState({} as any);
 
   const [message, setMessage] = useState('');
@@ -578,6 +576,10 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   useEffect(() => {
     verifyDataLocalStorage();
   }, [customersList]);
+
+  useEffect(() => {
+    setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro de ' : 'Alterar'} Trabalho`);
+  }, [route, setPageTitle]);
 
   return (
     <>

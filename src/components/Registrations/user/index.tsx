@@ -37,7 +37,7 @@ import { getAllBanks } from '@/services/brasilAPI';
 import { createAdmin, updateAdmin } from '@/services/admins';
 import { IOfficeProps } from '@/interfaces/IOffice';
 
-import Router from 'next/router';
+import Router, { useRouter } from 'next/router';
 import { cepMask, cpfMask } from '@/utils/masks';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
@@ -77,7 +77,6 @@ interface FormData {
 }
 
 interface props {
-  pageTitle: string;
   dataToEdit?: any;
 }
 
@@ -106,7 +105,7 @@ const userSchema = z.object({
   cep: z.string().nonempty({ message: 'O campo CEP é obrigatório.' }),
 });
 
-const User = ({ pageTitle, dataToEdit }: props) => {
+const User = ({ dataToEdit }: props) => {
   const { data: session } = useSession();
 
   const [loading, setLoading] = useState(false);
@@ -114,8 +113,8 @@ const User = ({ pageTitle, dataToEdit }: props) => {
   const [isEditing, setIsEditing] = useState(false);
   const [officesList, setOfficesList] = useState<IOfficeProps[]>([]);
 
-  const { setShowTitle, setPageTitle } = useContext(PageTitleContext);
-
+  const { setShowTitle, setPageTitle, pageTitle } = useContext(PageTitleContext);
+  const route = useRouter();
   const currentDate = dayjs();
   const [bankList, setBankList] = useState([] as any[]);
   const [selectedDate, setSelectedDate] = useState(currentDate);
@@ -577,10 +576,8 @@ const User = ({ pageTitle, dataToEdit }: props) => {
     const updateScrollPosition = () => {
       if (window.scrollY >= 49) {
         setShowTitle(true);
-        setPageTitle(pageTitle);
       } else if (window.scrollY <= 32) {
         setShowTitle(false);
-        setPageTitle('');
       }
     };
 
@@ -672,6 +669,10 @@ const User = ({ pageTitle, dataToEdit }: props) => {
       handleDataForm();
     }
   }, [dataToEdit, officesList, bankList]);
+
+  useEffect(() => {
+    setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro de' : 'Alterar'} Usuário`);
+  }, [route, setPageTitle]);
 
   return (
     <>

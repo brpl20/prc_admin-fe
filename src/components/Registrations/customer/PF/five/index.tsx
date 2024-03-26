@@ -34,8 +34,8 @@ interface FormData {
 
 const stepFiveSchema = z.object({
   profession: z.string().nonempty('Profissão é obrigatório'),
-  company: z.string().nonempty('Empresa é obrigatório'),
-  number_benefit: z.string().nonempty('Número de Benefício é obrigatório'),
+  company: z.string(),
+  number_benefit: z.string(),
   mother_name: z.string().nonempty('Nome da Mãe é obrigatório'),
 });
 

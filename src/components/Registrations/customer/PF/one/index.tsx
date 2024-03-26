@@ -38,11 +38,11 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { cpfMask, rgMask } from '@/utils/masks';
-import { getAllAdmins } from '@/services/admins';
 import { getAllCustomers } from '@/services/customers';
 import CustomTooltip from '@/components/Tooltip';
 import { MdOutlineAddCircle, MdOutlineInfo } from 'react-icons/md';
 import RepresentativeModal from '../../representative/representativeModal';
+import { PageTitleContext } from '@/contexts/PageTitleContext';
 
 export interface IRefPFCustomerStepOneProps {
   handleSubmitForm: () => void;
@@ -86,6 +86,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   const [isRepresentativeFinished, setIsRepresentativeFinished] = useState(false);
   const currentDate = dayjs();
   const [errors, setErrors] = useState({} as any);
+  const { setPageTitle } = useContext(PageTitleContext);
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -147,7 +148,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         name: parsedData.name,
         last_name: parsedData.last_name,
         cpf: cpfMask(parsedData.cpf),
-        rg: rgMask(parsedData.rg),
+        rg: parsedData.rg,
         birth: parsedData.birth,
         nationality: parsedData.nationality,
         gender: parsedData.gender,
@@ -239,6 +240,26 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 
         setCustomerForm(customerForm);
 
+        const representName = representorsList.find(
+          (customer: any) => customer.id == formData.representor?.id,
+        )?.attributes.name;
+
+        console.log(representName);
+
+        const customerTitle = `${editMode ? 'Alterar' : 'Cadastro'} Pessoa Física ${
+          customerForm.data.attributes.capacity === 'relatively'
+            ? ' - Relativamente Incapaz'
+            : customerForm.data.attributes.capacity === 'unable'
+            ? ' - Absolutamente Incapaz'
+            : ''
+        } ${
+          customerForm.data.attributes.represent_attributes?.representor_id
+            ? ` - ${representName}`
+            : ''
+        }`;
+
+        setPageTitle(customerTitle);
+
         nextStep();
         return;
       }
@@ -259,6 +280,20 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       }
 
       setCustomerForm(customerForm);
+
+      const representName = representorsList.find(
+        (customer: any) => customer.id == formData.representor?.id,
+      )?.attributes.name;
+
+      const customerTitle = `${editMode ? 'Alterar' : 'Cadastro'} Pessoa Física ${
+        customerForm.capacity === 'relatively'
+          ? ' - Relativamente Incapaz'
+          : customerForm.capacity === 'unable'
+          ? ' - Absolutamente Incapaz'
+          : ''
+      } ${customerForm.represent_attributes?.representor_id ? ` - ${representName}` : ''}`;
+
+      setPageTitle(customerTitle);
 
       nextStep();
     } catch (error: any) {
@@ -394,6 +429,10 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       }));
     }
   }, [formData.capacity]);
+
+  useEffect(() => {
+    setPageTitle(`${editMode ? 'Alterar' : 'Cadastro'} Pessoa Física`);
+  }, [editMode, setPageTitle]);
 
   return (
     <>

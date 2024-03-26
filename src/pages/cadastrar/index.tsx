@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
 import dynamic from 'next/dynamic';
@@ -9,12 +9,12 @@ import User from '@/components/Registrations/user';
 import Office from '@/components/Registrations/office';
 import { workSteps, PFCustomerSteps, PJCustomerSteps } from '@/utils/constants';
 import Representative from '@/components/Registrations/customer/representative';
-import { useSession } from 'next-auth/react';
+import { PageTitleContext } from '@/contexts/PageTitleContext';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Registration = () => {
-  const { data: session } = useSession();
+  const { customerTitle } = useContext(PageTitleContext);
 
   const router = useRouter();
   const params = router.query.type;
@@ -22,17 +22,12 @@ const Registration = () => {
   return (
     <Layout>
       {params === 'trabalho' && (
-        <RegistrationScreen
-          registrationType={'trabalho'}
-          pageTitle={'Cadastro de Trabalho'}
-          titleSteps={workSteps}
-        />
+        <RegistrationScreen registrationType={'trabalho'} titleSteps={workSteps} />
       )}
 
       {params === 'cliente/pessoa_fisica' && (
         <RegistrationScreen
           registrationType={'cliente/pessoa_fisica'}
-          pageTitle={'Cadastro Pessoa Física'}
           titleSteps={PFCustomerSteps}
         />
       )}
@@ -40,7 +35,6 @@ const Registration = () => {
       {params === 'cliente/pessoa_juridica' && (
         <RegistrationScreen
           registrationType={'cliente/pessoa_juridica'}
-          pageTitle={'Cadastro Pessoa Jurídica'}
           titleSteps={PJCustomerSteps}
         />
       )}
@@ -51,9 +45,9 @@ const Registration = () => {
         <Representative pageTitle={'Cadastro de Representante'} />
       )}
 
-      {params === 'usuario' && <User pageTitle={'Cadastro de Usuário'} />}
+      {params === 'usuario' && <User />}
 
-      {params === 'escritorio' && <Office pageTitle={'Cadastro de Escritório'} />}
+      {params === 'escritorio' && <Office />}
 
       <Footer />
     </Layout>
