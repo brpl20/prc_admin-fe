@@ -167,17 +167,10 @@ const Representative = ({ pageTitle }: props) => {
       return;
     }
 
-    if (name === 'CPF') {
-      setFormData(prevData => ({
-        ...prevData,
-        CPF: cpfMask(value),
-      }));
-    } else {
-      setFormData(prevData => ({
-        ...prevData,
-        [name]: value,
-      }));
-    }
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleContactChange = (
@@ -303,7 +296,7 @@ const Representative = ({ pageTitle }: props) => {
           addresses_attributes: [
             {
               id: customerForm?.data?.attributes?.addresses[0]?.id ?? '',
-              zip_code: formData.cep.replace(/\D/g, ''),
+              zip_code: formData.cep,
               street: formData.street,
               number: formData.number,
               description: formData.description,
@@ -325,8 +318,8 @@ const Representative = ({ pageTitle }: props) => {
           capacity: 'able',
           profession: 'representative',
           customer_type: 'representative',
-          cpf: formData.CPF.replace(/\D/g, ''),
-          rg: formData.RG.replace(/\D/g, ''),
+          cpf: formData.CPF,
+          rg: formData.RG,
           gender: formData.gender,
           nationality: formData.nationality,
           name: formData.name,
@@ -340,7 +333,7 @@ const Representative = ({ pageTitle }: props) => {
           },
           addresses_attributes: [
             {
-              zip_code: formData.cep.replace(/\D/g, ''),
+              zip_code: formData.cep,
               street: formData.street,
               number: formData.number,
               description: formData.description,
@@ -492,9 +485,10 @@ const Representative = ({ pageTitle }: props) => {
       const attributes = customerForm.data.attributes;
 
       if (attributes) {
+        console.log(attributes);
         const name = attributes.name ? attributes.name : '';
         const last_name = attributes.last_name ? attributes.last_name : '';
-        const cpf = attributes.cpf ? cpfMask(attributes.cpf) : '';
+        const cpf = attributes.cpf ? attributes.cpf : '';
         const rg = attributes.rg ? attributes.rg : '';
         const gender = attributes.gender ? attributes.gender : '';
         const civil_status = attributes.civil_status ? attributes.civil_status : '';
