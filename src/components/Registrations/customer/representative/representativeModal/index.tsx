@@ -52,8 +52,14 @@ interface FormData {
   civil_status: string;
   nationality: string;
   birth: Dayjs | string;
+  cep: string;
+  street: string;
+  number: string;
+  description: string;
+  neighborhood: string;
+  city: string;
+  state: string;
 }
-
 interface props {
   pageTitle: string;
   isOpen: boolean;
@@ -72,6 +78,13 @@ const representativeSchema = z.object({
   nationality: z.string().nonempty('Naturalidade é obrigatório'),
   phone_number: z.string().nonempty('Telefone Obrigatório'),
   email: z.string().nonempty('Email Obrigatório'),
+  cep: z.string().nonempty({ message: 'Preencha o campo CEP.' }),
+  street: z.string().nonempty({ message: 'Preencha o campo Endereço.' }),
+  number: z.string().nonempty({ message: 'Preencha o campo Número.' }),
+  description: z.string(),
+  neighborhood: z.string().nonempty({ message: 'Preencha o campo Bairro.' }),
+  city: z.string().nonempty({ message: 'Preencha o campo Cidade.' }),
+  state: z.string().nonempty({ message: 'Preencha o campo Estado.' }),
 });
 
 const RepresentativeModal = ({
@@ -108,6 +121,13 @@ const RepresentativeModal = ({
     civil_status: '',
     nationality: '',
     birth: currentDate,
+    cep: '',
+    street: '',
+    number: '',
+    description: '',
+    neighborhood: '',
+    city: '',
+    state: '',
   });
 
   const [contactData, setContactData] = useState({
@@ -126,6 +146,13 @@ const RepresentativeModal = ({
       civil_status: '',
       nationality: '',
       birth: currentDate,
+      cep: '',
+      street: '',
+      number: '',
+      description: '',
+      neighborhood: '',
+      city: '',
+      state: '',
     });
     setContactData({
       phoneInputFields: [{ phone_number: '' }],
@@ -140,17 +167,10 @@ const RepresentativeModal = ({
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
-    if (name === 'CPF') {
-      setFormData(prevData => ({
-        ...prevData,
-        CPF: cpfMask(value),
-      }));
-    } else {
-      setFormData(prevData => ({
-        ...prevData,
-        [name]: value,
-      }));
-    }
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleContactChange = (
@@ -245,14 +265,21 @@ const RepresentativeModal = ({
         civil_status: formData.civil_status,
         phone_number: contactData.phoneInputFields[0].phone_number,
         email: contactData.emailInputFields[0].email,
+        cep: formData.cep,
+        street: formData.street,
+        number: formData.number,
+        description: formData.description,
+        neighborhood: formData.neighborhood,
+        city: formData.city,
+        state: formData.state,
       });
 
       const data = {
         capacity: 'able',
         profession: 'representative',
         customer_type: 'representative',
-        cpf: formData.CPF.replace(/\D/g, ''),
-        rg: formData.RG.replace(/\D/g, ''),
+        cpf: formData.CPF,
+        rg: formData.RG,
         gender: formData.gender,
         nationality: formData.nationality,
         name: formData.name,
@@ -264,6 +291,17 @@ const RepresentativeModal = ({
         represent_attributes: {
           representor_id: formData.represent_id ? Number(formData.represent_id) : '',
         },
+        addresses_attributes: [
+          {
+            zip_code: formData.cep,
+            street: formData.street,
+            number: formData.number,
+            description: formData.description,
+            neighborhood: formData.neighborhood,
+            city: formData.city,
+            state: formData.state,
+          },
+        ],
       };
 
       const res = await completeRegistration(data);
@@ -545,6 +583,43 @@ const RepresentativeModal = ({
                 </Flex>
 
                 <Divider />
+
+                <Flex>
+                  <Box width={'300px'}>
+                    <Typography variant="h6" sx={{ marginRight: 'auto' }}>
+                      {'Endereço'}
+                    </Typography>
+                  </Box>
+
+                  <Flex style={{ gap: '32px', flex: 1 }}>
+                    <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
+                      {renderInputField('cep', 'CEP', 'Informe o CEP', !!errors.cep)}
+                      <Flex style={{ gap: '16px' }}>
+                        {renderInputField(
+                          'street',
+                          'Endereço',
+                          'Informe o Endereço',
+
+                          !!errors.street,
+                        )}
+                        <Box maxWidth={'30%'}>
+                          {renderInputField('number', 'Número', 'N.º', !!errors.number)}
+                        </Box>
+                      </Flex>
+                      {renderInputField('description', 'Complemento', 'Informe o Estado')}
+                    </Box>
+                    <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
+                      {renderInputField(
+                        'neighborhood',
+                        'Bairro',
+                        'Informe o Estado',
+                        !!errors.neighborhood,
+                      )}
+                      {renderInputField('city', 'Cidade', 'Informe a Cidade', !!errors.city)}
+                      {renderInputField('state', 'Estado', 'Informe o Estado', !!errors.state)}
+                    </Box>
+                  </Flex>
+                </Flex>
 
                 <Flex>
                   <Box width={'300px'}>

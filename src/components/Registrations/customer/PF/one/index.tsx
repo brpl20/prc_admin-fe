@@ -37,7 +37,6 @@ import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { cpfMask, rgMask } from '@/utils/masks';
 import { getAllCustomers } from '@/services/customers';
 import CustomTooltip from '@/components/Tooltip';
 import { MdOutlineAddCircle, MdOutlineInfo } from 'react-icons/md';
@@ -125,14 +124,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
-    if (name === 'cpf') {
-      setFormData(prevData => ({
-        ...prevData,
-        cpf: cpfMask(value),
-      }));
-      return;
-    }
-
     setFormData(prevData => ({
       ...prevData,
       [name]: value,
@@ -147,7 +138,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       setFormData({
         name: parsedData.name,
         last_name: parsedData.last_name,
-        cpf: cpfMask(parsedData.cpf),
+        cpf: parsedData.cpf,
         rg: parsedData.rg,
         birth: parsedData.birth,
         nationality: parsedData.nationality,
@@ -213,8 +204,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       saveDataLocalStorage({
         name: formData.name,
         last_name: formData.last_name,
-        cpf: formData.cpf.replace(/\D/g, ''),
-        rg: formData.rg.replace(/\D/g, ''),
+        cpf: formData.cpf,
+        rg: formData.rg,
         birth: birthDate,
         nationality: formData.nationality,
         gender: formData.gender,
@@ -226,8 +217,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       if (editMode) {
         customerForm.data.attributes.name = formData.name;
         customerForm.data.attributes.last_name = formData.last_name;
-        customerForm.data.attributes.cpf = formData.cpf.replace(/\D/g, '');
-        customerForm.data.attributes.rg = formData.rg.replace(/\D/g, '');
+        customerForm.data.attributes.cpf = formData.cpf;
+        customerForm.data.attributes.rg = formData.rg;
         customerForm.data.attributes.birth = birthDate;
         customerForm.data.attributes.gender = formData.gender;
         customerForm.data.attributes.nationality = formData.nationality;
@@ -267,8 +258,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       if (formData) {
         customerForm.name = formData.name;
         customerForm.last_name = formData.last_name;
-        customerForm.cpf = formData.cpf.replace(/\D/g, '');
-        customerForm.rg = formData.rg.replace(/\D/g, '');
+        customerForm.cpf = formData.cpf;
+        customerForm.rg = formData.rg;
         customerForm.birth = birthDate;
         customerForm.gender = formData.gender;
         customerForm.nationality = formData.nationality;
@@ -347,6 +338,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         variant="outlined"
         error={error && !formData[name]}
         fullWidth
+        type="text"
         name={name}
         size="small"
         value={formData[name] || ''}
@@ -397,7 +389,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           ...prevData,
           name: attributes.name,
           last_name: attributes.last_name,
-          cpf: attributes.cpf ? cpfMask(attributes.cpf) : '',
+          cpf: attributes.cpf ? attributes.cpf : '',
           rg: attributes.rg ? attributes.rg : '',
           birth: attributes.birth,
           nationality: attributes.nationality,
