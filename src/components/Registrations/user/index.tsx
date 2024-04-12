@@ -160,14 +160,6 @@ const User = ({ dataToEdit }: props) => {
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
-    if (name === 'cpf') {
-      setFormData(prevData => ({
-        ...prevData,
-        cpf: cpfMask(value),
-      }));
-      return;
-    }
-
     if (name === 'cep') {
       setFormData(prevData => ({
         ...prevData,
@@ -1062,7 +1054,7 @@ const User = ({ dataToEdit }: props) => {
                       </Typography>
                       <TextField
                         variant="outlined"
-                        error={passwordIsValid}
+                        error={!passwordIsValid}
                         fullWidth
                         name="password"
                         size="small"

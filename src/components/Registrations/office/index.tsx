@@ -241,7 +241,7 @@ const Office = ({ dataToEdit }: props) => {
         size="small"
         value={
           name === 'cnpj_cpf' && formData.cnpj_cpf
-            ? cnpjMask(formData.cnpj_cpf)
+            ? formData.cnpj_cpf
             : name === 'cep' && formData.cep
             ? cepMask(formData.cep)
             : formData[name] || ''

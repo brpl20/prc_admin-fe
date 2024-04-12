@@ -228,7 +228,7 @@ const Offices = () => {
                   officesListFiltered.map((office: IOfficeProps) => ({
                     id: office.id,
                     name: office.attributes.name,
-                    cnpj: office.attributes.cnpj ? cnpjMask(office.attributes.cnpj) : '',
+                    cnpj: office.attributes.cnpj ? office.attributes.cnpj : '',
                     office_type: office.attributes.office_type_description,
                     city: office.attributes.city,
                     site: office.attributes.site,

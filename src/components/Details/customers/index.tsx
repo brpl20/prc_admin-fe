@@ -282,7 +282,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                               fontWeight: '400',
                             }}
                           >
-                            {personalData.cpf ? cpfMask(personalData.cpf) : 'Não Informado'}
+                            {personalData.cpf ? personalData.cpf : 'Não Informado'}
                           </span>
                         </Flex>
                       )}
@@ -311,7 +311,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                               fontWeight: '400',
                             }}
                           >
-                            {personalData.cnpj ? cnpjMask(personalData.cnpj) : 'Não Informado'}
+                            {personalData.cnpj ? personalData.cnpj : 'Não Informado'}
                           </span>
                         </Flex>
                       )}

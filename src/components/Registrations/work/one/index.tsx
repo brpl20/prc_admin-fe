@@ -605,7 +605,9 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                 limitTags={1}
                 id="multiple-limit-tags"
                 options={customersList}
-                getOptionLabel={option => option && option.attributes && option.attributes.name}
+                getOptionLabel={option =>
+                  option && option.attributes && `${option.id} - ${option.attributes.name}`
+                }
                 renderInput={params => (
                   <TextField
                     placeholder="Selecione um Cliente"

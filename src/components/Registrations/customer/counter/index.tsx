@@ -105,14 +105,6 @@ const Counter = ({ pageTitle }: props) => {
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
-    if (name === 'cpf') {
-      setFormData(prevData => ({
-        ...prevData,
-        cpf: cpfMask(value),
-      }));
-      return;
-    }
-
     setFormData(prevData => ({
       ...prevData,
       [name]: value,
@@ -387,7 +379,7 @@ const Counter = ({ pageTitle }: props) => {
           accountant_id: attributes.accountant_id ? attributes.accountant_id : '',
           civil_status: attributes.civil_status ? attributes.civil_status : '',
           capacity: attributes.capacity ? attributes.capacity : '',
-          cpf: attributes.cpf ? cpfMask(attributes.cpf) : '',
+          cpf: attributes.cpf ? attributes.cpf : '',
           rg: attributes.rg ? attributes.rg : '',
         });
 
