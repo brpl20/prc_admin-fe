@@ -57,7 +57,7 @@ export const Input = styled.input<IFormProps>`
   border: none;
   border-bottom: 1px solid ${colors.border};
 
-  color: ${colors.text};
+  color: black;
   outline: none;
   transition-duration: 0.15s;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);

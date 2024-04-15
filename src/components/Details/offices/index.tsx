@@ -298,7 +298,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {officeData.cnpj ? cnpjMask(officeData.cnpj) : 'Não Informado'}
+                          {officeData.cnpj ? officeData.cnpj : 'Não Informado'}
                         </span>
                       </Flex>
 

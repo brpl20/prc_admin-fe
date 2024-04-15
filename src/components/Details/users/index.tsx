@@ -90,6 +90,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
           nationality: data.data.attributes.nationality ? data.data.attributes.nationality : '',
           office_id: data.data.attributes.office_id ? data.data.attributes.office_id : '',
           origin: data.data.attributes.origin ? data.data.attributes.origin : '',
+          oab: data.data.attributes.oab ? data.data.attributes.oab : '',
         };
 
         setUserData(newData);
@@ -250,7 +251,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {userData.cpf ? cpfMask(userData.cpf) : 'Não Informado'}
+                          {userData.cpf ? userData.cpf : 'Não Informado'}
                         </span>
                       </Flex>
 
@@ -1114,6 +1115,33 @@ export default function UserDetails({ id }: UserDetailsProps) {
                           }}
                         >
                           {userData.office_id ? getOfficeName(userData.office_id) : 'Não Informado'}
+                        </span>
+                      </Flex>
+                      <Flex
+                        style={{
+                          flexDirection: 'column',
+                          gap: '8px',
+                          alignItems: 'flex-start',
+                          width: '220px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#344054',
+                            fontSize: '20px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          OAB
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            color: '#344054',
+                            fontWeight: '400',
+                          }}
+                        >
+                          {userData.oab ? userData.oab : 'Não Informado'}
                         </span>
                       </Flex>
                       <Flex

@@ -132,11 +132,11 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
           const attributes = draftWork.attributes;
 
           if (attributes.recommendations) {
-            if (attributes.recommendations[0].percentage) {
+            if (attributes.recommendations[0]?.percentage) {
               handlePercentage(attributes.recommendations[0].percentage);
             }
 
-            if (attributes.recommendations[0].commission) {
+            if (attributes.recommendations[0]?.commission) {
               setCommission(
                 `R$ ${parseFloat(attributes.recommendations[0].commission)
                   .toFixed(2)
@@ -145,7 +145,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
               );
             }
 
-            if (attributes.recommendations[0].profile_customer_id) {
+            if (attributes.recommendations[0]?.profile_customer_id) {
               if (customersList.length === 0) {
                 return;
               }

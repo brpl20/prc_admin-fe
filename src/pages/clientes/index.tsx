@@ -364,10 +364,10 @@ const Customers = () => {
                         customer.attributes.customer_type === 'physical_person') ||
                       customer.attributes.customer_type === 'counter' ||
                       customer.attributes.customer_type === 'representative'
-                        ? cpfMask(customer.attributes.cpf)
+                        ? customer.attributes.cpf
                         : customer.attributes.cnpj &&
                           customer.attributes.customer_type === 'legal_person'
-                        ? cnpjMask(customer.attributes.cnpj)
+                        ? customer.attributes.cnpj
                         : '',
                     email: customer.attributes.default_email,
                     city: customer.attributes.city,

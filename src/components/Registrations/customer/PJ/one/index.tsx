@@ -77,14 +77,6 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
-    if (name === 'cnpj') {
-      setFormData(prevData => ({
-        ...prevData,
-        [name]: cnpjMask(value),
-      }));
-      return;
-    }
-
     if (name === 'cep') {
       setFormData(prevData => ({
         ...prevData,
@@ -133,7 +125,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
 
       if (editMode) {
         customerForm.data.attributes.name = formData.name;
-        customerForm.data.attributes.cnpj = formData.cnpj ? cnpjMask(formData.cnpj) : '';
+        customerForm.data.attributes.cnpj = formData.cnpj ? formData.cnpj : '';
         customerForm.data.attributes.gender = formData.gender;
         customerForm.data.attributes.capacity = 'able';
         customerForm.data.attributes.civil_status = 'single';
@@ -192,7 +184,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
         }));
       }
 
-      const cnpj = parsedData.cnpj ? cnpjMask(parsedData.cnpj) : '';
+      const cnpj = parsedData.cnpj ? parsedData.cnpj : '';
       const name = parsedData.name ? parsedData.name : '';
       const gender = parsedData.gender;
 
@@ -290,7 +282,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
         setFormData(prevData => ({
           ...prevData,
           name: attributes.name,
-          cnpj: attributes.cnpj ? cnpjMask(attributes.cnpj) : '',
+          cnpj: attributes.cnpj ? attributes.cnpj : '',
           gender: attributes.gender,
         }));
 
