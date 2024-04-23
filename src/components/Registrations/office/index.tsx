@@ -29,7 +29,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { Flex, Divider } from '@/styles/globals';
 
 import { getAllOfficeTypes } from '@/services/offices';
-import { getCEPDetails } from '@/services/brasilAPI';
+import { getAllBanks, getCEPDetails } from '@/services/brasilAPI';
 import { createOffice, updateOffice } from '@/services/offices';
 
 import Router, { useRouter } from 'next/router';
@@ -38,6 +38,7 @@ import { cepMask, cnpjMask } from '@/utils/masks';
 import { IAdminPropsAttributes } from '@/interfaces/IAdmin';
 import { getAllAdmins } from '@/services/admins';
 import { z } from 'zod';
+import { useSession } from 'next-auth/react';
 
 interface FormData {
   name: string;
@@ -56,6 +57,11 @@ interface FormData {
   webSite: string;
   responsible_lawyer: string;
   accounting_type: string;
+  bank_name: string;
+  agency: string;
+  operation: string;
+  account: string;
+  pix: string;
 }
 
 interface props {
@@ -82,6 +88,8 @@ const officeSchema = z.object({
 const Office = ({ dataToEdit }: props) => {
   const route = useRouter();
 
+  const { data: session } = useSession();
+
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -89,6 +97,7 @@ const Office = ({ dataToEdit }: props) => {
   const [officeTypes, setOfficeTypes] = useState<any[]>([]);
   const [selectedOfficeType, setSelectedOfficeType] = useState<any>({});
   const [selectedSocialType, setSelectedSocialType] = useState<any>({});
+  const [bankList, setBankList] = useState([] as any[]);
 
   const { setShowTitle, setPageTitle, pageTitle } = useContext(PageTitleContext);
 
@@ -117,6 +126,11 @@ const Office = ({ dataToEdit }: props) => {
     webSite: '',
     responsible_lawyer: '',
     accounting_type: '',
+    bank_name: '',
+    agency: '',
+    operation: '',
+    account: '',
+    pix: '',
   });
   const [contactData, setContactData] = useState({
     phoneInputFields: [{ phone_number: '' }],
@@ -206,11 +220,30 @@ const Office = ({ dataToEdit }: props) => {
 
         emails_attributes: contactData.emailInputFields,
         phones_attributes: contactData.phoneInputFields,
+
+        bank_accounts_attributes: [
+          {
+            bank_name: formData.bank_name,
+            agency: formData.agency,
+            account: formData.account,
+            pix: formData.pix,
+            operation: formData.operation,
+          },
+        ],
       };
 
       if (isEditing) {
-        await updateOffice(dataToEdit.id, office);
+        await updateOffice(dataToEdit.id, {
+          ...office,
+          bank_accounts_attributes: [
+            {
+              ...office.bank_accounts_attributes[0],
+              id: dataToEdit.attributes.bank_accounts[0]?.id,
+            },
+          ],
+        });
         Router.push('/escritorios');
+
         return;
       } else {
         await createOffice(office);
@@ -337,6 +370,20 @@ const Office = ({ dataToEdit }: props) => {
     setOfficeTypes(response.data);
   };
 
+  const handleBankChange = (value: any) => {
+    if (value) {
+      setFormData(prevData => ({
+        ...prevData,
+        bank_name: value.name,
+      }));
+    } else {
+      setFormData(prevData => ({
+        ...prevData,
+        bank_name: '',
+      }));
+    }
+  };
+
   const handleFormError = (error: any) => {
     const newErrors = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
@@ -372,6 +419,34 @@ const Office = ({ dataToEdit }: props) => {
     return () => {
       window.removeEventListener('scroll', updateScrollPosition);
     };
+  }, []);
+
+  useEffect(() => {
+    const getBanks = async () => {
+      try {
+        const response = await getAllBanks();
+        const uniqueBanks = removeDuplicateBanks(response);
+        setBankList(uniqueBanks);
+      } catch (error: any) {}
+    };
+
+    const removeDuplicateBanks = (banks: any) => {
+      const uniqueBanks = [];
+      const keysSet = new Set();
+
+      for (const bank of banks) {
+        const { code, fullName, ispb, name } = bank;
+        const key = `${code}-${fullName}-${ispb}-${name}`;
+
+        if (!keysSet.has(key)) {
+          keysSet.add(key);
+          uniqueBanks.push(bank);
+        }
+      }
+
+      return uniqueBanks;
+    };
+    getBanks();
   }, []);
 
   useEffect(() => {
@@ -428,6 +503,11 @@ const Office = ({ dataToEdit }: props) => {
           neighborhood: form.neighborhood,
           responsible_lawyer: form.responsible_lawyer_id,
           accounting_type: form.accounting_type,
+          bank_name: form.bank_accounts[0]?.bank_name,
+          agency: form.bank_accounts[0]?.agency,
+          operation: form.bank_accounts[0]?.operation,
+          account: form.bank_accounts[0]?.account,
+          pix: form.bank_accounts[0]?.pix,
         }));
 
         const office = officeTypes.find(
@@ -461,7 +541,7 @@ const Office = ({ dataToEdit }: props) => {
         handleDataForm();
       }
     }
-  }, [dataToEdit, adminsList, officeTypes]);
+  }, [dataToEdit, adminsList, officeTypes, bankList]);
 
   useEffect(() => {
     setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro de ' : 'Alterar'} Escritório`);
@@ -611,6 +691,64 @@ const Office = ({ dataToEdit }: props) => {
                       !!errors.accounting_type,
                     )}
                   </Flex>
+                </Box>
+              </Box>
+            </Flex>
+
+            <Divider />
+
+            <Flex>
+              <Box width={'300px'}>
+                <Typography variant="h6" sx={{ marginRight: 'auto' }}>
+                  {'Dados Bancário'}
+                </Typography>
+              </Box>
+              <Box
+                display={'flex'}
+                flexDirection={'column'}
+                gap={'16px'}
+                style={{
+                  flex: 1,
+                }}
+              >
+                <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+                  {'Banco'}
+                </Typography>
+
+                <Autocomplete
+                  limitTags={1}
+                  id="multiple-limit-tags"
+                  options={bankList}
+                  getOptionLabel={option => (option.name ? option.name : '')}
+                  isOptionEqualToValue={(option, value) => option.ispb === value.ispb}
+                  onChange={(event, value) => handleBankChange(value)}
+                  value={
+                    formData.bank_name
+                      ? bankList.find(bank => bank.name == formData.bank_name)
+                      : null
+                  }
+                  renderInput={params => (
+                    <TextField
+                      placeholder="Selecione um Banco"
+                      {...params}
+                      size="small"
+                      error={!!errors.bank_name}
+                    />
+                  )}
+                  sx={{ backgroundColor: 'white', zIndex: 1 }}
+                  noOptionsText="Nenhum Banco Encontrado"
+                />
+
+                <Flex style={{ gap: '16px' }}>
+                  {renderInputField('agency', 'Agência', 'Número da agencia', !!errors.agency)}
+                  <Box width={'100px'}>
+                    {renderInputField('operation', 'Operação', 'Op.', !!errors.operation)}
+                  </Box>
+                  {renderInputField('account', 'Conta', 'Número da conta', !!errors.account)}
+                </Flex>
+
+                <Box>
+                  {renderInputField('pix', 'Cadastrar Chave Pix', 'Informe a chave', !!errors.pix)}
                 </Box>
               </Box>
             </Flex>

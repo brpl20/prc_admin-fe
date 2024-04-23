@@ -1,4 +1,4 @@
-import React, {
+import {
   useState,
   useContext,
   useEffect,
@@ -9,7 +9,6 @@ import React, {
 
 import { parseCookies } from 'nookies';
 import { getAllAdmins } from '@/services/admins';
-import { getAllOffices, getOfficeById } from '@/services/offices';
 import { getOfficesWithLaws } from '@/services/offices';
 
 import { WorkContext } from '@/contexts/WorkContext';
@@ -19,7 +18,7 @@ import { IAdminProps, IAdminPropsAttributes } from '@/interfaces/IAdmin';
 import { Container } from './styles';
 import { Flex } from '@/styles/globals';
 import Checkbox from '@mui/material/Checkbox';
-import { Box, Typography, Autocomplete, TextField } from '@mui/material';
+import { Box, Typography, Autocomplete, TextField, Radio } from '@mui/material';
 
 import {
   Collapse,
@@ -56,16 +55,10 @@ interface FormData {
   physical_lawyer: string;
 }
 
-const stepFourSchema = z.object({
-  office_ids: z.array(z.string()).nonempty(),
-  profile_admin_ids: z.array(z.number()).nonempty(),
-});
-
 const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourProps> = (
   { nextStep },
   ref,
 ) => {
-  const { ['admin_id']: admin_id } = parseCookies();
   const [openSubTable, setOpenSubTable] = useState(true);
   const [errors, setErrors] = useState({} as any);
 
@@ -78,6 +71,10 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   const [paralegal, SetParalegal] = useState<IAdminPropsAttributes[]>([]);
   const [initialService, SetInitialService] = useState<IAdminPropsAttributes[]>([]);
   const [responsibleLawyer, SetResponsibleLawyer] = useState<IAdminPropsAttributes[]>([]);
+
+  const [isLegalPerson, setIsLegalPerson] = useState(true);
+
+  const [legalPersonError, setLegalPersonError] = useState(false);
 
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -103,7 +100,21 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
       updatedFormData.lawyers = selectedLawyers;
       const officesIDs = officesSelected.map((office: any) => office.id);
 
-      stepFourSchema.parse({ office_ids: officesIDs, profile_admin_ids: selectedLawyers });
+      if (isLegalPerson && officesIDs.length <= 0) {
+        setLegalPersonError(true);
+        setMessage('Selecione ao menos um escritório.');
+        setType('error');
+        setOpenSnackbar(true);
+        return;
+      }
+
+      if (!isLegalPerson && !updatedFormData.physical_lawyer) {
+        setLegalPersonError(true);
+        setMessage('Selecione um advogado.');
+        setType('error');
+        setOpenSnackbar(true);
+        return;
+      }
 
       const data = {
         ...workForm,
@@ -158,7 +169,13 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
           parsedData.office_ids.includes(office.id),
         );
 
-        setOfficesSelected(officesSelected);
+        if (officesSelected.length > 0) {
+          setIsLegalPerson(true);
+        }
+
+        if (officesSelected) {
+          setOfficesSelected(officesSelected);
+        }
       }
 
       if (parsedData.profile_admin_ids) {
@@ -166,6 +183,8 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
       }
 
       if (parsedData.physical_lawyer) {
+        setIsLegalPerson(false);
+
         setFormData(prevData => ({
           ...prevData,
           physical_lawyer: parsedData.physical_lawyer,
@@ -247,6 +266,25 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
       [field as string]: value ? value.id : '',
     }));
   };
+
+  useEffect(() => {
+    if (isLegalPerson && officesSelected.length > 0) {
+      setLegalPersonError(false);
+    }
+
+    if (!isLegalPerson && formData.physical_lawyer) {
+      setLegalPersonError(false);
+    }
+
+    if (isLegalPerson) {
+      formData.physical_lawyer = '';
+    }
+
+    if (!isLegalPerson) {
+      setOfficesSelected([]);
+      setSelectedLawyers([]);
+    }
+  }, [isLegalPerson]);
 
   useEffect(() => {
     const handleDraftWork = () => {
@@ -415,88 +453,159 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
 
       <Container>
         <Box mr={'16px'}>
-          <Flex className="inputContainer">
+          <Box>
+            <Typography display={'flex'} alignItems={'center'} variant="h6" marginTop={'16px'}>
+              {'Atuar como:'}
+            </Typography>
+
             <Flex
               style={{
+                display: 'flex',
                 alignItems: 'center',
+                gap: '20px',
+                justifyContent: 'start',
               }}
             >
-              <Typography
-                display={'flex'}
-                alignItems={'center'}
-                variant="h6"
-                style={{ height: '40px' }}
+              <Flex
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
               >
-                {'Escritório'}
-              </Typography>
-              <CustomTooltip
-                title="Advogado ou Advogados atuando dentro de uma pessoa jurídica."
-                placement="right"
-              >
-                <span
-                  style={{
-                    display: 'flex',
-                  }}
-                >
-                  <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
-                </span>
-              </CustomTooltip>
-            </Flex>
-
-            <Autocomplete
-              multiple
-              limitTags={1}
-              id="multiple-limit-tags"
-              options={offices}
-              getOptionLabel={option => option.attributes.name}
-              renderInput={params => (
-                <TextField
-                  placeholder="Selecione um Escritório"
-                  {...params}
+                <Radio
+                  checked={isLegalPerson}
+                  onChange={() => setIsLegalPerson(true)}
+                  inputProps={{ 'aria-label': 'primary checkbox' }}
                   size="small"
-                  error={!!errors.office_ids}
+                  style={{
+                    width: '20px',
+                    marginRight: '8px',
+                  }}
                 />
-              )}
-              sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
-              noOptionsText="Nenhum Escritório Encontrado"
-              onChange={(event, value) => {
-                handleSelectedOffice(value);
-              }}
-              value={officesSelected}
-            />
-            <Typography variant="caption" sx={{ marginTop: '4px' }} gutterBottom>
-              {'* Indique ao menos um advogado para cada escritório selecionado.'}
-            </Typography>
-          </Flex>
+                <Typography
+                  variant="subtitle1"
+                  onClick={() => setIsLegalPerson(true)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {'Pessoa Jurídica'}
+                </Typography>
+              </Flex>
+              <Flex
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <Radio
+                  checked={!isLegalPerson}
+                  onChange={() => setIsLegalPerson(false)}
+                  inputProps={{ 'aria-label': 'primary checkbox' }}
+                  size="small"
+                  style={{
+                    width: '20px',
+                    marginRight: '8px',
+                  }}
+                />
+                <Typography
+                  variant="subtitle1"
+                  onClick={() => setIsLegalPerson(false)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {'Pessoa Física'}
+                </Typography>
+              </Flex>
+            </Flex>
+          </Box>
 
-          <Flex className="inputContainer">
-            {customTitleWithInfo(
-              'Advogado Pessoa Física',
-              'Selecione quando a atuação for pela pessoa física.',
-            )}
+          {isLegalPerson ? (
+            <Flex className="inputContainer">
+              <Flex
+                style={{
+                  alignItems: 'center',
+                }}
+              >
+                <Typography
+                  display={'flex'}
+                  alignItems={'center'}
+                  variant="h6"
+                  style={{ height: '40px' }}
+                >
+                  {'Escritório'}
+                </Typography>
+                <CustomTooltip
+                  title="Advogado ou Advogados atuando dentro de uma pessoa jurídica."
+                  placement="right"
+                >
+                  <span
+                    style={{
+                      display: 'flex',
+                    }}
+                  >
+                    <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
+                  </span>
+                </CustomTooltip>
+              </Flex>
 
-            <Autocomplete
-              limitTags={1}
-              id="multiple-limit-tags"
-              value={
-                formData.physical_lawyer
-                  ? allLawyers.find(
-                      (lawyer: IAdminPropsAttributes) =>
-                        lawyer.id.toString() == formData.physical_lawyer,
-                    )
-                  : ''
-              }
-              options={allLawyers}
-              getOptionLabel={(option: any) =>
-                option && option.attributes ? option.attributes.name : ''
-              }
-              onChange={(event, value) => handleSelectChange('physical_lawyer', value)}
-              renderInput={params => (
-                <TextField {...params} placeholder={'Informe o Advogado'} size="small" />
+              <Autocomplete
+                multiple
+                limitTags={1}
+                id="multiple-limit-tags"
+                options={offices}
+                getOptionLabel={option => option.attributes.name}
+                renderInput={params => (
+                  <TextField
+                    placeholder="Selecione um Escritório"
+                    {...params}
+                    size="small"
+                    error={legalPersonError}
+                  />
+                )}
+                sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
+                noOptionsText="Nenhum Escritório Encontrado"
+                onChange={(event, value) => {
+                  handleSelectedOffice(value);
+                }}
+                value={officesSelected}
+              />
+              <Typography variant="caption" sx={{ marginTop: '4px' }} gutterBottom>
+                {'* Indique ao menos um advogado para cada escritório selecionado.'}
+              </Typography>
+            </Flex>
+          ) : (
+            <Flex className="inputContainer">
+              {customTitleWithInfo(
+                'Advogado Pessoa Física',
+                'Selecione quando a atuação for pela pessoa física.',
               )}
-              noOptionsText={`Nenhuma Advogado Encontrado`}
-            />
-          </Flex>
+
+              <Autocomplete
+                limitTags={1}
+                id="multiple-limit-tags"
+                value={
+                  formData.physical_lawyer
+                    ? allLawyers.find(
+                        (lawyer: IAdminPropsAttributes) =>
+                          lawyer.id.toString() == formData.physical_lawyer,
+                      )
+                    : ''
+                }
+                options={allLawyers}
+                getOptionLabel={(option: any) =>
+                  option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
+                }
+                onChange={(event, value) => handleSelectChange('physical_lawyer', value)}
+                renderInput={params => (
+                  <TextField
+                    {...params}
+                    placeholder={'Informe o Advogado'}
+                    size="small"
+                    error={legalPersonError}
+                  />
+                )}
+                noOptionsText={`Nenhuma Advogado Encontrado`}
+              />
+            </Flex>
+          )}
 
           <Flex className="inputContainer">
             {customTitleWithInfo(
@@ -517,7 +626,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               }
               options={allLawyers}
               getOptionLabel={(option: any) =>
-                option && option.attributes.name ? option.attributes.name : ''
+                option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
               }
               onChange={(event, value) => handleSelectChange('responsible_lawyer', value)}
               renderInput={params => (
@@ -546,7 +655,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               }
               options={allLawyers}
               getOptionLabel={(option: any) =>
-                option && option.attributes.name ? option.attributes.name : ''
+                option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
               }
               onChange={(event, value) => handleSelectChange('initial_atendee', value)}
               renderInput={params => (
@@ -575,7 +684,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               }
               options={allLawyers}
               getOptionLabel={(option: any) =>
-                option && option.attributes ? option.attributes.name : ''
+                option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
               }
               onChange={(event, value) => handleSelectChange('partner_lawyer', value)}
               renderInput={params => (
@@ -603,7 +712,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               }
               options={trainee}
               getOptionLabel={(option: any) =>
-                option && option.attributes.name ? option.attributes.name : ''
+                option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
               }
               onChange={(event, value) => handleSelectChange('intern', value)}
               renderInput={params => (
@@ -629,7 +738,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               }
               options={paralegal}
               getOptionLabel={(option: any) =>
-                option && option.attributes.name ? option.attributes.name : ''
+                option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
               }
               onChange={(event, value) => handleSelectChange('bachelor', value)}
               renderInput={params => (
@@ -640,49 +749,51 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
           </Flex>
         </Box>
 
-        <Box mt={'16px'}>
-          <Typography
-            display={'flex'}
-            alignItems={'center'}
-            variant="h6"
-            style={{
-              color: selectedLawyers.length <= 0 ? '#FF0000' : 'black',
-              height: '40px',
-            }}
-          >
-            {'Advogados'}
-          </Typography>
-          <Box width={'398px'} className="tableContainer">
-            <TableContainer component={Paper}>
-              <Table aria-label="collapsible table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell />
-                    <TableCell>
-                      <Typography
-                        display={'flex'}
-                        alignItems={'center'}
-                        variant="subtitle1"
-                        style={{ height: '30px', position: 'relative' }}
-                      >
-                        {officesSelected.length > 0
-                          ? 'Informe os Advogados'
-                          : 'Nenhum Escritório selecionado'}
-                      </Typography>
-                    </TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {officesSelected.length > 0 &&
-                    officesSelected.map((data: any) => <SubTable key={data.id} row={data} />)}
-                </TableBody>
-              </Table>
-            </TableContainer>
+        {isLegalPerson && (
+          <Box mt={'16px'}>
+            <Typography
+              display={'flex'}
+              alignItems={'center'}
+              variant="h6"
+              style={{
+                color: legalPersonError ? '#FF0000' : 'black',
+                height: '40px',
+              }}
+            >
+              {'Advogados'}
+            </Typography>
+            <Box width={'398px'} className="tableContainer">
+              <TableContainer component={Paper}>
+                <Table aria-label="collapsible table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell />
+                      <TableCell>
+                        <Typography
+                          display={'flex'}
+                          alignItems={'center'}
+                          variant="subtitle1"
+                          style={{ height: '30px', position: 'relative' }}
+                        >
+                          {officesSelected.length > 0
+                            ? 'Informe os Advogados'
+                            : 'Nenhum Escritório selecionado'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {officesSelected.length > 0 &&
+                      officesSelected.map((data: any) => <SubTable key={data.id} row={data} />)}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
           </Box>
-        </Box>
+        )}
       </Container>
     </>
   );
