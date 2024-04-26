@@ -108,7 +108,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
         return;
       }
 
-      if (!isLegalPerson && !updatedFormData.physical_lawyer) {
+      if (!isLegalPerson && selectedLawyers.length <= 0) {
         setLegalPersonError(true);
         setMessage('Selecione um advogado.');
         setType('error');
@@ -171,6 +171,8 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
 
         if (officesSelected.length > 0) {
           setIsLegalPerson(true);
+        } else {
+          setIsLegalPerson(false);
         }
 
         if (officesSelected) {
@@ -180,15 +182,6 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
 
       if (parsedData.profile_admin_ids) {
         setSelectedLawyers(parsedData.profile_admin_ids);
-      }
-
-      if (parsedData.physical_lawyer) {
-        setIsLegalPerson(false);
-
-        setFormData(prevData => ({
-          ...prevData,
-          physical_lawyer: parsedData.physical_lawyer,
-        }));
       }
 
       if (parsedData.initial_atendee) {
@@ -272,19 +265,17 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
       setLegalPersonError(false);
     }
 
-    if (!isLegalPerson && formData.physical_lawyer) {
-      setLegalPersonError(false);
-    }
-
-    if (isLegalPerson) {
-      formData.physical_lawyer = '';
-    }
-
     if (!isLegalPerson) {
       setOfficesSelected([]);
       setSelectedLawyers([]);
     }
+
+    if (isLegalPerson) {
+      setSelectedLawyers([]);
+    }
   }, [isLegalPerson]);
+
+  useEffect(() => {}, [isLegalPerson]);
 
   useEffect(() => {
     const handleDraftWork = () => {
@@ -314,6 +305,12 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
         const office_ids = attributes.offices.map((item: any) => item.id);
 
         const officesSelected = offices.filter((office: any) => office_ids == office.id.toString());
+
+        if (officesSelected.length > 0) {
+          setIsLegalPerson(true);
+        } else {
+          setIsLegalPerson(false);
+        }
 
         setOfficesSelected(officesSelected);
 
@@ -582,10 +579,10 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
                 limitTags={1}
                 id="multiple-limit-tags"
                 value={
-                  formData.physical_lawyer
+                  selectedLawyers.length > 0
                     ? allLawyers.find(
                         (lawyer: IAdminPropsAttributes) =>
-                          lawyer.id.toString() == formData.physical_lawyer,
+                          lawyer.id.toString() == selectedLawyers[0].toString(),
                       )
                     : ''
                 }
@@ -593,7 +590,9 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
                 getOptionLabel={(option: any) =>
                   option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
                 }
-                onChange={(event, value) => handleSelectChange('physical_lawyer', value)}
+                onChange={(event, value) => {
+                  setSelectedLawyers([value.id]);
+                }}
                 renderInput={params => (
                   <TextField
                     {...params}
