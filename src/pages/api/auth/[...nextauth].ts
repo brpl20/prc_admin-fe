@@ -48,6 +48,13 @@ export default NextAuth({
       }
       return session;
     },
+    signIn: ({ account, profile }) => {
+      if (account?.provider === 'google') {
+        return profile?.email ? true : false;
+      }
+
+      return true;
+    },
   },
   session: {
     maxAge: 60 * 60 * 24, // 24 hours

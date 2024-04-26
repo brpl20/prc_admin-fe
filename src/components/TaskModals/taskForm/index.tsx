@@ -20,7 +20,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { z } from 'zod';
-import { getAllWorks, getWorkByCustomerId } from '@/services/works';
+import { getAllWorks, getWorkByCustomerId, getWorkById } from '@/services/works';
 import { IModalProps } from '@/interfaces/IModal';
 import { getAllCustomers } from '@/services/customers';
 import { createTask, getTaskById, updateTask } from '@/services/tasks';
@@ -54,7 +54,6 @@ const taskSchema = z.object({
 });
 
 const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
-  const { data: session } = useSession();
   const currentDate = dayjs();
   const router = useRouter();
 
@@ -200,7 +199,26 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
       if (formData.profile_customer_id) {
         const works = await getWorkByCustomerId(formData.profile_customer_id);
         const data = works.data;
-        const idsArray = data.map((item: any) => item.id);
+        const idsArray = data.map(
+          (item: any) =>
+            `${item.id} - ${item.attributes.number ? item.attributes.number : 'Sem Número'} - ${
+              item.attributes.subject === 'administrative_subject'
+                ? 'Administrativo'
+                : item.attributes.subject === 'civel'
+                ? 'Cível'
+                : item.attributes.subject === 'criminal'
+                ? 'Criminal'
+                : item.attributes.subject === 'laborite'
+                ? 'Trabalhista'
+                : item.attributes.subject === 'social_security'
+                ? 'Previdenciário'
+                : item.attributes.subject === 'tributary'
+                ? 'Tributário'
+                : item.attributes.subject === 'tributary_pis'
+                ? 'Tributário Pis/Cofins insumos'
+                : 'Outros'
+            }`,
+        );
         setworksByCustomer(idsArray);
       }
     };
@@ -212,22 +230,44 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
     const handleEdit = async (id: any) => {
       setLoading(true);
       try {
-        await getData();
-
         const task = await getTaskById(id);
-        const taskData = task.data;
-        const taskAttributes = taskData.attributes;
+        const taskAttributes = task.data.attributes;
 
-        const taskDeadline = taskAttributes.deadline ? dayjs(taskAttributes.deadline) : null;
+        const work = await getWorkById(taskAttributes.work.id);
+        const workAttributes = work.data.attributes;
 
         handleSelectChange('description', taskAttributes.description);
-        handleSelectChange('deadline', taskDeadline);
+        handleSelectChange(
+          'deadline',
+          taskAttributes.deadline ? dayjs(taskAttributes.deadline) : null,
+        );
         handleSelectChange('status', taskAttributes.status);
         handleSelectChange('priority', taskAttributes.priority);
         handleSelectChange('comments', taskAttributes.comment);
         handleSelectChange('profile_customer_id', taskAttributes.profile_customer.id.toString());
         handleSelectChange('profile_admin_id', taskAttributes.profile_admin_id.toString());
-        handleSelectChange('work_id', taskAttributes.work.id.toString());
+        handleSelectChange(
+          'work_id',
+          `${taskAttributes.work.id} - ${
+            workAttributes.number ? workAttributes.number : 'Sem Número'
+          } - ${
+            workAttributes.subject === 'administrative_subject'
+              ? 'Administrativo'
+              : workAttributes.subject === 'civel'
+              ? 'Cível'
+              : workAttributes.subject === 'criminal'
+              ? 'Criminal'
+              : workAttributes.subject === 'laborite'
+              ? 'Trabalhista'
+              : workAttributes.subject === 'social_security'
+              ? 'Previdenciário'
+              : workAttributes.subject === 'tributary'
+              ? 'Tributário'
+              : workAttributes.subject === 'tributary_pis'
+              ? 'Tributário Pis/Cofins insumos'
+              : 'Outros'
+          }`,
+        );
       } catch (error: any) {
         setMessage(error.message);
         setType('error');
@@ -319,7 +359,9 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
                       }
                       options={customersList}
                       getOptionLabel={(option: any) =>
-                        option && option.attributes ? option.attributes.name : ''
+                        option && option.attributes
+                          ? `${option.id} - ${option.attributes.name}`
+                          : ''
                       }
                       isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
                       onChange={(event, value) => handleSelectChange('profile_customer_id', value)}

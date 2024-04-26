@@ -92,14 +92,14 @@ const Home = () => {
 
         <Typography sx={{ marginBottom: '16px', fontSize: '28px' }}>{'Seja bem-vindo!'}</Typography>
 
-        <GoogleLoginButton onClick={() => signIn('google')}>
+        {/* <GoogleLoginButton onClick={() => signIn('google')}>
           <Image src={Google} alt="Logo" width={20} priority />
           <Typography color={colors.text} variant="subtitle1">
             {'Entrar com Google'}
           </Typography>
-        </GoogleLoginButton>
+        </GoogleLoginButton> */}
 
-        <Box
+        {/* <Box
           m={2}
           gap={2}
           width={'100%'}
@@ -110,7 +110,7 @@ const Home = () => {
           <Divider />
           <Typography variant="subtitle1">{'ou'}</Typography>
           <Divider />
-        </Box>
+        </Box> */}
         <Form onSubmit={handleSubmit(handleSignIn)}>
           <Box>
             <Box mb={2}>

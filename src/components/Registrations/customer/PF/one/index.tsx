@@ -235,8 +235,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           (customer: any) => customer.id == formData.representor?.id,
         )?.attributes.name;
 
-        console.log(representName);
-
         const customerTitle = `${editMode ? 'Alterar' : 'Cadastro'} Pessoa Física ${
           customerForm.data.attributes.capacity === 'relatively'
             ? ' - Relativamente Incapaz'

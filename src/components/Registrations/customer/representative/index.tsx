@@ -485,7 +485,6 @@ const Representative = ({ pageTitle }: props) => {
       const attributes = customerForm.data.attributes;
 
       if (attributes) {
-        console.log(attributes);
         const name = attributes.name ? attributes.name : '';
         const last_name = attributes.last_name ? attributes.last_name : '';
         const cpf = attributes.cpf ? attributes.cpf : '';
