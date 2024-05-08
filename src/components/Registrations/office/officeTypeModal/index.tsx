@@ -4,7 +4,6 @@ import { Flex, colors } from '@/styles/globals';
 import { MdClose } from 'react-icons/md';
 
 import { Content, Input, Title } from '../styles';
-import { createOfficeType } from '@/services/offices';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { Notification } from '@/components';
@@ -28,8 +27,8 @@ const OfficeTypeModal = ({ isOpen, onClose, handleSave }: IOfficeTypeModalProps)
 
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
+  const [loading, setLoading] = useState(false);
 
   const resetForm = () => {
     setFormData({

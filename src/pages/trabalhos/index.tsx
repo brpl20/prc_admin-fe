@@ -17,7 +17,7 @@ import {
   Container,
   ContentContainer,
 } from '@/styles/globals';
-import { MdOutlineAddCircle, MdSearch, MdVisibility, MdModeEdit } from 'react-icons/md';
+import { MdOutlineAddCircle, MdSearch, MdVisibility, MdModeEdit, MdNoteAdd } from 'react-icons/md';
 
 import { Box, Button, Typography, LinearProgress } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
@@ -27,6 +27,7 @@ import dynamic from 'next/dynamic';
 import Router from 'next/router';
 import { IAdminProps } from '@/interfaces/IAdmin';
 import { useSession } from 'next-auth/react';
+import WorkStatusModal from '@/components/WorkStatusModal';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Works = () => {
@@ -39,6 +40,8 @@ const Works = () => {
   const [worksListListFiltered, setWorksListFiltered] = useState<IWorksListProps[]>([]);
   const [allLawyers, SetAllLawyers] = useState<any>([]);
   const [adminId, setAdminId] = useState<number>(0);
+  const [statusModalisOpen, setStatusModalisOpen] = useState<boolean>(false);
+  const [workId, setWorkId] = useState<string>('');
 
   const { data: session } = useSession();
 
@@ -60,16 +63,20 @@ const Works = () => {
       switch (searchFor) {
         case 'profile_customers':
           filteredWorks = worksList.filter((work: any) => {
-            const customerData = work.relationships?.profile_customers.data;
-            if (customerData) {
-              return customerData.some((customer: any) => regex.test(customer.id));
-            }
-            return false;
+            const clients_names = work.attributes.profile_customers.map(
+              (customer: any) => customer.name,
+            );
+            return clients_names.some((name: string) => regex.test(name));
           });
           break;
 
         case 'procedure':
-          filteredWorks = worksList.filter((work: any) => regex.test(work.attributes.procedure));
+          filteredWorks = worksList.filter((work: any) => {
+            const procedures = work.attributes.procedure
+              ? mapProcedureName(work.attributes.procedure)
+              : work.attributes.procedures.map(mapProcedureName);
+            return procedures.some((procedure: string) => regex.test(procedure));
+          });
           break;
 
         case 'requestProcess':
@@ -88,7 +95,13 @@ const Works = () => {
   };
 
   const handleEdit = (work: IWorksListProps) => {
+    setWorkForm(work);
     Router.push(`/alterar?type=trabalho&id=${work.id}`);
+  };
+
+  const handleStatus = (work: IWorksListProps) => {
+    setStatusModalisOpen(true);
+    setWorkId(work.id.toString());
   };
 
   const mapProcedureName = (procedure: string) => {
@@ -332,6 +345,19 @@ const Works = () => {
                         >
                           <MdModeEdit size={22} color={colors.icons} cursor={'pointer'} />
                         </button>
+                        <button
+                          style={{
+                            backgroundColor: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                          }}
+                          disabled={params.row.created_by_id !== adminId}
+                          onClick={() => {
+                            handleStatus(params.row);
+                          }}
+                        >
+                          <MdNoteAdd size={22} color={colors.icons} cursor={'pointer'} />
+                        </button>
                       </Box>
                     ),
                   },
@@ -392,6 +418,17 @@ const Works = () => {
         </Container>
         <Footer />
       </Layout>
+
+      {statusModalisOpen && (
+        <WorkStatusModal
+          isOpen={statusModalisOpen}
+          onClose={() => {
+            setStatusModalisOpen(false);
+            setWorkId('');
+          }}
+          workId={workId}
+        />
+      )}
     </>
   );
 };

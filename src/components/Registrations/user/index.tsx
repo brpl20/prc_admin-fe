@@ -281,7 +281,7 @@ const User = ({ dataToEdit }: props) => {
           gender: formData.gender,
           nationality: formData.nationality,
           civil_status: formData.civil_status,
-          birth: selectedDate,
+          birth: formData.birth,
           mother_name: formData.mother_name,
           role: formData.role,
           status: 'active',
@@ -315,7 +315,7 @@ const User = ({ dataToEdit }: props) => {
           gender: formData.gender,
           nationality: formData.nationality,
           civil_status: formData.civil_status,
-          birth: selectedDate,
+          birth: formData.birth,
           mother_name: formData.mother_name,
           role: formData.role,
           status: 'active',
@@ -742,15 +742,21 @@ const User = ({ dataToEdit }: props) => {
                           </Typography>
                         </Flex>
 
-                        <DatePicker
-                          sx={{
-                            '& .MuiInputBase-root': {
-                              height: '40px',
-                            },
+                        <input
+                          type="date"
+                          name="birth"
+                          value={formData.birth}
+                          onChange={handleInputChange}
+                          style={{
+                            height: '40px',
+                            width: '100%',
+                            padding: '8px',
+                            borderRadius: '4px',
+                            border: '1px solid #c4c4c4',
+                            fontSize: '16px',
+                            fontFamily: 'Roboto',
+                            fontWeight: 400,
                           }}
-                          format="DD/MM/YYYY"
-                          value={dayjs(selectedDate)}
-                          onChange={handleBirthDate}
                         />
                       </LocalizationProvider>
                     </BirthdayContainer>

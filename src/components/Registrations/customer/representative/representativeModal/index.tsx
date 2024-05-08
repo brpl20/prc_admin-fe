@@ -120,7 +120,7 @@ const RepresentativeModal = ({
     gender: '',
     civil_status: '',
     nationality: '',
-    birth: currentDate,
+    birth: '',
     cep: '',
     street: '',
     number: '',
@@ -145,7 +145,7 @@ const RepresentativeModal = ({
       gender: '',
       civil_status: '',
       nationality: '',
-      birth: currentDate,
+      birth: '',
       cep: '',
       street: '',
       number: '',
@@ -545,15 +545,21 @@ const RepresentativeModal = ({
                               {'Data de Nascimento'}
                             </Typography>
                           </Flex>
-                          <DatePicker
-                            sx={{
-                              '& .MuiInputBase-root': {
-                                height: '40px',
-                              },
+                          <input
+                            type="date"
+                            name="birth"
+                            value={formData.birth as string}
+                            onChange={handleInputChange}
+                            style={{
+                              height: '40px',
+                              width: '100%',
+                              padding: '8px',
+                              borderRadius: '4px',
+                              border: '1px solid #c4c4c4',
+                              fontSize: '16px',
+                              fontFamily: 'Roboto',
+                              fontWeight: 400,
                             }}
-                            format="DD/MM/YYYY"
-                            value={selectedDate}
-                            onChange={handleBirthDate}
                           />
                         </LocalizationProvider>
                       </Flex>

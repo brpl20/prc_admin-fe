@@ -12,6 +12,7 @@ export const DetailsWrapper = styled.div`
   flex-direction: column;
   gap: 32px;
   background-color: #fff;
+  border-radius: 4px;
 `;
 
 export const ButtonShowData = styled.button`

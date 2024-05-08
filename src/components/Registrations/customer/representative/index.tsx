@@ -492,7 +492,7 @@ const Representative = ({ pageTitle }: props) => {
         const gender = attributes.gender ? attributes.gender : '';
         const civil_status = attributes.civil_status ? attributes.civil_status : '';
         const nationality = attributes.nationality ? attributes.nationality : '';
-        const birth = attributes.birth ? attributes.birth.split('-').reverse().join('/') : '';
+        const birth = attributes.birth ? attributes.birth : '';
         const represent_id = attributes.represent?.representor_id.toString() ?? '';
 
         setFormData({
@@ -522,10 +522,6 @@ const Representative = ({ pageTitle }: props) => {
           emailInputFields:
             attributes.emails && attributes.emails.length > 0 ? attributes.emails : [{ email: '' }],
         });
-
-        if (attributes.birth) {
-          setSelectedDate(dayjs(attributes.birth));
-        }
 
         if (attributes.represent) {
           handleCustomerChange(
@@ -698,15 +694,21 @@ const Representative = ({ pageTitle }: props) => {
                             {'Data de Nascimento'}
                           </Typography>
                         </Flex>
-                        <DatePicker
-                          sx={{
-                            '& .MuiInputBase-root': {
-                              height: '40px',
-                            },
+                        <input
+                          type="date"
+                          name="birth"
+                          value={formData.birth as string}
+                          onChange={handleInputChange}
+                          style={{
+                            height: '40px',
+                            width: '100%',
+                            padding: '8px',
+                            borderRadius: '4px',
+                            border: '1px solid #c4c4c4',
+                            fontSize: '16px',
+                            fontFamily: 'Roboto',
+                            fontWeight: 400,
                           }}
-                          format="DD/MM/YYYY"
-                          value={selectedDate}
-                          onChange={handleBirthDate}
                         />
                       </LocalizationProvider>
                     </Flex>
