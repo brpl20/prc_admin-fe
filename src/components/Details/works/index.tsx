@@ -1562,75 +1562,81 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                             alignItems: 'flex-start',
                           }}
                         >
-                          {formData.map((event: any, index: number) => (
-                            <div
-                              key={event.id}
-                              style={{
-                                display: 'flex',
-                                gap: '18px',
-                                width: '100%',
-                              }}
-                            >
-                              <Box
+                          {formData.length > 0 ? (
+                            formData.map((event: any, index: number) => (
+                              <div
+                                key={event.id}
                                 style={{
-                                  width: '600px',
-                                }}
-                              >
-                                <Typography
-                                  mb={'8px'}
-                                  variant="h6"
-                                  textAlign={'left'}
-                                  color={'#2A3F54'}
-                                >
-                                  {'Data da Movimentação'}
-                                </Typography>
-                                <input
-                                  type="date"
-                                  name="birth"
-                                  style={{
-                                    height: '40px',
-                                    width: '100%',
-                                    padding: '8px',
-                                    borderRadius: '4px',
-                                    border: `1px solid #A8A8B3`,
-                                    fontSize: '16px',
-                                    fontFamily: 'Roboto',
-                                    fontWeight: 400,
-                                  }}
-                                  value={new Date(event.date).toISOString().split('T')[0]}
-                                  onChange={e => handleFieldChange(e, event.id, 'date')}
-                                />
-                              </Box>
-
-                              <Box
-                                style={{
+                                  display: 'flex',
+                                  gap: '18px',
                                   width: '100%',
                                 }}
                               >
-                                <Flex
+                                <Box
                                   style={{
-                                    flexDirection: 'column',
-                                    gap: '8px',
-                                    alignItems: 'flex-start',
+                                    width: '600px',
+                                  }}
+                                >
+                                  <Typography
+                                    mb={'8px'}
+                                    variant="h6"
+                                    textAlign={'left'}
+                                    color={'#2A3F54'}
+                                  >
+                                    {'Data da Movimentação'}
+                                  </Typography>
+                                  <input
+                                    type="date"
+                                    name="birth"
+                                    style={{
+                                      height: '40px',
+                                      width: '100%',
+                                      padding: '8px',
+                                      borderRadius: '4px',
+                                      border: `1px solid #A8A8B3`,
+                                      fontSize: '16px',
+                                      fontFamily: 'Roboto',
+                                      fontWeight: 400,
+                                    }}
+                                    value={new Date(event.date).toISOString().split('T')[0]}
+                                    onChange={e => handleFieldChange(e, event.id, 'date')}
+                                  />
+                                </Box>
+
+                                <Box
+                                  style={{
                                     width: '100%',
                                   }}
                                 >
-                                  <Typography variant="h6" textAlign={'left'}>
-                                    {'Descrição'}
-                                  </Typography>
-                                  <TextField
-                                    variant="outlined"
-                                    fullWidth
-                                    size="small"
-                                    autoComplete="off"
-                                    placeholder={`Informe a descrição`}
-                                    value={event.description}
-                                    onChange={e => handleFieldChange(e, event.id, 'description')}
-                                  />
-                                </Flex>
-                              </Box>
-                            </div>
-                          ))}
+                                  <Flex
+                                    style={{
+                                      flexDirection: 'column',
+                                      gap: '8px',
+                                      alignItems: 'flex-start',
+                                      width: '100%',
+                                    }}
+                                  >
+                                    <Typography variant="h6" textAlign={'left'}>
+                                      {'Descrição'}
+                                    </Typography>
+                                    <TextField
+                                      variant="outlined"
+                                      fullWidth
+                                      size="small"
+                                      autoComplete="off"
+                                      placeholder={`Informe a descrição`}
+                                      value={event.description}
+                                      onChange={e => handleFieldChange(e, event.id, 'description')}
+                                    />
+                                  </Flex>
+                                </Box>
+                              </div>
+                            ))
+                          ) : (
+                            <Typography variant="h6" color={'#2A3F54'}>
+                              {'Sem Movimentações'}
+                            </Typography>
+                          )}
                         </Flex>
 
                         <Flex
