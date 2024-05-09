@@ -28,7 +28,7 @@ import { createTask, getTaskById, updateTask } from '@/services/tasks';
 import { Content, Title, Input, DeadlineContainer } from './styles';
 import { ICustomerProps } from '@/interfaces/ICustomer';
 import { colors, Flex } from '@/styles/globals';
-import Notification from '../../Notification';
+import Notification from '../../OfficeModals/Notification';
 import { MdClose } from 'react-icons/md';
 import { getAdmins } from '@/services/admins';
 import { useRouter } from 'next/router';

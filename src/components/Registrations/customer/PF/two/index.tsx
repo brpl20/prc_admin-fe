@@ -9,7 +9,7 @@ import React, {
 
 import { Flex } from '@/styles/globals';
 import { Container, ColumnContainer } from '../styles';
-import Notification from '@/components/Notification';
+import Notification from '@/components/OfficeModals/Notification';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
 

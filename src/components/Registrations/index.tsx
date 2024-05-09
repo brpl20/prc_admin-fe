@@ -168,8 +168,6 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
         const customerData = {
           customer: {
             email: userEmail,
-            password: '123456',
-            password_confirmation: '123456',
           },
         };
 

@@ -14,7 +14,7 @@ import { MdOutlineInfo } from 'react-icons/md';
 import { WorkContext } from '@/contexts/WorkContext';
 
 import { Container, InputContainer } from './styles';
-import Notification from '@/components/Notification';
+import Notification from '@/components/OfficeModals/Notification';
 import { animateScroll as scroll } from 'react-scroll';
 
 import {

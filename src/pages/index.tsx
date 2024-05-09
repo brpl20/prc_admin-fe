@@ -12,7 +12,7 @@ import Logo from '../assets/logo-colors@3x.png';
 import Google from '../assets/google.svg';
 import { Box, Link, Typography } from '@mui/material';
 
-import Notification from '@/components/Notification';
+import Notification from '@/components/OfficeModals/Notification';
 
 import {
   Container,

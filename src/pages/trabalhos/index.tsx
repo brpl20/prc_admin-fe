@@ -42,6 +42,7 @@ const Works = () => {
   const [adminId, setAdminId] = useState<number>(0);
   const [statusModalisOpen, setStatusModalisOpen] = useState<boolean>(false);
   const [workId, setWorkId] = useState<string>('');
+  const [workStatus, setWorkStatus] = useState<string>('');
 
   const { data: session } = useSession();
 
@@ -99,9 +100,10 @@ const Works = () => {
     Router.push(`/alterar?type=trabalho&id=${work.id}`);
   };
 
-  const handleStatus = (work: IWorksListProps) => {
+  const handleStatus = (work: any) => {
     setStatusModalisOpen(true);
     setWorkId(work.id.toString());
+    setWorkStatus(work.status);
   };
 
   const mapProcedureName = (procedure: string) => {
@@ -136,6 +138,14 @@ const Works = () => {
     SetAllLawyers(response.data);
   };
 
+  const getWorks = async () => {
+    setIsLoading(true);
+    const response = await getAllWorks();
+    setWorksList(response.data);
+    setWorksListFiltered(response.data);
+    setIsLoading(false);
+  };
+
   const getLawyerName = (lawyerId: number) => {
     if (lawyerId) {
       const lawyer = allLawyers.find((lawyer: any) => lawyer.id == lawyerId);
@@ -166,14 +176,6 @@ const Works = () => {
       });
     }
 
-    const getWorks = async () => {
-      setIsLoading(true);
-      const response = await getAllWorks();
-      setWorksList(response.data);
-      setWorksListFiltered(response.data);
-      setIsLoading(false);
-    };
-
     getWorks();
     setWorkForm({});
   }, []);
@@ -194,8 +196,25 @@ const Works = () => {
     };
   }, []);
 
+  const handleCloseModal = async () => {
+    setStatusModalisOpen(false);
+    setWorkId('');
+    setWorkStatus('');
+
+    await getWorks();
+  };
+
   return (
     <>
+      {statusModalisOpen && (
+        <WorkStatusModal
+          isOpen={statusModalisOpen}
+          onClose={handleCloseModal}
+          workId={workId}
+          workStatus={workStatus}
+        />
+      )}
+
       <Layout>
         <Container>
           <PageTitle showTitle={showTitle}>{'Trabalhos'}</PageTitle>
@@ -313,6 +332,7 @@ const Works = () => {
                       responsible: responsible,
                       partner: partner,
                       created_by_id: work.attributes.created_by_id,
+                      status: work.attributes.status,
                     };
                   })
                 }
@@ -418,17 +438,6 @@ const Works = () => {
         </Container>
         <Footer />
       </Layout>
-
-      {statusModalisOpen && (
-        <WorkStatusModal
-          isOpen={statusModalisOpen}
-          onClose={() => {
-            setStatusModalisOpen(false);
-            setWorkId('');
-          }}
-          workId={workId}
-        />
-      )}
     </>
   );
 };

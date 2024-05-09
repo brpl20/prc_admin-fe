@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 
 import { colors, Flex } from '@/styles/globals';
-import Notification from '@/components/Notification';
+import Notification from '@/components/OfficeModals/Notification';
 import { Container, Input, OptionsArea } from './styles';
 
 import { animateScroll as scroll } from 'react-scroll';

@@ -14,7 +14,7 @@ import { Container } from '../styles';
 
 import { z } from 'zod';
 import { Flex, Divider } from '@/styles/globals';
-import Notification from '@/components/Notification';
+import Notification from '@/components/OfficeModals/Notification';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { PageTitleContext } from '@/contexts/PageTitleContext';

@@ -151,8 +151,6 @@ const Counter = ({ pageTitle }: props) => {
       const data_customer = {
         customer: {
           email: data.emails_attributes[0].email,
-          password: '123456',
-          password_confirmation: '123456',
         },
       };
       const customer_data = await createCustomer(data_customer);

@@ -24,6 +24,7 @@ interface IWorkStatusModalProps {
   isOpen: boolean;
   onClose: () => void;
   workId: string;
+  workStatus: string;
 }
 
 interface FormData {
@@ -38,7 +39,7 @@ const statusSchema = z.object({
   date: z.string().nonempty({ message: 'Data é obrigatória' }),
 });
 
-const WorkStatusModal = ({ isOpen, onClose, workId }: IWorkStatusModalProps) => {
+const WorkStatusModal = ({ isOpen, onClose, workId, workStatus }: IWorkStatusModalProps) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -47,11 +48,9 @@ const WorkStatusModal = ({ isOpen, onClose, workId }: IWorkStatusModalProps) => 
 
   const [formData, setFormData] = useState<FormData>({
     description: '',
-    status: 'in_progress',
+    status: workStatus,
     date: '',
   });
-
-  const route = useRouter();
 
   const handleClose = () => {
     onClose();
@@ -69,9 +68,20 @@ const WorkStatusModal = ({ isOpen, onClose, workId }: IWorkStatusModalProps) => 
       statusSchema.parse(formData);
       setLoading(true);
 
+      const responseStatus = await api.put(`/works/${workId}`, {
+        work: {
+          status: formData.status,
+        },
+      });
+
+      if (responseStatus.status === 200 || responseStatus.status === 201) {
+        setMessage('Status atualizado com sucesso!');
+        setType('success');
+        setOpenSnackbar(true);
+      }
+
       const response = await api.post(`/work_events`, {
         work_event: {
-          status: formData.status,
           date: formData.date,
           description: formData.description,
           work_id: workId,
