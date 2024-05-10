@@ -37,6 +37,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
 
   const [formData, setFormData] = useState<any>([]);
   const [isFormDataChanged, setIsFormDataChanged] = useState(false);
+  const [status, setStatus] = useState('');
 
   const [workData, setWorkData] = useState<any>([]);
   const [subject, setSubject] = useState<string>('');
@@ -234,6 +235,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
         setWorkData(data);
 
         setFormData(data?.attributes?.work_events);
+        setStatus(data?.attributes?.status);
       }
     } catch (error) {
       console.log(error);
@@ -329,7 +331,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
         setMessage('Status alterado com sucesso.');
         setTypeMessage('success');
 
-        fetchData();
+        setStatus(status);
       }
     } catch (error) {
       setOpenSnackbar(true);
@@ -1533,7 +1535,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                             </Typography>
                           </Flex>
                           <RadioGroup
-                            value={workData?.attributes?.status}
+                            value={status}
                             sx={{ flexDirection: 'row' }}
                             onChange={(e: any) => handleSaveStatus(e.target.value)}
                           >
@@ -1598,7 +1600,13 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                                       fontFamily: 'Roboto',
                                       fontWeight: 400,
                                     }}
-                                    value={new Date(event.date).toISOString().split('T')[0]}
+                                    value={
+                                      event.date && event.date.split('T')[0]
+                                        ? new Date(event.date).toISOString().split('T')[0]
+                                        : event.date
+                                        ? new Date(event.date).toISOString()
+                                        : ''
+                                    }
                                     onChange={e => handleFieldChange(e, event.id, 'date')}
                                   />
                                 </Box>
