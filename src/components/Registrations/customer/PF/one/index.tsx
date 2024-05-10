@@ -29,7 +29,7 @@ import {
 
 import { z } from 'zod';
 import { DescriptionText, Flex, colors } from '@/styles/globals';
-import Notification from '@/components/Notification';
+import Notification from '@/components/OfficeModals/Notification';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
 
@@ -463,15 +463,21 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                       {'Data de Nascimento'}
                     </Typography>
                   </Flex>
-                  <DatePicker
-                    sx={{
-                      '& .MuiInputBase-root': {
-                        height: '40px',
-                      },
+                  <input
+                    type="date"
+                    name="birth"
+                    value={formData.birth}
+                    onChange={handleInputChange}
+                    style={{
+                      height: '40px',
+                      width: '100%',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      border: '1px solid #c4c4c4',
+                      fontSize: '16px',
+                      fontFamily: 'Roboto',
+                      fontWeight: 400,
                     }}
-                    format="DD/MM/YYYY"
-                    value={dayjs(selectedDate)}
-                    onChange={handleBirthDate}
                   />
                 </LocalizationProvider>
               </BirthdayContainer>

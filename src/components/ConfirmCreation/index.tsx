@@ -11,7 +11,7 @@ import {
   Switch,
 } from '@mui/material';
 import { IModalProps } from '@/interfaces/IFinalizeRegistration';
-import Notification from '@/components/Notification';
+import Notification from '@/components/OfficeModals/Notification';
 
 import { colors, Flex } from '@/styles/globals';
 

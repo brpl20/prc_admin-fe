@@ -41,6 +41,7 @@ interface IAttributesProps {
   note: string;
   extra_pending_document: string;
   tributary_files: any;
+  status: string;
 
   // #Honorary
   fixed_honorary_value: string;

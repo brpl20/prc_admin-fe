@@ -120,7 +120,7 @@ export const SelectContainer = styled.div<IMenuUserProps>`
   cursor: pointer;
 
   padding: 6px;
-  border-radius: 8px;
+  border-radius: 4px;
   background-color: rgba(255, 255, 255, 0.2);
 
   .selectItemsContainer {

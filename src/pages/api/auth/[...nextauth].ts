@@ -38,6 +38,9 @@ export default NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     } as GoogleProviderConfig),
   ],
+  pages: {
+    signIn: '/',
+  },
   callbacks: {
     jwt: ({ token, user }) => {
       return user ? { ...token, user } : token;

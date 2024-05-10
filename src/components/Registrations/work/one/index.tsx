@@ -17,7 +17,7 @@ import { colors, Flex } from '@/styles/globals';
 import { MdOutlineInfo, MdDelete } from 'react-icons/md';
 
 import { WorkContext } from '@/contexts/WorkContext';
-import Notification from '@/components/Notification';
+import Notification from '@/components/OfficeModals/Notification';
 
 import { ICustomerProps } from '@/interfaces/ICustomer';
 import { getAllCustomers } from '@/services/customers';
