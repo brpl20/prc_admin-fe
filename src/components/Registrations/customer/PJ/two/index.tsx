@@ -33,9 +33,9 @@ interface IStepTwoProps {
 }
 
 const stepTwoSchema = z.object({
-  profile_admin: z.string().nonempty('Representante Obrigatório'),
-  phone_number: z.string().nonempty('Telefone Obrigatório'),
-  email: z.string().nonempty('Email Obrigatório'),
+  profile_admin: z.string().min(1, { message: 'Representante Obrigatório' }),
+  phone_number: z.string().min(1, { message: 'Telefone Obrigatório' }),
+  email: z.string().min(1, { message: 'Email Obrigatório' }),
 });
 
 const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IStepTwoProps> = (

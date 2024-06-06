@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
 import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
-import { cpfMask, rgMask } from '@/utils/masks';
 import { Box, Button, CircularProgress } from '@mui/material';
 import { getAdminByID } from '@/services/admins';
 import { getAllOffices } from '@/services/offices';
@@ -96,7 +95,6 @@ export default function UserDetails({ id }: UserDetailsProps) {
         setUserData(newData);
       }
     } catch (error) {
-      console.log(error);
     } finally {
       setLoading(false);
     }
@@ -278,7 +276,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {userData.rg ? rgMask(userData.rg) : 'Não Informado'}
+                          {userData.rg ? userData.rg : 'Não Informado'}
                         </span>
                       </Flex>
 
@@ -1051,7 +1049,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                             fontWeight: '500',
                           }}
                         >
-                          Origin
+                          Origem
                         </span>
                         <span
                           style={{

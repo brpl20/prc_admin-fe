@@ -297,53 +297,6 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
     });
   };
 
-  // const handleNext = () => {
-  //   let newSkipped = skipped;
-
-  //   setActiveStep(prevActiveStep => {
-  //     if (
-  //       session?.role === 'counter' &&
-  //       router.asPath.includes('trabalho') &&
-  //       prevActiveStep === 5
-  //     ) {
-  //       return 5;
-  //     }
-  //     return prevActiveStep + 1;
-  //   });
-
-  //   if (isStepSkipped(currentStep)) {
-  //     newSkipped = new Set<number>(newSkipped.values());
-  //     newSkipped.delete(currentStep);
-  //   }
-
-  //   setCurrentStep(prevActiveStep => {
-  //     if (
-  //       session?.role === 'counter' &&
-  //       router.asPath.includes('trabalho') &&
-  //       prevActiveStep === 1
-  //     ) {
-  //       return 5;
-  //     }
-  //     return prevActiveStep + 1;
-  //   });
-  //   setSkipped(newSkipped);
-  //   scrollToTop();
-  // };
-
-  // const handleBack = () => {
-  //   setCurrentStep(prevActiveStep => {
-  //     if (
-  //       session?.role === 'counter' &&
-  //       router.asPath.includes('trabalho') &&
-  //       prevActiveStep === 5
-  //     ) {
-  //       return 1;
-  //     }
-  //     return prevActiveStep - 1;
-  //   });
-  //   scrollToTop();
-  // };
-
   const handleNext = () => {
     let newSkipped = skipped;
 
@@ -370,15 +323,6 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
     const currentWidth = (activeStep / (titleSteps.length - 1)) * maxWidth;
     return `${currentWidth}%`;
   };
-
-  // const handlePreviousStep = () => {
-  //   setActiveStep(prevActiveStep =>
-  //     session?.role === 'counter' && router.asPath.includes('trabalho') && prevActiveStep === 5
-  //       ? 1
-  //       : prevActiveStep - 1,
-  //   );
-  //   handleBack();
-  // };
 
   const handlePreviousStep = () => {
     setActiveStep(activeStep - 1);

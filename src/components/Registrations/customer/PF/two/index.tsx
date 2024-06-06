@@ -38,12 +38,12 @@ interface FormData {
 }
 
 const stepTwoSchema = z.object({
-  cep: z.string().nonempty({ message: 'CEP é obrigatório' }),
-  address: z.string().nonempty({ message: 'Endereço é obrigatório' }),
-  state: z.string().nonempty({ message: 'Estado é obrigatório' }),
-  city: z.string().nonempty({ message: 'Cidade é obrigatório' }),
-  number: z.string().nonempty({ message: 'Número é obrigatório' }),
-  neighborhood: z.string().nonempty({ message: 'Bairro é obrigatório' }),
+  cep: z.string().min(3, { message: 'CEP é obrigatório' }),
+  address: z.string().min(1, { message: 'Endereço é obrigatório' }),
+  state: z.string().min(1, { message: 'Estado é obrigatório' }),
+  city: z.string().min(1, { message: 'Cidade é obrigatório' }),
+  number: z.string().min(1, { message: 'Número é obrigatório' }),
+  neighborhood: z.string().min(1, { message: 'Bairro é obrigatório' }),
 });
 
 const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IStepTwoProps> = (
@@ -270,6 +270,8 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
             ...prevData,
             state: response.state,
             city: response.city,
+            address: response.street,
+            neighborhood: response.neighborhood,
           }));
         } catch (error: any) {
           setMessage('CEP inválido.');

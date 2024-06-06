@@ -230,7 +230,10 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
       try {
         const response = await getAllBanks();
         const uniqueBanks = removeDuplicateBanks(response);
-        setBankList(uniqueBanks);
+        const filteredBanks = uniqueBanks.filter(
+          bank => bank.name !== 'Selic' && bank.name !== 'Bacen',
+        );
+        setBankList(filteredBanks);
       } catch (error: any) {}
     };
 

@@ -1,11 +1,10 @@
 import styles from './style.module.css';
 
 import React, { useEffect, useState, useContext } from 'react';
-import Router, { useRouter } from 'next/router';
+import Router from 'next/router';
 import Link from 'next/link';
 
 import { PageTitleContext } from '@/contexts/PageTitleContext';
-
 import { getAllCustomers } from '@/services/customers';
 
 import {
@@ -23,7 +22,6 @@ import {
   MdSearch,
   MdVisibility,
   MdModeEdit,
-  MdGavel,
   MdKeyboardArrowDown,
   MdKeyboardArrowRight,
 } from 'react-icons/md';
@@ -378,7 +376,7 @@ const Customers = () => {
                 }
                 columns={[
                   {
-                    width: 180,
+                    width: 150,
                     field: 'actions',
                     headerName: 'Ações',
                     align: 'center',
@@ -401,6 +399,13 @@ const Customers = () => {
                         />
                       </Box>
                     ),
+                  },
+                  {
+                    width: 60,
+                    field: 'id',
+                    headerName: 'ID',
+                    align: 'center',
+                    headerAlign: 'center',
                   },
                   {
                     width: 200,

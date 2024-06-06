@@ -238,7 +238,6 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
         setStatus(data?.attributes?.status);
       }
     } catch (error) {
-      console.log(error);
     } finally {
       setLoading(false);
     }

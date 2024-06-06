@@ -34,7 +34,6 @@ import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
 
 import dayjs from 'dayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { getAllCustomers } from '@/services/customers';
@@ -66,15 +65,15 @@ interface FormData {
 }
 
 const stepOneSchema = z.object({
-  name: z.string().nonempty(),
-  last_name: z.string().nonempty(),
-  cpf: z.string().nonempty('CPF obrigatório'),
-  rg: z.string().nonempty('RG obrigatório'),
+  name: z.string().min(1),
+  last_name: z.string().min(1),
+  cpf: z.string().min(6, { message: 'CPF obrigatório' }),
+  rg: z.string().min(6, { message: 'RG obrigatório' }),
   birth: z.string().optional(),
-  nationality: z.string().nonempty('Naturalidade obrigatória'),
-  gender: z.string().nonempty('Sexo obrigatório'),
-  civil_status: z.string().nonempty('Estado civil obrigatório'),
-  capacity: z.string().nonempty('Capacidade obrigatória'),
+  nationality: z.string().min(2, { message: 'Naturalidade obrigatória' }),
+  gender: z.string().min(2, { message: 'Sexo obrigatório' }),
+  civil_status: z.string().min(2, { message: 'Estado civil obrigatório' }),
+  capacity: z.string().min(2, { message: 'Capacidade obrigatória' }),
 });
 
 const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IStepOneProps> = (
@@ -92,7 +91,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   const [type, setType] = useState<'success' | 'error'>('success');
 
   const [representorsList, setRepresentorsList] = useState([] as any);
-  const [selectedDate, setSelectedDate] = useState(currentDate);
   const [formData, setFormData] = useState<FormData>({
     name: customerForm.name,
     last_name: customerForm.last_name,
@@ -166,15 +164,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     setFormData(prevData => ({
       ...prevData,
       [field as string]: value,
-    }));
-  };
-
-  const handleBirthDate = (date: any) => {
-    const birthDate = new Date(date).toLocaleDateString('pt-BR');
-    setSelectedDate(date);
-    setFormData((prevData: any) => ({
-      ...prevData,
-      ['birth']: birthDate,
     }));
   };
 
@@ -398,7 +387,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         }));
 
         customerForm.represent = attributes.represent;
-        setSelectedDate(dayjs(attributes.birth));
       }
     };
 

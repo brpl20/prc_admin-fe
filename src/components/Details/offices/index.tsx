@@ -87,7 +87,6 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
         setOfficeData(newData);
       }
     } catch (error) {
-      console.log(error);
     } finally {
       setLoading(false);
     }

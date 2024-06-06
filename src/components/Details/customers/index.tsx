@@ -2,7 +2,6 @@ import { getCustomerById } from '@/services/customers';
 import { useEffect, useState } from 'react';
 
 import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
-import { cnpjMask, cpfMask, rgMask } from '@/utils/masks';
 import { FiMinusCircle } from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
 import { Box, Button, CircularProgress } from '@mui/material';
@@ -342,7 +341,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                               fontWeight: '400',
                             }}
                           >
-                            {personalData.rg ? rgMask(personalData.rg) : 'Não Informado'}
+                            {personalData.rg ? personalData.rg : 'Não Informado'}
                           </span>
                         </Flex>
                       )}
@@ -478,6 +477,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                           {personalData.civil_status
                             ? personalData.civil_status === 'single'
                               ? 'Solteiro(a)'
+                              : personalData.civil_status === 'union'
+                              ? 'União Estável'
                               : personalData.civil_status === 'married'
                               ? 'Casado(a)'
                               : personalData.civil_status === 'divorced'

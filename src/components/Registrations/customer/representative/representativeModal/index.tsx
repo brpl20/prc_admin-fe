@@ -10,11 +10,11 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Autocomplete,
   CircularProgress,
   Modal,
 } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
+import { getCEPDetails } from '@/services/brasilAPI';
 
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { CustomerContext } from '@/contexts/CustomerContext';
@@ -69,22 +69,22 @@ interface props {
 
 const representativeSchema = z.object({
   represent_id: z.string(),
-  name: z.string().nonempty({ message: 'Preencha o campo Nome.' }),
-  last_name: z.string().nonempty({ message: 'Preencha o campo Sobrenome.' }),
-  CPF: z.string().nonempty({ message: 'Preencha o campo CPF.' }),
-  RG: z.string().nonempty({ message: 'Preencha o campo RG.' }),
-  gender: z.string().nonempty('Gênero é obrigatório'),
-  civil_status: z.string().nonempty('Estado Civil é obrigatório'),
-  nationality: z.string().nonempty('Naturalidade é obrigatório'),
-  phone_number: z.string().nonempty('Telefone Obrigatório'),
-  email: z.string().nonempty('Email Obrigatório'),
-  cep: z.string().nonempty({ message: 'Preencha o campo CEP.' }),
-  street: z.string().nonempty({ message: 'Preencha o campo Endereço.' }),
-  number: z.string().nonempty({ message: 'Preencha o campo Número.' }),
+  name: z.string().min(1, { message: 'Preencha o campo Nome.' }),
+  last_name: z.string().min(1, { message: 'Preencha o campo Sobrenome.' }),
+  CPF: z.string().min(1, { message: 'Preencha o campo CPF.' }),
+  RG: z.string().min(1, { message: 'Preencha o campo RG.' }),
+  gender: z.string().min(1, 'Gênero é obrigatório'),
+  civil_status: z.string().min(1, 'Estado Civil é obrigatório'),
+  nationality: z.string().min(1, 'Naturalidade é obrigatório'),
+  phone_number: z.string().min(1, 'Telefone Obrigatório'),
+  email: z.string().min(1, 'Email Obrigatório'),
+  cep: z.string().min(1, { message: 'Preencha o campo CEP.' }),
+  street: z.string().min(1, { message: 'Preencha o campo Endereço.' }),
+  number: z.string().min(1, { message: 'Preencha o campo Número.' }),
   description: z.string(),
-  neighborhood: z.string().nonempty({ message: 'Preencha o campo Bairro.' }),
-  city: z.string().nonempty({ message: 'Preencha o campo Cidade.' }),
-  state: z.string().nonempty({ message: 'Preencha o campo Estado.' }),
+  neighborhood: z.string().min(1, { message: 'Preencha o campo Bairro.' }),
+  city: z.string().min(1, { message: 'Preencha o campo Cidade.' }),
+  state: z.string().min(1, { message: 'Preencha o campo Estado.' }),
 });
 
 const RepresentativeModal = ({
@@ -400,13 +400,6 @@ const RepresentativeModal = ({
     </Flex>
   );
 
-  const handleCustomerChange = (name: any, value: any) => {
-    setFormData(prevData => ({
-      ...prevData,
-      [name as string]: value,
-    }));
-  };
-
   const handleSelectChange = (event: any) => {
     const { name, value } = event.target;
     setFormData(prevData => ({
@@ -427,15 +420,6 @@ const RepresentativeModal = ({
         [inputArrayName]: newInputFields,
       };
     });
-  };
-
-  const handleBirthDate = (date: any) => {
-    const birthDate = new Date(date).toLocaleDateString('pt-BR');
-    setSelectedDate(date);
-    setFormData((prevData: any) => ({
-      ...prevData,
-      ['birth']: birthDate,
-    }));
   };
 
   useEffect(() => {
@@ -475,6 +459,33 @@ const RepresentativeModal = ({
       setIsEditing(false);
     }
   }, [pageTitle]);
+
+  useEffect(() => {
+    const fetchCEPDetails = async () => {
+      const numericCEP = formData.cep.replace(/\D/g, '');
+
+      if (numericCEP.length === 8) {
+        try {
+          const response = await getCEPDetails(numericCEP);
+          setFormData(prevData => ({
+            ...prevData,
+            state: response.state,
+            city: response.city,
+            street: response.street,
+            neighborhood: response.neighborhood,
+          }));
+        } catch (error: any) {
+          setMessage('CEP inválido.');
+          setType('error');
+          setOpenSnackbar(true);
+        }
+      }
+    };
+
+    if (formData.cep) {
+      fetchCEPDetails();
+    }
+  }, [formData.cep]);
 
   return (
     <>

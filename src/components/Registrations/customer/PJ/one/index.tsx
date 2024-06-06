@@ -44,8 +44,11 @@ interface FormData {
 }
 
 const stepOneSchema = z.object({
-  name: z.string().nonempty('Nome é obrigatório.'),
-  cnpj: z.string().nonempty('CNPJ é obrigatório.'),
+  name: z.string().min(2, { message: 'Nome é obrigatório.' }),
+  cnpj: z.string().min(2, { message: 'CNPJ é obrigatório.' }),
+  street: z.string().min(2, { message: 'Endereço é obrigatório.' }),
+  neighborhood: z.string().min(2, { message: 'Bairro é obrigatório.' }),
+  number: z.string().min(1, { message: 'Número é obrigatório.' }),
 });
 
 const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IStepOneProps> = (
@@ -96,6 +99,9 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
       stepOneSchema.parse({
         name: formData.name,
         cnpj: formData.cnpj,
+        street: formData.street,
+        neighborhood: formData.neighborhood,
+        number: formData.number,
       });
 
       const data = {
@@ -260,6 +266,8 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
             ...prevData,
             state: response.state,
             city: response.city,
+            street: response.street,
+            neighborhood: response.neighborhood,
           }));
         } catch (error: any) {
           setMessage('CEP inválido.');
@@ -335,7 +343,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
                   {'Descrição da Empresa'}
                 </Typography>
               </Box>
-              {renderInputField('name', 'Nome', 'Nome da Empresa', !!errors.name)}
+              {renderInputField('name', 'Nome', 'Nome', !!errors.name)}
               {renderInputField('cnpj', 'Número do CNPJ', '00.000.000/000-00', !!errors.cnpj)}
             </Flex>
 
@@ -359,13 +367,23 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
                     !!errors.street,
                   )}
                   <Box maxWidth={'30%'}>
-                    {renderInputField('number', 'Número', 'N.º', !!errors.street)}
+                    {renderInputField('number', 'Número', 'N.º', !!errors.number)}
                   </Box>
                 </Flex>
-                {renderInputField('description', 'Complemento', 'Informe o Estado', !!errors.state)}
+                {renderInputField(
+                  'description',
+                  'Complemento',
+                  'Informe o Complemento',
+                  !!errors.description,
+                )}
               </Box>
               <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                {renderInputField('neighborhood', 'Bairro', 'Informe o Estado', !!errors.state)}
+                {renderInputField(
+                  'neighborhood',
+                  'Bairro',
+                  'Informe o Bairro',
+                  !!errors.neighborhood,
+                )}
                 {renderInputField('city', 'Cidade', 'Informe a Cidade', !!errors.city)}
                 {renderInputField('state', 'Estado', 'Informe o Estado', !!errors.state)}
               </Box>

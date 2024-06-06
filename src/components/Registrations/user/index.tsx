@@ -56,7 +56,7 @@ interface FormData {
   civil_status: string;
   birth: string;
   origin: string;
-
+  oab: string;
   cep: string;
   address: string;
   state: string;
@@ -285,7 +285,7 @@ const User = ({ dataToEdit }: props) => {
           mother_name: formData.mother_name,
           role: formData.role,
           status: 'active',
-          oab: '0000',
+          oab: formData.oab,
           origin: formData.origin,
         };
 
@@ -307,7 +307,7 @@ const User = ({ dataToEdit }: props) => {
 
       if (!isEditing) {
         data = {
-          oab: '0000',
+          oab: formData.oab,
           name: formData.name,
           last_name: formData.last_name,
           cpf: formData.cpf,
@@ -505,7 +505,10 @@ const User = ({ dataToEdit }: props) => {
       try {
         const response = await getAllBanks();
         const uniqueBanks = removeDuplicateBanks(response);
-        setBankList(uniqueBanks);
+        const filteredBanks = uniqueBanks.filter(
+          bank => bank.name !== 'Selic' && bank.name !== 'Bacen',
+        );
+        setBankList(filteredBanks);
       } catch (error: any) {}
     };
 
@@ -638,6 +641,7 @@ const User = ({ dataToEdit }: props) => {
           civil_status: attributes.civil_status ? attributes.civil_status : '',
           birth: attributes.birth ? attributes.birth : '',
           origin: attributes.origin ? attributes.origin : '',
+          oab: attributes.oab ? attributes.oab : '',
         });
 
         const office = officesList.find(office => office.id == attributes.office_id);
@@ -927,7 +931,7 @@ const User = ({ dataToEdit }: props) => {
           <Flex>
             <Box width={'210px'}>
               <Typography variant="h6" sx={{ marginRight: 'auto' }}>
-                {'Dados Pessoais'}
+                {'Informações Adicionais'}
               </Typography>
             </Box>
 
@@ -940,7 +944,10 @@ const User = ({ dataToEdit }: props) => {
                   flex: 1,
                 }}
               >
-                {renderInputField('origin', 'Origin', 'Informe a Origin')}
+                <Flex style={{ gap: '24px' }}>
+                  {renderInputField('oab', 'OAB', 'Informe a OAB')}
+                  {renderInputField('origin', 'Origin', 'Informe a Origem')}
+                </Flex>
                 <Flex style={{ gap: '24px' }}>
                   {renderSelectField(
                     'Tipo do Usuário',
