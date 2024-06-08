@@ -683,7 +683,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                   <TextField placeholder="Selecione uma Pré-definição" {...params} size="small" />
                 )}
                 sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
-                noOptionsText="Nenhuma Pré-definição Encontrada"
+                noOptionsText="Não Encontrado"
                 onChange={(event, draftWork) => {
                   setSelectedDraftWork(draftWork);
                 }}
@@ -1185,7 +1185,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                             onInput={(e: any) => {
                               e.target.value = e.target.value.replace(/[^0-9.,]/g, '');
                             }}
-                            onBlur={e => {
+                            onBlur={(e: any) => {
                               const inputValue = e.target.value;
                               const numericValue = parseFloat(inputValue.replace(',', '.'));
 

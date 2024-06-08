@@ -341,7 +341,13 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {officeData.society ? officeData.society : 'Não Informado'}
+                          {officeData.society === 'company'
+                            ? 'Empresarial'
+                            : officeData.society === 'sole_proprietorship'
+                            ? 'Sociedade Simples'
+                            : officeData.society === 'individual'
+                            ? 'Sociedade Empresária'
+                            : 'Não Informado'}
                         </span>
                       </Flex>
                       <Flex

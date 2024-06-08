@@ -306,7 +306,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                   <TextField placeholder="Selecione um Representante" {...params} size="small" />
                 )}
                 sx={{ backgroundColor: 'white', zIndex: 1 }}
-                noOptionsText="Nenhum Cliente Encontrado"
+                noOptionsText="Não Encontrado"
                 onChange={(event, value) => handleSelectedCustomer(value as IAdminProps)}
                 value={profileAdmin || null}
               />

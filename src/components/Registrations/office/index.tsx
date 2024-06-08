@@ -623,7 +623,7 @@ const Office = ({ dataToEdit }: props) => {
                         />
                       )}
                       sx={{ backgroundColor: 'white', zIndex: 1, width: '49%' }}
-                      noOptionsText="Nenhum Tipo de Escritório Encontrado"
+                      noOptionsText="Não Encontrado"
                       onChange={(event, value) => {
                         value ? setSelectedOfficeType(value) : setSelectedOfficeType('');
                       }}

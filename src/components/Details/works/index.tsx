@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { Notification } from '@/components';
 
 import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
-import { cpfMask, moneyMask, rgMask } from '@/utils/masks';
 import {
   Box,
   Button,

@@ -188,6 +188,7 @@ const Admins = () => {
                         ? 'Contador(a)'
                         : '',
                     name: `${admin.attributes.name} ${admin.attributes.last_name}`,
+                    email: admin.attributes.email,
                   }))
                 }
                 columns={[
@@ -227,10 +228,9 @@ const Admins = () => {
                     headerName: 'Atribuição',
                   },
                   {
-                    width: 200,
+                    width: 300,
                     field: 'email',
                     headerName: 'E-mail',
-
                     sortable: false,
                   },
                 ]}

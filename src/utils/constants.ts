@@ -86,7 +86,6 @@ const officeType = [
 ];
 
 const societyType = [
-  { label: 'Unipessoal', value: 'unipessoal' },
   { label: 'Sociedade Simples', value: 'sole_proprietorship' },
   { label: 'Sociedade Empresária', value: 'individual' },
 ];

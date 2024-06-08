@@ -558,7 +558,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
                   />
                 )}
                 sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
-                noOptionsText="Nenhum Escritório Encontrado"
+                noOptionsText="Não Encontrado"
                 onChange={(event, value) => {
                   handleSelectedOffice(value);
                 }}
@@ -601,7 +601,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
                     error={legalPersonError}
                   />
                 )}
-                noOptionsText={`Nenhuma Advogado Encontrado`}
+                noOptionsText={`Não Encontrado`}
               />
             </Flex>
           )}
@@ -631,7 +631,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               renderInput={params => (
                 <TextField {...params} placeholder={'Informe o Responsável'} size="small" />
               )}
-              noOptionsText={`Nenhuma Responsável Encontrado`}
+              noOptionsText={`Não Encontrado`}
             />
           </Flex>
 
@@ -660,7 +660,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               renderInput={params => (
                 <TextField {...params} placeholder={'Informe o Responsavel'} size="small" />
               )}
-              noOptionsText={`Nenhuma Advogado Encontrado`}
+              noOptionsText={`Não Encontrado`}
             />
           </Flex>
 
@@ -687,9 +687,13 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               }
               onChange={(event, value) => handleSelectChange('partner_lawyer', value)}
               renderInput={params => (
-                <TextField {...params} placeholder={'Selecione um Advogado Externo'} size="small" />
+                <TextField
+                  {...params}
+                  placeholder={'Selecione um Advogado Parceiro'}
+                  size="small"
+                />
               )}
-              noOptionsText={`Nenhuma Advogado Encontrado`}
+              noOptionsText={`Não Encontrado`}
             />
           </Flex>
 
@@ -717,7 +721,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               renderInput={params => (
                 <TextField {...params} placeholder={'Selecione um Estagiário'} size="small" />
               )}
-              noOptionsText={`Nenhuma Advogado Encontrado`}
+              noOptionsText={`Não Encontrado`}
             />
           </Flex>
 
@@ -743,7 +747,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               renderInput={params => (
                 <TextField {...params} placeholder={'Selecione um Paralegal'} size="small" />
               )}
-              noOptionsText={`Nenhuma Advogado Encontrado`}
+              noOptionsText={`Não Encontrado`}
             />
           </Flex>
         </Box>

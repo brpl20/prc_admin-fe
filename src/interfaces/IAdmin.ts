@@ -15,6 +15,7 @@ interface IAdminPropsAttributes {
   rg: string;
   role: string;
   status: string;
+  email: string;
   updated_at: string;
 }
 
