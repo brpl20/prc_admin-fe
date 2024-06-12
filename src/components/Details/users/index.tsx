@@ -407,6 +407,8 @@ export default function UserDetails({ id }: UserDetailsProps) {
                           {userData.civil_status
                             ? userData.civil_status === 'single'
                               ? 'Solteiro(a)'
+                              : userData.civil_status === 'union'
+                              ? 'União Estável'
                               : userData.civil_status === 'married'
                               ? 'Casado(a)'
                               : userData.civil_status === 'divorced'
