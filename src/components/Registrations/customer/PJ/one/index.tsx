@@ -48,7 +48,6 @@ const stepOneSchema = z.object({
   cnpj: z.string().min(2, { message: 'CNPJ é obrigatório.' }),
   street: z.string().min(2, { message: 'Endereço é obrigatório.' }),
   neighborhood: z.string().min(2, { message: 'Bairro é obrigatório.' }),
-  number: z.string().min(1, { message: 'Número é obrigatório.' }),
 });
 
 const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IStepOneProps> = (

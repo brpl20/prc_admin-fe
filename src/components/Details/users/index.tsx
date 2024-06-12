@@ -1085,7 +1085,17 @@ export default function UserDetails({ id }: UserDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {userData.role ? userData.role : 'Não Informado'}
+                          {userData.role === 'lawyer'
+                            ? 'Advogado'
+                            : userData.role === 'paralegal'
+                            ? 'Paralegal'
+                            : userData.role === 'trainee'
+                            ? 'Estagiário'
+                            : userData.role === 'secretary'
+                            ? 'Secretário(a)'
+                            : userData.role === 'counter'
+                            ? 'Contador(a)'
+                            : ''}
                         </span>
                       </Flex>
                       <Flex
