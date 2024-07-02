@@ -107,6 +107,7 @@ const userSchema = z.object({
 
 const User = ({ dataToEdit }: props) => {
   const { data: session } = useSession();
+  const today = new Date().toISOString().split('T')[0];
 
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
@@ -159,6 +160,22 @@ const User = ({ dataToEdit }: props) => {
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
+
+    if (name === 'agency' || name === 'account' || name === 'op') {
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value.replace(/\D/g, ''),
+      }));
+      return;
+    }
+
+    if (name === 'cpf') {
+      setFormData(prevData => ({
+        ...prevData,
+        cpf: cpfMask(value),
+      }));
+      return;
+    }
 
     if (name === 'cep') {
       setFormData(prevData => ({
@@ -388,6 +405,7 @@ const User = ({ dataToEdit }: props) => {
   const renderInputField = (
     name: keyof FormData,
     title: string,
+    length: number,
     placeholderText: string,
     error?: boolean,
   ) => (
@@ -401,6 +419,7 @@ const User = ({ dataToEdit }: props) => {
         fullWidth
         name={name}
         size="small"
+        inputProps={{ maxLength: length }}
         value={formData[name] || ''}
         autoComplete="off"
         placeholder={`${placeholderText}`}
@@ -723,18 +742,19 @@ const User = ({ dataToEdit }: props) => {
                   }}
                 >
                   <Flex style={{ gap: '24px' }}>
-                    {renderInputField('name', 'Nome', 'Nome do Usuário', !!errors.name)}
+                    {renderInputField('name', 'Nome', 99, 'Nome do Usuário', !!errors.name)}
                     {renderInputField(
                       'last_name',
                       'Sobrenome',
+                      99,
                       'Sobrenome do Usuário',
                       !!errors.last_name,
                     )}
                   </Flex>
 
                   <Flex style={{ gap: '24px' }}>
-                    {renderInputField('cpf', 'CPF', 'Informe o CPF', !!errors.cpf)}
-                    {renderInputField('rg', 'RG', 'Informe o RG', !!errors.rg)}
+                    {renderInputField('cpf', 'CPF', 12, 'Informe o CPF', !!errors.cpf)}
+                    {renderInputField('rg', 'RG', 16, 'Informe o RG', !!errors.rg)}
                   </Flex>
 
                   <Flex style={{ gap: '24px' }}>
@@ -749,6 +769,7 @@ const User = ({ dataToEdit }: props) => {
                         <input
                           type="date"
                           name="birth"
+                          max={today}
                           value={formData.birth}
                           onChange={handleInputChange}
                           style={{
@@ -764,7 +785,13 @@ const User = ({ dataToEdit }: props) => {
                         />
                       </LocalizationProvider>
                     </BirthdayContainer>
-                    {renderInputField('mother_name', 'Nome da Mãe', 'Informe o Nome', !!errors.rg)}
+                    {renderInputField(
+                      'mother_name',
+                      'Nome da Mãe',
+                      60,
+                      'Informe o Nome',
+                      !!errors.rg,
+                    )}
                   </Flex>
                 </Box>
 
@@ -803,26 +830,33 @@ const User = ({ dataToEdit }: props) => {
 
               <Box display={'flex'} gap={'24px'} flex={1}>
                 <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                  {renderInputField('cep', 'CEP', 'Informe o CEP', !!errors.cep)}
+                  {renderInputField('cep', 'CEP', 60, 'Informe o CEP', !!errors.cep)}
                   <Flex style={{ gap: '16px' }}>
                     {renderInputField(
                       'address',
                       'Endereço',
+                      99,
                       'Informe o Endereço',
 
                       !!errors.address,
                     )}
                     <Box maxWidth={'30%'}>
-                      {renderInputField('number', 'Número', 'N.º', !!errors.address)}
+                      {renderInputField('number', 'Número', 16, 'N.º', !!errors.address)}
                     </Box>
                   </Flex>
-                  {renderInputField('description', 'Complemento', 'Informe o Complemento')}
+                  {renderInputField('description', 'Complemento', 99, 'Informe o Complemento')}
                 </Box>
 
                 <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                  {renderInputField('neighborhood', 'Bairro', 'Informe o Estado', !!errors.state)}
-                  {renderInputField('city', 'Cidade', 'Informe a Cidade', !!errors.city)}
-                  {renderInputField('state', 'Estado', 'Informe o Estado', !!errors.state)}
+                  {renderInputField(
+                    'neighborhood',
+                    'Bairro',
+                    99,
+                    'Informe o Bairro',
+                    !!errors.state,
+                  )}
+                  {renderInputField('city', 'Cidade', 99, 'Informe a Cidade', !!errors.city)}
+                  {renderInputField('state', 'Estado', 99, 'Informe o Estado', !!errors.state)}
                 </Box>
               </Box>
             </Flex>
@@ -945,8 +979,8 @@ const User = ({ dataToEdit }: props) => {
                 }}
               >
                 <Flex style={{ gap: '24px' }}>
-                  {renderInputField('oab', 'OAB', 'Informe a OAB')}
-                  {renderInputField('origin', 'Origin', 'Informe a Origem')}
+                  {renderInputField('oab', 'OAB', 60, 'Informe a OAB')}
+                  {renderInputField('origin', 'Origin', 60, 'Informe a Origem')}
                 </Flex>
                 <Flex style={{ gap: '24px' }}>
                   {renderSelectField(
@@ -1033,13 +1067,21 @@ const User = ({ dataToEdit }: props) => {
               />
 
               <Flex style={{ gap: '16px' }}>
-                {renderInputField('agency', 'Agência', 'Número da agencia', !!errors.agency)}
-                <Box width={'100px'}>{renderInputField('op', 'Operação', 'Op.', !!errors.op)}</Box>
-                {renderInputField('account', 'Conta', 'Número da conta', !!errors.account)}
+                {renderInputField('agency', 'Agência', 99, 'Número da agencia', !!errors.agency)}
+                <Box width={'100px'}>
+                  {renderInputField('op', 'Operação', 20, 'Op.', !!errors.op)}
+                </Box>
+                {renderInputField('account', 'Conta', 99, 'Número da conta', !!errors.account)}
               </Flex>
 
               <Box>
-                {renderInputField('pix', 'Cadastrar Chave Pix', 'Informe a chave', !!errors.pix)}
+                {renderInputField(
+                  'pix',
+                  'Cadastrar Chave Pix',
+                  99,
+                  'Informe a chave',
+                  !!errors.pix,
+                )}
               </Box>
             </Box>
           </Flex>
@@ -1055,7 +1097,7 @@ const User = ({ dataToEdit }: props) => {
 
             <Box style={{ flex: 1 }}>
               <Flex style={{ gap: '24px' }}>
-                {renderInputField('email', 'E-mail', 'Informe seu e-mail', !!errors.userEmail)}
+                {renderInputField('email', 'E-mail', 99, 'Informe seu e-mail', !!errors.userEmail)}
               </Flex>
 
               {!isEditing && (

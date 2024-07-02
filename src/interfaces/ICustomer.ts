@@ -75,7 +75,7 @@ interface IAttributesProps {
   representor?: any;
 
   cep?: any;
-  address?: any;
+  street?: any;
   state?: any;
   city?: any;
   number?: any;

@@ -17,14 +17,12 @@ import { Notification, ConfirmCreation } from '@/components';
 import { getCEPDetails } from '@/services/brasilAPI';
 
 import { PageTitleContext } from '@/contexts/PageTitleContext';
-import { CustomerContext } from '@/contexts/CustomerContext';
 import { gendersOptions, civilStatusOptions, nationalityOptions } from '@/utils/constants';
 
 import { Container } from '../styles';
 import { colors, ContentContainer } from '@/styles/globals';
 
 import dayjs, { Dayjs } from 'dayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
@@ -33,11 +31,10 @@ import {
   createProfileCustomer,
   getAllCustomers,
   createCustomer as createCustomerApi,
-  updateProfileCustomer,
 } from '@/services/customers';
 import { animateScroll as scroll } from 'react-scroll';
 
-import Router, { useRouter } from 'next/router';
+import { useRouter } from 'next/router';
 import { cpfMask } from '@/utils/masks';
 import { z } from 'zod';
 import { ICustomerProps } from '@/interfaces/ICustomer';
@@ -99,11 +96,10 @@ const RepresentativeModal = ({
   const [isEditing, setIsEditing] = useState(false);
   const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
 
-  const { customerForm } = useContext(CustomerContext);
   const { setShowTitle, setPageTitle } = useContext(PageTitleContext);
 
   const currentDate = dayjs();
-  const [selectedDate, setSelectedDate] = useState(currentDate);
+  const today = new Date().toISOString().split('T')[0];
 
   const [message, setMessage] = useState('');
   const [type, setType] = useState<'success' | 'error'>('success');
@@ -276,7 +272,7 @@ const RepresentativeModal = ({
         capacity: 'able',
         profession: 'representative',
         customer_type: 'representative',
-        cpf: formData.CPF,
+        cpf: formData.CPF.replace(/\D/g, ''),
         rg: formData.RG,
         gender: formData.gender,
         nationality: formData.nationality,
@@ -349,6 +345,7 @@ const RepresentativeModal = ({
   const renderInputField = (
     name: keyof FormData,
     title: string,
+    length: number,
     placeholderText: string,
     error?: boolean,
   ) => (
@@ -362,6 +359,7 @@ const RepresentativeModal = ({
         fullWidth
         name={name}
         size="small"
+        inputProps={{ maxLength: length }}
         value={formData[name]}
         autoComplete="off"
         placeholder={`${placeholderText}`}
@@ -532,18 +530,19 @@ const RepresentativeModal = ({
                         gap: '32px',
                       }}
                     >
-                      {renderInputField('name', 'Nome', 'Nome do Representante', !!errors.name)}
+                      {renderInputField('name', 'Nome', 99, 'Nome do Representante', !!errors.name)}
                       {renderInputField(
                         'last_name',
                         'Sobrenome',
+                        99,
                         'Sobrenome do Representante',
                         !!errors.last_name,
                       )}
                     </Flex>
 
                     <Flex style={{ gap: '32px' }}>
-                      {renderInputField('CPF', 'CPF', 'Informe o CPF', !!errors.CPF)}
-                      {renderInputField('RG', 'RG', 'Informe o RG', !!errors.RG)}
+                      {renderInputField('CPF', 'CPF', 16, 'Informe o CPF', !!errors.CPF)}
+                      {renderInputField('RG', 'RG', 12, 'Informe o RG', !!errors.RG)}
                     </Flex>
 
                     <Flex style={{ gap: '24px' }}>
@@ -557,6 +556,7 @@ const RepresentativeModal = ({
                           <input
                             type="date"
                             name="birth"
+                            max={today}
                             value={formData.birth as string}
                             onChange={handleInputChange}
                             style={{
@@ -608,30 +608,32 @@ const RepresentativeModal = ({
 
                   <Flex style={{ gap: '32px', flex: 1 }}>
                     <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                      {renderInputField('cep', 'CEP', 'Informe o CEP', !!errors.cep)}
+                      {renderInputField('cep', 'CEP', 20, 'Informe o CEP', !!errors.cep)}
                       <Flex style={{ gap: '16px' }}>
                         {renderInputField(
                           'street',
                           'Endereço',
+                          99,
                           'Informe o Endereço',
 
                           !!errors.street,
                         )}
                         <Box maxWidth={'30%'}>
-                          {renderInputField('number', 'Número', 'N.º', !!errors.number)}
+                          {renderInputField('number', 'Número', 16, 'N.º', !!errors.number)}
                         </Box>
                       </Flex>
-                      {renderInputField('description', 'Complemento', 'Informe o Estado')}
+                      {renderInputField('description', 'Complemento', 99, 'Informe o Estado')}
                     </Box>
                     <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
                       {renderInputField(
                         'neighborhood',
                         'Bairro',
+                        99,
                         'Informe o Estado',
                         !!errors.neighborhood,
                       )}
-                      {renderInputField('city', 'Cidade', 'Informe a Cidade', !!errors.city)}
-                      {renderInputField('state', 'Estado', 'Informe o Estado', !!errors.state)}
+                      {renderInputField('city', 'Cidade', 99, 'Informe a Cidade', !!errors.city)}
+                      {renderInputField('state', 'Estado', 99, 'Informe o Estado', !!errors.state)}
                     </Box>
                   </Flex>
                 </Flex>

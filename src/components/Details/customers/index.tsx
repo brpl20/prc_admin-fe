@@ -35,7 +35,7 @@ interface PersonalData {
   mother_name: string;
   customer_type: string;
   company: string;
-  professional: string;
+  profession: string;
   number_benefit: string;
   nit: string;
   inss_password: string;
@@ -117,7 +117,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
           mother_name: data.attributes.mother_name ? data.attributes.mother_name : '',
           customer_type: data.attributes.customer_type ? data.attributes.customer_type : '',
           bank_accounts: data.attributes.bank_accounts ? data.attributes.bank_accounts : '',
-          professional: data.attributes.professional ? data.attributes.professional : '',
+          profession: data.attributes.profession ? data.attributes.profession : '',
           company: data.attributes.company ? data.attributes.company : '',
           number_benefit: data.attributes.number_benefit ? data.attributes.number_benefit : '',
           nit: data.attributes.nit ? data.attributes.nit : '',
@@ -476,15 +476,15 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         >
                           {personalData.civil_status
                             ? personalData.civil_status === 'single'
-                              ? 'Solteiro(a)'
+                              ? 'Solteiro'
                               : personalData.civil_status === 'union'
                               ? 'União Estável'
                               : personalData.civil_status === 'married'
-                              ? 'Casado(a)'
+                              ? 'Casado'
                               : personalData.civil_status === 'divorced'
-                              ? 'Divorciado(a)'
+                              ? 'Divorciado'
                               : personalData.civil_status === 'widower'
-                              ? 'Viúvo(a)'
+                              ? 'Viúvo'
                               : ''
                             : ''}
                         </span>
@@ -1383,7 +1383,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             fontWeight: '400',
                           }}
                         >
-                          {personalData.professional ? personalData.professional : 'Não Informado'}
+                          {personalData.profession ? personalData.profession : 'Não Informado'}
                         </span>
                       </Flex>
                       <Flex

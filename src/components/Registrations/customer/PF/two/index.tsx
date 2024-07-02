@@ -29,7 +29,7 @@ interface IStepTwoProps {
 
 interface FormData {
   cep: string;
-  address: string;
+  street: string;
   state: string;
   city: string;
   number: string;
@@ -39,7 +39,7 @@ interface FormData {
 
 const stepTwoSchema = z.object({
   cep: z.string().min(3, { message: 'CEP é obrigatório' }),
-  address: z.string().min(1, { message: 'Endereço é obrigatório' }),
+  street: z.string().min(1, { message: 'Endereço é obrigatório' }),
   state: z.string().min(1, { message: 'Estado é obrigatório' }),
   city: z.string().min(1, { message: 'Cidade é obrigatório' }),
   number: z.string().min(1, { message: 'Número é obrigatório' }),
@@ -58,7 +58,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
   const [formData, setFormData] = useState<FormData>({
     cep: customerForm.cep,
-    address: customerForm.address,
+    street: customerForm.street,
     state: customerForm.state,
     city: customerForm.city,
     number: customerForm.number,
@@ -92,7 +92,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
 
       setFormData({
         cep: address_attributes.zip_code,
-        address: address_attributes.street,
+        street: address_attributes.street,
         number: address_attributes.number,
         description: address_attributes.description,
         neighborhood: address_attributes.neighborhood,
@@ -114,7 +114,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
           {
             description: formData.description,
             zip_code: formData.cep,
-            street: formData.address,
+            street: formData.street,
             number: formData.number,
             neighborhood: formData.neighborhood,
             city: formData.city,
@@ -125,7 +125,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
 
       stepTwoSchema.parse({
         cep: formData.cep,
-        address: formData.address,
+        street: formData.street,
         state: formData.state,
         city: formData.city,
         number: formData.number?.toString(),
@@ -138,7 +138,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
             id: customerForm?.data?.attributes?.addresses[0]?.id ?? '',
             description: formData.description,
             zip_code: formData.cep,
-            street: formData.address,
+            street: formData.street,
             number: formData.number,
             neighborhood: formData.neighborhood,
             city: formData.city,
@@ -157,7 +157,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
           {
             description: formData.description,
             zip_code: formData.cep,
-            street: formData.address,
+            street: formData.street,
             number: formData.number,
             neighborhood: formData.neighborhood,
             city: formData.city,
@@ -244,7 +244,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
         setFormData(prevData => ({
           ...prevData,
           cep: addresses.zip_code,
-          address: addresses.street,
+          street: addresses.street,
           state: addresses.state,
           city: addresses.city,
           number: addresses.number,
@@ -270,7 +270,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
             ...prevData,
             state: response.state,
             city: response.city,
-            address: response.street,
+            street: response.street,
             neighborhood: response.neighborhood,
           }));
         } catch (error: any) {
@@ -304,14 +304,8 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
         <ColumnContainer>
           {renderInputField('CEP', 'cep', 'Informe o CEP', '100%', !!errors.cep)}
           <Flex style={{ gap: '16px' }}>
-            {renderInputField(
-              'Endereço',
-              'address',
-              'Informe o Endereço',
-              '100%',
-              !!errors.address,
-            )}
-            {renderInputField('Número', 'number', 'N.º', '140px', !!errors.address)}
+            {renderInputField('Endereço', 'street', 'Informe o Endereço', '100%', !!errors.street)}
+            {renderInputField('Número', 'number', 'N.º', '140px', !!errors.street)}
           </Flex>
           {renderInputField('Complemento', 'description', 'Informe o Complemento', '100%')}
           {renderInputField(

@@ -10,6 +10,7 @@ import React, {
 
 import Dropzone from 'react-dropzone';
 import { MdDelete } from 'react-icons/md';
+import { useRouter } from 'next/router';
 
 import { Flex, colors } from '@/styles/globals';
 import CheckBox from '@/components/CheckBox';
@@ -35,6 +36,8 @@ const PFCustomerStepSix: ForwardRefRenderFunction<IRefPFCustomerStepSixProps, IS
   { confirmation, editMode },
   ref,
 ) => {
+  const router = useRouter();
+  const isEdit = router.asPath.includes('alterar');
   const [selectedFile, setSelectedFile] = useState<File[]>([]);
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
   const [openFileSnackbar, setOpenFileSnackbar] = useState(false);
@@ -143,7 +146,7 @@ const PFCustomerStepSix: ForwardRefRenderFunction<IRefPFCustomerStepSixProps, IS
             />
 
             <CheckBox
-              label="Emitir procuração simples"
+              label={isEdit ? 'Reemitir procuração simples' : 'Emitir procuração simples'}
               name="issueDocuments"
               checked={checkedItems.issueDocuments}
               onChange={handleCheckboxChange}

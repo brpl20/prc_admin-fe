@@ -33,7 +33,8 @@ import Notification from '@/components/OfficeModals/Notification';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
 
-import dayjs from 'dayjs';
+import { cpfMask } from '@/utils/masks';
+
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { getAllCustomers } from '@/services/customers';
@@ -82,14 +83,13 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 ) => {
   const [isModalRegisterRepresentativeOpen, setIsModalRegisterRepresentativeOpen] = useState(false);
   const [isRepresentativeFinished, setIsRepresentativeFinished] = useState(false);
-  const currentDate = dayjs();
   const [errors, setErrors] = useState({} as any);
   const { setPageTitle } = useContext(PageTitleContext);
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
-
+  const today = new Date().toISOString().split('T')[0];
   const [representorsList, setRepresentorsList] = useState([] as any);
   const [formData, setFormData] = useState<FormData>({
     name: customerForm.name,
@@ -122,6 +122,14 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
+    if (name === 'cpf') {
+      setFormData(prevData => ({
+        ...prevData,
+        cpf: cpfMask(value),
+      }));
+      return;
+    }
+
     setFormData(prevData => ({
       ...prevData,
       [name]: value,
@@ -136,7 +144,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       setFormData({
         name: parsedData.name,
         last_name: parsedData.last_name,
-        cpf: parsedData.cpf,
+        cpf: cpfMask(parsedData.cpf),
         rg: parsedData.rg,
         birth: parsedData.birth,
         nationality: parsedData.nationality,
@@ -193,7 +201,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       saveDataLocalStorage({
         name: formData.name,
         last_name: formData.last_name,
-        cpf: formData.cpf,
+        cpf: formData.cpf.replace(/\D/g, ''),
         rg: formData.rg,
         birth: birthDate,
         nationality: formData.nationality,
@@ -206,7 +214,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       if (editMode) {
         customerForm.data.attributes.name = formData.name;
         customerForm.data.attributes.last_name = formData.last_name;
-        customerForm.data.attributes.cpf = formData.cpf;
+        customerForm.data.attributes.cpf = formData.cpf.replace(/\D/g, '');
         customerForm.data.attributes.rg = formData.rg;
         customerForm.data.attributes.birth = birthDate;
         customerForm.data.attributes.gender = formData.gender;
@@ -245,7 +253,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       if (formData) {
         customerForm.name = formData.name;
         customerForm.last_name = formData.last_name;
-        customerForm.cpf = formData.cpf;
+        customerForm.cpf = formData.cpf.replace(/\D/g, '');
         customerForm.rg = formData.rg;
         customerForm.birth = birthDate;
         customerForm.gender = formData.gender;
@@ -315,7 +323,12 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     </Flex>
   );
 
-  const renderInputField = (label: string, name: keyof FormData, error: boolean) => (
+  const renderInputField = (
+    label: string,
+    name: keyof FormData,
+    length: number,
+    error: boolean,
+  ) => (
     <Flex style={{ flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
@@ -328,6 +341,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         type="text"
         name={name}
         size="small"
+        inputProps={{ maxLength: length }}
         value={formData[name] || ''}
         autoComplete="off"
         placeholder={`Informe o ${label}`}
@@ -376,7 +390,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           ...prevData,
           name: attributes.name,
           last_name: attributes.last_name,
-          cpf: attributes.cpf ? attributes.cpf : '',
+          cpf: attributes.cpf ? cpfMask(attributes.cpf) : '',
           rg: attributes.rg ? attributes.rg : '',
           birth: attributes.birth,
           nationality: attributes.nationality,
@@ -436,12 +450,12 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         <form>
           <Box maxWidth={'812px'} display={'flex'} flexDirection={'column'} gap={'16px'}>
             <Flex style={{ gap: '24px' }}>
-              {renderInputField('Nome', 'name', !!errors.name)}
-              {renderInputField('Sobrenome', 'last_name', !!errors.last_name)}
+              {renderInputField('Nome', 'name', 99, !!errors.name)}
+              {renderInputField('Sobrenome', 'last_name', 99, !!errors.last_name)}
             </Flex>
             <Flex style={{ gap: '24px' }}>
-              {renderInputField('CPF', 'cpf', !!errors.cpf)}
-              {renderInputField('RG', 'rg', !!errors.rg)}
+              {renderInputField('CPF', 'cpf', 16, !!errors.cpf)}
+              {renderInputField('RG', 'rg', 12, !!errors.rg)}
             </Flex>
             <Flex style={{ gap: '24px' }}>
               <BirthdayContainer>
@@ -454,6 +468,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                   <input
                     type="date"
                     name="birth"
+                    max={today}
                     value={formData.birth}
                     onChange={handleInputChange}
                     style={{

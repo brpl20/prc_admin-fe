@@ -23,7 +23,6 @@ import { Container, Title } from './styles';
 import { colors, ContentContainer } from '@/styles/globals';
 
 import dayjs, { Dayjs } from 'dayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
@@ -85,6 +84,7 @@ const representativeSchema = z.object({
 });
 
 const Representative = ({ pageTitle }: props) => {
+  const today = new Date().toISOString().split('T')[0];
   const [errors, setErrors] = useState({} as any);
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
@@ -316,7 +316,7 @@ const Representative = ({ pageTitle }: props) => {
           capacity: 'able',
           profession: 'representative',
           customer_type: 'representative',
-          cpf: formData.CPF,
+          cpf: formData.CPF.replace(/\D/g, ''),
           rg: formData.RG,
           gender: formData.gender,
           nationality: formData.nationality,
@@ -485,7 +485,7 @@ const Representative = ({ pageTitle }: props) => {
       if (attributes) {
         const name = attributes.name ? attributes.name : '';
         const last_name = attributes.last_name ? attributes.last_name : '';
-        const cpf = attributes.cpf ? attributes.cpf : '';
+        const cpf = attributes.cpf ? cpfMask(attributes.cpf) : '';
         const rg = attributes.rg ? attributes.rg : '';
         const gender = attributes.gender ? attributes.gender : '';
         const civil_status = attributes.civil_status ? attributes.civil_status : '';
@@ -695,6 +695,7 @@ const Representative = ({ pageTitle }: props) => {
                         <input
                           type="date"
                           name="birth"
+                          max={today}
                           value={formData.birth as string}
                           onChange={handleInputChange}
                           style={{

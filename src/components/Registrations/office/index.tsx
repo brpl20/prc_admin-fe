@@ -152,6 +152,14 @@ const Office = ({ dataToEdit }: props) => {
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
+    if (name === 'agency' || name === 'account' || name === 'op') {
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value.replace(/\D/g, ''),
+      }));
+      return;
+    }
+
     setFormData(prevData => ({
       ...prevData,
       [name]: value,

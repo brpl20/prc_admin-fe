@@ -67,6 +67,14 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
+    if (name === 'agency' || name === 'account' || name === 'op') {
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value.replace(/\D/g, ''),
+      }));
+      return;
+    }
+
     setFormData(prevData => ({
       ...prevData,
       [name]: value,
@@ -350,7 +358,14 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
         <Flex style={{ gap: '16px' }}>
           {renderInputField('Agência', 'agency', 'Número da agencia', '100%', !!errors.agency)}
           {renderInputField('Operação', 'op', 'Op.', '100px', !!errors.operation)}
-          {renderInputField('Conta', 'account', 'Número da conta', '100%', !!errors.account)}
+          {renderInputField(
+            'Conta',
+            'account',
+
+            'Número da conta',
+            '100%',
+            !!errors.account,
+          )}
         </Flex>
 
         <Box>
