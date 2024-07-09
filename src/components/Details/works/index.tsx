@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react';
 
 import { Notification } from '@/components';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from '@mui/material';
 
 import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
 import {
@@ -341,6 +350,22 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
     }
   };
 
+  const formatValueBR = (value: string) => {
+    const valorNumerico = parseFloat(value);
+    return valorNumerico.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  const mapProcedure = (procedure: string) => {
+    switch (procedure) {
+      case 'administrative':
+        return 'Administrativo';
+      case 'judicial':
+        return 'Judicial';
+      default:
+        return 'Extrajudicial';
+    }
+  };
+
   return (
     <>
       <div
@@ -517,13 +542,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                             }}
                           >
                             {workData.attributes && workData.attributes.procedures
-                              ? workData.attributes.procedures.map((procedure: any) => {
-                                  return procedure === 'administrative'
-                                    ? 'Administrativo '
-                                    : procedure === 'judicial'
-                                    ? 'Judicial '
-                                    : 'Extrajudicial';
-                                })
+                              ? workData.attributes.procedures.map(mapProcedure).join(', ')
                               : 'Não Informado'}
                           </span>
                         </Flex>
@@ -722,7 +741,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                             {workData.attributes &&
                             workData.attributes.honorary &&
                             workData.attributes.honorary.fixed_honorary_value
-                              ? workData.attributes.honorary.fixed_honorary_value
+                              ? formatValueBR(workData.attributes.honorary.fixed_honorary_value)
                               : 'Não Informado'}
                           </span>
                         </Flex>
@@ -753,7 +772,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                             workData.attributes.honorary &&
                             workData.attributes.honorary.percent_honorary_value
                               ? workData.attributes.honorary.percent_honorary_value + '%'
-                              : 'Não Informado'}
+                              : 'Não contratado'}
                           </span>
                         </Flex>
                       </div>
@@ -912,8 +931,6 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                     >
                       <div
                         style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
                           gap: '18px',
                           padding: '0 32px',
                         }}
@@ -923,31 +940,51 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                             flexDirection: 'column',
                             gap: '8px',
                             alignItems: 'flex-start',
-                            width: '300px',
                           }}
                         >
-                          <span
-                            style={{
-                              color: '#344054',
-                              fontSize: '20px',
-                              fontWeight: '500',
-                            }}
-                          >
-                            Descrição
-                          </span>
-                          <span
-                            style={{
-                              fontSize: '18px',
-                              color: '#344054',
-                              fontWeight: '400',
-                              textTransform: 'capitalize',
-                            }}
-                          >
-                            {workData.attributes &&
-                              workData.attributes.powers &&
-                              workData.attributes.powers.map((power: any) => {
-                                return `${power.description} `;
-                              })}
+                          <span>
+                            {workData.attributes && workData.attributes.powers && (
+                              <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
+                                <Table sx={{ width: '100%' }} aria-label="simple table">
+                                  <TableHead>
+                                    <TableRow>
+                                      <TableCell>
+                                        {' '}
+                                        <span
+                                          style={{
+                                            color: '#344054',
+                                            fontSize: '20px',
+                                            fontWeight: '500',
+                                          }}
+                                        >
+                                          ID
+                                        </span>
+                                      </TableCell>
+                                      <TableCell>
+                                        {' '}
+                                        <span
+                                          style={{
+                                            color: '#344054',
+                                            fontSize: '20px',
+                                            fontWeight: '500',
+                                          }}
+                                        >
+                                          Descrição
+                                        </span>
+                                      </TableCell>
+                                    </TableRow>
+                                  </TableHead>
+                                  <TableBody>
+                                    {workData.attributes.powers.map((power: any) => (
+                                      <TableRow key={power.id}>
+                                        <TableCell>{power.id}</TableCell>
+                                        <TableCell>{power.description}</TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </TableContainer>
+                            )}
                           </span>
                         </Flex>
                       </div>
