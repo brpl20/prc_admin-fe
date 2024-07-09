@@ -43,7 +43,6 @@ const getWorkByCustomerId = async (id: string) => {
 const updateWork = async (id: string, data: any) => {
   const payload = {
     work: data,
-    regenerate_documents: true,
   };
 
   try {

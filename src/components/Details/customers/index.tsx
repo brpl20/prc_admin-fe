@@ -1,4 +1,5 @@
-import { getCustomerById } from '@/services/customers';
+import { getCustomerById, getAllCustomers } from '@/services/customers';
+
 import { useEffect, useState } from 'react';
 
 import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
@@ -6,6 +7,8 @@ import { FiMinusCircle } from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
 import { Box, Button, CircularProgress } from '@mui/material';
 import { useSession } from 'next-auth/react';
+
+import { phoneMask, cpfMask, rgMask } from '@/utils/masks';
 
 interface PersonalDataProps {
   id: string | string[];
@@ -39,6 +42,11 @@ interface PersonalData {
   number_benefit: string;
   nit: string;
   inss_password: string;
+  represent: {
+    id: number;
+    profile_customer_id: number;
+    representor_id: number;
+  };
   emails: [
     {
       email: string;
@@ -64,6 +72,8 @@ interface PersonalData {
 
 const PersonalData = ({ id, type }: PersonalDataProps) => {
   const { data: session } = useSession();
+
+  const [representorsList, setRepresentorsList] = useState([] as any);
 
   const [personalData, setPersonalData] = useState({} as PersonalData);
   const [personalDataIsOpen, setPersonalDataIsOpen] = useState(true);
@@ -121,6 +131,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
           company: data.attributes.company ? data.attributes.company : '',
           number_benefit: data.attributes.number_benefit ? data.attributes.number_benefit : '',
           nit: data.attributes.nit ? data.attributes.nit : '',
+          represent: data.attributes.represent ? data.attributes.represent : '',
           inss_password: data.attributes.inss_password ? data.attributes.inss_password : '',
         };
 
@@ -133,9 +144,53 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
     }
   };
 
+  const EmailList =
+    personalData.emails && personalData.emails.length > 0
+      ? personalData.emails.map((phone, index) => (
+          <span key={index} style={{ display: 'block' }}>
+            {phone.email}
+          </span>
+        ))
+      : 'Não Informado';
+
+  const phoneNumbers =
+    personalData.phones && personalData.phones.length > 0
+      ? personalData.phones.map((phone, index) => (
+          <span key={index} style={{ display: 'block' }}>
+            {phoneMask(phone.phone_number)}
+          </span>
+        ))
+      : 'Não Informado';
+
   useEffect(() => {
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    const getRepresentors = async () => {
+      const allCustomers = await getAllCustomers();
+      const response = allCustomers.data;
+
+      const representors = response.filter(
+        (customer: any) => customer.attributes.customer_type === 'representative',
+      );
+
+      setRepresentorsList(representors);
+    };
+
+    getRepresentors();
+  }, []);
+
+  const handleCapacity = () => {
+    switch (personalData.capacity) {
+      case 'able':
+        return 'Capaz';
+      case 'relatively':
+        return 'Relativamente Incapaz';
+      default:
+        return 'Absolutamente Incapaz';
+    }
+  };
 
   return (
     <div
@@ -281,7 +336,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                               fontWeight: '400',
                             }}
                           >
-                            {personalData.cpf ? personalData.cpf : 'Não Informado'}
+                            {personalData.cpf ? cpfMask(personalData.cpf) : 'Não Informado'}
                           </span>
                         </Flex>
                       )}
@@ -341,7 +396,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                               fontWeight: '400',
                             }}
                           >
-                            {personalData.rg ? personalData.rg : 'Não Informado'}
+                            {personalData.rg ? rgMask(personalData.rg) : 'Não Informado'}
                           </span>
                         </Flex>
                       )}
@@ -542,13 +597,44 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             fontWeight: '400',
                           }}
                         >
-                          {personalData.capacity
-                            ? personalData.capacity === 'able'
-                              ? 'Capaz'
-                              : 'Incapaz'
-                            : ''}
+                          {handleCapacity()}
                         </span>
                       </Flex>
+
+                      {personalData.represent && (
+                        <Flex
+                          style={{
+                            flexDirection: 'column',
+                            gap: '8px',
+                            alignItems: 'flex-start',
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: '#344054',
+                              fontSize: '20px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            Representante
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '18px',
+                              color: '#344054',
+                              fontWeight: '400',
+                            }}
+                          >
+                            {representorsList.map((representor: any) => {
+                              if (
+                                Number(representor.id) === personalData.represent.representor_id
+                              ) {
+                                return `${representor.id} - ${representor.attributes.name}`;
+                              }
+                            })}
+                          </span>
+                        </Flex>
+                      )}
                     </div>
                   </div>
                 )}
@@ -953,15 +1039,12 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             fontSize: '18px',
                             color: '#344054',
                             fontWeight: '400',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
                           }}
                         >
-                          {`${
-                            personalData.phones &&
-                            personalData.phones[0] &&
-                            personalData.phones[0].phone_number
-                              ? personalData.phones[0].phone_number
-                              : 'Não Informado'
-                          }`}
+                          {phoneNumbers}
                         </span>
                       </Flex>
                       <Flex
@@ -986,15 +1069,12 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             fontSize: '18px',
                             color: '#344054',
                             fontWeight: '400',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
                           }}
                         >
-                          {`${
-                            personalData.emails &&
-                            personalData.emails[0] &&
-                            personalData.emails[0].email
-                              ? personalData.emails[0].email
-                              : 'Não Informado'
-                          }`}
+                          {EmailList}
                         </span>
                       </Flex>
                       <Flex

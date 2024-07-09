@@ -44,12 +44,12 @@ const Customers = () => {
   const legend = [
     {
       id: 1,
-      name: 'Pessoa Jurídica',
+      name: 'Pessoa Juridica',
       color: '#29A74466',
     },
     {
       id: 2,
-      name: 'Pessoa Física',
+      name: 'Pessoa Fisica',
       color: '#fa768c66',
     },
     {
@@ -65,9 +65,9 @@ const Customers = () => {
   ];
 
   const getRowClassName = (params: any) => {
-    return params.row.type === 'Pessoa Física'
+    return params.row.type === 'Pessoa Fisica'
       ? styles.physicalPerson
-      : params.row.type === 'Pessoa Jurídica'
+      : params.row.type === 'Pessoa Juridica'
       ? styles.legalPerson
       : params.row.type === 'Contador'
       ? styles.counter
@@ -123,9 +123,9 @@ const Customers = () => {
   const handleEdit = (customer: ICustomerProps) => {
     const customerTypeUnformatted = customer.type;
     const customerType =
-      customerTypeUnformatted == 'Pessoa Física'
+      customerTypeUnformatted == 'Pessoa Fisica'
         ? 'physical_person'
-        : customerTypeUnformatted == 'Pessoa Jurídica'
+        : customerTypeUnformatted == 'Pessoa Juridica'
         ? 'legal_person'
         : customerTypeUnformatted == 'Contador'
         ? 'counter'
@@ -152,9 +152,9 @@ const Customers = () => {
   const handleDetails = (customer: ICustomerProps) => {
     const customerTypeUnformatted = customer.type;
     const customerType =
-      customerTypeUnformatted == 'Pessoa Física'
+      customerTypeUnformatted == 'Pessoa Fisica'
         ? 'physical_person'
-        : customerTypeUnformatted == 'Pessoa Jurídica'
+        : customerTypeUnformatted == 'Pessoa Juridica'
         ? 'legal_person'
         : customerTypeUnformatted == 'Contador'
         ? 'counter'
@@ -178,12 +178,35 @@ const Customers = () => {
     }
   };
 
+  const translateCustomerType = (customerType: string) => {
+    switch (customerType) {
+      case 'physical_person':
+        return 'Pessoa Fisica';
+      case 'legal_person':
+        return 'Pessoa Juridica';
+      case 'counter':
+        return 'Contador';
+      case 'representative':
+        return 'Representante Legal';
+      default:
+        return customerType;
+    }
+  };
+
   useEffect(() => {
     setIsLoading(true);
     const getCustomers = async () => {
       const response = await getAllCustomers();
-      setCustomersList(response.data);
-      setCustomersListFiltered(response.data);
+      const translatedCustomers = response.data.map((customer: ICustomerProps) => ({
+        ...customer,
+        attributes: {
+          ...customer.attributes,
+          customer_type: translateCustomerType(customer.attributes.customer_type),
+        },
+      }));
+
+      setCustomersList(translatedCustomers);
+      setCustomersListFiltered(translatedCustomers);
       setIsLoading(false);
     };
 
@@ -281,13 +304,13 @@ const Customers = () => {
                     <Flex className="selectItemsContainer">
                       <Link href={'/cadastrar?type=cliente/pessoa_fisica'}>
                         <Box className={'item'}>
-                          <Typography variant="subtitle2">{'Pessoa Física'}</Typography>
+                          <Typography variant="subtitle2">{'Pessoa Fisica'}</Typography>
                           <MdKeyboardArrowRight size={24} color={colors.white} />
                         </Box>
                       </Link>
                       <Link href={'/cadastrar?type=cliente/pessoa_juridica'}>
                         <Box className={'item'}>
-                          <Typography variant="subtitle2">{'Pessoa Jurídica'}</Typography>
+                          <Typography variant="subtitle2">{'Pessoa Juridica'}</Typography>
                           <MdKeyboardArrowRight size={24} color={colors.white} />
                         </Box>
                       </Link>
@@ -349,22 +372,15 @@ const Customers = () => {
                   customersListFiltered.map((customer: ICustomerProps) => ({
                     id: customer.id,
                     name: customer.attributes.name,
-                    type:
-                      customer.attributes.customer_type === 'physical_person'
-                        ? 'Pessoa Física'
-                        : customer.attributes.customer_type === 'legal_person'
-                        ? 'Pessoa Jurídica'
-                        : customer.attributes.customer_type === 'counter'
-                        ? 'Contador'
-                        : 'Representante Legal',
+                    type: customer.attributes.customer_type,
                     cpf:
                       (customer.attributes.cpf &&
-                        customer.attributes.customer_type === 'physical_person') ||
-                      customer.attributes.customer_type === 'counter' ||
-                      customer.attributes.customer_type === 'representative'
+                        customer.attributes.customer_type === 'Pessoa Fisica') ||
+                      customer.attributes.customer_type === 'Contador' ||
+                      customer.attributes.customer_type === 'Representante Legal'
                         ? customer.attributes.cpf
                         : customer.attributes.cnpj &&
-                          customer.attributes.customer_type === 'legal_person'
+                          customer.attributes.customer_type === 'Pessoa Juridica'
                         ? customer.attributes.cnpj
                         : '',
                     email: customer.attributes.default_email,

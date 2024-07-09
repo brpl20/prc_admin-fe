@@ -53,8 +53,8 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
   const [profileAdmin, setProfileAdmin] = useState('' as any);
 
   const [formData, setFormData] = useState({
-    phoneInputFields: [{ phone_number: '' }],
-    emailInputFields: [{ email: '' }],
+    phones: [{ phone_number: '' }],
+    emails: [{ email: '' }],
   });
 
   const handleInputChange = (
@@ -65,7 +65,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     setFormData(prevData => {
       const newInputFields = [...prevData[inputArrayName]];
 
-      if (inputArrayName === 'phoneInputFields') {
+      if (inputArrayName === 'phones') {
         if (newInputFields[index]) {
           newInputFields[index] = {
             ...newInputFields[index],
@@ -74,7 +74,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
         } else {
           newInputFields.push({ phone_number: value });
         }
-      } else if (inputArrayName === 'emailInputFields') {
+      } else if (inputArrayName === 'emails') {
         if (newInputFields[index]) {
           newInputFields[index] = {
             ...newInputFields[index],
@@ -96,7 +96,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     setFormData(prevData => {
       const newInputFields = [...prevData[inputArrayName]] as any;
       newInputFields.push({
-        [inputArrayName === 'phoneInputFields' ? 'phone_number' : 'email']: '',
+        [inputArrayName === 'phones' ? 'phone_number' : 'email']: '',
       });
 
       return {
@@ -120,17 +120,17 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
         setProfileAdmin(customer);
       }
 
-      if (parsedData.phones_attributes) {
+      if (parsedData.phones) {
         setFormData(prevData => ({
           ...prevData,
-          phoneInputFields: parsedData.phones_attributes,
+          phones: parsedData.phones,
         }));
       }
 
-      if (parsedData.emails_attributes) {
+      if (parsedData.emails) {
         setFormData(prevData => ({
           ...prevData,
-          emailInputFields: parsedData.emails_attributes,
+          emails: parsedData.emails,
         }));
       }
     }
@@ -144,8 +144,8 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     try {
       stepTwoSchema.parse({
         profile_admin: profileAdmin?.id,
-        phone_number: formData.phoneInputFields[0].phone_number,
-        email: formData.emailInputFields[0].email,
+        phone_number: formData.phones[0].phone_number,
+        email: formData.emails[0].email,
       });
 
       if (editMode) {
@@ -153,16 +153,16 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
           represent_attributes: {
             profile_admin_id: Number(profileAdmin?.id),
           },
-          phones_attributes: formData.phoneInputFields,
-          emails_attributes: formData.emailInputFields,
+          phones: formData.phones,
+          emails: formData.emails,
         };
 
         customerForm.data.attributes.represent_attributes = {
           ...customerForm.data.attributes.represent,
           profile_admin_id: Number(profileAdmin?.id),
         };
-        customerForm.data.attributes.phones_attributes = formData.phoneInputFields;
-        customerForm.data.attributes.emails_attributes = formData.emailInputFields;
+        customerForm.data.attributes.phones = formData.phones;
+        customerForm.data.attributes.emails = formData.emails;
 
         saveDataLocalStorage(data);
         setCustomerForm(customerForm);
@@ -175,8 +175,8 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
         represent_attributes: {
           profile_admin_id: Number(profileAdmin?.id),
         },
-        phones_attributes: formData.phoneInputFields,
-        emails_attributes: formData.emailInputFields,
+        phones: formData.phones,
+        emails: formData.emails,
       };
 
       saveDataLocalStorage(data);
@@ -238,7 +238,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
 
       if (attributes) {
         const customer = customersList.find(
-          customer => customer.id == attributes.represent.profile_admin_id,
+          customer => customer.id == attributes?.represent?.profile_admin_id,
         );
 
         if (customer) {
@@ -247,12 +247,8 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
 
         setFormData(prevData => ({
           ...prevData,
-          phoneInputFields: attributes.phones_attributes
-            ? attributes.phones_attributes
-            : attributes.phones,
-          emailInputFields: attributes.emails_attributes
-            ? attributes.emails_attributes
-            : attributes.emails,
+          phones: attributes.phones,
+          emails: attributes.emails,
         }));
       }
     };
@@ -339,7 +335,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                 <Typography style={{ marginBottom: '8px' }} variant="h6">
                   {'Telefone'}
                 </Typography>
-                {formData.phoneInputFields.map((inputValue, index) => (
+                {formData.phones.map((inputValue, index) => (
                   <Flex
                     key={index}
                     style={{
@@ -356,16 +352,14 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                       size="small"
                       placeholder="Informe o Telefone"
                       value={inputValue.phone_number || ''}
-                      onChange={(e: any) =>
-                        handleInputChange(index, e.target.value, 'phoneInputFields')
-                      }
+                      onChange={(e: any) => handleInputChange(index, e.target.value, 'phones')}
                       autoComplete="off"
                       error={!!errors.phone_number}
                     />
-                    {index === formData.phoneInputFields.length - 1 && (
+                    {index === formData.phones.length - 1 && (
                       <IoAddCircleOutline
                         style={{ marginLeft: 'auto', cursor: 'pointer' }}
-                        onClick={() => handleAddInput('phoneInputFields')}
+                        onClick={() => handleAddInput('phones')}
                         color={colors.quartiary}
                         size={20}
                       />
@@ -379,7 +373,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                 <Typography style={{ marginBottom: '8px' }} variant="h6">
                   {'E-mail'}
                 </Typography>
-                {formData.emailInputFields.map((inputValue, index) => (
+                {formData.emails.map((inputValue, index) => (
                   <Flex
                     key={index}
                     style={{
@@ -397,15 +391,15 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                       placeholder="Informe o Email"
                       value={inputValue.email || ''}
                       onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        handleInputChange(index, e.target.value, 'emailInputFields')
+                        handleInputChange(index, e.target.value, 'emails')
                       }
                       autoComplete="off"
                       error={!!errors.email}
                     />
-                    {index === formData.emailInputFields.length - 1 && (
+                    {index === formData.emails.length - 1 && (
                       <IoAddCircleOutline
                         style={{ marginLeft: 'auto', cursor: 'pointer' }}
-                        onClick={() => handleAddInput('emailInputFields')}
+                        onClick={() => handleAddInput('emails')}
                         color={colors.quartiary}
                         size={20}
                       />

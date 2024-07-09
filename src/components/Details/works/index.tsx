@@ -34,6 +34,8 @@ import { IoCheckmarkOutline } from 'react-icons/io5';
 import { colors } from '@/styles/globals';
 import api from '@/services/api';
 
+import { moneyMask } from '@/utils/masks';
+
 interface WorkDetailsProps {
   id: string | string[];
 }
@@ -348,11 +350,6 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
       setMessage('Erro ao alterar o status.');
       setTypeMessage('error');
     }
-  };
-
-  const formatValueBR = (value: string) => {
-    const valorNumerico = parseFloat(value);
-    return valorNumerico.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
   const mapProcedure = (procedure: string) => {
@@ -741,7 +738,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                             {workData.attributes &&
                             workData.attributes.honorary &&
                             workData.attributes.honorary.fixed_honorary_value
-                              ? formatValueBR(workData.attributes.honorary.fixed_honorary_value)
+                              ? `R$ ${moneyMask(workData.attributes.honorary.fixed_honorary_value)}`
                               : 'Não Informado'}
                           </span>
                         </Flex>
@@ -776,99 +773,85 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                           </span>
                         </Flex>
                       </div>
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))',
-                          gap: '18px',
-                          padding: '0 32px',
-                        }}
-                      >
-                        <Flex
-                          style={{
-                            flexDirection: 'column',
-                            gap: '8px',
-                            alignItems: 'flex-start',
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: '#344054',
-                              fontSize: '20px',
-                              fontWeight: '500',
-                            }}
-                          >
-                            Parcelamento
-                          </span>
-                          <span
-                            style={{
-                              fontSize: '18px',
-                              color: '#344054',
-                              fontWeight: '400',
-                            }}
-                          >
-                            {workData.attributes &&
-                            workData.attributes.honorary &&
-                            workData.attributes.honorary.parcelling
-                              ? workData.attributes.honorary.parcelling === true
-                                ? 'Sim'
-                                : 'Não'
-                              : 'Não Informado'}
-                          </span>
-                        </Flex>
-                        <Flex
-                          style={{
-                            flexDirection: 'column',
-                            gap: '8px',
-                            alignItems: 'flex-start',
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: '#344054',
-                              fontSize: '20px',
-                              fontWeight: '500',
-                            }}
-                          >
-                            Parcelamento
-                          </span>
-                          <span
-                            style={{
-                              fontSize: '18px',
-                              color: '#344054',
-                              fontWeight: '400',
-                            }}
-                          >
-                            {workData.attributes &&
-                            workData.attributes.honorary &&
-                            workData.attributes.honorary.parcelling_value
-                              ? workData.attributes.honorary.parcelling_value + 'x'
-                              : 'Não Informado'}
-                          </span>
-                        </Flex>
-                        <Flex
-                          style={{
-                            flexDirection: 'column',
-                            gap: '8px',
-                            alignItems: 'flex-start',
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: '#344054',
-                              fontSize: '20px',
-                              fontWeight: '500',
-                            }}
-                          ></span>
-                          <span
-                            style={{
-                              fontSize: '18px',
-                              color: '#344054',
-                              fontWeight: '400',
-                            }}
-                          ></span>
-                        </Flex>
-                      </div>
+
+                      {workData.attributes &&
+                      workData.attributes.honorary &&
+                      workData.attributes.honorary.parcelling
+                        ? workData.attributes.honorary.parcelling === true && (
+                            <div
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))',
+                                gap: '18px',
+                                padding: '0 32px',
+                              }}
+                            >
+                              <Flex
+                                style={{
+                                  flexDirection: 'column',
+                                  gap: '8px',
+                                  alignItems: 'flex-start',
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    color: '#344054',
+                                    fontSize: '20px',
+                                    fontWeight: '500',
+                                  }}
+                                >
+                                  Parcelamento
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: '18px',
+                                    color: '#344054',
+                                    fontWeight: '400',
+                                  }}
+                                >
+                                  {workData.attributes &&
+                                  workData.attributes.honorary &&
+                                  workData.attributes.honorary.parcelling
+                                    ? workData.attributes.honorary.parcelling === true
+                                      ? 'Sim'
+                                      : 'Não'
+                                    : 'Não Informado'}
+                                </span>
+                              </Flex>
+
+                              <Flex
+                                style={{
+                                  flexDirection: 'column',
+                                  gap: '8px',
+                                  alignItems: 'flex-start',
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    color: '#344054',
+                                    fontSize: '20px',
+                                    fontWeight: '500',
+                                  }}
+                                >
+                                  Número de Parcelas
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: '18px',
+                                    color: '#344054',
+                                    fontWeight: '400',
+                                  }}
+                                >
+                                  {workData.attributes &&
+                                  workData.attributes.honorary &&
+                                  workData.attributes.honorary.parcelling_value
+                                    ? workData.attributes.honorary.parcelling_value + 'x'
+                                    : 'Não Informado'}
+                                </span>
+                              </Flex>
+                            </div>
+                          )
+                        : ''}
                     </div>
                   )}
                 </>
@@ -942,48 +925,50 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                             alignItems: 'flex-start',
                           }}
                         >
-                          <span>
+                          <span style={{ width: '100%' }}>
                             {workData.attributes && workData.attributes.powers && (
-                              <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
-                                <Table sx={{ width: '100%' }} aria-label="simple table">
-                                  <TableHead>
-                                    <TableRow>
-                                      <TableCell>
-                                        {' '}
-                                        <span
-                                          style={{
-                                            color: '#344054',
-                                            fontSize: '20px',
-                                            fontWeight: '500',
-                                          }}
-                                        >
-                                          ID
-                                        </span>
-                                      </TableCell>
-                                      <TableCell>
-                                        {' '}
-                                        <span
-                                          style={{
-                                            color: '#344054',
-                                            fontSize: '20px',
-                                            fontWeight: '500',
-                                          }}
-                                        >
-                                          Descrição
-                                        </span>
-                                      </TableCell>
-                                    </TableRow>
-                                  </TableHead>
-                                  <TableBody>
-                                    {workData.attributes.powers.map((power: any) => (
-                                      <TableRow key={power.id}>
-                                        <TableCell>{power.id}</TableCell>
-                                        <TableCell>{power.description}</TableCell>
-                                      </TableRow>
-                                    ))}
-                                  </TableBody>
-                                </Table>
-                              </TableContainer>
+                              <>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    gap: '26px',
+                                    marginLeft: '16px',
+                                    marginBottom: '12px',
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      color: '#344054',
+                                      fontSize: '20px',
+                                      fontWeight: '500',
+                                    }}
+                                  >
+                                    ID
+                                  </span>
+                                  <span
+                                    style={{
+                                      color: '#344054',
+                                      fontSize: '20px',
+                                      fontWeight: '500',
+                                    }}
+                                  >
+                                    Descrição
+                                  </span>
+                                </div>
+                                <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
+                                  <Table sx={{ width: '100%' }} aria-label="simple table">
+                                    <TableBody>
+                                      {workData.attributes.powers.map((power: any) => (
+                                        <TableRow key={power.id}>
+                                          <TableCell>{power.id}</TableCell>
+                                          <TableCell>{power.description}</TableCell>
+                                        </TableRow>
+                                      ))}
+                                    </TableBody>
+                                  </Table>
+                                </TableContainer>
+                              </>
                             )}
                           </span>
                         </Flex>
