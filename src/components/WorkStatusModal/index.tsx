@@ -13,7 +13,7 @@ import {
 import { Flex, colors } from '@/styles/globals';
 
 import { MdClose } from 'react-icons/md';
-import { Content, Title } from './styles';
+import { Content } from './styles';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { z } from 'zod';
@@ -129,7 +129,9 @@ const WorkStatusModal = ({ isOpen, onClose, workId, workStatus }: IWorkStatusMod
       <Modal open={isOpen} onClose={onClose} style={{ overflowY: 'auto' }}>
         <Content>
           <Box display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
-            <Title style={{ fontSize: '28px' }}>{'Atualização do Trabalho'}</Title>
+            <label style={{ fontSize: '28px', color: '#2A3F54', fontWeight: '500' }}>
+              {'Atualização do Trabalho'}
+            </label>
             <Box sx={{ cursor: 'pointer' }} onClick={onClose}>
               <MdClose size={26} onClick={handleClose} />
             </Box>

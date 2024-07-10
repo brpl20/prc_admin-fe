@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { colors } from '@/styles/globals';
 
-export const Container = styled.div`
+export const Container = styled.div<any>`
   width: 100%;
   display: flex;
   min-height: 348px;
@@ -11,8 +11,6 @@ export const Container = styled.div`
     margin-top: 16px;
     flex-direction: column;
   }
-
-
 `;
 
 export const Input = styled.div`

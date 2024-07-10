@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { colors } from '@/styles/globals';
 
-export const Container = styled.div`
+export const Container = styled.div<any>`
   width: 100%;
   margin-top: 16px;
 
@@ -55,7 +55,7 @@ export const SubjectOptionsArea = styled.div`
   padding: 10px;
 `;
 
-export const Input = styled.input`
+export const Input = styled.input<any>`
   height: 40px;
   padding-left: 8px;
 

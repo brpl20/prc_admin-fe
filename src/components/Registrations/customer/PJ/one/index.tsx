@@ -13,7 +13,7 @@ import { getCEPDetails } from '@/services/brasilAPI';
 import { Container } from '../styles';
 
 import { z } from 'zod';
-import { Flex, Divider } from '@/styles/globals';
+import { Divider } from '@/styles/globals';
 import Notification from '@/components/OfficeModals/Notification';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
@@ -235,7 +235,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
     placeholderText: string,
     error: boolean,
   ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {title}
       </Typography>
@@ -251,7 +251,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
         placeholder={`${placeholderText}`}
         onChange={handleInputChange}
       />
-    </Flex>
+    </div>
   );
 
   useEffect(() => {
@@ -336,7 +336,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
       <Container>
         <form>
           <Box display={'flex'} flexDirection={'column'} gap={'16px'}>
-            <Flex style={{ gap: '32px' }}>
+            <div style={{ display: 'flex', gap: '32px' }}>
               <Box width={'210px'}>
                 <Typography variant="h6" sx={{ marginRight: 'auto' }}>
                   {'Descrição da Empresa'}
@@ -344,11 +344,11 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
               </Box>
               {renderInputField('name', 'Nome', 'Nome', !!errors.name)}
               {renderInputField('cnpj', 'Número do CNPJ', '00.000.000/000-00', !!errors.cnpj)}
-            </Flex>
+            </div>
 
             <Divider />
 
-            <Flex style={{ gap: '32px' }}>
+            <div style={{ display: 'flex', gap: '32px' }}>
               <Box width={'210px'}>
                 <Typography variant="h6" sx={{ marginRight: 'auto' }}>
                   {'Endereço'}
@@ -357,7 +357,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
 
               <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
                 {renderInputField('cep', 'CEP', 'Informe o CEP', !!errors.CEP)}
-                <Flex style={{ gap: '16px' }}>
+                <div style={{ display: 'flex', gap: '16px' }}>
                   {renderInputField(
                     'street',
                     'Endereço',
@@ -368,7 +368,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
                   <Box maxWidth={'30%'}>
                     {renderInputField('number', 'Número', 'N.º', !!errors.number)}
                   </Box>
-                </Flex>
+                </div>
                 {renderInputField(
                   'description',
                   'Complemento',
@@ -386,7 +386,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
                 {renderInputField('city', 'Cidade', 'Informe a Cidade', !!errors.city)}
                 {renderInputField('state', 'Estado', 'Informe o Estado', !!errors.state)}
               </Box>
-            </Flex>
+            </div>
           </Box>
         </form>
       </Container>

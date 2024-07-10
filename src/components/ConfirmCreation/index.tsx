@@ -13,11 +13,11 @@ import {
 import { IModalProps } from '@/interfaces/IFinalizeRegistration';
 import Notification from '@/components/OfficeModals/Notification';
 
-import { colors, Flex } from '@/styles/globals';
+import { colors } from '@/styles/globals';
 
 import { MdClose, MdOutlineInfo } from 'react-icons/md';
 import CustomTooltip from '../Tooltip';
-import { Content, Title, InputContainer, Input } from './styles';
+import { Content, InputContainer, Input } from './styles';
 
 import { styled } from '@mui/material/styles';
 import { useRouter } from 'next/router';
@@ -120,7 +120,9 @@ const ConfirmCreation = ({ isOpen, onClose, isLoading, handleSave, editMode }: I
         )}
         <Content>
           <Box display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
-            <Title style={{ fontSize: '28px' }}>{'Finalizar Cadastro'}</Title>
+            <label style={{ fontSize: '28px', color: '#2A3F54', fontWeight: '500' }}>
+              {'Finalizar Cadastro'}
+            </label>
             <Box sx={{ cursor: 'pointer' }} onClick={onClose}>
               <MdClose size={26} />
             </Box>
@@ -148,8 +150,9 @@ const ConfirmCreation = ({ isOpen, onClose, isLoading, handleSave, editMode }: I
 
             <InputContainer showInput={isSwitchOn}>
               <Box mt={'16px'}>
-                <Flex
+                <div
                   style={{
+                    display: 'flex',
                     marginBottom: '8px',
                     alignItems: 'center',
                   }}
@@ -175,7 +178,7 @@ const ConfirmCreation = ({ isOpen, onClose, isLoading, handleSave, editMode }: I
                       <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
                     </span>
                   </CustomTooltip>
-                </Flex>
+                </div>
                 <Input
                   style={{
                     border: 'none',

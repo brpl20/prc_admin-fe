@@ -8,7 +8,6 @@ import React, {
   ChangeEvent,
 } from 'react';
 
-import { Flex } from '@/styles/globals';
 import { Container } from '../styles';
 import { CustomerContext } from '@/contexts/CustomerContext';
 
@@ -201,7 +200,7 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
     widthValue: string,
     error: boolean,
   ) => (
-    <Flex style={{ flexDirection: 'column', width: `${widthValue}` }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: `${widthValue}` }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
       </Typography>
@@ -236,7 +235,7 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
           disabled={true}
         />
       )}
-    </Flex>
+    </div>
   );
 
   useImperativeHandle(ref, () => ({
@@ -355,7 +354,7 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
           />
         </Box>
 
-        <Flex style={{ gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '16px' }}>
           {renderInputField('Agência', 'agency', 'Número da agencia', '100%', !!errors.agency)}
           {renderInputField('Operação', 'op', 'Op.', '100px', !!errors.operation)}
           {renderInputField(
@@ -366,7 +365,7 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
             '100%',
             !!errors.account,
           )}
-        </Flex>
+        </div>
 
         <Box>
           {renderInputField('Cadastrar Chave Pix', 'pix', 'Informe a chave', '100%', !!errors.pix)}

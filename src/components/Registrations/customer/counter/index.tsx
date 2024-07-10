@@ -20,7 +20,7 @@ import { CustomerContext } from '@/contexts/CustomerContext';
 import { Container, Title } from './styles';
 import { colors, ContentContainer } from '@/styles/globals';
 
-import { Flex, Divider } from '@/styles/globals';
+import { Divider } from '@/styles/globals';
 import { createProfileCustomer, createCustomer, updateProfileCustomer } from '@/services/customers';
 import { animateScroll as scroll } from 'react-scroll';
 
@@ -304,7 +304,7 @@ const Counter = ({ pageTitle }: props) => {
     placeholderText: string,
     error?: boolean,
   ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {title}
       </Typography>
@@ -320,7 +320,7 @@ const Counter = ({ pageTitle }: props) => {
         onChange={handleInputChange}
         error={error && !formData[name]}
       />
-    </Flex>
+    </div>
   );
 
   const renderSelectField = (
@@ -329,7 +329,7 @@ const Counter = ({ pageTitle }: props) => {
     options: { label: string; value: string }[],
     error?: boolean,
   ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
       </Typography>
@@ -348,7 +348,7 @@ const Counter = ({ pageTitle }: props) => {
           ))}
         </Select>
       </FormControl>
-    </Flex>
+    </div>
   );
 
   const handleAddInput = (inputArrayName: keyof typeof contactData) => {
@@ -462,7 +462,7 @@ const Counter = ({ pageTitle }: props) => {
         <ContentContainer>
           <form>
             <Box display={'flex'} flexDirection={'column'} gap={'16px'}>
-              <Flex style={{ gap: '32px' }}>
+              <div style={{ display: 'flex', gap: '32px' }}>
                 <Box width={'210px'}>
                   <Typography variant="h6" sx={{ marginRight: 'auto' }}>
                     {'Registro Profissional'}
@@ -478,25 +478,27 @@ const Counter = ({ pageTitle }: props) => {
                     )}
                   </Box>
                 </Box>
-              </Flex>
+              </div>
 
               <Divider />
 
-              <Flex style={{ gap: '32px' }}>
+              <div style={{ display: 'flex', gap: '32px' }}>
                 <Box width={'210px'}>
                   <Typography variant="h6" sx={{ marginRight: 'auto' }}>
                     {'Dados do Contador'}
                   </Typography>
                 </Box>
 
-                <Flex
+                <div
                   style={{
+                    display: 'flex',
                     flexDirection: 'column',
                     flex: 1,
                   }}
                 >
-                  <Flex
+                  <div
                     style={{
+                      display: 'flex',
                       gap: '32px',
                       flex: 1,
                       marginTop: '24px',
@@ -514,20 +516,20 @@ const Counter = ({ pageTitle }: props) => {
                         !!errors.last_name,
                       )}
                     </Box>
-                  </Flex>
-                </Flex>
-              </Flex>
+                  </div>
+                </div>
+              </div>
 
               <Divider />
 
-              <Flex style={{ gap: '32px' }}>
+              <div style={{ display: 'flex', gap: '32px' }}>
                 <Box width={'210px'}>
                   <Typography variant="h6" sx={{ marginRight: 'auto' }}>
                     {'Contato'}
                   </Typography>
                 </Box>
 
-                <Flex style={{ gap: '32px', flex: 1 }}>
+                <div style={{ display: 'flex', gap: '32px', flex: 1 }}>
                   <Box
                     style={{
                       flex: 1,
@@ -537,9 +539,10 @@ const Counter = ({ pageTitle }: props) => {
                       {'Telefone'}
                     </Typography>
                     {contactData.phoneInputFields.map((inputValue, index) => (
-                      <Flex
+                      <div
                         key={index}
                         style={{
+                          display: 'flex',
                           flexDirection: 'column',
                           marginBottom: '8px',
                           gap: '6px',
@@ -567,7 +570,7 @@ const Counter = ({ pageTitle }: props) => {
                             size={20}
                           />
                         )}
-                      </Flex>
+                      </div>
                     ))}
                   </Box>
                   <Box
@@ -579,9 +582,10 @@ const Counter = ({ pageTitle }: props) => {
                       {'E-mail'}
                     </Typography>
                     {contactData.emailInputFields.map((inputValue, index) => (
-                      <Flex
+                      <div
                         key={index}
                         style={{
+                          display: 'flex',
                           flexDirection: 'column',
                           marginBottom: '8px',
                           gap: '6px',
@@ -610,11 +614,11 @@ const Counter = ({ pageTitle }: props) => {
                             size={20}
                           />
                         )}
-                      </Flex>
+                      </div>
                     ))}
                   </Box>
-                </Flex>
-              </Flex>
+                </div>
+              </div>
             </Box>
           </form>
 

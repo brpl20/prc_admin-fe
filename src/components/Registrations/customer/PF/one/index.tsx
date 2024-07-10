@@ -28,7 +28,7 @@ import {
 } from '@/utils/constants';
 
 import { z } from 'zod';
-import { DescriptionText, Flex, colors } from '@/styles/globals';
+import { DescriptionText, colors } from '@/styles/globals';
 import Notification from '@/components/OfficeModals/Notification';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
@@ -311,7 +311,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   };
 
   const customTitleWithInfo = (title: string, tooltipText: string) => (
-    <Flex style={{ alignItems: 'center' }}>
+    <div style={{ display: 'flex', alignItems: 'center' }}>
       <Typography display={'flex'} alignItems={'center'} variant="h6" style={{ height: '40px' }}>
         {title}
       </Typography>
@@ -320,7 +320,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
         </span>
       </CustomTooltip>
-    </Flex>
+    </div>
   );
 
   const renderInputField = (
@@ -329,7 +329,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     length: number,
     error: boolean,
   ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
       </Typography>
@@ -347,7 +347,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         placeholder={`Informe o ${label}`}
         onChange={handleInputChange}
       />
-    </Flex>
+    </div>
   );
 
   const renderSelectField = (
@@ -356,7 +356,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     options: { label: string; value: string }[],
     error?: boolean,
   ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
       </Typography>
@@ -375,7 +375,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           ))}
         </Select>
       </FormControl>
-    </Flex>
+    </div>
   );
 
   useEffect(() => {
@@ -449,22 +449,22 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       <Container>
         <form>
           <Box maxWidth={'812px'} display={'flex'} flexDirection={'column'} gap={'16px'}>
-            <Flex style={{ gap: '24px' }}>
+            <div style={{ display: 'flex', gap: '24px' }}>
               {renderInputField('Nome', 'name', 99, !!errors.name)}
               {renderInputField('Sobrenome', 'last_name', 99, !!errors.last_name)}
-            </Flex>
-            <Flex style={{ gap: '24px' }}>
+            </div>
+            <div style={{ display: 'flex', gap: '24px' }}>
               {renderInputField('CPF', 'cpf', 16, !!errors.cpf)}
               {renderInputField('RG', 'rg', 12, !!errors.rg)}
-            </Flex>
-            <Flex style={{ gap: '24px' }}>
+            </div>
+            <div style={{ display: 'flex', gap: '24px' }}>
               <BirthdayContainer>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <Flex>
+                  <div style={{ display: 'flex' }}>
                     <Typography mb={'8px'} variant="h6">
                       {'Data de Nascimento'}
                     </Typography>
-                  </Flex>
+                  </div>
                   <input
                     type="date"
                     name="birth"
@@ -490,7 +490,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                 nationalityOptions,
                 !!errors.nationality,
               )}
-            </Flex>
+            </div>
           </Box>
 
           <Box display={'flex'} gap={4} mt={'24px'} maxWidth={'812px'}>
@@ -506,15 +506,23 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           </Box>
 
           {(formData.capacity === 'relatively' || formData.capacity === 'unable') && (
-            <Flex style={{ gap: '24px', maxWidth: '812px', marginTop: '24px' }}>
-              <Flex
+            <div style={{ display: 'flex', gap: '24px', maxWidth: '812px', marginTop: '24px' }}>
+              <div
                 style={{
+                  display: 'flex',
                   flexDirection: 'column',
                   gap: '24px',
                   width: '50%',
                 }}
               >
-                <Flex className="inputContainer" style={{ flexDirection: 'column', width: '100%' }}>
+                <div
+                  className="inputContainer"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    width: '100%',
+                  }}
+                >
                   {customTitleWithInfo(
                     'Representante',
                     'Selecione quando necessário um Representante.',
@@ -536,9 +544,9 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                     )}
                     noOptionsText={`Nenhum Representante Encontrado`}
                   />
-                </Flex>
-              </Flex>
-              <Flex>
+                </div>
+              </div>
+              <div style={{ display: 'flex' }}>
                 <Button
                   variant="contained"
                   color="primary"
@@ -558,8 +566,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                   </DescriptionText>
                   <MdOutlineAddCircle size={20} />
                 </Button>
-              </Flex>
-            </Flex>
+              </div>
+            </div>
           )}
         </form>
       </Container>

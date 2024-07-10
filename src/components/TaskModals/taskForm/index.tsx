@@ -284,9 +284,9 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
 
   const renderTitle = () => {
     return (
-      <Title style={{ fontSize: '28px' }}>
+      <label style={{ fontSize: '28px', color: '#2A3F54', fontWeight: '500' }}>
         {dataToEdit && Object.values(dataToEdit).length > 0 ? 'Editar Tarefa' : 'Nova Tarefa'}
-      </Title>
+      </label>
     );
   };
 

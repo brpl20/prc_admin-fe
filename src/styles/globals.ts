@@ -1,5 +1,4 @@
 import styled, { css } from 'styled-components';
-import { IMenuProps } from '@/interfaces/ICustomer';
 import { createTheme } from '@mui/material/styles';
 
 interface titleProps {
@@ -62,7 +61,7 @@ export const border = {
   0px 8px 10px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12)`,
 };
 
-export const HeaderPageTitle = styled.div`
+export const HeaderPageTitle = styled.div<any>`
   font-size: 26px;
   font-weight: 500;
   margin-bottom: 20px;
@@ -75,10 +74,14 @@ export const PageTitle = styled(HeaderPageTitle)<titleProps>`
   visibility: ${({ showTitle }) => (!showTitle ? 'visible' : 'hidden')};
 `;
 
-export const Title = styled.label`
+export const Title = styled.label<any>`
   font-size: 20px;
   font-weight: 500;
   color: ${colors.secondary};
+`;
+
+export const Flex = styled.div<any>`
+  display: flex;
 `;
 
 export const CustomerTitle = styled.div`
@@ -88,11 +91,7 @@ export const CustomerTitle = styled.div`
   color: ${colors.primary};
 `;
 
-export const Flex = styled.div`
-  display: flex;
-`;
-
-export const DescriptionText = styled.label`
+export const DescriptionText = styled.label<any>`
   font-size: 16px;
   font-weight: 300;
 
@@ -137,7 +136,7 @@ export const Input = styled.div`
   }
 `;
 
-export const CloseDropdown = styled.div`
+export const CloseDropdown = styled.div<any>`
   display: none;
   cursor: default;
   position: fixed;
@@ -148,7 +147,7 @@ export const CloseDropdown = styled.div`
   background-color: transparent;
 `;
 
-export const Container = styled.div`
+export const Container = styled.div<any>`
   margin-top: 84px;
   padding: 0 40px;
   overflow-x: auto;
@@ -158,7 +157,7 @@ export const Container = styled.div`
   }
 `;
 
-export const ContentContainer = styled.div`
+export const ContentContainer = styled.div<any>`
   padding: 20px;
   min-width: 900px;
   max-width: 1600px;
@@ -199,7 +198,7 @@ export const ContentContainer = styled.div`
   }
 `;
 
-export const SelectContainer = styled.div<IMenuProps>`
+export const SelectContainer = styled.div<any>`
   width: 180px;
   height: 36px;
   display: flex;

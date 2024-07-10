@@ -16,12 +16,6 @@ export const Content = styled(Box)`
   padding: 16px;
 `;
 
-export const Title = styled.div`
-  font-size: 24px;
-  font-weight: 500;
-  color: ${colors.primary};
-`;
-
 export const InputContainer = styled.div<IDSwitchProps>`
   opacity: ${({ showInput }) => (showInput ? 1 : 0)};
   max-height: ${({ showInput }) => (showInput ? '100px' : 0)};

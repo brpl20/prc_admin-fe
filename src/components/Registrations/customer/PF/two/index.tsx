@@ -7,7 +7,6 @@ import React, {
   useImperativeHandle,
 } from 'react';
 
-import { Flex } from '@/styles/globals';
 import { Container, ColumnContainer } from '../styles';
 import Notification from '@/components/OfficeModals/Notification';
 import { animateScroll as scroll } from 'react-scroll';
@@ -204,7 +203,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
     widthValue: string,
     error?: boolean,
   ) => (
-    <Flex style={{ flexDirection: 'column', width: `${widthValue}` }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: `${widthValue}` }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
       </Typography>
@@ -220,7 +219,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
         placeholder={`${placeholderValue}`}
         onChange={handleInputChange}
       />
-    </Flex>
+    </div>
   );
 
   useEffect(() => {
@@ -303,10 +302,10 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
       <Container>
         <ColumnContainer>
           {renderInputField('CEP', 'cep', 'Informe o CEP', '100%', !!errors.cep)}
-          <Flex style={{ gap: '16px' }}>
+          <div style={{ display: 'flex', gap: '16px' }}>
             {renderInputField('Endereço', 'street', 'Informe o Endereço', '100%', !!errors.street)}
             {renderInputField('Número', 'number', 'N.º', '140px', !!errors.street)}
-          </Flex>
+          </div>
           {renderInputField('Complemento', 'description', 'Informe o Complemento', '100%')}
           {renderInputField(
             'Bairro',

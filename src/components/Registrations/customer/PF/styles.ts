@@ -1,7 +1,7 @@
 import { colors } from '@/styles/globals';
 import styled from 'styled-components';
 
-export const Container = styled.div`
+export const Container = styled.div<any>`
   width: 100%;
   min-height: 348px;
   margin-top: 16px;

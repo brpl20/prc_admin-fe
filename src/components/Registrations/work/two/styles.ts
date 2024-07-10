@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { colors } from '@/styles/globals';
 
-export const Container = styled.div`
+export const Container = styled.div<any>`
   min-height: 348px;
 
   .MuiInputBase-root {
@@ -14,7 +14,7 @@ export const Container = styled.div`
   }
 `;
 
-export const Input = styled.input`
+export const Input = styled.input<any>`
   width: 314px;
   height: 40px;
   padding-left: 8px;

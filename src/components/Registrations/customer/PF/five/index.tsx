@@ -7,7 +7,6 @@ import React, {
   useEffect,
 } from 'react';
 
-import { Flex } from '@/styles/globals';
 import { Container } from '../styles';
 import { CustomerContext } from '@/contexts/CustomerContext';
 
@@ -165,7 +164,7 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
     placeholderValue: string,
     error?: boolean,
   ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
       </Typography>
@@ -183,7 +182,7 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
         onChange={handleInputChange}
         error={error && !formData[name]}
       />
-    </Flex>
+    </div>
   );
 
   useEffect(() => {
@@ -222,7 +221,7 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
 
       <Container>
         <Box maxWidth={'812px'} display={'flex'} flexDirection={'column'} gap={'16px'}>
-          <Flex style={{ gap: '24px' }}>
+          <div style={{ display: 'flex', gap: '24px' }}>
             {renderInputField(
               'Profissão',
               'profession',
@@ -237,9 +236,9 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
               'Informe a Empersa Atual',
               !!errors.company,
             )}
-          </Flex>
+          </div>
 
-          <Flex style={{ gap: '24px' }}>
+          <div style={{ display: 'flex', gap: '24px' }}>
             {renderInputField(
               'Número de Benefício',
               'number_benefit',
@@ -248,9 +247,9 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
               !!errors.number_benefit,
             )}
             {renderInputField('NIT', 'nit', 30, 'Informe o Número do NIT')}
-          </Flex>
+          </div>
 
-          <Flex style={{ gap: '24px' }}>
+          <div style={{ display: 'flex', gap: '24px' }}>
             {renderInputField(
               'Nome da Mãe',
               'mother_name',
@@ -259,7 +258,7 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
               !!errors.mother_name,
             )}
             {renderInputField('Senha do meu INSS', 'inss_password', 99, 'Informe a Senha')}
-          </Flex>
+          </div>
         </Box>
       </Container>
     </>

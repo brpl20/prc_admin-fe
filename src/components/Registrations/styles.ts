@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-export const Container = styled.div`
+export const Container = styled.div<any>`
   margin-top: 84px;
   padding: 0 40px;
   overflow-x: auto;

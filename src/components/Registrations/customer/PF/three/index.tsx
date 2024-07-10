@@ -8,7 +8,7 @@ import React, {
   useEffect,
 } from 'react';
 
-import { Flex, colors } from '@/styles/globals';
+import { colors } from '@/styles/globals';
 import { IoAddCircleOutline } from 'react-icons/io5';
 import { Container, ColumnContainer } from '../styles';
 import { Box, TextField, Typography } from '@mui/material';
@@ -212,7 +212,7 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
       )}
 
       <Container>
-        <Flex style={{ gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '16px' }}>
           <ColumnContainer>
             <Box>
               <Typography style={{ marginBottom: '8px' }} variant="h6">
@@ -220,9 +220,10 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
               </Typography>
               {formData.phoneInputFields &&
                 formData.phoneInputFields.map((inputValue, index) => (
-                  <Flex
+                  <div
                     key={index}
                     style={{
+                      display: 'flex',
                       flexDirection: 'column',
                       marginBottom: '8px',
                       gap: '6px',
@@ -250,7 +251,7 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
                         size={20}
                       />
                     )}
-                  </Flex>
+                  </div>
                 ))}
             </Box>
           </ColumnContainer>
@@ -262,9 +263,10 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
               {formData &&
                 formData.emailInputFields &&
                 formData.emailInputFields.map((inputValue, index) => (
-                  <Flex
+                  <div
                     key={index}
                     style={{
+                      display: 'flex',
                       flexDirection: 'column',
                       marginBottom: '8px',
                       gap: '6px',
@@ -292,11 +294,11 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
                         size={20}
                       />
                     )}
-                  </Flex>
+                  </div>
                 ))}
             </Box>
           </ColumnContainer>
-        </Flex>
+        </div>
       </Container>
     </>
   );

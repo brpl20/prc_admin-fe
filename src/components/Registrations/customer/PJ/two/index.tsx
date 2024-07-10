@@ -8,7 +8,7 @@ import React, {
   useImperativeHandle,
 } from 'react';
 
-import { DescriptionText, Flex, colors } from '@/styles/globals';
+import { DescriptionText, colors } from '@/styles/globals';
 import { IoAddCircleOutline } from 'react-icons/io5';
 import { Container, ColumnContainer } from '../styles';
 import { animateScroll as scroll } from 'react-scroll';
@@ -284,13 +284,14 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
 
       <Container>
         <Box maxWidth={'600px'}>
-          <Flex
+          <div
             style={{
+              display: 'flex',
               gap: '16px',
               marginBottom: '16px',
             }}
           >
-            <Flex style={{ flexDirection: 'column', flex: 1, maxWidth: '292px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, maxWidth: '292px' }}>
               <Typography variant="h6" sx={{ marginBottom: '8px' }}>
                 {'Representante'}
               </Typography>
@@ -306,8 +307,8 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                 onChange={(event, value) => handleSelectedCustomer(value as IAdminProps)}
                 value={profileAdmin || null}
               />
-            </Flex>
-            <Flex>
+            </div>
+            <div style={{ display: 'flex' }}>
               <Button
                 variant="contained"
                 color="primary"
@@ -327,18 +328,19 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                 </DescriptionText>
                 <MdOutlineAddCircle size={20} />
               </Button>
-            </Flex>
-          </Flex>
-          <Flex style={{ gap: '16px' }}>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '16px' }}>
             <ColumnContainer>
               <Box>
                 <Typography style={{ marginBottom: '8px' }} variant="h6">
                   {'Telefone'}
                 </Typography>
                 {formData.phones.map((inputValue, index) => (
-                  <Flex
+                  <div
                     key={index}
                     style={{
+                      display: 'flex',
                       flexDirection: 'column',
                       marginBottom: '8px',
                       gap: '6px',
@@ -364,7 +366,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                         size={20}
                       />
                     )}
-                  </Flex>
+                  </div>
                 ))}
               </Box>
             </ColumnContainer>
@@ -374,9 +376,10 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                   {'E-mail'}
                 </Typography>
                 {formData.emails.map((inputValue, index) => (
-                  <Flex
+                  <div
                     key={index}
                     style={{
+                      display: 'flex',
                       flexDirection: 'column',
                       marginBottom: '8px',
                       gap: '6px',
@@ -404,11 +407,11 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                         size={20}
                       />
                     )}
-                  </Flex>
+                  </div>
                 ))}
               </Box>
             </ColumnContainer>
-          </Flex>
+          </div>
         </Box>
       </Container>
     </>

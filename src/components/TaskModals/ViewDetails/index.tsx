@@ -36,7 +36,9 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
               justifyContent: 'space-between',
             }}
           >
-            <Title style={{ fontSize: '26px' }}>{'Informações sobre a Tarefa'}</Title>
+            <label style={{ fontSize: '28px', color: '#2A3F54', fontWeight: '500' }}>
+              {'Informações sobre a Tarefa'}
+            </label>
             <MdClose size={26} cursor="pointer" onClick={onClose} />
           </div>
         </Box>

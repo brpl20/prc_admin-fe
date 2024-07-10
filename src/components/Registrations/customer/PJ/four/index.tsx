@@ -12,7 +12,6 @@ import Dropzone from 'react-dropzone';
 import { MdDelete } from 'react-icons/md';
 import { useRouter } from 'next/router';
 
-import { Flex, colors } from '@/styles/globals';
 import CheckBox from '@/components/CheckBox';
 import { Container, DropContainer, FileList } from '../styles';
 

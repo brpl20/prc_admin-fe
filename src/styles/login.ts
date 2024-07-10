@@ -1,15 +1,7 @@
 import styled, { css } from 'styled-components';
 import { colors } from '@/styles/globals';
 
-interface IButtonProps {
-  isLoading: boolean;
-}
-
-interface IFormProps {
-  isErrored: boolean;
-}
-
-export const Container = styled.div`
+export const Container = styled.div<any>`
   display: flex;
   min-height: 100vh;
   align-items: center;
@@ -50,7 +42,7 @@ export const Content = styled.div`
   }
 `;
 
-export const Input = styled.input<IFormProps>`
+export const Input = styled.input<any>`
   width: 100%;
   padding: 0.5rem 0.75rem;
   background-color: transparent;
@@ -79,7 +71,7 @@ export const Input = styled.input<IFormProps>`
   }
 `;
 
-export const Form = styled.form`
+export const Form = styled.form<any>`
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -88,7 +80,7 @@ export const Form = styled.form`
   max-width: 640px;
 `;
 
-export const Button = styled.button<IButtonProps>`
+export const Button = styled.button<any>`
   position: relative;
   display: flex;
   align-items: center;
