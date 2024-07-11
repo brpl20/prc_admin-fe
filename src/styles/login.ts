@@ -33,7 +33,7 @@ export const Content = styled.div`
   width: 500px;
   max-width: 554px;
   border-radius: 4px;
-  padding: 0 64px 32px 64px;
+  padding: 64px 32px;
 
   background-color: ${colors.white};
 

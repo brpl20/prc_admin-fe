@@ -575,7 +575,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                                 color: '#344054',
                               }}
                             >
-                              <span>
+                              <span className="underline">
                                 {representorsList.map((representor: any) => {
                                   if (
                                     Number(representor.id) === personalData.represent.representor_id
