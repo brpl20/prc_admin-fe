@@ -270,7 +270,7 @@ const RepresentativeModal = ({
 
       const data = {
         capacity: 'able',
-        profession: 'representative',
+        profession: '',
         customer_type: 'representative',
         cpf: formData.CPF.replace(/\D/g, ''),
         rg: formData.RG,

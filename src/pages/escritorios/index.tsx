@@ -220,8 +220,8 @@ const Offices = () => {
                 disableColumnMenu
                 disableRowSelectionOnClick
                 loading={isLoading}
-                components={{
-                  LoadingOverlay: LinearProgress,
+                slots={{
+                  loadingOverlay: LinearProgress,
                 }}
                 rows={
                   officesListFiltered &&

@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
 export const Container = styled.div<any>`
   display: flex;
@@ -57,23 +57,4 @@ export const Flex = styled.div<any>`
 export const Box = styled.div`
   display: flex;
   flex-direction: column;
-`;
-
-export const GridInfo = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  width: 100%;
-`;
-
-export const BoxInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-export const Title = styled.h3`
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: #000;
-  margin: 0;
-  margin-top: 0.5rem;
 `;

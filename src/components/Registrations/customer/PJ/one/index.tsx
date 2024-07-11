@@ -46,6 +46,7 @@ interface FormData {
 const stepOneSchema = z.object({
   name: z.string().min(2, { message: 'Nome é obrigatório.' }),
   cnpj: z.string().min(2, { message: 'CNPJ é obrigatório.' }),
+  cep: z.string().min(8, { message: 'CEP é obrigatório.' }),
   street: z.string().min(2, { message: 'Endereço é obrigatório.' }),
   neighborhood: z.string().min(2, { message: 'Bairro é obrigatório.' }),
 });
@@ -79,6 +80,10 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
+    if (name === 'cnpj' && !/^\d*$/.test(value)) {
+      return;
+    }
+
     if (name === 'cep') {
       setFormData(prevData => ({
         ...prevData,
@@ -99,6 +104,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
         name: formData.name,
         cnpj: formData.cnpj,
         street: formData.street,
+        cep: formData.cep,
         neighborhood: formData.neighborhood,
         number: formData.number,
       });
@@ -356,7 +362,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
               </Box>
 
               <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                {renderInputField('cep', 'CEP', 'Informe o CEP', !!errors.CEP)}
+                {renderInputField('cep', 'CEP', 'Informe o CEP', !!errors.cep)}
                 <div style={{ display: 'flex', gap: '16px' }}>
                   {renderInputField(
                     'street',

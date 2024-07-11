@@ -35,7 +35,7 @@ import dynamic from 'next/dynamic';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 import { ICustomerProps } from '@/interfaces/ICustomer';
-import { cnpjMask, cpfMask, phoneMask } from '@/utils/masks';
+import { phoneMask } from '@/utils/masks';
 
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { getSession } from 'next-auth/react';
@@ -197,6 +197,7 @@ const Customers = () => {
     setIsLoading(true);
     const getCustomers = async () => {
       const response = await getAllCustomers();
+
       const translatedCustomers = response.data.map((customer: ICustomerProps) => ({
         ...customer,
         attributes: {
@@ -364,8 +365,8 @@ const Customers = () => {
                 disableRowSelectionOnClick
                 loading={isLoading}
                 getRowClassName={getRowClassName}
-                components={{
-                  LoadingOverlay: LinearProgress,
+                slots={{
+                  loadingOverlay: LinearProgress,
                 }}
                 rows={
                   customersListFiltered &&

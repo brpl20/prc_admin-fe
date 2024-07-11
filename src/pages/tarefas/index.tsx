@@ -228,8 +228,8 @@ const Tasks = () => {
                 disableColumnMenu
                 loading={isLoading}
                 disableRowSelectionOnClick
-                components={{
-                  LoadingOverlay: LinearProgress,
+                slots={{
+                  loadingOverlay: LinearProgress,
                 }}
                 rows={
                   filteredTasksList.length > 0

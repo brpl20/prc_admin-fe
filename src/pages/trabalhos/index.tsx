@@ -300,8 +300,8 @@ const Works = () => {
                 disableColumnMenu
                 loading={isLoading}
                 disableRowSelectionOnClick
-                components={{
-                  LoadingOverlay: LinearProgress,
+                slots={{
+                  loadingOverlay: LinearProgress,
                 }}
                 rows={
                   worksListListFiltered &&

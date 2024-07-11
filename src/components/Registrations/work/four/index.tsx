@@ -71,7 +71,6 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   const [paralegal, SetParalegal] = useState<IAdminPropsAttributes[]>([]);
   const [initialService, SetInitialService] = useState<IAdminPropsAttributes[]>([]);
   const [responsibleLawyer, SetResponsibleLawyer] = useState<IAdminPropsAttributes[]>([]);
-
   const [isLegalPerson, setIsLegalPerson] = useState(true);
 
   const [legalPersonError, setLegalPersonError] = useState(false);
@@ -243,7 +242,6 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
       SetTrainee(trainees);
 
       const paralegals = allLawyers.filter((lawyer: any) => lawyer.attributes.role == 'paralegal');
-
       SetParalegal(paralegals);
     }
   }, [allLawyers]);

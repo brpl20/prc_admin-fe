@@ -9,8 +9,10 @@ import React, {
 } from 'react';
 
 import Dropzone from 'react-dropzone';
-import { MdDelete } from 'react-icons/md';
+import { MdDelete, MdOutlineInfo } from 'react-icons/md';
+
 import { useRouter } from 'next/router';
+import CustomTooltip from '@/components/Tooltip';
 
 import CheckBox from '@/components/CheckBox';
 import { Container, DropContainer, FileList } from '../styles';
@@ -128,12 +130,29 @@ const PJCustomerStepFour: ForwardRefRenderFunction<IRefPJCustomerStepFourProps, 
             onChange={handleCheckboxChange}
           />
 
-          <CheckBox
-            label={isEdit ? 'Reemitir procuração simples' : 'Emitir procuração simples'}
-            name="issueDocuments"
-            checked={checkedItems.issueDocuments}
-            onChange={handleCheckboxChange}
-          />
+          <div className="flex">
+            <CheckBox
+              label={isEdit ? 'Reemitir procuração simples' : 'Emitir procuração simples'}
+              name="issueDocuments"
+              isDisabled={true}
+              checked={checkedItems.issueDocuments}
+              onChange={handleCheckboxChange}
+            />
+
+            <CustomTooltip
+              title="A geração deste documento ainda não está disponível."
+              placement="right"
+            >
+              <span
+                aria-label="Pré-Definição"
+                style={{
+                  display: 'flex',
+                }}
+              >
+                <MdOutlineInfo style={{ marginLeft: '-6px' }} size={20} />
+              </span>
+            </CustomTooltip>
+          </div>
 
           {/* <CheckBox
             label="Enviar para assinatura"

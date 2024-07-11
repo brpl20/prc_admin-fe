@@ -1,6 +1,7 @@
 import * as React from 'react';
 import type { AppProps } from 'next/app';
 
+import '@/styles/index.css';
 import { theme } from '@/styles/globals';
 import { ThemeProvider } from '@mui/material/styles';
 import WorkProvider from '@/contexts/WorkContext';

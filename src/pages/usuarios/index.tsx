@@ -34,9 +34,25 @@ const Admins = () => {
   const [adminsList, setAdminsList] = useState<IAdminProps[]>([]);
   const [adminsListFiltered, setAdminsListFiltered] = useState<IAdminProps[]>([]);
 
+  const translateRole = (userRole: string) => {
+    switch (userRole) {
+      case 'lawyer':
+        return 'Advogado';
+      case 'paralegal':
+        return 'Paralegal';
+      case 'trainee':
+        return 'Estagiario';
+      case 'secretary':
+        return 'Secretario';
+      case 'counter':
+        return 'Contador';
+      default:
+        return userRole;
+    }
+  };
+
   const handleSearch = (search: string) => {
     const regex = new RegExp(search, 'i');
-
     switch (searchFor) {
       case 'name':
         const filteredByName = adminsList.filter(
@@ -71,8 +87,17 @@ const Admins = () => {
   useEffect(() => {
     const getAdmins = async () => {
       const response = await getAllAdmins();
-      setAdminsList(response.data);
-      setAdminsListFiltered(response.data);
+
+      const translatedRole = response.data.map((user: IAdminProps) => ({
+        ...user,
+        attributes: {
+          ...user.attributes,
+          role: translateRole(user.attributes.role),
+        },
+      }));
+
+      setAdminsList(translatedRole);
+      setAdminsListFiltered(translatedRole);
     };
 
     getAdmins();
@@ -168,25 +193,14 @@ const Admins = () => {
               <DataGrid
                 disableColumnMenu
                 disableRowSelectionOnClick
-                components={{
-                  LoadingOverlay: LinearProgress,
+                slots={{
+                  loadingOverlay: LinearProgress,
                 }}
                 rows={
                   adminsListFiltered &&
                   adminsListFiltered.map((admin: IAdminProps) => ({
                     id: admin.id,
-                    role:
-                      admin.attributes.role === 'lawyer'
-                        ? 'Advogado'
-                        : admin.attributes.role === 'paralegal'
-                        ? 'Paralegal'
-                        : admin.attributes.role === 'trainee'
-                        ? 'Estagiário'
-                        : admin.attributes.role === 'secretary'
-                        ? 'Secretário(a)'
-                        : admin.attributes.role === 'counter'
-                        ? 'Contador(a)'
-                        : '',
+                    role: admin.attributes.role,
                     name: `${admin.attributes.name} ${admin.attributes.last_name}`,
                     email: admin.attributes.email,
                   }))

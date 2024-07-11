@@ -2,16 +2,7 @@ import { getOfficeById } from '@/services/offices';
 
 import { useEffect, useState } from 'react';
 
-import {
-  Title,
-  ButtonShowData,
-  ContainerDetails,
-  Flex,
-  DetailsWrapper,
-  BoxInfo,
-  GridInfo,
-  ButtonShowContact,
-} from '../styles';
+import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
 import { cnpjMask, phoneMask } from '@/utils/masks';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import { Box, Button, CircularProgress } from '@mui/material';
