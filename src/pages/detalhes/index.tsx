@@ -16,7 +16,6 @@ const Details = () => {
 
   const router = useRouter();
   const params = router.query.type ? router.query.type : '';
-  console.group('params', params);
 
   useEffect(() => {
     const updateScrollPosition = () => {
