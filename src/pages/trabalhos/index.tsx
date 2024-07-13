@@ -275,18 +275,18 @@ const Works = () => {
                   <Button
                     variant="contained"
                     color="primary"
+                    className="gap-2"
                     sx={{
                       backgroundColor: colors.quartiary,
                       color: colors.white,
                       height: 36,
-                      width: 180,
                       textTransform: 'none',
                       '&:hover': {
                         backgroundColor: colors.quartiaryHover,
                       },
                     }}
                   >
-                    <DescriptionText style={{ cursor: 'pointer' }} className="ml-8">
+                    <DescriptionText style={{ cursor: 'pointer' }}>
                       {'Novo Trabalho'}
                     </DescriptionText>
                     <MdOutlineAddCircle size={20} />

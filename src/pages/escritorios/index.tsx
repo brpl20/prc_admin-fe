@@ -196,6 +196,7 @@ const Offices = () => {
                 <Button
                   variant="contained"
                   color="primary"
+                  className="gap-2"
                   onClick={() => {
                     Router.push('/cadastrar?type=escritorio');
                   }}
@@ -208,9 +209,7 @@ const Offices = () => {
                     },
                   }}
                 >
-                  <DescriptionText style={{ cursor: 'pointer' }} className="ml-8">
-                    {'Adicionar'}
-                  </DescriptionText>
+                  <DescriptionText style={{ cursor: 'pointer' }}>{'Adicionar'}</DescriptionText>
                   <MdOutlineAddCircle size={20} />
                 </Button>
               </Box>

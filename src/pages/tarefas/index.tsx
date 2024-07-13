@@ -205,20 +205,18 @@ const Tasks = () => {
                 <Button
                   variant="contained"
                   color="primary"
+                  className="gap-2"
                   sx={{
                     backgroundColor: colors.quartiary,
                     color: colors.white,
                     height: 36,
-                    width: 180,
                     '&:hover': {
                       backgroundColor: colors.quartiaryHover,
                     },
                   }}
                   onClick={() => setOpenTaskModal(true)}
                 >
-                  <DescriptionText style={{ cursor: 'pointer' }} className="ml-8">
-                    {'Nova Tarefa'}
-                  </DescriptionText>
+                  <DescriptionText style={{ cursor: 'pointer' }}>{'Nova Tarefa'}</DescriptionText>
                   <MdOutlineAddCircle size={20} />
                 </Button>
               </Box>

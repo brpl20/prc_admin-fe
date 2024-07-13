@@ -169,6 +169,7 @@ const Admins = () => {
                   <Button
                     variant="contained"
                     color="primary"
+                    className="gap-2"
                     onClick={() => {
                       Router.push('/cadastrar?type=usuario');
                     }}
@@ -181,9 +182,7 @@ const Admins = () => {
                       },
                     }}
                   >
-                    <DescriptionText style={{ cursor: 'pointer' }} className="ml-8">
-                      {'Adicionar'}
-                    </DescriptionText>
+                    <DescriptionText style={{ cursor: 'pointer' }}>{'Adicionar'}</DescriptionText>
                     <MdOutlineAddCircle size={20} />
                   </Button>
                 )}
