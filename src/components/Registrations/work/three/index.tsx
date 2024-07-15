@@ -40,7 +40,6 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
   const [type, setType] = useState<'success' | 'error'>('success');
 
   const { workForm, setWorkForm } = useContext(WorkContext);
-
   const [powersSelected, setPowersSelected] = useState<number[]>([]);
   const [allPowers, setAllPowers] = useState<any>([]);
   const [filteredPowers, setFilteredPowers] = useState<any>([]);

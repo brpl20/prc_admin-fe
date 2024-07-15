@@ -45,22 +45,22 @@ const Customers = () => {
     {
       id: 1,
       name: 'Pessoa Juridica',
-      color: '#29A74466',
+      color: '#57a72160',
     },
     {
       id: 2,
       name: 'Pessoa Fisica',
-      color: '#fa768c66',
+      color: '#3281f75b',
     },
     {
       id: 3,
       name: 'Contador',
-      color: '#FEC03233',
+      color: '#fa9c0e8e',
     },
     {
       id: 4,
       name: 'Representante Legal',
-      color: '#1D79FB66',
+      color: '#c9c9c92a',
     },
   ];
 
@@ -401,7 +401,7 @@ const Customers = () => {
                     sortable: false,
                     editable: false,
                     renderCell: (params: any) => (
-                      <Box width={'100%'} display={'flex'} justifyContent={'space-around'}>
+                      <Box className="w-full flex justify-around">
                         <MdVisibility
                           size={22}
                           color={colors.icons}
@@ -421,6 +421,7 @@ const Customers = () => {
                     width: 60,
                     field: 'id',
                     headerName: 'ID',
+                    cellClassName: 'font-medium text-black',
                     align: 'center',
                     headerAlign: 'center',
                   },
@@ -428,6 +429,7 @@ const Customers = () => {
                     width: 200,
                     field: 'name',
                     headerName: 'Nome',
+                    cellClassName: 'font-medium text-black',
                     align: 'left',
                     headerAlign: 'left',
                   },
@@ -435,29 +437,34 @@ const Customers = () => {
                     width: 180,
                     field: 'type',
                     headerName: 'Tipo',
+                    cellClassName: 'font-medium text-black',
                   },
                   {
                     width: 180,
                     field: 'cpf',
                     headerName: 'CPF/CNPJ',
+                    cellClassName: 'font-medium text-black',
                     sortable: false,
                   },
                   {
                     width: 250,
                     field: 'email',
                     headerName: 'E-mail',
+                    cellClassName: 'font-medium text-black',
                     sortable: false,
                   },
                   {
                     width: 140,
                     field: 'city',
                     headerName: 'Cidade',
+                    cellClassName: 'font-medium text-black',
                     sortable: false,
                   },
                   {
                     width: 180,
                     field: 'contact',
                     headerName: 'Contato',
+                    cellClassName: 'font-medium text-black',
                     sortable: false,
                   },
                 ]}

@@ -190,7 +190,7 @@ const ConfirmCreation = ({ isOpen, onClose, isLoading, handleSave, editMode }: I
                     autoComplete="off"
                     onChange={handleInputChange}
                     placeholder="Informe o título do trabalho"
-                    style={{ width: '100%', border: '1px solid #41414D', outline: 'none' }}
+                    style={{ width: '100%', outline: 'none' }}
                   />
                 </Input>
               </Box>

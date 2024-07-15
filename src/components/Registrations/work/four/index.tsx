@@ -664,39 +664,6 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
 
           <Flex className="inputContainer">
             {customTitleWithInfo(
-              'Outorgado por Advogado Parceiro?',
-              'O termo "Outorgado por Advogado Parceiro" indica que a autorização vem de um advogado que é parceiro do escritório, fortalecendo a colaboração e a sinergia entre eles.',
-            )}
-
-            <Autocomplete
-              limitTags={1}
-              id="multiple-limit-tags"
-              value={
-                formData.partner_lawyer
-                  ? allLawyers.find(
-                      (lawyer: IAdminPropsAttributes) =>
-                        lawyer.id.toString() == formData.partner_lawyer,
-                    )
-                  : ''
-              }
-              options={allLawyers}
-              getOptionLabel={(option: any) =>
-                option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
-              }
-              onChange={(event, value) => handleSelectChange('partner_lawyer', value)}
-              renderInput={params => (
-                <TextField
-                  {...params}
-                  placeholder={'Selecione um Advogado Parceiro'}
-                  size="small"
-                />
-              )}
-              noOptionsText={`Não Encontrado`}
-            />
-          </Flex>
-
-          <Flex className="inputContainer">
-            {customTitleWithInfo(
               'Estagiários da Procuração',
               'Em alguns serviços administrativos, é possível adicionar os estagiários para executar trabalhos mais simples.',
             )}

@@ -697,12 +697,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
               alignItems: 'center',
             }}
           >
-            <Typography
-              display={'flex'}
-              alignItems={'center'}
-              variant="h6"
-              style={{ height: '40px' }}
-            >
+            <Typography display={'flex'} alignItems={'center'} variant="h6" className="h-[40px]">
               {'Notas em Geral Sobre o Caso'}
             </Typography>
             <CustomTooltip
@@ -721,15 +716,14 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
 
           <TextareaAutosize
             style={{
-              width: '100%',
-              height: '136px',
-              resize: 'none',
-              padding: '4px',
-              font: 'inherit',
+              height: '130px',
+              border: '1px solid #D1D5DB',
+              borderRadius: '4px',
             }}
+            name="gradesInGeneral"
             value={gradesInGeneral}
             onChange={e => setGradesInGeneral(e.target.value)}
-            className="comment-input"
+            className="comment-input w-full resize-none p-1"
           />
         </Box>
       </Box>
