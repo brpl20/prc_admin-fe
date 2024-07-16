@@ -336,7 +336,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       <TextField
         id="outlined-basic"
         variant="outlined"
-        error={error && !formData[name]}
+        error={error || !formData[name]}
         fullWidth
         type="text"
         name={name}
@@ -361,7 +361,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         {label}
       </Typography>
       <FormControl size="small">
-        <InputLabel error={error && !formData[name]}>{`Selecione ${label}`}</InputLabel>
+        <InputLabel error={error || !formData[name]}>{`Selecione ${label}`}</InputLabel>
         <Select
           name={name}
           label={`Selecione ${label}`}

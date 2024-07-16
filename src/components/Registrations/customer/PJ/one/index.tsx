@@ -31,9 +31,9 @@ interface IStepOneProps {
 }
 
 interface FormData {
-  name: string | undefined;
-  cnpj: string | undefined;
-  cep: string;
+  name: string;
+  cnpj: string;
+  zip_code: string;
   gender: string;
   street: string;
   state: string;
@@ -46,7 +46,7 @@ interface FormData {
 const stepOneSchema = z.object({
   name: z.string().min(2, { message: 'Nome é obrigatório.' }),
   cnpj: z.string().min(2, { message: 'CNPJ é obrigatório.' }),
-  cep: z.string().min(8, { message: 'CEP é obrigatório.' }),
+  zip_code: z.string().min(8, { message: 'CEP é obrigatório.' }),
   street: z.string().min(2, { message: 'Endereço é obrigatório.' }),
   neighborhood: z.string().min(2, { message: 'Bairro é obrigatório.' }),
 });
@@ -64,18 +64,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
 
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    cnpj: '',
-    cep: '',
-    street: '',
-    state: '',
-    city: '',
-    gender: 'male',
-    number: '',
-    description: '',
-    neighborhood: '',
-  });
+  const [formData, setFormData] = useState<FormData>({} as FormData);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -84,7 +73,12 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
       return;
     }
 
-    if (name === 'cep') {
+    if (errors[name]) {
+      delete errors[name];
+      setErrors(errors);
+    }
+
+    if (name === 'zip_code') {
       setFormData(prevData => ({
         ...prevData,
         [name]: cepMask(value),
@@ -104,7 +98,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
         name: formData.name,
         cnpj: formData.cnpj,
         street: formData.street,
-        cep: formData.cep,
+        zip_code: formData.zip_code,
         neighborhood: formData.neighborhood,
         number: formData.number,
       });
@@ -121,7 +115,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
         profession: 'company',
         addresses_attributes: [
           {
-            zip_code: formData.cep,
+            zip_code: formData.zip_code,
             street: formData.street,
             state: formData.state,
             city: formData.city,
@@ -148,7 +142,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
         customerForm.data.attributes.addresses_attributes = [
           {
             id: customerForm?.data?.attributes?.addresses[0]?.id,
-            zip_code: formData.cep,
+            zip_code: formData.zip_code,
             street: formData.street,
             state: formData.state,
             city: formData.city,
@@ -179,13 +173,12 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
 
     if (data) {
       const parsedData = JSON.parse(data);
-
       const address = parsedData.addresses_attributes[0];
 
       if (address) {
         setFormData(prevData => ({
           ...prevData,
-          cep: address.zip_code,
+          zip_code: address.zip_code,
           street: address.street,
           state: address.state,
           city: address.city,
@@ -193,18 +186,18 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
           description: address.description,
           neighborhood: address.neighborhood,
         }));
+      } else {
+        const cnpj = parsedData.cnpj ? parsedData.cnpj : '';
+        const name = parsedData.name ? parsedData.name : '';
+        const gender = parsedData.gender;
+
+        setFormData(prevData => ({
+          ...prevData,
+          cnpj,
+          name,
+          gender,
+        }));
       }
-
-      const cnpj = parsedData.cnpj ? parsedData.cnpj : '';
-      const name = parsedData.name ? parsedData.name : '';
-      const gender = parsedData.gender;
-
-      setFormData(prevData => ({
-        ...prevData,
-        cnpj,
-        name,
-        gender,
-      }));
     }
   };
 
@@ -248,7 +241,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
       <TextField
         id="outlined-basic"
         variant="outlined"
-        error={error && !formData[name]}
+        error={error || !formData[name]}
         fullWidth
         name={name}
         size="small"
@@ -262,7 +255,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
 
   useEffect(() => {
     const fetchCEPDetails = async () => {
-      const numericCEP = formData.cep.replace(/\D/g, '');
+      const numericCEP = formData.zip_code.replace(/\D/g, '');
 
       if (numericCEP.length === 8) {
         try {
@@ -282,10 +275,10 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
       }
     };
 
-    if (formData.cep) {
+    if (formData.zip_code) {
       fetchCEPDetails();
     }
-  }, [formData.cep]);
+  }, [formData.zip_code]);
 
   useEffect(() => {
     const handleDataForm = () => {
@@ -307,7 +300,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
 
           setFormData(prevData => ({
             ...prevData,
-            cep: lastAddress.zip_code,
+            zip_code: lastAddress.zip_code,
             street: lastAddress.street,
             state: lastAddress.state,
             city: lastAddress.city,
@@ -362,7 +355,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
               </Box>
 
               <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                {renderInputField('cep', 'CEP', 'Informe o CEP', !!errors.cep)}
+                {renderInputField('zip_code', 'CEP', 'Informe o CEP', errors.zip_code)}
                 <div style={{ display: 'flex', gap: '16px' }}>
                   {renderInputField(
                     'street',

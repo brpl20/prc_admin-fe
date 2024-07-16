@@ -290,7 +290,7 @@ const Office = ({ dataToEdit }: props) => {
         autoComplete="off"
         placeholder={`${placeholderText}`}
         onChange={handleInputChange}
-        error={error && !formData[name]}
+        error={error || !formData[name]}
       />
     </Flex>
   );
@@ -312,7 +312,7 @@ const Office = ({ dataToEdit }: props) => {
           label={`Selecione ${label}`}
           value={formData[name] || ''}
           onChange={handleSelectChange}
-          error={error && !formData[name]}
+          error={error || !formData[name]}
         >
           {options.map(option => (
             <MenuItem key={option.value} value={option.value}>

@@ -43,7 +43,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
   ref,
 ) => {
   const [isModalRegisterRepresentativeOpen, setIsModalRegisterRepresentativeOpen] = useState(false);
-  const [isRepresentativeFinished, setIsRepresentativeFinished] = useState(false);
+
   const [errors, setErrors] = useState({} as any);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -207,6 +207,11 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
   };
 
   const handleSelectedCustomer = (admin: IAdminProps) => {
+    if (errors.profile_admin) {
+      delete errors.profile_admin;
+      setErrors(errors);
+    }
+
     if (admin) {
       setProfileAdmin(admin);
     } else {
@@ -218,19 +223,20 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     handleSubmitForm,
   }));
 
+  const getCustomers = async () => {
+    const allCustomers = await getAllCustomers();
+    const response = allCustomers.data;
+
+    const representors = response.filter(
+      (customer: any) => customer.attributes.customer_type === 'representative',
+    );
+
+    setCustomersList(representors);
+  };
+
   useEffect(() => {
-    const getCustomers = async () => {
-      const allCustomers = await getAllCustomers();
-      const response = allCustomers.data;
-
-      const representors = response.filter(
-        (customer: any) => customer.attributes.customer_type === 'representative',
-      );
-      setCustomersList(representors);
-    };
-
     getCustomers();
-  }, [isRepresentativeFinished]);
+  }, []);
 
   useEffect(() => {
     const handleDataForm = () => {
@@ -278,7 +284,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
           pageTitle="Cadastro de Representante"
           isOpen={isModalRegisterRepresentativeOpen}
           handleClose={() => setIsModalRegisterRepresentativeOpen(false)}
-          handleRegistrationFinished={() => setIsRepresentativeFinished(true)}
+          handleRegistrationFinished={getCustomers}
         />
       )}
 
@@ -297,12 +303,18 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
               </Typography>
               <Autocomplete
                 limitTags={1}
+                className="bg-white z-1"
                 options={customersList}
                 getOptionLabel={option => option?.attributes?.name ?? ''}
                 renderInput={params => (
-                  <TextField placeholder="Selecione um Representante" {...params} size="small" />
+                  <TextField
+                    error={!!errors.profile_admin}
+                    variant="outlined"
+                    placeholder="Selecione um Representante"
+                    {...params}
+                    size="small"
+                  />
                 )}
-                sx={{ backgroundColor: 'white', zIndex: 1 }}
                 noOptionsText="Não Encontrado"
                 onChange={(event, value) => handleSelectedCustomer(value as IAdminProps)}
                 value={profileAdmin || null}

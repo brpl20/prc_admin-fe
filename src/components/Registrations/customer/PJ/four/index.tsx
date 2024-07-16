@@ -44,8 +44,7 @@ const PJCustomerStepFour: ForwardRefRenderFunction<IRefPJCustomerStepFourProps, 
   const [openFileSnackbar, setOpenFileSnackbar] = useState(false);
   const [checkedItems, setCheckedItems] = useState({
     sendAccessData: false,
-    issueDocuments: false,
-    sendForSignature: false,
+    issue_documents: false,
   });
 
   const renderDragMessage = (isDragActive: boolean) => {
@@ -94,6 +93,7 @@ const PJCustomerStepFour: ForwardRefRenderFunction<IRefPJCustomerStepFourProps, 
   const handleSubmitForm = () => {
     const data = {
       ...customerForm,
+      issue_documents: checkedItems.issue_documents,
       customer_type: 'legal_person',
     };
 
@@ -133,9 +133,8 @@ const PJCustomerStepFour: ForwardRefRenderFunction<IRefPJCustomerStepFourProps, 
           <div className="flex">
             <CheckBox
               label={isEdit ? 'Reemitir procuração simples' : 'Emitir procuração simples'}
-              name="issueDocuments"
-              isDisabled={true}
-              checked={checkedItems.issueDocuments}
+              name="issue_documents"
+              checked={checkedItems.issue_documents}
               onChange={handleCheckboxChange}
             />
 

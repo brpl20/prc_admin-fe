@@ -35,7 +35,7 @@ const PFCustomerStepSix: ForwardRefRenderFunction<IRefPFCustomerStepSixProps, IS
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
   const [checkedItems, setCheckedItems] = useState({
     sendAccessData: false,
-    issueDocuments: false,
+    issue_documents: false,
   });
 
   const handleCheckboxChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -50,7 +50,7 @@ const PFCustomerStepSix: ForwardRefRenderFunction<IRefPFCustomerStepSixProps, IS
   const handleSubmitForm = () => {
     let data = {};
 
-    if (checkedItems.issueDocuments) {
+    if (checkedItems.issue_documents) {
       data = {
         ...customerForm,
         checked_items: checkedItems,
@@ -62,9 +62,10 @@ const PFCustomerStepSix: ForwardRefRenderFunction<IRefPFCustomerStepSixProps, IS
       };
     }
 
-    if (!checkedItems.issueDocuments) {
+    if (!checkedItems.issue_documents) {
       data = {
         ...customerForm,
+        issue_documents: checkedItems.issue_documents,
         checked_items: checkedItems,
       };
     }
@@ -105,8 +106,8 @@ const PFCustomerStepSix: ForwardRefRenderFunction<IRefPFCustomerStepSixProps, IS
 
             <CheckBox
               label={isEdit ? 'Reemitir procuração simples' : 'Emitir procuração simples'}
-              name="issueDocuments"
-              checked={checkedItems.issueDocuments}
+              name="issue_documents"
+              checked={checkedItems.issue_documents}
               onChange={handleCheckboxChange}
             />
           </Box>

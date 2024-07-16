@@ -42,6 +42,7 @@ import { ICustomerProps } from '@/interfaces/ICustomer';
 
 interface FormData {
   represent_id: string;
+  profession: string;
   name: string;
   last_name: string;
   CPF: string;
@@ -62,25 +63,25 @@ interface FormData {
 interface props {
   pageTitle: string;
 }
-
-const representativeSchema = z.object({
-  represent_id: z.string().nonempty({ message: 'Selecione o Representado.' }),
-  name: z.string().nonempty({ message: 'Preencha o campo Nome.' }),
-  last_name: z.string().nonempty({ message: 'Preencha o campo Sobrenome.' }),
-  CPF: z.string().nonempty({ message: 'Preencha o campo CPF.' }),
-  RG: z.string().nonempty({ message: 'Preencha o campo RG.' }),
-  gender: z.string().nonempty('Gênero é obrigatório'),
-  civil_status: z.string().nonempty('Estado Civil é obrigatório'),
-  nationality: z.string().nonempty('Naturalidade é obrigatório'),
-  phone_number: z.string().nonempty('Telefone Obrigatório'),
-  email: z.string().nonempty('Email Obrigatório'),
-  cep: z.string().nonempty({ message: 'Preencha o campo CEP.' }),
-  street: z.string().nonempty({ message: 'Preencha o campo Endereço.' }),
-  number: z.string().nonempty({ message: 'Preencha o campo Número.' }),
+export const representativeSchema = z.object({
+  represent_id: z.string().min(2, { message: 'Selecione o Representado.' }),
+  name: z.string().min(3, { message: 'Preencha o campo Nome.' }),
+  last_name: z.string().min(3, { message: 'Preencha o campo Sobrenome.' }),
+  CPF: z.string().min(5, { message: 'Preencha o campo CPF.' }),
+  RG: z.string().min(5, { message: 'Preencha o campo RG.' }),
+  gender: z.string().min(3, 'Gênero é obrigatório'),
+  civil_status: z.string().min(1, 'Estado Civil é obrigatório'),
+  nationality: z.string().min(1, 'Naturalidade é obrigatório'),
+  phone_number: z.string().min(6, 'Telefone Obrigatório'),
+  email: z.string().min(1, 'Email Obrigatório'),
+  cep: z.string().min(4, { message: 'Preencha o campo CEP.' }),
+  street: z.string().min(4, { message: 'Preencha o campo Endereço.' }),
+  number: z.string().min(4, { message: 'Preencha o campo Número.' }),
   description: z.string(),
-  neighborhood: z.string().nonempty({ message: 'Preencha o campo Bairro.' }),
-  city: z.string().nonempty({ message: 'Preencha o campo Cidade.' }),
-  state: z.string().nonempty({ message: 'Preencha o campo Estado.' }),
+  profession: z.string().min(4, { message: 'Preencha o campo Profissão.' }),
+  neighborhood: z.string().min(4, { message: 'Preencha o campo Bairro.' }),
+  city: z.string().min(4, { message: 'Preencha o campo Cidade.' }),
+  state: z.string().min(2, { message: 'Preencha o campo Estado.' }),
 });
 
 const Representative = ({ pageTitle }: props) => {
@@ -95,7 +96,6 @@ const Representative = ({ pageTitle }: props) => {
   const { setShowTitle, setPageTitle } = useContext(PageTitleContext);
 
   const currentDate = dayjs();
-  const [selectedDate, setSelectedDate] = useState(currentDate);
 
   const [message, setMessage] = useState('');
   const [type, setType] = useState<'success' | 'error'>('success');
@@ -103,24 +103,7 @@ const Representative = ({ pageTitle }: props) => {
 
   const route = useRouter();
 
-  const [formData, setFormData] = useState<FormData>({
-    represent_id: '',
-    name: '',
-    last_name: '',
-    CPF: '',
-    RG: '',
-    gender: '',
-    civil_status: '',
-    nationality: '',
-    birth: currentDate,
-    cep: '',
-    street: '',
-    number: '',
-    description: '',
-    neighborhood: '',
-    city: '',
-    state: '',
-  });
+  const [formData, setFormData] = useState<FormData>({} as FormData);
 
   const [contactData, setContactData] = useState({
     phoneInputFields: [{ phone_number: '' }],
@@ -132,6 +115,7 @@ const Representative = ({ pageTitle }: props) => {
       represent_id: '',
       name: '',
       last_name: '',
+      profession: '',
       CPF: '',
       RG: '',
       gender: '',
@@ -233,7 +217,7 @@ const Representative = ({ pageTitle }: props) => {
           customer_id: Number(customer_id),
         };
 
-        const res = await createProfileCustomer(newData);
+        await createProfileCustomer(newData);
 
         Router.push('/clientes');
         resetValues();
@@ -258,6 +242,7 @@ const Representative = ({ pageTitle }: props) => {
         last_name: formData.last_name,
         CPF: formData.CPF,
         RG: formData.RG,
+        profession: formData.profession,
         gender: formData.gender,
         nationality: formData.nationality,
         civil_status: formData.civil_status,
@@ -314,7 +299,7 @@ const Representative = ({ pageTitle }: props) => {
       } else {
         const data = {
           capacity: 'able',
-          profession: 'representative',
+          profession: formData.profession,
           customer_type: 'representative',
           cpf: formData.CPF.replace(/\D/g, ''),
           rg: formData.RG,
@@ -469,15 +454,6 @@ const Representative = ({ pageTitle }: props) => {
     });
   };
 
-  const handleBirthDate = (date: any) => {
-    const birthDate = new Date(date).toLocaleDateString('pt-BR');
-    setSelectedDate(date);
-    setFormData((prevData: any) => ({
-      ...prevData,
-      ['birth']: birthDate,
-    }));
-  };
-
   useEffect(() => {
     const handleDataForm = () => {
       const attributes = customerForm.data.attributes;
@@ -498,6 +474,7 @@ const Representative = ({ pageTitle }: props) => {
           represent_id: represent_id.toString(),
           last_name: last_name,
           CPF: cpf,
+          profession: attributes.profession,
           RG: rg,
           gender: gender,
           civil_status: civil_status,
@@ -733,6 +710,19 @@ const Representative = ({ pageTitle }: props) => {
                       !!errors.civil_status,
                     )}
                   </Flex>
+
+                  <Flex
+                    style={{
+                      gap: '32px',
+                    }}
+                  >
+                    {renderInputField(
+                      'profession',
+                      'Profissão',
+                      'Informe a Profissão',
+                      !!errors.profession,
+                    )}
+                  </Flex>
                 </Flex>
               </Flex>
 
@@ -753,7 +743,6 @@ const Representative = ({ pageTitle }: props) => {
                         'street',
                         'Endereço',
                         'Informe o Endereço',
-
                         !!errors.street,
                       )}
                       <Box maxWidth={'30%'}>

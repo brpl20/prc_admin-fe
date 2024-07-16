@@ -214,7 +214,7 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
           sx={{ flex: 1 }}
           value={formData[name] ? formData[name] : ''}
           autoComplete="off"
-          error={error && !formData[name]}
+          error={error || !formData[name]}
           placeholder={`${placeholderValue}`}
           onChange={handleInputChange}
           disabled={editMode && session?.role === 'secretary'}
@@ -229,7 +229,7 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
           size="small"
           sx={{ flex: 1 }}
           autoComplete="off"
-          error={error && !formData[name]}
+          error={error || !formData[name]}
           placeholder={`${placeholderValue}`}
           onChange={handleInputChange}
           disabled={true}

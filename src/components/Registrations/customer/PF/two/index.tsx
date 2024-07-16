@@ -210,7 +210,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
       <TextField
         id="outlined-basic"
         variant="outlined"
-        error={error && !formData[name]}
+        error={error || !formData[name]}
         fullWidth
         name={name}
         size="small"

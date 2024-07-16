@@ -415,7 +415,7 @@ const User = ({ dataToEdit }: props) => {
       </Typography>
       <TextField
         variant="outlined"
-        error={error && !formData[name]}
+        error={error || !formData[name]}
         fullWidth
         name={name}
         size="small"
@@ -446,7 +446,7 @@ const User = ({ dataToEdit }: props) => {
           label={`Selecione ${label}`}
           value={formData[name] || ''}
           onChange={handleSelectChange}
-          error={error && !formData[name]}
+          error={error || !formData[name]}
         >
           {options.map(option => (
             <MenuItem key={option.value} value={option.value}>

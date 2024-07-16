@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, useEffect, useContext } from 'react';
+import { useState, ChangeEvent, useEffect } from 'react';
 import { IoAddCircleOutline } from 'react-icons/io5';
 
 import {
@@ -16,34 +16,27 @@ import {
 import { Notification, ConfirmCreation } from '@/components';
 import { getCEPDetails } from '@/services/brasilAPI';
 
-import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { gendersOptions, civilStatusOptions, nationalityOptions } from '@/utils/constants';
 
 import { Container } from '../styles';
 import { colors, ContentContainer } from '@/styles/globals';
 
-import dayjs, { Dayjs } from 'dayjs';
+import { Dayjs } from 'dayjs';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { Flex, Divider } from '@/styles/globals';
-import {
-  createProfileCustomer,
-  getAllCustomers,
-  createCustomer as createCustomerApi,
-} from '@/services/customers';
+import { createProfileCustomer, createCustomer as createCustomerApi } from '@/services/customers';
 import { animateScroll as scroll } from 'react-scroll';
 
 import { useRouter } from 'next/router';
-import { cpfMask } from '@/utils/masks';
 import { z } from 'zod';
-import { ICustomerProps } from '@/interfaces/ICustomer';
 
 interface FormData {
-  represent_id: string;
   name: string;
   last_name: string;
   CPF: string;
+  profession: string;
   RG: string;
   gender: string;
   civil_status: string;
@@ -65,23 +58,23 @@ interface props {
 }
 
 const representativeSchema = z.object({
-  represent_id: z.string(),
-  name: z.string().min(1, { message: 'Preencha o campo Nome.' }),
-  last_name: z.string().min(1, { message: 'Preencha o campo Sobrenome.' }),
-  CPF: z.string().min(1, { message: 'Preencha o campo CPF.' }),
-  RG: z.string().min(1, { message: 'Preencha o campo RG.' }),
-  gender: z.string().min(1, 'Gênero é obrigatório'),
+  name: z.string().min(3, { message: 'Preencha o campo Nome.' }),
+  last_name: z.string().min(3, { message: 'Preencha o campo Sobrenome.' }),
+  CPF: z.string().min(5, { message: 'Preencha o campo CPF.' }),
+  RG: z.string().min(5, { message: 'Preencha o campo RG.' }),
+  gender: z.string().min(3, 'Gênero é obrigatório'),
   civil_status: z.string().min(1, 'Estado Civil é obrigatório'),
   nationality: z.string().min(1, 'Naturalidade é obrigatório'),
-  phone_number: z.string().min(1, 'Telefone Obrigatório'),
+  phone_number: z.string().min(6, 'Telefone Obrigatório'),
   email: z.string().min(1, 'Email Obrigatório'),
-  cep: z.string().min(1, { message: 'Preencha o campo CEP.' }),
-  street: z.string().min(1, { message: 'Preencha o campo Endereço.' }),
-  number: z.string().min(1, { message: 'Preencha o campo Número.' }),
+  cep: z.string().min(4, { message: 'Preencha o campo CEP.' }),
+  street: z.string().min(4, { message: 'Preencha o campo Endereço.' }),
+  number: z.string().min(4, { message: 'Preencha o campo Número.' }),
   description: z.string(),
-  neighborhood: z.string().min(1, { message: 'Preencha o campo Bairro.' }),
-  city: z.string().min(1, { message: 'Preencha o campo Cidade.' }),
-  state: z.string().min(1, { message: 'Preencha o campo Estado.' }),
+  profession: z.string().min(4, { message: 'Preencha o campo Profissão.' }),
+  neighborhood: z.string().min(2, { message: 'Preencha o campo Bairro.' }),
+  city: z.string().min(4, { message: 'Preencha o campo Cidade.' }),
+  state: z.string().min(2, { message: 'Preencha o campo Estado.' }),
 });
 
 const RepresentativeModal = ({
@@ -94,37 +87,14 @@ const RepresentativeModal = ({
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
 
-  const { setShowTitle, setPageTitle } = useContext(PageTitleContext);
-
-  const currentDate = dayjs();
   const today = new Date().toISOString().split('T')[0];
 
   const [message, setMessage] = useState('');
   const [type, setType] = useState<'success' | 'error'>('success');
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const route = useRouter();
-
-  const [formData, setFormData] = useState<FormData>({
-    represent_id: '',
-    name: '',
-    last_name: '',
-    CPF: '',
-    RG: '',
-    gender: '',
-    civil_status: '',
-    nationality: '',
-    birth: '',
-    cep: '',
-    street: '',
-    number: '',
-    description: '',
-    neighborhood: '',
-    city: '',
-    state: '',
-  });
+  const [formData, setFormData] = useState<FormData>({} as FormData);
 
   const [contactData, setContactData] = useState({
     phoneInputFields: [{ phone_number: '' }],
@@ -132,24 +102,8 @@ const RepresentativeModal = ({
   });
 
   const resetValues = () => {
-    setFormData({
-      represent_id: '',
-      name: '',
-      last_name: '',
-      CPF: '',
-      RG: '',
-      gender: '',
-      civil_status: '',
-      nationality: '',
-      birth: '',
-      cep: '',
-      street: '',
-      number: '',
-      description: '',
-      neighborhood: '',
-      city: '',
-      state: '',
-    });
+    setFormData({} as FormData);
+
     setContactData({
       phoneInputFields: [{ phone_number: '' }],
       emailInputFields: [{ email: '' }],
@@ -162,6 +116,11 @@ const RepresentativeModal = ({
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
+
+    if (errors[name]) {
+      delete errors[name];
+      setErrors(errors);
+    }
 
     setFormData(prevData => ({
       ...prevData,
@@ -206,7 +165,6 @@ const RepresentativeModal = ({
 
   const createCustomer = async (data: any) => {
     const response = await createCustomerApi(data);
-
     return response;
   };
 
@@ -229,7 +187,7 @@ const RepresentativeModal = ({
           customer_id: Number(customer_id),
         };
 
-        const res = await createProfileCustomer(newData);
+        await createProfileCustomer(newData);
 
         handleClose();
         resetValues();
@@ -249,7 +207,6 @@ const RepresentativeModal = ({
 
     try {
       representativeSchema.parse({
-        represent_id: formData.represent_id,
         name: formData.name,
         last_name: formData.last_name,
         CPF: formData.CPF,
@@ -262,6 +219,7 @@ const RepresentativeModal = ({
         cep: formData.cep,
         street: formData.street,
         number: formData.number,
+        profession: formData.profession,
         description: formData.description,
         neighborhood: formData.neighborhood,
         city: formData.city,
@@ -270,7 +228,7 @@ const RepresentativeModal = ({
 
       const data = {
         capacity: 'able',
-        profession: '',
+        profession: formData.profession,
         customer_type: 'representative',
         cpf: formData.CPF.replace(/\D/g, ''),
         rg: formData.RG,
@@ -282,9 +240,7 @@ const RepresentativeModal = ({
         civil_status: formData.civil_status,
         phones_attributes: contactData.phoneInputFields,
         emails_attributes: contactData.emailInputFields,
-        represent_attributes: {
-          representor_id: formData.represent_id ? Number(formData.represent_id) : '',
-        },
+
         addresses_attributes: [
           {
             zip_code: formData.cep,
@@ -419,36 +375,6 @@ const RepresentativeModal = ({
       };
     });
   };
-
-  useEffect(() => {
-    const getAdmins = async () => {
-      const response: {
-        data: ICustomerProps[];
-      } = await getAllCustomers();
-
-      if (response) {
-        setCustomersList(response.data);
-      }
-    };
-
-    getAdmins();
-  }, []);
-
-  useEffect(() => {
-    const updateScrollPosition = () => {
-      if (window.scrollY >= 49) {
-        setShowTitle(true);
-      } else if (window.scrollY <= 32) {
-        setShowTitle(false);
-      }
-    };
-
-    window.addEventListener('scroll', updateScrollPosition);
-
-    return () => {
-      window.removeEventListener('scroll', updateScrollPosition);
-    };
-  }, []);
 
   useEffect(() => {
     if (pageTitle.search('terar') !== -1) {
@@ -592,6 +518,20 @@ const RepresentativeModal = ({
                         'civil_status',
                         civilStatusOptions,
                         !!errors.civil_status,
+                      )}
+                    </Flex>
+
+                    <Flex
+                      style={{
+                        gap: '32px',
+                      }}
+                    >
+                      {renderInputField(
+                        'profession',
+                        'Profissão',
+                        99,
+                        'Informe a Profissão',
+                        !!errors.profession,
                       )}
                     </Flex>
                   </Flex>
