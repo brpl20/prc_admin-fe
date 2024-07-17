@@ -73,6 +73,7 @@ interface IAttributesProps {
   emails_attributes: any;
   data: any;
   representor?: any;
+  issue_documents?: boolean;
 
   cep?: any;
   street?: any;

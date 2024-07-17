@@ -318,7 +318,7 @@ const Counter = ({ pageTitle }: props) => {
         autoComplete="off"
         placeholder={`${placeholderText}`}
         onChange={handleInputChange}
-        error={error || !formData[name]}
+        error={error && !formData[name]}
       />
     </div>
   );
@@ -334,7 +334,7 @@ const Counter = ({ pageTitle }: props) => {
         {label}
       </Typography>
       <FormControl size="small">
-        <InputLabel error={error || !formData[name]}>{`Selecione ${label}`}</InputLabel>
+        <InputLabel error={error && !formData[name]}>{`Selecione ${label}`}</InputLabel>
         <Select
           name={name}
           label={`Selecione ${label}`}

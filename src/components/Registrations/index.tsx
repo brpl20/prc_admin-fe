@@ -142,8 +142,14 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
       try {
         if (route.asPath.includes('alterar')) {
           const id = router.query.id as string;
+
+          const data = {
+            profile_customer: customerForm.data.attributes,
+            issue_documents: customerForm.issue_documents,
+          };
+
           if (id) {
-            const res = await updateProfileCustomer(id, customerForm.data.attributes);
+            const res = await updateProfileCustomer(id, data);
 
             const url = res.data.attributes.customer_files;
 

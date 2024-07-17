@@ -133,6 +133,7 @@ const PJCustomerStepFour: ForwardRefRenderFunction<IRefPJCustomerStepFourProps, 
           <div className="flex">
             <CheckBox
               label={isEdit ? 'Reemitir procuração simples' : 'Emitir procuração simples'}
+              isDisabled={true}
               name="issue_documents"
               checked={checkedItems.issue_documents}
               onChange={handleCheckboxChange}

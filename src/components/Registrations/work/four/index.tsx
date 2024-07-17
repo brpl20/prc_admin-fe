@@ -69,8 +69,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   const [selectedLawyers, setSelectedLawyers] = useState<any[]>([]);
   const [trainee, SetTrainee] = useState<IAdminPropsAttributes[]>([]);
   const [paralegal, SetParalegal] = useState<IAdminPropsAttributes[]>([]);
-  const [initialService, SetInitialService] = useState<IAdminPropsAttributes[]>([]);
-  const [responsibleLawyer, SetResponsibleLawyer] = useState<IAdminPropsAttributes[]>([]);
+  const [lawyers, SetLawyers] = useState<IAdminPropsAttributes[]>([]);
   const [isLegalPerson, setIsLegalPerson] = useState(true);
 
   const [legalPersonError, setLegalPersonError] = useState(false);
@@ -243,6 +242,9 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
 
       const paralegals = allLawyers.filter((lawyer: any) => lawyer.attributes.role == 'paralegal');
       SetParalegal(paralegals);
+
+      const lawyerlList = allLawyers.filter((lawyer: any) => lawyer.attributes.role == 'lawyer');
+      SetLawyers(lawyerlList);
     }
   }, [allLawyers]);
 
@@ -615,13 +617,13 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               id="multiple-limit-tags"
               value={
                 formData.responsible_lawyer
-                  ? allLawyers.find(
+                  ? lawyers.find(
                       (lawyer: IAdminPropsAttributes) =>
                         lawyer.id.toString() == formData.responsible_lawyer,
                     )
                   : ''
               }
-              options={allLawyers}
+              options={lawyers}
               getOptionLabel={(option: any) =>
                 option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
               }

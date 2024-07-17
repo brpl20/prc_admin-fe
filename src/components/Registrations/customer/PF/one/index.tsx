@@ -82,7 +82,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   ref,
 ) => {
   const [isModalRegisterRepresentativeOpen, setIsModalRegisterRepresentativeOpen] = useState(false);
-  const [isRepresentativeFinished, setIsRepresentativeFinished] = useState(false);
+
   const [errors, setErrors] = useState({} as any);
   const { setPageTitle } = useContext(PageTitleContext);
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
@@ -104,20 +104,20 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     representor: {},
   });
 
+  const getRepresentors = async () => {
+    const allCustomers = await getAllCustomers();
+    const response = allCustomers.data;
+
+    const representors = response.filter(
+      (customer: any) => customer.attributes.customer_type === 'representative',
+    );
+
+    setRepresentorsList(representors);
+  };
+
   useEffect(() => {
-    const getRepresentors = async () => {
-      const allCustomers = await getAllCustomers();
-      const response = allCustomers.data;
-
-      const representors = response.filter(
-        (customer: any) => customer.attributes.customer_type === 'representative',
-      );
-
-      setRepresentorsList(representors);
-    };
-
     getRepresentors();
-  }, [isRepresentativeFinished]);
+  }, []);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -336,7 +336,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       <TextField
         id="outlined-basic"
         variant="outlined"
-        error={error || !formData[name]}
+        error={error && !formData[name]}
         fullWidth
         type="text"
         name={name}
@@ -361,7 +361,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         {label}
       </Typography>
       <FormControl size="small">
-        <InputLabel error={error || !formData[name]}>{`Selecione ${label}`}</InputLabel>
+        <InputLabel error={error && !formData[name]}>{`Selecione ${label}`}</InputLabel>
         <Select
           name={name}
           label={`Selecione ${label}`}
@@ -442,7 +442,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           pageTitle="Cadastro de Representante"
           isOpen={isModalRegisterRepresentativeOpen}
           handleClose={() => setIsModalRegisterRepresentativeOpen(false)}
-          handleRegistrationFinished={() => setIsRepresentativeFinished(true)}
+          handleRegistrationFinished={getRepresentors}
         />
       )}
 
@@ -540,7 +540,12 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                     getOptionLabel={(option: any) => option?.attributes?.name ?? ''}
                     onChange={(event, value) => handleRepresentorChange('representor', value)}
                     renderInput={params => (
-                      <TextField {...params} placeholder={'Informe o Representante'} size="small" />
+                      <TextField
+                        error={!formData.representor?.id}
+                        {...params}
+                        placeholder={'Informe o Representante'}
+                        size="small"
+                      />
                     )}
                     noOptionsText={`Nenhum Representante Encontrado`}
                   />

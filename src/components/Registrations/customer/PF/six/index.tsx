@@ -53,7 +53,7 @@ const PFCustomerStepSix: ForwardRefRenderFunction<IRefPFCustomerStepSixProps, IS
     if (checkedItems.issue_documents) {
       data = {
         ...customerForm,
-        checked_items: checkedItems,
+        issue_documents: checkedItems.issue_documents,
         customer_files_attributes: [
           {
             file_description: 'simple_procuration',
@@ -66,7 +66,6 @@ const PFCustomerStepSix: ForwardRefRenderFunction<IRefPFCustomerStepSixProps, IS
       data = {
         ...customerForm,
         issue_documents: checkedItems.issue_documents,
-        checked_items: checkedItems,
       };
     }
 

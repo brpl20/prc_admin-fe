@@ -95,6 +95,7 @@ export const DescriptionText = styled.label<any>`
   font-size: 16px;
   font-weight: 300;
 
+  min-width: 110px;
   text-transform: none;
   color: ${colors.white};
 `;

@@ -223,7 +223,7 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
         autoComplete="off"
         placeholder={`${placeholderValue}`}
         onChange={handleInputChange}
-        error={error || !formData[name]}
+        error={error && !formData[name]}
       />
     </div>
   );
