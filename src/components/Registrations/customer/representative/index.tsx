@@ -64,7 +64,7 @@ interface props {
   pageTitle: string;
 }
 export const representativeSchema = z.object({
-  represent_id: z.string().min(2, { message: 'Selecione o Representado.' }),
+  represent_id: z.string().min(1, { message: 'Selecione o Representado.' }),
   name: z.string().min(3, { message: 'Preencha o campo Nome.' }),
   last_name: z.string().min(3, { message: 'Preencha o campo Sobrenome.' }),
   CPF: z.string().min(5, { message: 'Preencha o campo CPF.' }),
@@ -78,10 +78,10 @@ export const representativeSchema = z.object({
   street: z.string().min(4, { message: 'Preencha o campo Endereço.' }),
   number: z.string().min(4, { message: 'Preencha o campo Número.' }),
   description: z.string(),
-  profession: z.string().min(4, { message: 'Preencha o campo Profissão.' }),
+  profession: z.string().min(1, { message: 'Preencha o campo Profissão.' }),
   neighborhood: z.string().min(4, { message: 'Preencha o campo Bairro.' }),
   city: z.string().min(4, { message: 'Preencha o campo Cidade.' }),
-  state: z.string().min(2, { message: 'Preencha o campo Estado.' }),
+  state: z.string().min(1, { message: 'Preencha o campo Estado.' }),
 });
 
 const Representative = ({ pageTitle }: props) => {
@@ -104,7 +104,6 @@ const Representative = ({ pageTitle }: props) => {
   const route = useRouter();
 
   const [formData, setFormData] = useState<FormData>({} as FormData);
-
   const [contactData, setContactData] = useState({
     phoneInputFields: [{ phone_number: '' }],
     emailInputFields: [{ email: '' }],
@@ -755,7 +754,7 @@ const Representative = ({ pageTitle }: props) => {
                     {renderInputField(
                       'neighborhood',
                       'Bairro',
-                      'Informe o Estado',
+                      'Informe o Bairro',
                       !!errors.neighborhood,
                     )}
                     {renderInputField('city', 'Cidade', 'Informe a Cidade', !!errors.city)}

@@ -165,7 +165,7 @@ const Counter = ({ pageTitle }: props) => {
           customer_id: Number(customer_id),
         };
 
-        const res = await createProfileCustomer(newData);
+        await createProfileCustomer(newData);
 
         Router.push('/clientes');
         resetValues();
