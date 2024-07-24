@@ -8,7 +8,7 @@ import { MdClose } from 'react-icons/md';
 import { Content } from './styles';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { getAllCustomers, getCustomerById } from '@/services/customers';
+import { getCustomerById } from '@/services/customers';
 
 interface IConfirmDownloadDocumentProps {
   isOpen: boolean;
@@ -86,12 +86,7 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
         <Box width={'100%'} height={'1px'} bgcolor={colors.quartiary} />
 
         {
-          <Box
-            sx={{
-              height: '300px',
-              overflow: 'auto',
-            }}
-          >
+          <div className="scroll">
             {customerNames.map((customerName, index) => (
               <Box mt={'20px'} key={index}>
                 <Typography
@@ -153,7 +148,7 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
                 )}
               </Box>
             ))}
-          </Box>
+          </div>
         }
 
         <Box width={'100%'} display={'flex'} justifyContent={'end'} mt={'20px'}>

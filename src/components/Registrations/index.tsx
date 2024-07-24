@@ -67,7 +67,6 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
   const { workForm, setWorkForm } = useContext(WorkContext);
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
   const { showTitle, setShowTitle, pageTitle } = useContext(PageTitleContext);
-
   const route = useRouter();
 
   const [activeStep, setActiveStep] = useState(0);
@@ -83,7 +82,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
   const [loading, setLoading] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
-
+  const [createdCustomerId, setCreatedCustomerId] = useState<number>();
   const [message, setMessage] = useState('');
   const [typeMessage, setTypeMessage] = useState<'success' | 'error'>('success');
   const router = useRouter();
@@ -143,21 +142,33 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
         if (route.asPath.includes('alterar')) {
           const id = router.query.id as string;
 
+          const lastCustomerFile =
+            customerForm.data.attributes.customer_files[
+              customerForm.data.attributes.customer_files.length - 1
+            ];
+
+          const prof_aux = {
+            ...customerForm.data.attributes,
+            customer_files_attributes: [
+              {
+                id: lastCustomerFile && lastCustomerFile.id ? lastCustomerFile.id : '',
+                file_description: 'simple_procuration',
+              },
+            ],
+          };
+
           const data = {
-            profile_customer: customerForm.data.attributes,
-            issue_documents: customerForm.issue_documents,
+            profile_customer: prof_aux,
+            regenerate_documents: customerForm.issue_documents,
           };
 
           if (id) {
             const res = await updateProfileCustomer(id, data);
-
             const url = res.data.attributes.customer_files;
 
             if (url && url.length > 0) {
               setUrlsDocuments(url);
-
               setOpenModal(false);
-
               setOpenDownloadModal(true);
             } else {
               setOpenModal(false);
@@ -183,10 +194,21 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
           throw new Error('E-mail já está em uso !');
         }
 
-        customerForm.customer_id = customer.data.id;
+        customerForm.customer_id = customer.data.id ? customer.data.id : createdCustomerId;
+        setCreatedCustomerId(customer.data.id);
 
-        const res = await createProfileCustomer(customerForm);
+        const prof_aux = {
+          ...customerForm,
+          customer_files_attributes: [
+            {
+              file_description: 'simple_procuration',
+            },
+          ],
+        };
 
+        const payload = customerForm.issue_documents === true ? prof_aux : customerForm;
+
+        const res = await createProfileCustomer(payload);
         const url = res.data.attributes.customer_files;
 
         if (url && url.length > 0) {
@@ -222,7 +244,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
               },
             };
 
-            const responseDraft = await createDraftWork(draftWork);
+            await createDraftWork(draftWork);
           }
 
           const url = res.data.attributes.documents;
@@ -248,7 +270,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
             },
           };
 
-          const responseDraft = await createDraftWork(draftWork);
+          await createDraftWork(draftWork);
         }
 
         const url = work.data.attributes.documents;

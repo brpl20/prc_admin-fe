@@ -19,11 +19,8 @@ const createCustomer = async (data: any) => {
 };
 
 const updateProfileCustomer = async (id: string, data: any) => {
-  const payload = {
-    profile_customer: data,
-  };
   try {
-    const response = await api.put(`/profile_customers/${id}`, payload);
+    const response = await api.put(`/profile_customers/${id}`, data);
     return response.data;
   } catch (error) {
     throw error;

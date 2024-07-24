@@ -25,7 +25,7 @@ import { createProfileCustomer, createCustomer, updateProfileCustomer } from '@/
 import { animateScroll as scroll } from 'react-scroll';
 
 import Router, { useRouter } from 'next/router';
-import { cpfMask } from '@/utils/masks';
+import { phoneMask } from '@/utils/masks';
 import { z } from 'zod';
 
 interface FormData {
@@ -123,7 +123,7 @@ const Counter = ({ pageTitle }: props) => {
         if (newInputFields[index]) {
           newInputFields[index] = {
             ...newInputFields[index],
-            phone_number: value,
+            phone_number: phoneMask(value),
           };
         } else {
           newInputFields.push({ phone_number: value });

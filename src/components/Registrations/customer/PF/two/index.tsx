@@ -73,6 +73,10 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
         ...prevData,
         [name]: cepMask(value),
       }));
+
+      if (errors.cep) {
+        setErrors({});
+      }
       return;
     }
 
@@ -107,6 +111,13 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
 
   const handleSubmitForm = () => {
     try {
+      if (errors.cep && errors.cep !== '') {
+        setMessage('CEP inválido.');
+        setType('error');
+        setOpenSnackbar(true);
+        return;
+      }
+
       saveDataLocalStorage({
         ...customerForm,
         addresses_attributes: [
@@ -273,6 +284,9 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
             neighborhood: response.neighborhood,
           }));
         } catch (error: any) {
+          setErrors({
+            cep: 'CEP inválido.',
+          });
           setMessage('CEP inválido.');
           setType('error');
           setOpenSnackbar(true);

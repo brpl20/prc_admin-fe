@@ -65,6 +65,7 @@ const PFCustomerStepSix: ForwardRefRenderFunction<IRefPFCustomerStepSixProps, IS
     if (!checkedItems.issue_documents) {
       data = {
         ...customerForm,
+        customer_type: 'physical_person',
         issue_documents: checkedItems.issue_documents,
       };
     }

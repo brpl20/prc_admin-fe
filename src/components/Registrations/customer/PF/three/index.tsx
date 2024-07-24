@@ -14,6 +14,7 @@ import { Container, ColumnContainer } from '../styles';
 import { Box, TextField, Typography } from '@mui/material';
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { Notification } from '@/components';
+import { phoneMask } from '@/utils/masks';
 import { z } from 'zod';
 
 export interface IRefPFCustomerStepThreeProps {
@@ -56,7 +57,7 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
         if (newInputFields[index]) {
           newInputFields[index] = {
             ...newInputFields[index],
-            phone_number: value,
+            phone_number: phoneMask(value),
           };
         } else {
           newInputFields.push({ phone_number: value });
@@ -135,6 +136,22 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
   };
 
   const handleSubmitForm = () => {
+    const validatePhoneDuplicate = formData.phoneInputFields.map((phone, index) => {
+      const phone_number = phone.phone_number.replace(/\D/g, '');
+      const phoneIndex = formData.phoneInputFields.findIndex(
+        (phone, i) => phone.phone_number.replace(/\D/g, '') === phone_number && i !== index,
+      );
+
+      return phoneIndex !== -1;
+    });
+
+    if (validatePhoneDuplicate.includes(true)) {
+      setMessage('Telefone duplicado.');
+      setType('error');
+      setOpenSnackbar(true);
+      return;
+    }
+
     try {
       stepThreeSchema.parse({
         phone_number: formData.phoneInputFields[0].phone_number,
