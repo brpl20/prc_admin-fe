@@ -180,7 +180,6 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
             return;
           }
         }
-        console.log('customerForm', customerForm);
         const userEmail = customerForm.emails_attributes[0].email;
         const customerData = {
           customer: {
@@ -222,7 +221,6 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
 
         return;
       } catch (error: any) {
-        console.log('error', error);
         const message = error.request.response ? JSON.parse(error.request.response).errors[0] : '';
         setMessage(message.code);
         setTypeMessage('error');
