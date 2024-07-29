@@ -132,13 +132,14 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
 
   const createCustomer = async (data: any) => {
     const response = await createCustomerApi(data);
-
     return response;
   };
 
   const completeRegistration = async (title: string) => {
     if (registrationType.search('liente') !== -1) {
       try {
+        const isPhisical = customerForm.customer_type === 'physical_person' ? true : false;
+
         if (route.asPath.includes('alterar')) {
           const id = router.query.id as string;
 
@@ -162,8 +163,10 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
             regenerate_documents: customerForm.issue_documents,
           };
 
+          const payload = isPhisical === true ? data : customerForm;
+
           if (id) {
-            const res = await updateProfileCustomer(id, data);
+            const res = await updateProfileCustomer(id, payload);
             const url = res.data.attributes.customer_files;
 
             if (url && url.length > 0) {
@@ -180,6 +183,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
             return;
           }
         }
+
         const userEmail = customerForm.emails_attributes[0].email;
         const customerData = {
           customer: {
@@ -205,7 +209,8 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
           ],
         };
 
-        const payload = customerForm.issue_documents === true ? prof_aux : customerForm;
+        const payload =
+          customerForm.issue_documents === true && isPhisical === true ? prof_aux : customerForm;
 
         const res = await createProfileCustomer(payload);
         const url = res.data.attributes.customer_files;

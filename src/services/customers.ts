@@ -18,6 +18,15 @@ const createCustomer = async (data: any) => {
   }
 };
 
+const updateCustomer = async (id: string, data: any) => {
+  try {
+    const response = await api.put(`/customers/${id}`, data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const updateProfileCustomer = async (id: string, data: any) => {
   try {
     const response = await api.put(`/profile_customers/${id}`, data);
@@ -27,9 +36,18 @@ const updateProfileCustomer = async (id: string, data: any) => {
   }
 };
 
-const getAllCustomers = async () => {
+const getAllProfileCustomer = async () => {
   try {
     const response = await api.get('/profile_customers');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getAllCustomers = async () => {
+  try {
+    const response = await api.get('/customers');
     return response.data;
   } catch (error) {
     throw error;
@@ -47,8 +65,10 @@ const getCustomerById = async (id: string) => {
 
 export {
   createProfileCustomer,
+  updateCustomer,
   updateProfileCustomer,
   createCustomer,
   getAllCustomers,
+  getAllProfileCustomer,
   getCustomerById,
 };

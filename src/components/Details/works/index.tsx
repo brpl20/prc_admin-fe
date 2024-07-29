@@ -27,7 +27,7 @@ import { getAllOffices } from '@/services/offices';
 import { FiMinusCircle } from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
 import { getWorkById } from '@/services/works';
-import { getAllCustomers } from '@/services/customers';
+import { getAllProfileCustomer } from '@/services/customers';
 import { BsDownload } from 'react-icons/bs';
 import { IoCheckmarkOutline } from 'react-icons/io5';
 
@@ -79,7 +79,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
   const getCustomers = async () => {
     const response: {
       data: any;
-    } = await getAllCustomers();
+    } = await getAllProfileCustomer();
     setAllCustomers(response.data);
   };
 

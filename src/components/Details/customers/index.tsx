@@ -1,4 +1,4 @@
-import { getCustomerById, getAllCustomers } from '@/services/customers';
+import { getCustomerById, getAllProfileCustomer } from '@/services/customers';
 
 import { useEffect, useState } from 'react';
 
@@ -173,7 +173,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
 
   useEffect(() => {
     const getRepresentors = async () => {
-      const allCustomers = await getAllCustomers();
+      const allCustomers = await getAllProfileCustomer();
       const response = allCustomers.data;
 
       const representors = response.filter(

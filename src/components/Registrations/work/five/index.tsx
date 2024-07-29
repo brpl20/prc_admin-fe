@@ -13,7 +13,7 @@ import { Box, Typography, TextField, Autocomplete } from '@mui/material';
 import { MdOutlineInfo } from 'react-icons/md';
 
 import { ICustomerProps } from '@/interfaces/ICustomer';
-import { getAllCustomers } from '@/services/customers';
+import { getAllProfileCustomer } from '@/services/customers';
 
 import CustomTooltip from '@/components/Tooltip';
 import { WorkContext } from '@/contexts/WorkContext';
@@ -63,7 +63,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
   useEffect(() => {
     const getCustomers = async () => {
-      const response = await getAllCustomers();
+      const response = await getAllProfileCustomer();
       setCustomersList(response.data);
     };
 

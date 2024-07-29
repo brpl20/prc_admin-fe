@@ -59,7 +59,6 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
   const [errors, setErrors] = useState({} as any);
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
   const { setPageTitle } = useContext(PageTitleContext);
-
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');

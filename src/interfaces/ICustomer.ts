@@ -74,6 +74,7 @@ interface IAttributesProps {
   data: any;
   representor?: any;
   issue_documents?: boolean;
+  customer_email: string;
 
   cep?: any;
   street?: any;
@@ -83,6 +84,7 @@ interface IAttributesProps {
   description?: any;
   neighborhood?: any;
   represent_attributes?: any;
+  profile_customer_id?: number;
   represent?: any;
 }
 

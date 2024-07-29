@@ -34,7 +34,6 @@ const PFCustomerStepSix: ForwardRefRenderFunction<IRefPFCustomerStepSixProps, IS
   const isEdit = router.asPath.includes('alterar');
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
   const [checkedItems, setCheckedItems] = useState({
-    sendAccessData: false,
     issue_documents: false,
   });
 
@@ -97,13 +96,6 @@ const PFCustomerStepSix: ForwardRefRenderFunction<IRefPFCustomerStepSixProps, IS
           </Typography>
 
           <Box display={'flex'} flexDirection={'column'} gap={'16px'}>
-            <CheckBox
-              label="Enviar os dados de acesso"
-              name="sendAccessData"
-              checked={checkedItems.sendAccessData}
-              onChange={handleCheckboxChange}
-            />
-
             <CheckBox
               label={isEdit ? 'Reemitir procuração simples' : 'Emitir procuração simples'}
               name="issue_documents"

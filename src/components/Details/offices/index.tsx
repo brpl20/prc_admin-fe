@@ -8,7 +8,7 @@ import { MdKeyboardArrowDown } from 'react-icons/md';
 import { Box, Button, CircularProgress } from '@mui/material';
 import Link from 'next/link';
 import { IAdminProps } from '@/interfaces/IAdmin';
-import { getAllCustomers } from '@/services/customers';
+import { getAllProfileCustomer } from '@/services/customers';
 import { FiMinusCircle } from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
 
@@ -29,7 +29,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
   const getAdmins = async () => {
     const response: {
       data: IAdminProps[];
-    } = await getAllCustomers();
+    } = await getAllProfileCustomer();
     SetAllLawyers(response.data);
   };
 

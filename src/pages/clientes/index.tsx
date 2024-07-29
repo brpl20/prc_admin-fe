@@ -5,7 +5,7 @@ import Router from 'next/router';
 import Link from 'next/link';
 
 import { PageTitleContext } from '@/contexts/PageTitleContext';
-import { getAllCustomers } from '@/services/customers';
+import { getAllCustomers, getAllProfileCustomer, updateCustomer } from '@/services/customers';
 
 import {
   colors,
@@ -25,11 +25,13 @@ import {
   MdKeyboardArrowDown,
   MdKeyboardArrowRight,
 } from 'react-icons/md';
+import { BsFilterCircle } from 'react-icons/bs';
 
 import { Box, Button, Typography, LinearProgress } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
-import { Footer } from '@/components';
+import { Footer, Notification, Spinner } from '@/components';
+
 import dynamic from 'next/dynamic';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
@@ -39,6 +41,7 @@ import { phoneMask } from '@/utils/masks';
 
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { getSession } from 'next-auth/react';
+import { number } from 'prop-types';
 
 const Customers = () => {
   const legend = [
@@ -74,55 +77,64 @@ const Customers = () => {
       : styles.representative;
   };
 
-  const { setCustomerForm } = useContext(CustomerContext);
+  const [loadingEmailChange, setLoadingEmailChange] = useState<boolean>(false);
+  const [refetch, setRefetch] = useState<boolean>(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [message, setMessage] = useState('');
+  const [typeMessage, setTypeMessage] = useState<'success' | 'error'>('success');
 
+  const { setCustomerForm } = useContext(CustomerContext);
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [openCreationMenu, setOpenCreationMenu] = useState<boolean>(false);
   const [searchFor, setSearchFor] = useState<string>('name');
-  const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
-  const [customersListFiltered, setCustomersListFiltered] = useState<ICustomerProps[]>([]);
+  const [profileCustomersList, setProfileCustomersList] = useState<ICustomerProps[]>([]);
+  const [profileCustomersListFiltered, setProfileCustomersListFiltered] = useState<
+    ICustomerProps[]
+  >([]);
+  const [openModal, setOpenModal] = useState<boolean>(false);
+  const [customerToChange, setCustomerToChange] = useState<any>();
 
   const handleSearch = (search: string) => {
     const regex = new RegExp(search, 'i');
 
     let filteredList = [];
 
-    if (!customersList) {
+    if (!profileCustomersList) {
       return;
     }
 
     switch (searchFor) {
       case 'name':
-        filteredList = customersList.filter((customer: ICustomerProps) =>
-          regex.test(customer.attributes.name),
+        filteredList = profileCustomersList.filter((profileCustomer: ICustomerProps) =>
+          regex.test(profileCustomer.attributes.name),
         );
         break;
 
       case 'type':
-        filteredList = customersList.filter((customer: ICustomerProps) =>
-          regex.test(customer.attributes.customer_type),
+        filteredList = profileCustomersList.filter((profileCustomer: ICustomerProps) =>
+          regex.test(profileCustomer.attributes.customer_type),
         );
         break;
 
       case 'identification':
-        filteredList = customersList.filter((customer: ICustomerProps) =>
-          regex.test(customer.attributes.cpf),
+        filteredList = profileCustomersList.filter((profileCustomer: ICustomerProps) =>
+          regex.test(profileCustomer.attributes.cpf),
         );
         break;
 
       default:
-        filteredList = [...customersList];
+        filteredList = [...profileCustomersList];
         break;
     }
 
-    setCustomersListFiltered(filteredList);
+    setProfileCustomersListFiltered(filteredList);
   };
 
-  const handleEdit = (customer: ICustomerProps) => {
-    const customerTypeUnformatted = customer.type;
-    const customerType =
+  const handleEdit = (profileCustomer: ICustomerProps) => {
+    const customerTypeUnformatted = profileCustomer.type;
+    const profileCustomerType =
       customerTypeUnformatted == 'Pessoa Fisica'
         ? 'physical_person'
         : customerTypeUnformatted == 'Pessoa Juridica'
@@ -131,27 +143,27 @@ const Customers = () => {
         ? 'counter'
         : 'representative';
 
-    switch (customerType) {
+    switch (profileCustomerType) {
       case 'physical_person':
-        Router.push(`/alterar?type=cliente/pessoa_fisica&id=${customer.id}`);
+        Router.push(`/alterar?type=cliente/pessoa_fisica&id=${profileCustomer.id}`);
         break;
       case 'legal_person':
-        Router.push(`/alterar?type=cliente/pessoa_juridica&id=${customer.id}`);
+        Router.push(`/alterar?type=cliente/pessoa_juridica&id=${profileCustomer.id}`);
         break;
       case 'counter':
-        Router.push(`/alterar?type=cliente/contador&id=${customer.id}`);
+        Router.push(`/alterar?type=cliente/contador&id=${profileCustomer.id}`);
         break;
       case 'representative':
-        Router.push(`/alterar?type=cliente/representante&id=${customer.id}`);
+        Router.push(`/alterar?type=cliente/representante&id=${profileCustomer.id}`);
         break;
       default:
         break;
     }
   };
 
-  const handleDetails = (customer: ICustomerProps) => {
-    const customerTypeUnformatted = customer.type;
-    const customerType =
+  const handleDetails = (profileCustomer: ICustomerProps) => {
+    const customerTypeUnformatted = profileCustomer.type;
+    const profileCustomerType =
       customerTypeUnformatted == 'Pessoa Fisica'
         ? 'physical_person'
         : customerTypeUnformatted == 'Pessoa Juridica'
@@ -160,26 +172,26 @@ const Customers = () => {
         ? 'counter'
         : 'representative';
 
-    switch (customerType) {
+    switch (profileCustomerType) {
       case 'physical_person':
-        Router.push(`/detalhes?type=cliente/pessoa_fisica&id=${customer.id}`);
+        Router.push(`/detalhes?type=cliente/pessoa_fisica&id=${profileCustomer.id}`);
         break;
       case 'legal_person':
-        Router.push(`/detalhes?type=cliente/pessoa_juridica&id=${customer.id}`);
+        Router.push(`/detalhes?type=cliente/pessoa_juridica&id=${profileCustomer.id}`);
         break;
       case 'counter':
-        Router.push(`/detalhes?type=cliente/contador&id=${customer.id}`);
+        Router.push(`/detalhes?type=cliente/contador&id=${profileCustomer.id}`);
         break;
       case 'representative':
-        Router.push(`/detalhes?type=cliente/representante&id=${customer.id}`);
+        Router.push(`/detalhes?type=cliente/representante&id=${profileCustomer.id}`);
         break;
       default:
         break;
     }
   };
 
-  const translateCustomerType = (customerType: string) => {
-    switch (customerType) {
+  const translateCustomerType = (profileCustomerType: string) => {
+    switch (profileCustomerType) {
       case 'physical_person':
         return 'Pessoa Fisica';
       case 'legal_person':
@@ -189,30 +201,30 @@ const Customers = () => {
       case 'representative':
         return 'Representante Legal';
       default:
-        return customerType;
+        return profileCustomerType;
     }
+  };
+
+  const getProfileCustomers = async () => {
+    const allProfileCustomer = await getAllProfileCustomer();
+
+    const translatedCustomers = allProfileCustomer.data.map((profileCustomer: ICustomerProps) => ({
+      ...profileCustomer,
+      attributes: {
+        ...profileCustomer.attributes,
+        customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
+      },
+    }));
+
+    setProfileCustomersList(translatedCustomers);
+    setProfileCustomersListFiltered(translatedCustomers);
+    setIsLoading(false);
   };
 
   useEffect(() => {
     setIsLoading(true);
-    const getCustomers = async () => {
-      const response = await getAllCustomers();
 
-      const translatedCustomers = response.data.map((customer: ICustomerProps) => ({
-        ...customer,
-        attributes: {
-          ...customer.attributes,
-          customer_type: translateCustomerType(customer.attributes.customer_type),
-        },
-      }));
-
-      setCustomersList(translatedCustomers);
-      setCustomersListFiltered(translatedCustomers);
-      setIsLoading(false);
-    };
-
-    getCustomers();
-
+    getProfileCustomers();
     setCustomerForm({});
   }, []);
 
@@ -232,8 +244,171 @@ const Customers = () => {
     };
   }, []);
 
+  const handleProcessRowUpdate = (newRow: any, oldRow: any) => {
+    const updatedRow = { ...oldRow, ...newRow };
+
+    if (oldRow.customer_email === updatedRow.customer_email) {
+      return updatedRow;
+    }
+
+    setCustomerToChange(updatedRow);
+    setOpenModal(true);
+    return updatedRow;
+  };
+
+  const handleEmailChange = async () => {
+    setLoadingEmailChange(true);
+
+    const payload = {
+      customer: {
+        email: customerToChange.customer_email,
+      },
+    };
+
+    try {
+      await updateCustomer(customerToChange.id, payload).finally(() => {
+        setOpenModal(false);
+        setMessage('E-mail alterado com sucesso!');
+        setTypeMessage('success');
+        setOpenSnackbar(true);
+
+        setRefetch(!refetch);
+      });
+
+      getProfileCustomers();
+    } catch (error: any) {
+      setMessage(error.message);
+      setTypeMessage('error');
+      setOpenSnackbar(true);
+    }
+
+    setLoadingEmailChange(false);
+  };
+
+  const orderByClick = (id: number) => {
+    let filteredList = [];
+
+    switch (id) {
+      case 1:
+        filteredList = profileCustomersList.filter(
+          (profileCustomer: ICustomerProps) =>
+            profileCustomer.attributes.customer_type === 'Pessoa Juridica',
+        );
+        break;
+      case 2:
+        filteredList = profileCustomersList.filter(
+          (profileCustomer: ICustomerProps) =>
+            profileCustomer.attributes.customer_type === 'Pessoa Fisica',
+        );
+        break;
+      case 3:
+        filteredList = profileCustomersList.filter(
+          (profileCustomer: ICustomerProps) =>
+            profileCustomer.attributes.customer_type === 'Contador',
+        );
+        break;
+      case 4:
+        filteredList = profileCustomersList.filter(
+          (profileCustomer: ICustomerProps) =>
+            profileCustomer.attributes.customer_type === 'Representante Legal',
+        );
+        break;
+      default:
+        filteredList = [...profileCustomersList];
+        break;
+    }
+
+    setProfileCustomersListFiltered(filteredList);
+  };
+
   return (
     <>
+      {openModal && (
+        <div
+          className="relative z-10"
+          aria-labelledby="modal-title"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+            aria-hidden="true"
+          />
+
+          <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+              <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                  <div className="sm:flex sm:items-start">
+                    <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                      <svg
+                        className="h-6 w-6 text-red-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                      <h3
+                        className="text-base font-semibold leading-6 text-gray-900"
+                        id="modal-title"
+                      >
+                        Alteração de E-mail
+                      </h3>
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500">
+                          {`Tem certeza que deseja alterar o endereço de e-mail? 
+                      Um email de confirmação sera enviado ao cliente para que uma nova senha seja cadastrada.`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                  <button
+                    onClick={handleEmailChange}
+                    type="button"
+                    className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
+                  >
+                    <div className="w-[70px]">
+                      {loadingEmailChange ? <Spinner className="text-white" /> : 'Alterar'}
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpenModal(false);
+                      setCustomerToChange({});
+                    }}
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                  >
+                    <div className="w-[70px]">Cancelar</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {openSnackbar && (
+        <Notification
+          open={openSnackbar}
+          message={message}
+          severity={typeMessage}
+          onClose={() => setOpenSnackbar(false)}
+        />
+      )}
+
       <Layout>
         <Container>
           <PageTitle showTitle={showTitle}>{'Clientes'}</PageTitle>
@@ -333,32 +508,36 @@ const Customers = () => {
               </Box>
             </Box>
             {
-              <Flex
-                style={{
-                  marginTop: '26px',
-                  gap: '40px',
-                }}
-              >
+              <div className="flex items-center mt-8 gap-[40px]">
                 {legend.map((item, index) => (
-                  <Flex
+                  <div
+                    className="flex gap-[10px] cursor-pointer items-center"
                     key={index}
-                    style={{
-                      gap: '10px',
-                    }}
+                    onClick={() => orderByClick(item.id)}
                   >
                     <Box
+                      className="cursor-pointer w-[20px] h-[20px] rounded-[50%]"
                       sx={{
-                        width: '20px',
-                        height: '20px',
-                        borderRadius: '50%',
                         backgroundColor: item.color,
                       }}
                     />
                     <Typography variant="subtitle2">{item.name}</Typography>
-                  </Flex>
+                  </div>
                 ))}
-              </Flex>
+
+                <div
+                  className="flex gap-[10px] cursor-pointer items-center"
+                  onClick={() => {
+                    setProfileCustomersListFiltered(profileCustomersList);
+                  }}
+                >
+                  <BsFilterCircle size={20} color="#a50000" />
+
+                  <Typography variant="subtitle2">Listar Todos</Typography>
+                </div>
+              </div>
             }
+
             <Box mt={'20px'} sx={{ height: 450 }}>
               <DataGrid
                 disableColumnMenu
@@ -369,25 +548,25 @@ const Customers = () => {
                   loadingOverlay: LinearProgress,
                 }}
                 rows={
-                  customersListFiltered &&
-                  customersListFiltered.map((customer: ICustomerProps) => ({
-                    id: customer.id,
-                    name: customer.attributes.name,
-                    type: customer.attributes.customer_type,
+                  profileCustomersListFiltered &&
+                  profileCustomersListFiltered.map((profileCustomer: ICustomerProps) => ({
+                    id: profileCustomer.id,
+                    name: profileCustomer.attributes.name,
+                    type: profileCustomer.attributes.customer_type,
                     cpf:
-                      (customer.attributes.cpf &&
-                        customer.attributes.customer_type === 'Pessoa Fisica') ||
-                      customer.attributes.customer_type === 'Contador' ||
-                      customer.attributes.customer_type === 'Representante Legal'
-                        ? customer.attributes.cpf
-                        : customer.attributes.cnpj &&
-                          customer.attributes.customer_type === 'Pessoa Juridica'
-                        ? customer.attributes.cnpj
+                      (profileCustomer.attributes.cpf &&
+                        profileCustomer.attributes.customer_type === 'Pessoa Fisica') ||
+                      profileCustomer.attributes.customer_type === 'Contador' ||
+                      profileCustomer.attributes.customer_type === 'Representante Legal'
+                        ? profileCustomer.attributes.cpf
+                        : profileCustomer.attributes.cnpj &&
+                          profileCustomer.attributes.customer_type === 'Pessoa Juridica'
+                        ? profileCustomer.attributes.cnpj
                         : '',
-                    email: customer.attributes.default_email,
-                    city: customer.attributes.city,
-                    contact: customer.attributes.default_phone
-                      ? phoneMask(customer.attributes.default_phone)
+                    customer_email: profileCustomer.attributes.default_email,
+                    city: profileCustomer.attributes.city,
+                    contact: profileCustomer.attributes.default_phone
+                      ? phoneMask(profileCustomer.attributes.default_phone)
                       : '',
                   }))
                 }
@@ -434,6 +613,14 @@ const Customers = () => {
                     headerAlign: 'left',
                   },
                   {
+                    editable: true,
+                    width: 250,
+                    field: 'customer_email',
+                    headerName: 'E-mail de Acesso',
+                    cellClassName: 'font-medium text-black',
+                    sortable: false,
+                  },
+                  {
                     width: 180,
                     field: 'type',
                     headerName: 'Tipo',
@@ -443,13 +630,6 @@ const Customers = () => {
                     width: 180,
                     field: 'cpf',
                     headerName: 'CPF/CNPJ',
-                    cellClassName: 'font-medium text-black',
-                    sortable: false,
-                  },
-                  {
-                    width: 250,
-                    field: 'email',
-                    headerName: 'E-mail',
                     cellClassName: 'font-medium text-black',
                     sortable: false,
                   },
@@ -468,6 +648,7 @@ const Customers = () => {
                     sortable: false,
                   },
                 ]}
+                processRowUpdate={handleProcessRowUpdate}
                 initialState={{
                   pagination: { paginationModel: { pageSize: 10 } },
                 }}
@@ -494,7 +675,7 @@ const Customers = () => {
 export default Customers;
 
 export const getServerSideProps = async (ctx: any) => {
-  const session = await getSession(ctx);
+  await getSession(ctx);
 
   return {
     props: {},

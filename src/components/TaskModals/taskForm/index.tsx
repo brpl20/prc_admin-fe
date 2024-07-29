@@ -22,7 +22,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { z } from 'zod';
 import { getAllWorks, getWorkByCustomerId, getWorkById } from '@/services/works';
 import { IModalProps } from '@/interfaces/IModal';
-import { getAllCustomers } from '@/services/customers';
+import { getAllProfileCustomer } from '@/services/customers';
 import { createTask, getTaskById, updateTask } from '@/services/tasks';
 
 import { Content, Title, Input, DeadlineContainer } from './styles';
@@ -167,7 +167,7 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
       const idsArray = data.map((item: any) => item.id);
       setWorkList(idsArray);
 
-      const customers = await getAllCustomers();
+      const customers = await getAllProfileCustomer();
       const dataCustomers = customers.data;
 
       if (dataCustomers) {

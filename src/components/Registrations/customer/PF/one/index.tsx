@@ -37,7 +37,7 @@ import { cpfMask } from '@/utils/masks';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { getAllCustomers } from '@/services/customers';
+import { getAllProfileCustomer } from '@/services/customers';
 import CustomTooltip from '@/components/Tooltip';
 import { MdOutlineAddCircle, MdOutlineInfo } from 'react-icons/md';
 import RepresentativeModal from '../../representative/representativeModal';
@@ -105,7 +105,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   });
 
   const getRepresentors = async () => {
-    const allCustomers = await getAllCustomers();
+    const allCustomers = await getAllProfileCustomer();
     const response = allCustomers.data;
 
     const representors = response.filter(

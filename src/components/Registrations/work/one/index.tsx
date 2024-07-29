@@ -20,7 +20,7 @@ import { WorkContext } from '@/contexts/WorkContext';
 import Notification from '@/components/OfficeModals/Notification';
 
 import { ICustomerProps } from '@/interfaces/ICustomer';
-import { getAllCustomers } from '@/services/customers';
+import { getAllProfileCustomer } from '@/services/customers';
 
 import {
   Container,
@@ -427,7 +427,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
 
   useEffect(() => {
     const getCustomers = async () => {
-      const response = await getAllCustomers();
+      const response = await getAllProfileCustomer();
       setCustomersList(response.data);
     };
 

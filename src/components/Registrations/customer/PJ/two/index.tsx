@@ -10,6 +10,9 @@ import React, {
 
 import { DescriptionText, colors } from '@/styles/globals';
 import { IoAddCircleOutline } from 'react-icons/io5';
+import { IoMdTrash } from 'react-icons/io';
+import { phoneMask } from '@/utils/masks';
+
 import { Container, ColumnContainer } from '../styles';
 import { animateScroll as scroll } from 'react-scroll';
 import { z } from 'zod';
@@ -17,9 +20,8 @@ import { z } from 'zod';
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { TextField, Box, Autocomplete, Typography, Button } from '@mui/material';
 import { Notification } from '@/components';
-import { getAllAdmins } from '@/services/admins';
 import { IAdminProps } from '@/interfaces/IAdmin';
-import { getAllCustomers } from '@/services/customers';
+import { getAllProfileCustomer } from '@/services/customers';
 import RepresentativeModal from '../../representative/representativeModal';
 import { MdOutlineAddCircle } from 'react-icons/md';
 
@@ -53,7 +55,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
   const [profileAdmin, setProfileAdmin] = useState('' as any);
 
   const [formData, setFormData] = useState({
-    phones: [{ phone_number: '' }],
+    phones_attributes: [{ phone_number: '' }],
     emails_attributes: [{ email: '' }],
   });
 
@@ -65,11 +67,11 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     setFormData(prevData => {
       const newInputFields = [...prevData[inputArrayName]];
 
-      if (inputArrayName === 'phones') {
+      if (inputArrayName === 'phones_attributes') {
         if (newInputFields[index]) {
           newInputFields[index] = {
             ...newInputFields[index],
-            phone_number: value,
+            phone_number: phoneMask(value),
           };
         } else {
           newInputFields.push({ phone_number: value });
@@ -96,7 +98,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     setFormData(prevData => {
       const newInputFields = [...prevData[inputArrayName]] as any;
       newInputFields.push({
-        [inputArrayName === 'phones' ? 'phone_number' : 'email']: '',
+        [inputArrayName === 'phones_attributes' ? 'phone_number' : 'email']: '',
       });
 
       return {
@@ -123,14 +125,14 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
       if (parsedData.phones) {
         setFormData(prevData => ({
           ...prevData,
-          phones: parsedData.phones,
+          phones_attributes: parsedData.phones,
         }));
       }
 
       if (parsedData.emails) {
         setFormData(prevData => ({
           ...prevData,
-          emails: parsedData.emails,
+          emails_attributes: parsedData.emails,
         }));
       }
     }
@@ -144,7 +146,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     try {
       stepTwoSchema.parse({
         profile_admin: profileAdmin?.id,
-        phone_number: formData.phones[0].phone_number,
+        phone_number: formData.phones_attributes[0].phone_number,
         email: formData.emails_attributes[0].email,
       });
 
@@ -153,7 +155,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
           represent_attributes: {
             profile_admin_id: Number(profileAdmin?.id),
           },
-          phones: formData.phones,
+          phones: formData.phones_attributes,
           emails: formData.emails_attributes,
         };
 
@@ -161,7 +163,9 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
           ...customerForm.data.attributes.represent,
           profile_admin_id: Number(profileAdmin?.id),
         };
-        customerForm.data.attributes.phones = formData.phones;
+
+        customerForm.data.attributes.default_phone = formData.phones_attributes[0].phone_number;
+        customerForm.data.attributes.phones_attributes = formData.phones_attributes;
         customerForm.data.attributes.emails_attributes = formData.emails_attributes;
 
         saveDataLocalStorage(data);
@@ -175,7 +179,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
         represent_attributes: {
           profile_admin_id: Number(profileAdmin?.id),
         },
-        phones: formData.phones,
+        phones_attributes: formData.phones_attributes,
         emails_attributes: formData.emails_attributes,
       };
 
@@ -224,8 +228,8 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
   }));
 
   const getCustomers = async () => {
-    const allCustomers = await getAllCustomers();
-    const response = allCustomers.data;
+    const allProfileCustomers = await getAllProfileCustomer();
+    const response = allProfileCustomers.data;
 
     const representors = response.filter(
       (customer: any) => customer.attributes.customer_type === 'representative',
@@ -244,7 +248,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
 
       if (attributes) {
         const customer = customersList.find(
-          customer => customer.id == attributes?.represent?.profile_admin_id,
+          customer => customer.id == attributes.represent?.profile_admin_id,
         );
 
         if (customer) {
@@ -253,8 +257,12 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
 
         setFormData(prevData => ({
           ...prevData,
-          phones: attributes.phones,
-          emails: attributes.emails,
+          phones_attributes:
+            attributes.phones && attributes.phones.length > 0
+              ? attributes.phones
+              : [{ phone_number: '' }],
+          emails_attributes:
+            attributes.emails && attributes.emails.length > 0 ? attributes.emails : [{ email: '' }],
         }));
       }
     };
@@ -267,6 +275,32 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
   useEffect(() => {
     verifyDataLocalStorage();
   }, [customersList]);
+
+  const handleRemoveContact = (removeIndex: number, inputArrayName: keyof typeof formData) => {
+    if (inputArrayName === 'phones_attributes') {
+      if (formData.phones_attributes.length === 1) return;
+
+      const updatedEducationals = [...formData.phones_attributes];
+      updatedEducationals.splice(removeIndex, 1);
+      setFormData(prevData => ({
+        ...prevData,
+        phones_attributes: updatedEducationals,
+      }));
+    }
+
+    if (inputArrayName === 'emails_attributes') {
+      if (formData.emails_attributes.length === 1) return;
+
+      const updatedEducationals = [...formData.emails_attributes];
+      updatedEducationals.splice(removeIndex, 1);
+      setFormData(prevData => ({
+        ...prevData,
+        emails_attributes: updatedEducationals,
+      }));
+    }
+  };
+
+  useEffect(() => {}, [formData]);
 
   return (
     <>
@@ -348,7 +382,8 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                 <Typography style={{ marginBottom: '8px' }} variant="h6">
                   {'Telefone'}
                 </Typography>
-                {formData.phones.map((inputValue, index) => (
+
+                {formData.phones_attributes.map((inputValue, index) => (
                   <div
                     key={index}
                     style={{
@@ -358,22 +393,44 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                       gap: '6px',
                     }}
                   >
-                    <TextField
-                      id="outlined-basic"
-                      variant="outlined"
-                      fullWidth
-                      name="phone"
-                      size="small"
-                      placeholder="Informe o Telefone"
-                      value={inputValue.phone_number || ''}
-                      onChange={(e: any) => handleInputChange(index, e.target.value, 'phones')}
-                      autoComplete="off"
-                      error={!!errors.phone_number}
-                    />
-                    {index === formData.phones.length - 1 && (
+                    <div className="flex flex-row gap-1">
+                      <TextField
+                        id="outlined-basic"
+                        variant="outlined"
+                        fullWidth
+                        name="phone"
+                        size="small"
+                        placeholder="Informe o Telefone"
+                        value={inputValue.phone_number || ''}
+                        onChange={(e: any) =>
+                          handleInputChange(index, e.target.value, 'phones_attributes')
+                        }
+                        autoComplete="off"
+                        error={!!errors.phone_number}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleRemoveContact(index, 'phones_attributes');
+                        }}
+                      >
+                        <div
+                          className={`flex  ${
+                            formData.phones_attributes.length > 1 ? '' : 'hidden'
+                          }`}
+                        >
+                          <IoMdTrash size={20} color="#a50000" />
+                        </div>
+                      </button>
+                    </div>
+
+                    {index === formData.phones_attributes.length - 1 && (
                       <IoAddCircleOutline
-                        style={{ marginLeft: 'auto', cursor: 'pointer' }}
-                        onClick={() => handleAddInput('phones')}
+                        className={`cursor-pointer ml-auto ${
+                          formData.phones_attributes.length > 1 ? 'mr-6' : ''
+                        }`}
+                        onClick={() => handleAddInput('phones_attributes')}
                         color={colors.quartiary}
                         size={20}
                       />
@@ -397,23 +454,43 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                       gap: '6px',
                     }}
                   >
-                    <TextField
-                      id="outlined-basic"
-                      variant="outlined"
-                      fullWidth
-                      name="email"
-                      size="small"
-                      placeholder="Informe o Email"
-                      value={inputValue.email || ''}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        handleInputChange(index, e.target.value, 'emails_attributes')
-                      }
-                      autoComplete="off"
-                      error={!!errors.email}
-                    />
+                    <div className="flex flex-row gap-1">
+                      <TextField
+                        id="outlined-basic"
+                        variant="outlined"
+                        fullWidth
+                        name="email"
+                        size="small"
+                        placeholder="Informe o Email"
+                        value={inputValue.email || ''}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                          handleInputChange(index, e.target.value, 'emails_attributes')
+                        }
+                        autoComplete="off"
+                        error={!!errors.email}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleRemoveContact(index, 'emails_attributes');
+                        }}
+                      >
+                        <div
+                          className={`flex  ${
+                            formData.emails_attributes.length > 1 ? '' : 'hidden'
+                          }`}
+                        >
+                          <IoMdTrash size={20} color="#a50000" />
+                        </div>
+                      </button>
+                    </div>
+
                     {index === formData.emails_attributes.length - 1 && (
                       <IoAddCircleOutline
-                        style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                        className={`cursor-pointer ml-auto ${
+                          formData.emails_attributes.length > 1 ? 'mr-6' : ''
+                        }`}
                         onClick={() => handleAddInput('emails_attributes')}
                         color={colors.quartiary}
                         size={20}
