@@ -27,10 +27,9 @@ const updateCustomer = async (data: CustomersProps) => {
   };
 
   try {
-    const response = await api.put(`/customers/${data.id}`, payload);
-    return response.data;
-  } catch (error) {
-    throw error;
+    await api.put(`/customers/${data.id}`, payload);
+  } catch (error: any) {
+    throw error.response.data.errors;
   }
 };
 

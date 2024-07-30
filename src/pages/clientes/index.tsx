@@ -317,7 +317,9 @@ const Customers = () => {
 
       getProfileCustomers();
     } catch (error: any) {
-      setMessage(error.message);
+      const message = error[0].code[0] ? error[0].code[0] : 'Erro ao alterar e-mail';
+
+      setMessage(message);
       setTypeMessage('error');
       setOpenSnackbar(true);
     }
