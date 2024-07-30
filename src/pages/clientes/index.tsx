@@ -41,7 +41,25 @@ import { phoneMask } from '@/utils/masks';
 
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { getSession } from 'next-auth/react';
-import { number } from 'prop-types';
+
+export type CustomersProps = {
+  id: string;
+  email: '';
+};
+
+type TranslatedCustomer = {
+  id: string;
+  attributes: {
+    [key: string]: any;
+  };
+};
+
+type AllCustomer = {
+  attributes: {
+    email: string;
+    profile_customer_id: number;
+  };
+};
 
 const Customers = () => {
   const legend = [
@@ -90,12 +108,12 @@ const Customers = () => {
   const [openCreationMenu, setOpenCreationMenu] = useState<boolean>(false);
   const [searchFor, setSearchFor] = useState<string>('name');
   const [profileCustomersList, setProfileCustomersList] = useState<ICustomerProps[]>([]);
+  const [customerList, setCustomerList] = useState<ICustomerProps[]>([]);
   const [profileCustomersListFiltered, setProfileCustomersListFiltered] = useState<
     ICustomerProps[]
   >([]);
   const [openModal, setOpenModal] = useState<boolean>(false);
-  const [customerToChange, setCustomerToChange] = useState<any>();
-
+  const [customerToChange, setCustomerToChange] = useState<CustomersProps>();
   const handleSearch = (search: string) => {
     const regex = new RegExp(search, 'i');
 
@@ -207,6 +225,9 @@ const Customers = () => {
 
   const getProfileCustomers = async () => {
     const allProfileCustomer = await getAllProfileCustomer();
+    const allCustomer = await getAllCustomers();
+
+    setCustomerList(allCustomer.data);
 
     const translatedCustomers = allProfileCustomer.data.map((profileCustomer: ICustomerProps) => ({
       ...profileCustomer,
@@ -215,6 +236,17 @@ const Customers = () => {
         customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
       },
     }));
+
+    translatedCustomers.forEach((translatedCustomer: TranslatedCustomer) => {
+      const matchingCustomer = allCustomer.data.find(
+        (customer: AllCustomer) =>
+          customer.attributes.profile_customer_id === Number(translatedCustomer.id),
+      );
+
+      if (matchingCustomer) {
+        translatedCustomer.attributes.customer_email = matchingCustomer.attributes.email;
+      }
+    });
 
     setProfileCustomersList(translatedCustomers);
     setProfileCustomersListFiltered(translatedCustomers);
@@ -247,26 +279,34 @@ const Customers = () => {
   const handleProcessRowUpdate = (newRow: any, oldRow: any) => {
     const updatedRow = { ...oldRow, ...newRow };
 
+    const customerId = customerList.find(
+      customer => customer.attributes.profile_customer_id === Number(updatedRow.id),
+    );
+
     if (oldRow.customer_email === updatedRow.customer_email) {
       return updatedRow;
     }
 
-    setCustomerToChange(updatedRow);
-    setOpenModal(true);
+    if (customerId && customerId.id) {
+      setCustomerToChange({
+        id: customerId.id,
+        email: updatedRow.customer_email,
+      });
+      setOpenModal(true);
+    }
+
     return updatedRow;
   };
 
   const handleEmailChange = async () => {
     setLoadingEmailChange(true);
 
-    const payload = {
-      customer: {
-        email: customerToChange.customer_email,
-      },
-    };
-
     try {
-      await updateCustomer(customerToChange.id, payload).finally(() => {
+      if (!customerToChange) {
+        throw new Error('Erro ao alterar e-mail');
+      }
+
+      await updateCustomer(customerToChange).finally(() => {
         setOpenModal(false);
         setMessage('E-mail alterado com sucesso!');
         setTypeMessage('success');
@@ -387,7 +427,10 @@ const Customers = () => {
                     type="button"
                     onClick={() => {
                       setOpenModal(false);
-                      setCustomerToChange({});
+                      setCustomerToChange({
+                        id: '',
+                        email: '',
+                      });
                     }}
                     className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
                   >
@@ -563,7 +606,7 @@ const Customers = () => {
                           profileCustomer.attributes.customer_type === 'Pessoa Juridica'
                         ? profileCustomer.attributes.cnpj
                         : '',
-                    customer_email: profileCustomer.attributes.default_email,
+                    customer_email: profileCustomer.attributes.customer_email,
                     city: profileCustomer.attributes.city,
                     contact: profileCustomer.attributes.default_phone
                       ? phoneMask(profileCustomer.attributes.default_phone)

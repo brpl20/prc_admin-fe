@@ -1,4 +1,5 @@
 import api from './api';
+import { CustomersProps } from '@/pages/clientes';
 
 const createProfileCustomer = async (data: any) => {
   try {
@@ -18,9 +19,15 @@ const createCustomer = async (data: any) => {
   }
 };
 
-const updateCustomer = async (id: string, data: any) => {
+const updateCustomer = async (data: CustomersProps) => {
+  const payload = {
+    customer: {
+      email: data.email,
+    },
+  };
+
   try {
-    const response = await api.put(`/customers/${id}`, data);
+    const response = await api.put(`/customers/${data.id}`, payload);
     return response.data;
   } catch (error) {
     throw error;
