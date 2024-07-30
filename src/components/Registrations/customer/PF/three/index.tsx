@@ -14,6 +14,7 @@ import { Container, ColumnContainer } from '../styles';
 import { Box, TextField, Typography } from '@mui/material';
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { Notification } from '@/components';
+import { IoMdTrash } from 'react-icons/io';
 import { phoneMask } from '@/utils/masks';
 import { z } from 'zod';
 
@@ -217,6 +218,30 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
     verifyDataLocalStorage();
   }, []);
 
+  const handleRemoveContact = (removeIndex: number, inputArrayName: keyof typeof formData) => {
+    if (inputArrayName === 'phoneInputFields') {
+      if (formData.phoneInputFields.length === 1) return;
+
+      const updatedEducationals = [...formData.phoneInputFields];
+      updatedEducationals.splice(removeIndex, 1);
+      setFormData(prevData => ({
+        ...prevData,
+        phoneInputFields: updatedEducationals,
+      }));
+    }
+
+    if (inputArrayName === 'emailInputFields') {
+      if (formData.emailInputFields.length === 1) return;
+
+      const updatedEducationals = [...formData.emailInputFields];
+      updatedEducationals.splice(removeIndex, 1);
+      setFormData(prevData => ({
+        ...prevData,
+        emailInputFields: updatedEducationals,
+      }));
+    }
+  };
+
   return (
     <>
       {openSnackbar && (
@@ -246,23 +271,42 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
                       gap: '6px',
                     }}
                   >
-                    <TextField
-                      id="outlined-basic"
-                      variant="outlined"
-                      fullWidth
-                      name="phone"
-                      size="small"
-                      placeholder="Informe o Telefone"
-                      value={inputValue.phone_number}
-                      onChange={(e: any) =>
-                        handleInputChange(index, e.target.value, 'phoneInputFields')
-                      }
-                      autoComplete="off"
-                      error={!!errors.phone_number}
-                    />
+                    <div className="flex flex-row gap-1">
+                      <TextField
+                        id="outlined-basic"
+                        variant="outlined"
+                        fullWidth
+                        name="phone"
+                        size="small"
+                        placeholder="Informe o Telefone"
+                        value={inputValue.phone_number}
+                        onChange={(e: any) =>
+                          handleInputChange(index, e.target.value, 'phoneInputFields')
+                        }
+                        autoComplete="off"
+                        error={!!errors.phone_number}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleRemoveContact(index, 'phoneInputFields');
+                        }}
+                      >
+                        <div
+                          className={`flex  ${
+                            formData.phoneInputFields.length > 1 ? '' : 'hidden'
+                          }`}
+                        >
+                          <IoMdTrash size={20} color="#a50000" />
+                        </div>
+                      </button>
+                    </div>
                     {index === formData.phoneInputFields.length - 1 && (
                       <IoAddCircleOutline
-                        style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                        className={`cursor-pointer ml-auto ${
+                          formData.phoneInputFields.length > 1 ? 'mr-6' : ''
+                        }`}
                         onClick={() => handleAddInput('phoneInputFields')}
                         color={colors.quartiary}
                         size={20}
@@ -289,23 +333,43 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
                       gap: '6px',
                     }}
                   >
-                    <TextField
-                      id="outlined-basic"
-                      variant="outlined"
-                      fullWidth
-                      name="email"
-                      size="small"
-                      placeholder="Informe o Email"
-                      value={inputValue.email}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        handleInputChange(index, e.target.value, 'emailInputFields')
-                      }
-                      autoComplete="off"
-                      error={!!errors.email}
-                    />
+                    <div className="flex flex-row gap-1">
+                      <TextField
+                        id="outlined-basic"
+                        variant="outlined"
+                        fullWidth
+                        name="email"
+                        size="small"
+                        placeholder="Informe o Email"
+                        value={inputValue.email}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                          handleInputChange(index, e.target.value, 'emailInputFields')
+                        }
+                        autoComplete="off"
+                        error={!!errors.email}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleRemoveContact(index, 'emailInputFields');
+                        }}
+                      >
+                        <div
+                          className={`flex  ${
+                            formData.emailInputFields.length > 1 ? '' : 'hidden'
+                          }`}
+                        >
+                          <IoMdTrash size={20} color="#a50000" />
+                        </div>
+                      </button>
+                    </div>
+
                     {index === formData.emailInputFields.length - 1 && (
                       <IoAddCircleOutline
-                        style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                        className={`cursor-pointer ml-auto ${
+                          formData.emailInputFields.length > 1 ? 'mr-6' : ''
+                        }`}
                         onClick={() => handleAddInput('emailInputFields')}
                         color={colors.quartiary}
                         size={20}
