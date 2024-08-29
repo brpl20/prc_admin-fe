@@ -12,7 +12,7 @@ import Logo from '../assets/logo-colors@3x.png';
 import Google from '../assets/google.svg';
 import { Box, Link, Typography } from '@mui/material';
 
-import Notification from '@/components/OfficeModals/Notification';
+import { Notification } from '@/components';
 
 import {
   Container,
@@ -28,11 +28,8 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
 
 const UserSchema = z.object({
-  email: z
-    .string()
-    .nonempty({ message: 'Email é obrigatório' })
-    .email({ message: 'Email inválido' }),
-  password: z.string().nonempty({ message: 'Senha é obrigatória' }),
+  email: z.string().min(3, { message: 'Email é obrigatório' }).email({ message: 'Email inválido' }),
+  password: z.string().min(2, { message: 'Senha é obrigatória' }),
 });
 
 type UserDataForm = z.infer<typeof UserSchema>;

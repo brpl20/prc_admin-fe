@@ -14,7 +14,6 @@ import { Flex, colors } from '@/styles/globals';
 
 import { MdClose } from 'react-icons/md';
 import { Content } from './styles';
-import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Notification } from '@/components';
@@ -34,9 +33,9 @@ interface FormData {
 }
 
 const statusSchema = z.object({
-  description: z.string().nonempty({ message: 'Descrição é obrigatória' }),
-  status: z.string().nonempty({ message: 'Status é obrigatório' }),
-  date: z.string().nonempty({ message: 'Data é obrigatória' }),
+  description: z.string().min(3, { message: 'Descrição é obrigatória' }),
+  status: z.string().min(3, { message: 'Status é obrigatório' }),
+  date: z.string().min(3, { message: 'Data é obrigatória' }),
 });
 
 const WorkStatusModal = ({ isOpen, onClose, workId, workStatus }: IWorkStatusModalProps) => {

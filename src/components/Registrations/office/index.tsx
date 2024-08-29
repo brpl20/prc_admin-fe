@@ -70,20 +70,20 @@ interface props {
 }
 
 const officeSchema = z.object({
-  name: z.string().nonempty({ message: 'Informe o Nome do Escritório' }),
-  office_type: z.string().nonempty({ message: 'Selecione o Tipo de Escritório' }),
-  oab: z.string().nonempty({ message: 'Informe o Identificador OAB' }),
-  cnpj_cpf: z.string().nonempty({ message: 'Informe o CNPJ/CPF' }),
-  society_type: z.string().nonempty({ message: 'Informe o Tipo de Sociedade' }),
-  cep: z.string().nonempty({ message: 'Informe o CEP' }),
-  address: z.string().nonempty({ message: 'Informe o Endereço' }),
-  state: z.string().nonempty({ message: 'Informe o Estado' }),
-  city: z.string().nonempty({ message: 'Informe a Cidade' }),
-  number: z.string().nonempty({ message: 'Informe o Número' }),
-  neighborhood: z.string().nonempty({ message: 'Informe o Bairro' }),
-  accounting_type: z.string().nonempty({ message: 'Selecione o Enquadramento Contábil' }),
-  phone: z.string().nonempty({ message: 'Informe o Telefone' }),
-  email: z.string().nonempty({ message: 'Informe o Email' }),
+  name: z.string().min(2, { message: 'Informe o Nome do Escritório' }),
+  office_type: z.string().min(2, { message: 'Selecione o Tipo de Escritório' }),
+  oab: z.string().min(2, { message: 'Informe o Identificador OAB' }),
+  cnpj_cpf: z.string().min(2, { message: 'Informe o CNPJ/CPF' }),
+  society_type: z.string().min(2, { message: 'Informe o Tipo de Sociedade' }),
+  cep: z.string().min(2, { message: 'Informe o CEP' }),
+  address: z.string().min(2, { message: 'Informe o Endereço' }),
+  state: z.string().min(2, { message: 'Informe o Estado' }),
+  city: z.string().min(2, { message: 'Informe a Cidade' }),
+  number: z.string().min(2, { message: 'Informe o Número' }),
+  neighborhood: z.string().min(2, { message: 'Informe o Bairro' }),
+  accounting_type: z.string().min(2, { message: 'Selecione o Enquadramento Contábil' }),
+  phone: z.string().min(2, { message: 'Informe o Telefone' }),
+  email: z.string().min(2, { message: 'Informe o Email' }),
 });
 
 const Office = ({ dataToEdit }: props) => {

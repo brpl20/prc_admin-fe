@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 
 import { Container, ColumnContainer } from '../styles';
-import Notification from '@/components/OfficeModals/Notification';
+import { Notification } from '@/components';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
 

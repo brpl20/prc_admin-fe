@@ -86,6 +86,7 @@ interface IAttributesProps {
   represent_attributes?: any;
   profile_customer_id?: number;
   represent?: any;
+  deleted: boolean;
 }
 
 interface IRelationshipsProps {
@@ -98,6 +99,7 @@ interface IRelationshipsProps {
 interface ICustomerProps {
   id: string;
   type: string;
+  deleted: boolean;
   attributes: IAttributesProps;
   relationships: IRelationshipsProps;
 }

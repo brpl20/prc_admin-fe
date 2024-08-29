@@ -5,7 +5,17 @@ import Router from 'next/router';
 import Link from 'next/link';
 
 import { PageTitleContext } from '@/contexts/PageTitleContext';
-import { getAllCustomers, getAllProfileCustomer, updateCustomer } from '@/services/customers';
+import {
+  getAllCustomers,
+  getAllProfileCustomer,
+  updateCustomer,
+  inactiveCustomer,
+  deleteProfileCustomer,
+  restoreCustomer,
+} from '@/services/customers';
+
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 
 import {
   colors,
@@ -20,15 +30,21 @@ import {
 
 import {
   MdSearch,
-  MdVisibility,
-  MdModeEdit,
+  MdMoreHoriz,
   MdKeyboardArrowDown,
   MdKeyboardArrowRight,
+  MdOutlineVisibility,
+  MdOutlineCreate,
+  MdOutlineArchive,
+  MdDeleteOutline,
+  MdOutlineUnarchive,
 } from 'react-icons/md';
 import { BsFilterCircle } from 'react-icons/bs';
 
 import { Box, Button, Typography, LinearProgress } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
+
+import IconButton from '@mui/material/IconButton';
 
 import { Footer, Notification, Spinner } from '@/components';
 
@@ -95,8 +111,23 @@ const Customers = () => {
       : styles.representative;
   };
 
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [rowItem, setRowItem] = useState<ICustomerProps>({} as ICustomerProps);
+
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+    setRowItem({} as ICustomerProps);
+  };
+
   const [loadingEmailChange, setLoadingEmailChange] = useState<boolean>(false);
   const [refetch, setRefetch] = useState<boolean>(false);
+
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [message, setMessage] = useState('');
   const [typeMessage, setTypeMessage] = useState<'success' | 'error'>('success');
@@ -104,6 +135,7 @@ const Customers = () => {
   const { setCustomerForm } = useContext(CustomerContext);
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
 
+  const [getForStatus, setGetForStatus] = useState<string>('active');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [openCreationMenu, setOpenCreationMenu] = useState<boolean>(false);
   const [searchFor, setSearchFor] = useState<string>('name');
@@ -114,6 +146,7 @@ const Customers = () => {
   >([]);
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [customerToChange, setCustomerToChange] = useState<CustomersProps>();
+
   const handleSearch = (search: string) => {
     const regex = new RegExp(search, 'i');
 
@@ -208,6 +241,48 @@ const Customers = () => {
     }
   };
 
+  const handleRestore = async (profileCustomer: ICustomerProps) => {
+    try {
+      await restoreCustomer(profileCustomer.id);
+      setMessage('Cliente restaurado com sucesso!');
+      setTypeMessage('success');
+      setOpenSnackbar(true);
+      setRefetch(!refetch);
+    } catch (error: any) {
+      setMessage('Erro ao restaurar cliente');
+      setTypeMessage('error');
+      setOpenSnackbar(true);
+    }
+  };
+
+  const handleInactive = async (profileCustomer: ICustomerProps) => {
+    try {
+      await inactiveCustomer(profileCustomer.id);
+      setMessage('Cliente inativado com sucesso!');
+      setTypeMessage('success');
+      setOpenSnackbar(true);
+      setRefetch(!refetch);
+    } catch (error: any) {
+      setMessage('Erro ao inativar cliente');
+      setTypeMessage('error');
+      setOpenSnackbar(true);
+    }
+  };
+
+  const handleDelete = async (profileCustomer: ICustomerProps) => {
+    try {
+      await deleteProfileCustomer(profileCustomer.id);
+      setMessage('Cliente removido com sucesso!');
+      setTypeMessage('success');
+      setOpenSnackbar(true);
+      setRefetch(!refetch);
+    } catch (error: any) {
+      setMessage('Erro ao remover cliente');
+      setTypeMessage('error');
+      setOpenSnackbar(true);
+    }
+  };
+
   const translateCustomerType = (profileCustomerType: string) => {
     switch (profileCustomerType) {
       case 'physical_person':
@@ -224,7 +299,9 @@ const Customers = () => {
   };
 
   const getProfileCustomers = async () => {
-    const allProfileCustomer = await getAllProfileCustomer();
+    const requestParams = getForStatus === 'active' ? '' : getForStatus;
+
+    const allProfileCustomer = await getAllProfileCustomer(requestParams);
     const allCustomer = await getAllCustomers();
 
     setCustomerList(allCustomer.data);
@@ -258,7 +335,7 @@ const Customers = () => {
 
     getProfileCustomers();
     setCustomerForm({});
-  }, []);
+  }, [refetch, getForStatus]);
 
   useEffect(() => {
     const updateScrollPosition = () => {
@@ -454,14 +531,165 @@ const Customers = () => {
         />
       )}
 
+      {rowItem.id && (
+        <Menu
+          id="long-menu"
+          MenuListProps={{
+            'aria-labelledby': 'long-button',
+          }}
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          slotProps={{
+            paper: {
+              style: {
+                width: '20ch',
+              },
+            },
+          }}
+        >
+          <div className="flex flex-col items-start gap-1">
+            {rowItem.deleted === true ? (
+              <>
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleClose();
+                    handleRestore(rowItem);
+                  }}
+                >
+                  <MdOutlineUnarchive size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Ativar</label>
+                </MenuItem>
+
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleClose();
+                    handleDelete(rowItem);
+                  }}
+                >
+                  <MdDeleteOutline size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Remover</label>
+                </MenuItem>
+              </>
+            ) : null}
+
+            {rowItem.deleted === false ? (
+              <>
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleClose();
+                    handleDetails(rowItem);
+                  }}
+                >
+                  <MdOutlineVisibility size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Detalhes</label>
+                </MenuItem>
+
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleClose();
+                    handleEdit(rowItem);
+                  }}
+                >
+                  <MdOutlineCreate size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Alterar</label>
+                </MenuItem>
+
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleClose();
+                    handleInactive(rowItem);
+                  }}
+                >
+                  <MdOutlineArchive size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Inativar</label>
+                </MenuItem>
+
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleClose();
+                    handleDelete(rowItem);
+                  }}
+                >
+                  <MdDeleteOutline size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Remover</label>
+                </MenuItem>
+              </>
+            ) : null}
+          </div>
+        </Menu>
+      )}
+
       <Layout>
         <Container>
-          <PageTitle showTitle={showTitle}>{'Clientes'}</PageTitle>
+          <div className="flex flex-row justify-between">
+            <PageTitle showTitle={showTitle}>{'Clientes'}</PageTitle>
+
+            <div className="flex items-center gap-1 relative font-medium text-[#2A3F54]">
+              <span className="w-[62px] text-[18px]">Ativo:</span>
+
+              <div className="flex items-center gap-[20px]">
+                <div className="flex items-center gap-[6px] cursor-pointer">
+                  <input
+                    type="radio"
+                    id="active"
+                    name="status"
+                    value="active"
+                    disabled={isLoading}
+                    checked={getForStatus === 'active'}
+                    className="w-[16px] h-[16px] cursor-pointer"
+                    onChange={() => setGetForStatus('active')}
+                  />
+                  <label htmlFor="active" className="text-[16px] cursor-pointer">
+                    Sim
+                  </label>
+                </div>
+                <div className="flex items-center gap-[6px] cursor-pointer">
+                  <input
+                    type="radio"
+                    id="only_deleted"
+                    name="status"
+                    value="only_deleted"
+                    disabled={isLoading}
+                    checked={getForStatus === 'only_deleted'}
+                    className="w-[16px] h-[16px] cursor-pointer"
+                    onChange={() => setGetForStatus('only_deleted')}
+                  />
+                  <label htmlFor="only_deleted" className="text-[16px] cursor-pointer">
+                    Não
+                  </label>
+                </div>
+                <div className="flex items-center gap-[6px] cursor-pointer">
+                  <input
+                    type="radio"
+                    id="with_deleted"
+                    name="status"
+                    value="with_deleted"
+                    disabled={isLoading}
+                    checked={getForStatus === 'with_deleted'}
+                    className="w-[16px] h-[16px] cursor-pointer"
+                    onChange={() => setGetForStatus('with_deleted')}
+                  />
+                  <label htmlFor="with_deleted" className="text-[16px] cursor-pointer">
+                    Todos
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <ContentContainer>
             <Box>
               <Typography mb={'8px'} variant="h6">
                 {'Buscar Por'}
               </Typography>
+
               <Box display={'flex'} gap={'16px'} justifyContent={'space-between'}>
                 <Box display={'flex'} gap={'16px'}>
                   <Box display={'flex'} gap={'16px'}>
@@ -476,6 +704,7 @@ const Customers = () => {
                     >
                       {'Nome'}
                     </Button>
+
                     <Button
                       value="type"
                       onClick={() => setSearchFor('type')}
@@ -488,6 +717,7 @@ const Customers = () => {
                     >
                       {'Tipo'}
                     </Button>
+
                     <Button
                       onClick={() => setSearchFor('identification')}
                       variant={searchFor === 'identification' ? 'contained' : 'outlined'}
@@ -552,6 +782,7 @@ const Customers = () => {
                 </SelectContainer>
               </Box>
             </Box>
+
             {
               <div className="flex items-center mt-8 gap-[40px]">
                 {legend.map((item, index) => (
@@ -597,6 +828,7 @@ const Customers = () => {
                   profileCustomersListFiltered.map((profileCustomer: ICustomerProps) => ({
                     id: profileCustomer.id,
                     name: profileCustomer.attributes.name,
+                    deleted: profileCustomer.attributes.deleted,
                     type: profileCustomer.attributes.customer_type,
                     cpf:
                       (profileCustomer.attributes.cpf &&
@@ -617,32 +849,7 @@ const Customers = () => {
                 }
                 columns={[
                   {
-                    width: 150,
-                    field: 'actions',
-                    headerName: 'Ações',
-                    align: 'center',
-                    headerAlign: 'center',
-                    sortable: false,
-                    editable: false,
-                    renderCell: (params: any) => (
-                      <Box className="w-full flex justify-around">
-                        <MdVisibility
-                          size={22}
-                          color={colors.icons}
-                          cursor={'pointer'}
-                          onClick={() => handleDetails(params.row)}
-                        />
-                        <MdModeEdit
-                          size={22}
-                          color={colors.icons}
-                          cursor={'pointer'}
-                          onClick={() => handleEdit(params.row)}
-                        />
-                      </Box>
-                    ),
-                  },
-                  {
-                    width: 60,
+                    width: 80,
                     field: 'id',
                     headerName: 'ID',
                     cellClassName: 'font-medium text-black',
@@ -650,7 +857,7 @@ const Customers = () => {
                     headerAlign: 'center',
                   },
                   {
-                    width: 200,
+                    width: 210,
                     field: 'name',
                     headerName: 'Nome',
                     cellClassName: 'font-medium text-black',
@@ -658,18 +865,13 @@ const Customers = () => {
                     headerAlign: 'left',
                   },
                   {
+                    flex: 1,
+                    minWidth: 210,
                     editable: true,
-                    width: 250,
                     field: 'customer_email',
                     headerName: 'E-mail de Acesso',
                     cellClassName: 'font-medium text-black',
                     sortable: false,
-                  },
-                  {
-                    width: 180,
-                    field: 'type',
-                    headerName: 'Tipo',
-                    cellClassName: 'font-medium text-black',
                   },
                   {
                     width: 180,
@@ -679,18 +881,37 @@ const Customers = () => {
                     sortable: false,
                   },
                   {
-                    width: 140,
-                    field: 'city',
-                    headerName: 'Cidade',
-                    cellClassName: 'font-medium text-black',
-                    sortable: false,
-                  },
-                  {
-                    width: 180,
+                    width: 150,
                     field: 'contact',
                     headerName: 'Contato',
                     cellClassName: 'font-medium text-black',
                     sortable: false,
+                  },
+                  {
+                    width: 100,
+                    field: 'actions',
+                    headerName: 'Ações',
+                    align: 'center',
+                    headerAlign: 'center',
+                    sortable: false,
+                    editable: false,
+                    renderCell: (params: any) => (
+                      <div>
+                        <IconButton
+                          aria-label="more"
+                          id="long-button"
+                          aria-controls={open ? 'long-menu' : undefined}
+                          aria-expanded={open ? 'true' : undefined}
+                          aria-haspopup="true"
+                          onClick={e => {
+                            setRowItem(params.row);
+                            handleClick(e);
+                          }}
+                        >
+                          <MdMoreHoriz size={22} color={colors.icons} cursor={'pointer'} />
+                        </IconButton>
+                      </div>
+                    ),
                   },
                 ]}
                 processRowUpdate={handleProcessRowUpdate}

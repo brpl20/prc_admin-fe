@@ -11,12 +11,12 @@ import {
   Switch,
 } from '@mui/material';
 import { IModalProps } from '@/interfaces/IFinalizeRegistration';
-import Notification from '@/components/OfficeModals/Notification';
+import { Notification } from '@/components';
 
 import { colors } from '@/styles/globals';
 
 import { MdClose, MdOutlineInfo } from 'react-icons/md';
-import CustomTooltip from '../Tooltip';
+import CustomTooltip from '../../Tooltip';
 import { Content, InputContainer, Input } from './styles';
 
 import { styled } from '@mui/material/styles';

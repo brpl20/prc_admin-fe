@@ -64,6 +64,7 @@ interface IAttributesProps {
   data: any;
 
   draftWork: any;
+  deleted: boolean;
 }
 
 interface IProfile_customersDataProps {

@@ -27,7 +27,7 @@ import dynamic from 'next/dynamic';
 import Router from 'next/router';
 import { IAdminProps } from '@/interfaces/IAdmin';
 import { useSession } from 'next-auth/react';
-import WorkStatusModal from '@/components/WorkStatusModal';
+import { WorkStatusModal } from '@/components';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Works = () => {
