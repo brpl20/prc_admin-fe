@@ -110,16 +110,16 @@ const Customers = () => {
       : styles.representative;
   };
 
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [rowItem, setRowItem] = useState<ICustomerProps>({} as ICustomerProps);
   const open = Boolean(anchorEl);
   const [openRemoveModal, setOpenRemoveModal] = useState<boolean>(false);
 
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleClose = () => {
+  const handleCloseMenu = () => {
     setAnchorEl(null);
     setRowItem({} as ICustomerProps);
   };
@@ -529,7 +529,7 @@ const Customers = () => {
           }}
           anchorEl={anchorEl}
           open={open}
-          onClose={handleClose}
+          onClose={handleCloseMenu}
           slotProps={{
             paper: {
               style: {
@@ -544,7 +544,7 @@ const Customers = () => {
                 <MenuItem
                   className="flex gap-2 w-full"
                   onClick={() => {
-                    handleClose();
+                    handleCloseMenu();
                     handleRestore(rowItem);
                   }}
                 >
@@ -555,7 +555,7 @@ const Customers = () => {
                 <MenuItem
                   className="flex gap-2 w-full"
                   onClick={() => {
-                    handleClose();
+                    handleCloseMenu();
                     handleDelete(rowItem);
                   }}
                 >
@@ -570,7 +570,7 @@ const Customers = () => {
                 <MenuItem
                   className="flex gap-2 w-full"
                   onClick={() => {
-                    handleClose();
+                    handleCloseMenu();
                     handleDetails(rowItem);
                   }}
                 >
@@ -581,7 +581,7 @@ const Customers = () => {
                 <MenuItem
                   className="flex gap-2 w-full"
                   onClick={() => {
-                    handleClose();
+                    handleCloseMenu();
                     handleEdit(rowItem);
                   }}
                 >
@@ -592,7 +592,7 @@ const Customers = () => {
                 <MenuItem
                   className="flex gap-2 w-full"
                   onClick={() => {
-                    handleClose();
+                    handleCloseMenu();
                     handleInactive(rowItem);
                   }}
                 >
@@ -603,7 +603,7 @@ const Customers = () => {
                 <MenuItem
                   className="flex gap-2 w-full"
                   onClick={() => {
-                    handleClose();
+                    handleCloseMenu();
                     handleDelete(rowItem);
                   }}
                 >
@@ -626,7 +626,7 @@ const Customers = () => {
             setRefetch(!refetch);
             setOpenRemoveModal(false);
           }}
-          model={'customer'}
+          model={'cliente'}
         />
       )}
 
@@ -874,6 +874,7 @@ const Customers = () => {
                     editable: true,
                     field: 'customer_email',
                     headerName: 'E-mail de Acesso',
+                    align: 'left',
                     cellClassName: 'font-medium text-black',
                     sortable: false,
                   },
@@ -882,6 +883,7 @@ const Customers = () => {
                     field: 'cpf',
                     headerName: 'CPF/CNPJ',
                     cellClassName: 'font-medium text-black',
+                    align: 'left',
                     sortable: false,
                   },
                   {
@@ -889,10 +891,12 @@ const Customers = () => {
                     field: 'contact',
                     headerName: 'Contato',
                     cellClassName: 'font-medium text-black',
+                    align: 'left',
                     sortable: false,
                   },
                   {
                     width: 100,
+                    maxWidth: 100,
                     field: 'actions',
                     headerName: 'Ações',
                     align: 'center',
@@ -909,7 +913,7 @@ const Customers = () => {
                           aria-haspopup="true"
                           onClick={e => {
                             setRowItem(params.row);
-                            handleClick(e);
+                            handleOpenMenu(e);
                           }}
                         >
                           <MdMoreHoriz size={22} color={colors.icons} cursor={'pointer'} />

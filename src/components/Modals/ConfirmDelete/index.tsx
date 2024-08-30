@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Modal, Button } from '@mui/material';
 import { MdClose } from 'react-icons/md';
 import { Notification } from '@/components';
+
 import { deleteProfileCustomer } from '@/services/customers';
+import { deleteWork } from '@/services/works';
 
 type RemoveProps = {
   isOpen: boolean;
@@ -43,13 +45,14 @@ const ModalOfRemove = ({
         break;
       case 1:
         setSteps(steps + 1);
-        setTextButton('Remover cliente');
+        setTextButton(`Remover ${model}`);
         break;
       case 2:
         setLoading(true);
 
         try {
-          await deleteProfileCustomer(id);
+          if (model === 'cliente') await deleteProfileCustomer(id);
+          if (model === 'trabalho') await deleteWork(id);
           setLoading(false);
           handleCloseModal();
           onClose();
@@ -57,6 +60,7 @@ const ModalOfRemove = ({
           setMessage(`Erro ao remover ${model}`);
           setTypeMessage('error');
           setOpenSnackbar(true);
+          setLoading(false);
         }
         break;
     }
@@ -76,9 +80,9 @@ const ModalOfRemove = ({
       <Modal open={isOpen} onClose={onClose}>
         <span className="absolute top-1/2 left-1/2 rounded transform -translate-x-1/2 -translate-y-1/2 w-[500px] bg-white">
           <div className="flex w-full justify-between p-4">
-            <label className="text-lg	font-medium">{`Remover ${textConfirmation}`}</label>
+            <label className="text-lg font-medium w-[420px] truncate overflow-hidden whitespace-nowrap">{`Remover ${textConfirmation}`}</label>
 
-            <span className="p-1 bg-[#2a3f543f] rounded">
+            <span className="flex justify-center items-center p-1 bg-[#2a3f543f] w-[30px] h-[30px] rounded">
               <MdClose onClick={handleClose} size={20} className="cursor-pointer" />
             </span>
           </div>
@@ -166,7 +170,7 @@ const ModalOfRemove = ({
                 className="w-full h-[36px]"
                 disabled={inputValue !== textConfirmation && steps === 2}
                 onClick={() => {
-                  handleNext();
+                  !loading ? handleNext() : null;
                 }}
               >
                 {loading ? (
