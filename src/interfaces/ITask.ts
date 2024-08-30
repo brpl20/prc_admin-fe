@@ -12,6 +12,7 @@ interface IAttributesProps {
   work_number: number;
   customer?: string;
   created_by_id: number;
+  deleted: boolean;
 }
 
 interface IRelationshipsProps {
@@ -22,6 +23,7 @@ interface ITaskProps {
   id: string;
   type: string;
   attributes: IAttributesProps;
+  deleted: boolean;
 }
 
 export type { ITaskProps, IAttributesProps };

@@ -5,6 +5,7 @@ import { Notification } from '@/components';
 
 import { deleteProfileCustomer } from '@/services/customers';
 import { deleteWork } from '@/services/works';
+import { deleteJob } from '@/services/tasks';
 
 type RemoveProps = {
   isOpen: boolean;
@@ -53,6 +54,8 @@ const ModalOfRemove = ({
         try {
           if (model === 'cliente') await deleteProfileCustomer(id);
           if (model === 'trabalho') await deleteWork(id);
+          if (model === 'tarefa') await deleteJob(id);
+
           setLoading(false);
           handleCloseModal();
           onClose();

@@ -4,6 +4,11 @@ import { getAllTasks } from '@/services/tasks';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { ITaskProps, IAttributesProps } from '@/interfaces/ITask';
 
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+
+import { restoreJob, inactiveJob } from '@/services/tasks';
+
 import {
   colors,
   PageTitle,
@@ -13,32 +18,63 @@ import {
   ContentContainer,
 } from '@/styles/globals';
 
-import { MdOutlineAddCircle, MdVisibility, MdModeEdit, MdSearch } from 'react-icons/md';
+import {
+  MdOutlineAddCircle,
+  MdOutlineVisibility,
+  MdOutlineCreate,
+  MdOutlineArchive,
+  MdDeleteOutline,
+  MdOutlineUnarchive,
+  MdSearch,
+  MdMoreHoriz,
+} from 'react-icons/md';
+import IconButton from '@mui/material/IconButton';
 
 import { format } from 'date-fns';
 import { Box, Button, Typography, LinearProgress } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
-import { Footer, TaskModal, ViewDetailsModal } from '@/components';
+import { Footer, TaskModal, ViewDetailsModal, ModalOfRemove, Notification } from '@/components';
 import dynamic from 'next/dynamic';
 import { getSession, useSession } from 'next-auth/react';
 import { jwtDecode } from 'jwt-decode';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Tasks = () => {
-  const { showTitle, setShowTitle, setPageTitle } = useContext(PageTitleContext);
+  const { showTitle, setShowTitle } = useContext(PageTitleContext);
+  const [getForStatus, setGetForStatus] = useState<string>('active');
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isOpenTaskModal, setOpenTaskModal] = useState(false);
   const [isOpenDetailsModal, setOpenDetailsModal] = useState(false);
   const [paramsRow, setParamsRow] = useState<IAttributesProps>();
+  const [refetch, setRefetch] = useState<boolean>(false);
 
   const [searchFor, setSearchFor] = useState<string>('description');
   const [tasksList, setTasksList] = useState<ITaskProps[]>([]);
   const [filteredTasksList, setFilteredTasksList] = useState<ITaskProps[]>([]);
   const [adminId, setAdminId] = useState<number>(0);
 
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [message, setMessage] = useState('');
+  const [typeMessage, setTypeMessage] = useState<'success' | 'error'>('success');
+
   const { data: session } = useSession();
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [rowItem, setRowItem] = useState<IAttributesProps>({} as IAttributesProps);
+
+  const open = Boolean(anchorEl);
+  const [openRemoveModal, setOpenRemoveModal] = useState<boolean>(false);
+
+  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+    setRowItem({} as IAttributesProps);
+  };
 
   useEffect(() => {
     if (session) {
@@ -69,14 +105,47 @@ const Tasks = () => {
     }
   };
 
-  const handleOpenToEdit = (task: IAttributesProps) => {
+  const handleEdit = (task: IAttributesProps) => {
     setParamsRow(task);
     setOpenTaskModal(true);
   };
 
-  const handleOpenToViewDetails = (task: IAttributesProps) => {
+  const handleDetails = (task: IAttributesProps) => {
     setParamsRow(task);
     setOpenDetailsModal(true);
+  };
+
+  const handleRestore = async (task: IAttributesProps) => {
+    try {
+      await restoreJob(task.id);
+      setMessage('Tarefa restaurada com sucesso!');
+      setTypeMessage('success');
+      setOpenSnackbar(true);
+      setRefetch(!refetch);
+    } catch (error: any) {
+      setMessage('Erro ao restaurar tarefa');
+      setTypeMessage('error');
+      setOpenSnackbar(true);
+    }
+  };
+
+  const handleInactive = async (task: IAttributesProps) => {
+    try {
+      await inactiveJob(task.id);
+      setMessage('Tarefa inativada com sucesso!');
+      setTypeMessage('success');
+      setOpenSnackbar(true);
+      setRefetch(!refetch);
+    } catch (error: any) {
+      setMessage('Erro ao inativar tarefa');
+      setTypeMessage('error');
+      setOpenSnackbar(true);
+    }
+  };
+
+  const handleDelete = async (task: IAttributesProps) => {
+    setRowItem(task);
+    setOpenRemoveModal(true);
   };
 
   const handleSearch = (search: string) => {
@@ -105,17 +174,20 @@ const Tasks = () => {
     setFilteredTasksList(filteredList);
   };
 
+  const getTasks = async () => {
+    const requestParams = getForStatus === 'active' ? '' : getForStatus;
+
+    const response = await getAllTasks(requestParams);
+    setTasksList(response.data);
+    setFilteredTasksList(response.data);
+  };
+
   useEffect(() => {
     setIsLoading(true);
-    const getTasks = async () => {
-      const response = await getAllTasks();
-      setTasksList(response.data);
-      setFilteredTasksList(response.data);
-    };
 
     getTasks();
     setIsLoading(false);
-  }, [isOpenTaskModal]);
+  }, [refetch, isOpenTaskModal, getForStatus]);
 
   useEffect(() => {
     const updateScrollPosition = () => {
@@ -140,6 +212,15 @@ const Tasks = () => {
           <TaskModal isOpen={isOpenTaskModal} onClose={handleCloseModal} dataToEdit={paramsRow} />
         ) : null}
 
+        {openSnackbar && (
+          <Notification
+            open={openSnackbar}
+            message={message}
+            severity={typeMessage}
+            onClose={() => setOpenSnackbar(false)}
+          />
+        )}
+
         {isOpenDetailsModal && (
           <ViewDetailsModal
             isOpen={isOpenDetailsModal}
@@ -147,9 +228,171 @@ const Tasks = () => {
             details={paramsRow}
           />
         )}
-        <Container>
-          <PageTitle showTitle={showTitle}>{'Tarefas'}</PageTitle>
 
+        {rowItem.id && (
+          <Menu
+            id="long-menu"
+            MenuListProps={{
+              'aria-labelledby': 'long-button',
+            }}
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleCloseMenu}
+            slotProps={{
+              paper: {
+                style: {
+                  width: '20ch',
+                },
+              },
+            }}
+          >
+            <div className="flex flex-col items-start gap-1">
+              {rowItem.deleted === true ? (
+                <>
+                  <MenuItem
+                    className="flex gap-2 w-full"
+                    onClick={() => {
+                      handleCloseMenu();
+                      handleRestore(rowItem);
+                    }}
+                  >
+                    <MdOutlineUnarchive size={22} color={colors.icons} cursor={'pointer'} />
+                    <label className="font-medium	cursor-pointer">Ativar</label>
+                  </MenuItem>
+
+                  <MenuItem
+                    className="flex gap-2 w-full"
+                    onClick={() => {
+                      handleCloseMenu();
+                      handleDelete(rowItem);
+                    }}
+                  >
+                    <MdDeleteOutline size={22} color={colors.icons} cursor={'pointer'} />
+                    <label className="font-medium	cursor-pointer">Remover</label>
+                  </MenuItem>
+                </>
+              ) : null}
+
+              {rowItem.deleted === false ? (
+                <>
+                  <MenuItem
+                    className="flex gap-2 w-full"
+                    onClick={() => {
+                      handleCloseMenu();
+                      handleDetails(rowItem);
+                    }}
+                  >
+                    <MdOutlineVisibility size={22} color={colors.icons} cursor={'pointer'} />
+                    <label className="font-medium	cursor-pointer">Detalhes</label>
+                  </MenuItem>
+
+                  <MenuItem
+                    className="flex gap-2 w-full"
+                    onClick={() => {
+                      handleCloseMenu();
+                      handleEdit(rowItem);
+                    }}
+                  >
+                    <MdOutlineCreate size={22} color={colors.icons} cursor={'pointer'} />
+                    <label className="font-medium	cursor-pointer">Alterar</label>
+                  </MenuItem>
+
+                  <MenuItem
+                    className="flex gap-2 w-full"
+                    onClick={() => {
+                      handleCloseMenu();
+                      handleInactive(rowItem);
+                    }}
+                  >
+                    <MdOutlineArchive size={22} color={colors.icons} cursor={'pointer'} />
+                    <label className="font-medium	cursor-pointer">Inativar</label>
+                  </MenuItem>
+
+                  <MenuItem
+                    className="flex gap-2 w-full"
+                    onClick={() => {
+                      handleCloseMenu();
+                      handleDelete(rowItem);
+                    }}
+                  >
+                    <MdDeleteOutline size={22} color={colors.icons} cursor={'pointer'} />
+                    <label className="font-medium	cursor-pointer">Remover</label>
+                  </MenuItem>
+                </>
+              ) : null}
+            </div>
+          </Menu>
+        )}
+
+        {openRemoveModal && (
+          <ModalOfRemove
+            isOpen={openRemoveModal}
+            onClose={() => setOpenRemoveModal(false)}
+            id={rowItem.id}
+            textConfirmation={`tarefa/${rowItem.description}`}
+            handleCloseModal={() => {
+              setRefetch(!refetch);
+              setOpenRemoveModal(false);
+            }}
+            model={'tarefa'}
+          />
+        )}
+
+        <Container>
+          <div className="flex flex-row justify-between">
+            <PageTitle showTitle={showTitle}>{'Tarefas'}</PageTitle>
+            <div className="flex items-center gap-1 relative font-medium text-[#2A3F54]">
+              <span className="w-[62px] text-[18px]">Ativo:</span>
+
+              <div className="flex items-center gap-[20px]">
+                <div className="flex items-center gap-[6px] cursor-pointer">
+                  <input
+                    type="radio"
+                    id="active"
+                    name="status"
+                    value="active"
+                    disabled={isLoading}
+                    checked={getForStatus === 'active'}
+                    className="w-[16px] h-[16px] cursor-pointer"
+                    onChange={() => setGetForStatus('active')}
+                  />
+                  <label htmlFor="active" className="text-[16px] cursor-pointer">
+                    Sim
+                  </label>
+                </div>
+                <div className="flex items-center gap-[6px] cursor-pointer">
+                  <input
+                    type="radio"
+                    id="only_deleted"
+                    name="status"
+                    value="only_deleted"
+                    disabled={isLoading}
+                    checked={getForStatus === 'only_deleted'}
+                    className="w-[16px] h-[16px] cursor-pointer"
+                    onChange={() => setGetForStatus('only_deleted')}
+                  />
+                  <label htmlFor="only_deleted" className="text-[16px] cursor-pointer">
+                    Não
+                  </label>
+                </div>
+                <div className="flex items-center gap-[6px] cursor-pointer">
+                  <input
+                    type="radio"
+                    id="with_deleted"
+                    name="status"
+                    value="with_deleted"
+                    disabled={isLoading}
+                    checked={getForStatus === 'with_deleted'}
+                    className="w-[16px] h-[16px] cursor-pointer"
+                    onChange={() => setGetForStatus('with_deleted')}
+                  />
+                  <label htmlFor="with_deleted" className="text-[16px] cursor-pointer">
+                    Todos
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
           <ContentContainer>
             <Box>
               <Typography mb={'8px'} variant="h6">
@@ -234,6 +477,7 @@ const Tasks = () => {
                     ? filteredTasksList.map(task => ({
                         id: task.id,
                         description: task.attributes.description,
+                        deleted: task.attributes.deleted,
                         work: task.attributes.work_number ? task.attributes.work_number : '-',
                         customer: task.attributes.customer,
                         responsible: task.attributes.responsible,
@@ -252,33 +496,12 @@ const Tasks = () => {
                 }
                 columns={[
                   {
-                    width: 140,
-                    field: 'actions',
-                    headerName: 'Ações',
+                    width: 80,
+                    field: 'id',
+                    headerName: 'ID',
+                    cellClassName: 'font-medium text-black',
                     align: 'center',
                     headerAlign: 'center',
-                    renderCell: (params: any) => (
-                      <Box width={'100%'} display={'flex'} justifyContent={'space-around'}>
-                        <MdVisibility
-                          size={20}
-                          cursor="pointer"
-                          onClick={() => handleOpenToViewDetails(params.row)}
-                        />
-                        <button
-                          style={{
-                            backgroundColor: 'transparent',
-                            border: 'none',
-                            cursor: 'pointer',
-                          }}
-                          disabled={params.row.created_by_id !== adminId}
-                          onClick={() => {
-                            handleOpenToEdit(params.row);
-                          }}
-                        >
-                          <MdModeEdit size={22} color={colors.icons} cursor={'pointer'} />
-                        </button>
-                      </Box>
-                    ),
                   },
                   {
                     width: 180,
@@ -292,21 +515,13 @@ const Tasks = () => {
                     sortable: false,
                   },
                   {
-                    flex: 1,
-                    field: 'work',
-                    headerName: 'Trabalho',
-                    align: 'center',
-                    headerAlign: 'center',
-                    sortable: false,
-                  },
-                  {
-                    flex: 1,
+                    width: 150,
                     field: 'deadline',
                     headerName: 'Data Limite',
                     sortable: false,
                   },
                   {
-                    flex: 1,
+                    width: 150,
                     field: 'status',
                     headerName: 'Status',
                     align: 'center',
@@ -323,6 +538,30 @@ const Tasks = () => {
                         }`}
                       >
                         {params.value}
+                      </div>
+                    ),
+                  },
+                  {
+                    width: 140,
+                    field: 'actions',
+                    headerName: 'Ações',
+                    align: 'center',
+                    headerAlign: 'center',
+                    renderCell: (params: any) => (
+                      <div>
+                        <IconButton
+                          aria-label="more"
+                          id="long-button"
+                          aria-controls={open ? 'long-menu' : undefined}
+                          aria-expanded={open ? 'true' : undefined}
+                          aria-haspopup="true"
+                          onClick={e => {
+                            setRowItem(params.row);
+                            handleOpenMenu(e);
+                          }}
+                        >
+                          <MdMoreHoriz size={22} color={colors.icons} cursor={'pointer'} />
+                        </IconButton>
                       </div>
                     ),
                   },
