@@ -10,7 +10,6 @@ import {
   getAllProfileCustomer,
   updateCustomer,
   inactiveCustomer,
-  deleteProfileCustomer,
   restoreCustomer,
 } from '@/services/customers';
 
@@ -46,7 +45,7 @@ import { DataGrid } from '@mui/x-data-grid';
 
 import IconButton from '@mui/material/IconButton';
 
-import { Footer, Notification, Spinner } from '@/components';
+import { Footer, Notification, Spinner, ModalOfRemove } from '@/components';
 
 import dynamic from 'next/dynamic';
 
@@ -113,8 +112,8 @@ const Customers = () => {
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [rowItem, setRowItem] = useState<ICustomerProps>({} as ICustomerProps);
-
   const open = Boolean(anchorEl);
+  const [openRemoveModal, setOpenRemoveModal] = useState<boolean>(false);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -270,17 +269,8 @@ const Customers = () => {
   };
 
   const handleDelete = async (profileCustomer: ICustomerProps) => {
-    try {
-      await deleteProfileCustomer(profileCustomer.id);
-      setMessage('Cliente removido com sucesso!');
-      setTypeMessage('success');
-      setOpenSnackbar(true);
-      setRefetch(!refetch);
-    } catch (error: any) {
-      setMessage('Erro ao remover cliente');
-      setTypeMessage('error');
-      setOpenSnackbar(true);
-    }
+    setRowItem(profileCustomer);
+    setOpenRemoveModal(true);
   };
 
   const translateCustomerType = (profileCustomerType: string) => {
@@ -624,6 +614,20 @@ const Customers = () => {
             ) : null}
           </div>
         </Menu>
+      )}
+
+      {openRemoveModal && (
+        <ModalOfRemove
+          isOpen={openRemoveModal}
+          onClose={() => setOpenRemoveModal(false)}
+          id={rowItem.id}
+          textConfirmation={`cliente/${rowItem.name}`}
+          handleCloseModal={() => {
+            setRefetch(!refetch);
+            setOpenRemoveModal(false);
+          }}
+          model={'customer'}
+        />
       )}
 
       <Layout>

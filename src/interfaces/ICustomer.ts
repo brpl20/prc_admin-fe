@@ -99,6 +99,7 @@ interface IRelationshipsProps {
 interface ICustomerProps {
   id: string;
   type: string;
+  name: string;
   deleted: boolean;
   attributes: IAttributesProps;
   relationships: IRelationshipsProps;
