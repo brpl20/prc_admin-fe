@@ -180,13 +180,13 @@ const Tasks = () => {
     const response = await getAllTasks(requestParams);
     setTasksList(response.data);
     setFilteredTasksList(response.data);
+    setIsLoading(false);
   };
 
   useEffect(() => {
     setIsLoading(true);
 
     getTasks();
-    setIsLoading(false);
   }, [refetch, isOpenTaskModal, getForStatus]);
 
   useEffect(() => {
@@ -273,7 +273,7 @@ const Tasks = () => {
                 </>
               ) : null}
 
-              {rowItem.deleted === false ? (
+              {!rowItem.deleted ? (
                 <>
                   <MenuItem
                     className="flex gap-2 w-full"

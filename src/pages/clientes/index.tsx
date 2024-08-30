@@ -565,7 +565,7 @@ const Customers = () => {
               </>
             ) : null}
 
-            {rowItem.deleted === false ? (
+            {!rowItem.deleted ? (
               <>
                 <MenuItem
                   className="flex gap-2 w-full"

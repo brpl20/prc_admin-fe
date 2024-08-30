@@ -207,14 +207,13 @@ const Works = () => {
   const getAdmins = async () => {
     const response: {
       data: IAdminProps[];
-    } = await getAllAdmins();
+    } = await getAllAdmins('');
     SetAllLawyers(response.data);
   };
 
   const getWorks = async () => {
     const requestParams = getForStatus === 'active' ? '' : getForStatus;
 
-    setIsLoading(true);
     const response = await getAllWorks(requestParams);
     setWorksList(response.data);
     setWorksListFiltered(response.data);
@@ -237,6 +236,8 @@ const Works = () => {
   }, []);
 
   useEffect(() => {
+    setIsLoading(true);
+
     if (window) {
       window.addEventListener('scroll', function () {
         const scrolled = window.scrollY;
@@ -339,7 +340,7 @@ const Works = () => {
               </>
             ) : null}
 
-            {rowItem.deleted === false ? (
+            {!rowItem.deleted ? (
               <>
                 <MenuItem
                   className="flex gap-2 w-full"
