@@ -65,7 +65,7 @@ const Admins = () => {
   const [searchFor, setSearchFor] = useState<string>('name');
   const [adminsList, setAdminsList] = useState<IAdminProps[]>([]);
   const [adminsListFiltered, setAdminsListFiltered] = useState<IAdminProps[]>([]);
-
+  console.log('adminsListFiltered', adminsListFiltered);
   const [refetch, setRefetch] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -75,7 +75,7 @@ const Admins = () => {
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [rowItem, setRowItem] = useState<IAdminPropsAttributes>({} as IAdminPropsAttributes);
-
+  console.log('rowItem', rowItem);
   const open = Boolean(anchorEl);
   const [openRemoveModal, setOpenRemoveModal] = useState<boolean>(false);
 
@@ -466,7 +466,7 @@ const Admins = () => {
                   adminsListFiltered &&
                   adminsListFiltered.map((admin: IAdminProps) => ({
                     id: Number(admin.id),
-                    deleted: admin.deleted,
+                    deleted: admin.attributes.deleted,
                     role: admin.attributes.role,
                     name: `${admin.attributes.name} ${admin.attributes.last_name}`,
                     email: admin.attributes.email,
