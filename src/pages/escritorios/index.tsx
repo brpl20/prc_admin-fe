@@ -218,7 +218,7 @@ const Offices = () => {
   }, [profilesAdminsOfOffice]);
 
   useEffect(() => {
-    if (rowItem.id) {
+    if (rowItem.id && rowItem.deleted === false) {
       getProfilesAdminsOfOffice(rowItem.id);
     }
   }, [rowItem]);
