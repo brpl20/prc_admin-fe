@@ -32,10 +32,10 @@ interface FormData {
 }
 
 const stepFiveSchema = z.object({
-  profession: z.string().nonempty('Profissão é obrigatório'),
+  profession: z.string().min(3, 'Profissão é obrigatório'),
   company: z.string(),
   number_benefit: z.string(),
-  mother_name: z.string().nonempty('Nome da Mãe é obrigatório'),
+  mother_name: z.string().min(3, 'Nome da Mãe é obrigatório'),
 });
 
 const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, IStepFiveProps> = (

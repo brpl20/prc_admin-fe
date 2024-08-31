@@ -64,6 +64,7 @@ interface IAttributesProps {
   data: any;
 
   draftWork: any;
+  deleted: boolean;
 }
 
 interface IProfile_customersDataProps {
@@ -74,9 +75,11 @@ interface IProfile_customersDataProps {
 }
 
 interface IWorksListProps {
-  id: number;
+  id: string;
   type: string;
+  procedure: string;
   attributes: IAttributesProps;
+  deleted: boolean;
 }
 
 export type { IWorksListProps, IAttributesProps };

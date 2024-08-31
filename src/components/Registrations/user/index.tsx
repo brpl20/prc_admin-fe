@@ -81,28 +81,28 @@ interface props {
 }
 
 const userSchema = z.object({
-  name: z.string().nonempty({ message: 'O campo Nome é obrigatório.' }),
-  last_name: z.string().nonempty({ message: 'O campo Sobrenome é obrigatório.' }),
-  cpf: z.string().nonempty({ message: 'O campo CPF é obrigatório.' }),
-  rg: z.string().nonempty({ message: 'O campo RG é obrigatório.' }),
-  mother_name: z.string().nonempty({ message: 'O campo Nome da Mãe é obrigatório.' }),
-  gender: z.string().nonempty({ message: 'O campo Gênero é obrigatório.' }),
-  civil_status: z.string().nonempty({ message: 'O campo Estado Civil é obrigatório.' }),
-  nationality: z.string().nonempty({ message: 'O campo Naturalidade é obrigatório.' }),
-  phone: z.string().nonempty({ message: 'O campo Telefone é obrigatório.' }),
-  email: z.string().nonempty({ message: 'O campo E-mail é obrigatório.' }),
-  userType: z.string().nonempty({ message: 'O campo Tipo do Usuário é obrigatório.' }),
-  bank_name: z.string().nonempty({ message: 'O campo Banco é obrigatório.' }),
-  agency: z.string().nonempty({ message: 'O campo Agência é obrigatório.' }),
-  op: z.string().nonempty({ message: 'O campo Operação é obrigatório.' }),
-  account: z.string().nonempty({ message: 'O campo Conta é obrigatório.' }),
-  pix: z.string().nonempty({ message: 'O campo Chave Pix é obrigatório.' }),
-  userEmail: z.string().nonempty({ message: 'O campo E-mail é obrigatório.' }),
-  city: z.string().nonempty({ message: 'O campo Cidade é obrigatório.' }),
-  state: z.string().nonempty({ message: 'O campo Estado é obrigatório.' }),
-  address: z.string().nonempty({ message: 'O campo Endereço é obrigatório.' }),
+  name: z.string().min(2, { message: 'O campo Nome é obrigatório.' }),
+  last_name: z.string().min(2, { message: 'O campo Sobrenome é obrigatório.' }),
+  cpf: z.string().min(2, { message: 'O campo CPF é obrigatório.' }),
+  rg: z.string().min(2, { message: 'O campo RG é obrigatório.' }),
+  mother_name: z.string().min(2, { message: 'O campo Nome da Mãe é obrigatório.' }),
+  gender: z.string().min(2, { message: 'O campo Gênero é obrigatório.' }),
+  civil_status: z.string().min(2, { message: 'O campo Estado Civil é obrigatório.' }),
+  nationality: z.string().min(2, { message: 'O campo Naturalidade é obrigatório.' }),
+  phone: z.string().min(2, { message: 'O campo Telefone é obrigatório.' }),
+  email: z.string().min(2, { message: 'O campo E-mail é obrigatório.' }),
+  userType: z.string().min(2, { message: 'O campo Tipo do Usuário é obrigatório.' }),
+  bank_name: z.string().min(2, { message: 'O campo Banco é obrigatório.' }),
+  agency: z.string().min(2, { message: 'O campo Agência é obrigatório.' }),
+  op: z.string().min(2, { message: 'O campo Operação é obrigatório.' }),
+  account: z.string().min(2, { message: 'O campo Conta é obrigatório.' }),
+  pix: z.string().min(2, { message: 'O campo Chave Pix é obrigatório.' }),
+  userEmail: z.string().min(2, { message: 'O campo E-mail é obrigatório.' }),
+  city: z.string().min(2, { message: 'O campo Cidade é obrigatório.' }),
+  state: z.string().min(2, { message: 'O campo Estado é obrigatório.' }),
+  address: z.string().min(2, { message: 'O campo Endereço é obrigatório.' }),
   number: z.number().min(1, { message: 'O campo Número é obrigatório.' }),
-  cep: z.string().nonempty({ message: 'O campo CEP é obrigatório.' }),
+  cep: z.string().min(2, { message: 'O campo CEP é obrigatório.' }),
 });
 
 const User = ({ dataToEdit }: props) => {
@@ -390,6 +390,14 @@ const User = ({ dataToEdit }: props) => {
   const handleFormError = (error: any) => {
     const newErrors = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
+
+    if (error.response && error.response.status === 400 && error.response.data.errors[0].code) {
+      setMessage(error.response.data.errors[0].code[0]);
+      setType('error');
+      setOpenSnackbar(true);
+      return;
+    }
+
     setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
@@ -577,7 +585,7 @@ const User = ({ dataToEdit }: props) => {
 
   useEffect(() => {
     const getOffices = async () => {
-      const response = await getAllOffices();
+      const response = await getAllOffices('');
       setOfficesList(response.data);
     };
 
@@ -777,7 +785,7 @@ const User = ({ dataToEdit }: props) => {
                   </Flex>
 
                   <Flex style={{ gap: '24px' }}>
-                    {renderInputField('cpf', 'CPF', 12, 'Informe o CPF', !!errors.cpf)}
+                    {renderInputField('cpf', 'CPF', 14, 'Informe o CPF', !!errors.cpf)}
                     {renderInputField('rg', 'RG', 16, 'Informe o RG', !!errors.rg)}
                   </Flex>
 

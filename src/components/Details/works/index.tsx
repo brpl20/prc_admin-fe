@@ -79,21 +79,21 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
   const getCustomers = async () => {
     const response: {
       data: any;
-    } = await getAllProfileCustomer();
+    } = await getAllProfileCustomer('');
     setAllCustomers(response.data);
   };
 
   const getAdmins = async () => {
     const response: {
       data: any;
-    } = await getAllAdmins();
+    } = await getAllAdmins('');
     setAllAdmins(response.data);
   };
 
   const getOffices = async () => {
     const response: {
       data: any;
-    } = await getAllOffices();
+    } = await getAllOffices('');
     setAllOffices(response.data);
   };
 

@@ -17,17 +17,6 @@ const signInRequest = async (data: ISignInRequestData) => {
   }
 };
 
-const loginWithGoogle = async (data: any) => {
-  data['provider'] = 'google';
-
-  try {
-    const response = await api.post('/login', data);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
 const logoutRequest = async () => {
   try {
     const response = await api.delete('/logout');
@@ -37,4 +26,4 @@ const logoutRequest = async () => {
   }
 };
 
-export { signInRequest, loginWithGoogle, logoutRequest };
+export { signInRequest, logoutRequest };

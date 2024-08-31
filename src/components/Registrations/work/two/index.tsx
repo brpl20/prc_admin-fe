@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 
 import { colors, Flex } from '@/styles/globals';
-import Notification from '@/components/OfficeModals/Notification';
+import { Notification } from '@/components';
 import { Container, Input, OptionsArea } from './styles';
 
 import { animateScroll as scroll } from 'react-scroll';
@@ -54,7 +54,7 @@ interface IStepTwoProps {
 }
 
 const stepTwoSchema = z.object({
-  honoraryType: z.string().nonempty(),
+  honoraryType: z.string().min(2),
 });
 
 const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps> = (

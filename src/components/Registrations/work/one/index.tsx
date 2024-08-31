@@ -17,7 +17,7 @@ import { colors, Flex } from '@/styles/globals';
 import { MdOutlineInfo, MdDelete } from 'react-icons/md';
 
 import { WorkContext } from '@/contexts/WorkContext';
-import Notification from '@/components/OfficeModals/Notification';
+import { Notification } from '@/components';
 
 import { ICustomerProps } from '@/interfaces/ICustomer';
 import { getAllProfileCustomer } from '@/services/customers';
@@ -67,9 +67,9 @@ interface IStepOneProps {
 }
 
 const stepOneSchema = z.object({
-  profile_customer_ids: z.array(z.string()).nonempty(),
-  procedures: z.array(z.string()).nonempty(),
-  subject: z.string().nonempty(),
+  profile_customer_ids: z.array(z.string()).min(2),
+  procedures: z.array(z.string()).min(2),
+  subject: z.string().min(2),
 });
 
 const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps> = (
@@ -427,7 +427,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
 
   useEffect(() => {
     const getCustomers = async () => {
-      const response = await getAllProfileCustomer();
+      const response = await getAllProfileCustomer('');
       setCustomersList(response.data);
     };
 

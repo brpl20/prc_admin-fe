@@ -257,6 +257,7 @@ export const SelectContainer = styled.div<any>`
       }
     }
   }
+
   ${props =>
     props.isOpen &&
     css`

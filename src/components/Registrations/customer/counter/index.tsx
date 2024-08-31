@@ -45,11 +45,11 @@ interface props {
 }
 
 const counterSchema = z.object({
-  name: z.string().nonempty('Nome é obrigatório'),
-  last_name: z.string().nonempty('Sobrenome é obrigatório'),
-  accountant_id: z.string().nonempty('Registro Profissional é obrigatório'),
-  phone_number: z.string().nonempty('Telefone Obrigatório'),
-  email: z.string().nonempty('Email Obrigatório'),
+  name: z.string().min(4, 'Nome é obrigatório'),
+  last_name: z.string().min(4, 'Sobrenome é obrigatório'),
+  accountant_id: z.string().min(4, 'Registro Profissional é obrigatório'),
+  phone_number: z.string().min(4, 'Telefone Obrigatório'),
+  email: z.string().min(4, 'Email Obrigatório'),
 });
 
 const Counter = ({ pageTitle }: props) => {

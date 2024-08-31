@@ -37,7 +37,7 @@ import WorkStepThree, { IRefWorkStepThreeProps } from './work/three';
 import WorkStepFour, { IRefWorkStepFourProps } from './work/four';
 import WorkStepFive, { IRefWorkStepFiveProps } from './work/five';
 import WorkStepSix, { IRefWorkStepSixProps } from './work/six';
-import ConfirmDownloadDocument from '../ConfirmDownloadDocument';
+import { ConfirmDownloadDocument } from '@/components';
 
 interface IRegistrationProps {
   registrationType: string;

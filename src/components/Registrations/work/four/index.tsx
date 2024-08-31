@@ -7,7 +7,6 @@ import {
   useImperativeHandle,
 } from 'react';
 
-import { parseCookies } from 'nookies';
 import { getAllAdmins } from '@/services/admins';
 import { getOfficesWithLaws } from '@/services/offices';
 
@@ -231,7 +230,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   const getAdmins = async () => {
     const response: {
       data: IAdminProps[];
-    } = await getAllAdmins();
+    } = await getAllAdmins('');
     SetAllLawyers(response.data);
   };
 

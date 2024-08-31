@@ -29,7 +29,7 @@ import {
 
 import { z } from 'zod';
 import { DescriptionText, colors } from '@/styles/globals';
-import Notification from '@/components/OfficeModals/Notification';
+import { Notification } from '@/components';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
 
@@ -105,7 +105,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   });
 
   const getRepresentors = async () => {
-    const allCustomers = await getAllProfileCustomer();
+    const allCustomers = await getAllProfileCustomer('');
     const response = allCustomers.data;
 
     const representors = response.filter(

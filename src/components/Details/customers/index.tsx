@@ -173,7 +173,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
 
   useEffect(() => {
     const getRepresentors = async () => {
-      const allCustomers = await getAllProfileCustomer();
+      const allCustomers = await getAllProfileCustomer('');
       const response = allCustomers.data;
 
       const representors = response.filter(

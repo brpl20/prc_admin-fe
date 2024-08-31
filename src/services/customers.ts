@@ -42,9 +42,12 @@ const updateProfileCustomer = async (id: string, data: any) => {
   }
 };
 
-const getAllProfileCustomer = async () => {
+const getAllProfileCustomer = async (typeOfParams: string) => {
+  const url =
+    typeOfParams !== '' ? `/profile_customers?deleted=${typeOfParams}` : '/profile_customers';
+
   try {
-    const response = await api.get('/profile_customers');
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     throw error;
@@ -69,6 +72,30 @@ const getCustomerById = async (id: string) => {
   }
 };
 
+const inactiveCustomer = async (id: string) => {
+  try {
+    await api.delete(`/profile_customers/${id}`);
+  } catch (error) {
+    throw error;
+  }
+};
+
+const deleteProfileCustomer = async (id: string) => {
+  try {
+    await api.delete(`/profile_customers/${id}?destroy_fully=true`);
+  } catch (error) {
+    throw error;
+  }
+};
+
+const restoreProfileCustomer = async (id: string) => {
+  try {
+    await api.post(`/profile_customers/${id}/restore`);
+  } catch (error) {
+    throw error;
+  }
+};
+
 export {
   createProfileCustomer,
   updateCustomer,
@@ -77,4 +104,7 @@ export {
   getAllCustomers,
   getAllProfileCustomer,
   getCustomerById,
+  inactiveCustomer,
+  deleteProfileCustomer,
+  restoreProfileCustomer,
 };
