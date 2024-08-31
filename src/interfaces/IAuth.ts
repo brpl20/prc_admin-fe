@@ -13,7 +13,7 @@ interface IAuthContextType {
   isAuthenticated: boolean;
   user: IUser;
   handleLogout: () => void;
-  localAuthentication: (data: ISignInData) => Promise<void>;
+  saveToken: (token: string) => void;
 }
 
 interface ISignInRequestData {
@@ -32,10 +32,4 @@ interface IGoogleProps {
   };
 }
 
-export type {
-  IUser,
-  ISignInData,
-  IAuthContextType,
-  ISignInRequestData,
-  IGoogleProps,
-};
+export type { IUser, ISignInData, IAuthContextType, ISignInRequestData, IGoogleProps };

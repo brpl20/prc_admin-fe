@@ -517,7 +517,7 @@ const Representative = ({ pageTitle }: props) => {
     const getAdmins = async () => {
       const response: {
         data: ICustomerProps[];
-      } = await getAllProfileCustomer();
+      } = await getAllProfileCustomer('');
 
       if (response) {
         setCustomersList(response.data);

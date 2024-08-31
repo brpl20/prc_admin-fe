@@ -390,6 +390,14 @@ const User = ({ dataToEdit }: props) => {
   const handleFormError = (error: any) => {
     const newErrors = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
+
+    if (error.response && error.response.status === 400 && error.response.data.errors[0].code) {
+      setMessage(error.response.data.errors[0].code[0]);
+      setType('error');
+      setOpenSnackbar(true);
+      return;
+    }
+
     setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
@@ -577,7 +585,7 @@ const User = ({ dataToEdit }: props) => {
 
   useEffect(() => {
     const getOffices = async () => {
-      const response = await getAllOffices();
+      const response = await getAllOffices('');
       setOfficesList(response.data);
     };
 
@@ -777,7 +785,7 @@ const User = ({ dataToEdit }: props) => {
                   </Flex>
 
                   <Flex style={{ gap: '24px' }}>
-                    {renderInputField('cpf', 'CPF', 12, 'Informe o CPF', !!errors.cpf)}
+                    {renderInputField('cpf', 'CPF', 14, 'Informe o CPF', !!errors.cpf)}
                     {renderInputField('rg', 'RG', 16, 'Informe o RG', !!errors.rg)}
                   </Flex>
 

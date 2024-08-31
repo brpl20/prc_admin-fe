@@ -8,7 +8,7 @@ import { MdKeyboardArrowDown } from 'react-icons/md';
 import { Box, Button, CircularProgress } from '@mui/material';
 import Link from 'next/link';
 import { IAdminProps } from '@/interfaces/IAdmin';
-import { getAllProfileCustomer } from '@/services/customers';
+import { getAllAdmins } from '@/services/admins';
 import { FiMinusCircle } from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
 
@@ -29,13 +29,14 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
   const getAdmins = async () => {
     const response: {
       data: IAdminProps[];
-    } = await getAllProfileCustomer();
+    } = await getAllAdmins('');
     SetAllLawyers(response.data);
   };
 
   const getLawyerName = (lawyerId: number) => {
     if (lawyerId) {
       const lawyer = allLawyers.find((lawyer: any) => lawyer.id == lawyerId);
+
       return (
         lawyer &&
         `${lawyer?.attributes.name ? lawyer?.attributes.name : ''} ${
@@ -70,7 +71,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
           phones: data.attributes.phones ? data.attributes.phones : '',
           emails: data.attributes.emails ? data.attributes.emails : '',
           site: data.attributes.site ? data.attributes.site : '',
-          responsible_lawyer: data.attributes.responsible_lawyer_id
+          responsible_lawyer_id: data.attributes.responsible_lawyer_id
             ? getLawyerName(data.attributes.responsible_lawyer_id)
             : '',
         };
@@ -1034,7 +1035,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                           flexDirection: 'column',
                           gap: '8px',
                           alignItems: 'flex-start',
-                          width: '300px',
+                          width: '330px',
                         }}
                       >
                         <span
@@ -1053,8 +1054,8 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {officeData.responsible_lawyer
-                            ? officeData.responsible_lawyer
+                          {officeData.responsible_lawyer_id
+                            ? officeData.responsible_lawyer_id
                             : 'Não Informado'}
                         </span>
                       </Flex>

@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useContext, useState } from 'react';
-import { AuthContext } from '../contexts/AuthContext';
 
 import Image from 'next/image';
 import Logo from '../assets/logo-colors@3x.png';

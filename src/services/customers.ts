@@ -88,7 +88,7 @@ const deleteProfileCustomer = async (id: string) => {
   }
 };
 
-const restoreCustomer = async (id: string) => {
+const restoreProfileCustomer = async (id: string) => {
   try {
     await api.post(`/profile_customers/${id}/restore`);
   } catch (error) {
@@ -106,5 +106,5 @@ export {
   getCustomerById,
   inactiveCustomer,
   deleteProfileCustomer,
-  restoreCustomer,
+  restoreProfileCustomer,
 };

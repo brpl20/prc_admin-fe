@@ -10,7 +10,7 @@ import {
   getAllProfileCustomer,
   updateCustomer,
   inactiveCustomer,
-  restoreCustomer,
+  restoreProfileCustomer,
 } from '@/services/customers';
 
 import Menu from '@mui/material/Menu';
@@ -55,7 +55,8 @@ import { ICustomerProps } from '@/interfaces/ICustomer';
 import { phoneMask } from '@/utils/masks';
 
 import { CustomerContext } from '@/contexts/CustomerContext';
-import { getSession } from 'next-auth/react';
+import { AuthContext } from '@/contexts/AuthContext';
+import { getSession, useSession } from 'next-auth/react';
 
 export type CustomersProps = {
   id: string;
@@ -77,6 +78,18 @@ type AllCustomer = {
 };
 
 const Customers = () => {
+  const { saveToken } = useContext(AuthContext);
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if (session) {
+      const token = session.token;
+      if (token) {
+        saveToken(token);
+      }
+    }
+  }, []);
+
   const legend = [
     {
       id: 1,
@@ -242,7 +255,7 @@ const Customers = () => {
 
   const handleRestore = async (profileCustomer: ICustomerProps) => {
     try {
-      await restoreCustomer(profileCustomer.id);
+      await restoreProfileCustomer(profileCustomer.id);
       setMessage('Cliente restaurado com sucesso!');
       setTypeMessage('success');
       setOpenSnackbar(true);

@@ -427,7 +427,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
 
   useEffect(() => {
     const getCustomers = async () => {
-      const response = await getAllProfileCustomer();
+      const response = await getAllProfileCustomer('');
       setCustomersList(response.data);
     };
 

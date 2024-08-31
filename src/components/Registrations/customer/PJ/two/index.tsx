@@ -228,7 +228,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
   }));
 
   const getCustomers = async () => {
-    const allProfileCustomers = await getAllProfileCustomer();
+    const allProfileCustomers = await getAllProfileCustomer('');
     const response = allProfileCustomers.data;
 
     const representors = response.filter(

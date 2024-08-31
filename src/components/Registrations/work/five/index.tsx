@@ -63,7 +63,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
   useEffect(() => {
     const getCustomers = async () => {
-      const response = await getAllProfileCustomer();
+      const response = await getAllProfileCustomer('');
       setCustomersList(response.data);
     };
 

@@ -105,7 +105,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   });
 
   const getRepresentors = async () => {
-    const allCustomers = await getAllProfileCustomer();
+    const allCustomers = await getAllProfileCustomer('');
     const response = allCustomers.data;
 
     const representors = response.filter(

@@ -71,7 +71,7 @@ interface props {
 
 const officeSchema = z.object({
   name: z.string().min(2, { message: 'Informe o Nome do Escritório' }),
-  office_type: z.string().min(2, { message: 'Selecione o Tipo de Escritório' }),
+  office_type: z.string().min(1, { message: 'Selecione o Tipo de Escritório' }),
   oab: z.string().min(2, { message: 'Informe o Identificador OAB' }),
   cnpj_cpf: z.string().min(2, { message: 'Informe o CNPJ/CPF' }),
   society_type: z.string().min(2, { message: 'Informe o Tipo de Sociedade' }),
@@ -88,8 +88,6 @@ const officeSchema = z.object({
 
 const Office = ({ dataToEdit }: props) => {
   const route = useRouter();
-
-  const { data: session } = useSession();
 
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
@@ -370,7 +368,7 @@ const Office = ({ dataToEdit }: props) => {
   };
 
   const getAdmins = async () => {
-    const response = await getAllAdmins();
+    const response = await getAllAdmins('');
     setAdminsList(response.data);
   };
 

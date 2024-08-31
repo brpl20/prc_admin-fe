@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useContext } from 'react';
 import Router from 'next/router';
+import jwt from 'jsonwebtoken';
 
 import { getAllAdmins } from '@/services/admins';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
+import { AuthContext } from '@/contexts/AuthContext';
 
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -42,9 +44,21 @@ import { getSession, useSession } from 'next-auth/react';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Admins = () => {
+  const { user, saveToken } = useContext(AuthContext);
   const { data: session } = useSession();
 
-  const { showTitle, setShowTitle, setPageTitle } = useContext(PageTitleContext);
+  useEffect(() => {
+    if (!user.admin_id) {
+      if (session) {
+        const token = session.token;
+        if (token) {
+          saveToken(token);
+        }
+      }
+    }
+  }, []);
+
+  const { showTitle, setShowTitle } = useContext(PageTitleContext);
 
   const [getForStatus, setGetForStatus] = useState<string>('active');
 
@@ -61,7 +75,7 @@ const Admins = () => {
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [rowItem, setRowItem] = useState<IAdminPropsAttributes>({} as IAdminPropsAttributes);
-  console.log('rowItem', rowItem);
+
   const open = Boolean(anchorEl);
   const [openRemoveModal, setOpenRemoveModal] = useState<boolean>(false);
 
@@ -160,7 +174,6 @@ const Admins = () => {
   const getAdmins = async () => {
     const requestParams = getForStatus === 'active' ? '' : getForStatus;
     const response = await getAllAdmins(requestParams);
-
     const translatedRole = response.data.map((user: IAdminProps) => ({
       ...user,
       attributes: {
@@ -274,27 +287,31 @@ const Admins = () => {
                   <label className="font-medium	cursor-pointer">Alterar</label>
                 </MenuItem>
 
-                <MenuItem
-                  className="flex gap-2 w-full"
-                  onClick={() => {
-                    handleCloseMenu();
-                    handleInactive(rowItem);
-                  }}
-                >
-                  <MdOutlineArchive size={22} color={colors.icons} cursor={'pointer'} />
-                  <label className="font-medium	cursor-pointer">Inativar</label>
-                </MenuItem>
+                {Number(user.admin_id) === Number(rowItem.id) ? null : (
+                  <>
+                    <MenuItem
+                      className="flex gap-2 w-full"
+                      onClick={() => {
+                        handleCloseMenu();
+                        handleInactive(rowItem);
+                      }}
+                    >
+                      <MdOutlineArchive size={22} color={colors.icons} cursor={'pointer'} />
+                      <label className="font-medium	cursor-pointer">Inativar</label>
+                    </MenuItem>
 
-                <MenuItem
-                  className="flex gap-2 w-full"
-                  onClick={() => {
-                    handleCloseMenu();
-                    handleDelete(rowItem);
-                  }}
-                >
-                  <MdDeleteOutline size={22} color={colors.icons} cursor={'pointer'} />
-                  <label className="font-medium	cursor-pointer">Remover</label>
-                </MenuItem>
+                    <MenuItem
+                      className="flex gap-2 w-full"
+                      onClick={() => {
+                        handleCloseMenu();
+                        handleDelete(rowItem);
+                      }}
+                    >
+                      <MdDeleteOutline size={22} color={colors.icons} cursor={'pointer'} />
+                      <label className="font-medium	cursor-pointer">Remover</label>
+                    </MenuItem>
+                  </>
+                )}
               </>
             ) : null}
           </div>

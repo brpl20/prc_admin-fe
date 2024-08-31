@@ -7,6 +7,7 @@ import { deleteProfileCustomer } from '@/services/customers';
 import { deleteWork } from '@/services/works';
 import { deleteJob } from '@/services/tasks';
 import { deleteProfileAdmin } from '@/services/admins';
+import { deleteOffice } from '@/services/offices';
 
 type RemoveProps = {
   isOpen: boolean;
@@ -57,6 +58,7 @@ const ModalOfRemove = ({
           if (model === 'trabalho') await deleteWork(id);
           if (model === 'tarefa') await deleteJob(id);
           if (model === 'admin') await deleteProfileAdmin(id);
+          if (model === 'escritório') await deleteOffice(id);
 
           setLoading(false);
           handleCloseModal();
