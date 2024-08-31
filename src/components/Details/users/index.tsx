@@ -26,7 +26,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
   const getOffices = async () => {
     const response: {
       data: any;
-    } = await getAllOffices();
+    } = await getAllOffices('');
     setAllOffices(response.data);
   };
 
