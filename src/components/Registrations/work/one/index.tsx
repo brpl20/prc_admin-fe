@@ -67,8 +67,8 @@ interface IStepOneProps {
 }
 
 const stepOneSchema = z.object({
-  profile_customer_ids: z.array(z.string()).min(2),
-  procedures: z.array(z.string()).min(2),
+  profile_customer_ids: z.array(z.string()).min(1),
+  procedures: z.array(z.string()).min(1),
   subject: z.string().min(2),
 });
 
@@ -96,7 +96,6 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File[] | null>(null);
-  const [tributaryArea, setTributaryArea] = useState<string>('');
   const [compensationsLastYears, setCompensationsLastYears] = useState('');
   const [officialCompensation, setOfficialCompensation] = useState('');
   const [hasALawsuit, setHasALawsuit] = useState('');

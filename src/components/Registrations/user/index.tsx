@@ -93,8 +93,8 @@ const userSchema = z.object({
   email: z.string().min(2, { message: 'O campo E-mail é obrigatório.' }),
   userType: z.string().min(2, { message: 'O campo Tipo do Usuário é obrigatório.' }),
   bank_name: z.string().min(2, { message: 'O campo Banco é obrigatório.' }),
-  agency: z.string().min(2, { message: 'O campo Agência é obrigatório.' }),
-  op: z.string().min(2, { message: 'O campo Operação é obrigatório.' }),
+  agency: z.string().min(1, { message: 'O campo Agência é obrigatório.' }),
+  op: z.string().min(1, { message: 'O campo Operação é obrigatório.' }),
   account: z.string().min(2, { message: 'O campo Conta é obrigatório.' }),
   pix: z.string().min(2, { message: 'O campo Chave Pix é obrigatório.' }),
   userEmail: z.string().min(2, { message: 'O campo E-mail é obrigatório.' }),
@@ -126,7 +126,6 @@ const User = ({ dataToEdit }: props) => {
   const [passwordHasNumber, setPasswordHasNumber] = useState(false);
 
   const [errors, setErrors] = useState({} as any);
-
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
@@ -137,6 +136,7 @@ const User = ({ dataToEdit }: props) => {
     last_name: '',
     cpf: '',
     rg: '',
+    agency: '',
     email: '',
     password: '',
     confirmPassword: '',

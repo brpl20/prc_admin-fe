@@ -65,7 +65,6 @@ const Admins = () => {
   const [searchFor, setSearchFor] = useState<string>('name');
   const [adminsList, setAdminsList] = useState<IAdminProps[]>([]);
   const [adminsListFiltered, setAdminsListFiltered] = useState<IAdminProps[]>([]);
-  console.log('adminsListFiltered', adminsListFiltered);
   const [refetch, setRefetch] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -75,7 +74,6 @@ const Admins = () => {
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [rowItem, setRowItem] = useState<IAdminPropsAttributes>({} as IAdminPropsAttributes);
-  console.log('rowItem', rowItem);
   const open = Boolean(anchorEl);
   const [openRemoveModal, setOpenRemoveModal] = useState<boolean>(false);
 
