@@ -19,7 +19,8 @@ export const Input = styled.input<any>`
   height: 40px;
   padding-left: 8px;
 
-  border: 1px solid ${colors.icons};
+  border: 1px solid;
+  border-radius: 4px;
 
   font-size: 16px;
   font-weight: 300;
@@ -28,6 +29,7 @@ export const Input = styled.input<any>`
 
 export const OptionsArea = styled.div`
   border: 1px solid ${colors.icons};
+  border-radius: 4px;
   margin-left: 29px;
 
   width: 100%;

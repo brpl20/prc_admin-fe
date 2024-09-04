@@ -8,14 +8,12 @@ import React, {
   useEffect,
 } from 'react';
 
-import { z } from 'zod';
 import { Flex } from '@/styles/globals';
 import { MdOutlineInfo } from 'react-icons/md';
 import { WorkContext } from '@/contexts/WorkContext';
 
 import { Container, InputContainer } from './styles';
 import { Notification } from '@/components';
-import { animateScroll as scroll } from 'react-scroll';
 
 import {
   Box,
@@ -40,6 +38,10 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
   { confirmation },
   ref,
 ) => {
+  const router = useRouter();
+
+  const isEdit = router.asPath.includes('alterar');
+
   const { workForm, setWorkForm } = useContext(WorkContext);
 
   const [errors, setErrors] = useState({} as any);
@@ -49,11 +51,11 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
   const [type, setType] = useState<'success' | 'error'>('success');
 
   const [documentsProduced, setDocumentsProduced] = useState<string[]>([]);
+  const [documentsToRegenerate, setDocumentsToRegenerate] = useState<string[]>([]);
   const [pendingDocuments, setPendingDocuments] = useState([] as any);
   const [gradesInGeneral, setGradesInGeneral] = useState<string>('');
   const [otherDocuments, setOtherDocuments] = useState<string>('');
   const [folder, setFolder] = useState('');
-  const router = useRouter();
 
   const handleDocumentsProducedSelection = (event: ChangeEvent<HTMLInputElement>) => {
     const { value, checked } = event.target;
@@ -65,44 +67,10 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
     }
   };
 
-  {
-    /*Retirar Documento e Adicionar novamente*/
-  }
-
-  // const handleDocumentsProducedSelection = (event: ChangeEvent<HTMLInputElement>) => {
-  //   const { value, checked } = event.target;
-
-  //   if (checked) {
-  //     setDocumentsProduced((prevSelected: any) => [...prevSelected, value]);
-  //   } else {
-  //     setDocumentsProduced((prevSelected: any) =>
-  //       prevSelected.filter((document: any) => {
-  //         const documentType = document.document_type ? document.document_type : document;
-  //         return documentType !== value;
-  //       }),
-  //     );
-  //   }
-  // };
-
-  const handleDocumentsPendingSelection = (event: ChangeEvent<HTMLInputElement>) => {
-    const { value, checked } = event.target;
-
-    if (checked) {
-      const document = {
-        description: value,
-        profile_customer_id: workForm.profile_customer_ids.toString(),
-      };
-      setPendingDocuments((prevSelected: any) => [...prevSelected, document]);
-    } else {
-      setPendingDocuments((prevSelected: any) =>
-        prevSelected.filter((document: any) => document.description !== value),
-      );
-    }
-  };
-
   const handleSubmitForm = () => {
     try {
       if (documentsProduced.length <= 0) {
+        setErrors({ ...errors, documents_attributes: true });
         throw new Error('Selecione pelo menos um documento a ser produzido');
       }
 
@@ -113,7 +81,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
           documentsProduced.map((document: any) => {
             return {
               document_type: document,
-              profile_customer_id: profile,
+              profile_customer_id: Number(profile),
             };
           }),
         );
@@ -143,7 +111,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
             workForm.profile_customer_ids.map((profile: any) => {
               newProducedDocumentsArray.push({
                 document_type: document,
-                profile_customer_id: profile,
+                profile_customer_id: Number(profile),
               });
             });
           }
@@ -152,7 +120,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
             newProducedDocumentsArray.push({
               id: document.id,
               document_type: document.document_type,
-              profile_customer_id: document.profile_customer_id,
+              profile_customer_id: Number(document.profile_customer_id),
               url: document.url,
             });
           }
@@ -162,18 +130,21 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
           documentTypesSet.forEach((document: any) => {
             newProducedDocumentsArray.push({
               document_type: document,
-              profile_customer_id: profile,
+              profile_customer_id: Number(profile),
             });
           });
         });
 
         data = {
-          ...workForm,
-          documents_attributes: newProducedDocumentsArray,
-          pending_documents_attributes: pendingDocuments,
-          extra_pending_document: otherDocuments,
-          folder: folder,
-          note: gradesInGeneral,
+          regenerate_documents: true,
+          work: {
+            ...workForm,
+            documents_attributes: newProducedDocumentsArray,
+            pending_documents_attributes: pendingDocuments,
+            extra_pending_document: otherDocuments,
+            folder: folder,
+            note: gradesInGeneral,
+          },
         };
       } else {
         data = {
@@ -210,30 +181,6 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
   }));
 
   useEffect(() => {
-    const handleDraftWork = () => {
-      const draftWork = workForm.draftWork;
-
-      if (draftWork.id) {
-        if (draftWork.attributes) {
-          const attributes = draftWork.attributes;
-
-          if (attributes.documents) {
-            const documents_types = attributes.documents.map(
-              (document: any) => document.document_type,
-            );
-
-            setDocumentsProduced(documents_types);
-          }
-
-          if (attributes.pending_documents) {
-            const pending_documents = attributes.pending_documents.map((document: any) => document);
-
-            setPendingDocuments(pending_documents);
-          }
-        }
-      }
-    };
-
     const handleDataForm = () => {
       const attributes = workForm.data.attributes;
 
@@ -242,6 +189,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
           const documents_types = attributes.documents.map((document: any) => document);
 
           setDocumentsProduced(documents_types);
+          setDocumentsToRegenerate(documents_types);
         }
 
         if (attributes.extra_pending_document) {
@@ -267,10 +215,6 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
     if (workForm.data) {
       handleDataForm();
     }
-
-    if (workForm.draftWork && workForm.draftWork.id) {
-      handleDraftWork();
-    }
   }, [workForm]);
 
   useEffect(() => {
@@ -282,6 +226,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
 
         if (parsedData.documents_attributes) {
           setDocumentsProduced(parsedData.documents_attributes);
+          setDocumentsToRegenerate(parsedData.documents_attributes);
         }
 
         if (parsedData.extra_pending_document) {
@@ -381,7 +326,14 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                       onChange={handleDocumentsProducedSelection}
                     />
                   }
-                  label="Procuração"
+                  label={
+                    (isEdit && documentsToRegenerate.includes('procuration')) ||
+                    documentsToRegenerate
+                      .map((document: any) => document.document_type)
+                      .includes('procuration')
+                      ? 'Reemitir procuração'
+                      : 'Emitir procuração'
+                  }
                 />
 
                 <FormControlLabel
@@ -397,7 +349,14 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                       onChange={handleDocumentsProducedSelection}
                     />
                   }
-                  label="Termo de Renúncia"
+                  label={
+                    (isEdit && documentsToRegenerate.includes('waiver')) ||
+                    documentsToRegenerate
+                      .map((document: any) => document.document_type)
+                      .includes('waiver')
+                      ? 'Reemitir Termo de renúncia'
+                      : 'Emitir Termo de renúncia'
+                  }
                 />
 
                 <FormControlLabel
@@ -413,7 +372,14 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                       onChange={handleDocumentsProducedSelection}
                     />
                   }
-                  label="Declaração  de Carência"
+                  label={
+                    (isEdit && documentsToRegenerate.includes('deficiency_statement')) ||
+                    documentsToRegenerate
+                      .map((document: any) => document.document_type)
+                      .includes('deficiency_statement')
+                      ? 'Reemitir declaração  de carência'
+                      : 'Emitir declaração  de carência'
+                  }
                   style={{
                     marginRight: '0px',
                   }}
@@ -432,201 +398,17 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
                       onChange={handleDocumentsProducedSelection}
                     />
                   }
-                  label="Contrato"
+                  label={
+                    (isEdit && documentsToRegenerate.includes('honorary')) ||
+                    documentsToRegenerate
+                      .map((document: any) => document.document_type)
+                      .includes('honorary')
+                      ? 'Reemitir contrato'
+                      : 'Emitir contrato'
+                  }
                 />
-
-                {/* <FormControlLabel
-                  control={
-                    <Checkbox
-                      value="termOfResidence"
-                      checked={
-                        documentsProduced.includes('termOfResidence') ||
-                        documentsProduced
-                          .map((document: any) => document.document_type)
-                          .includes('termOfResidence')
-                      }
-                      onChange={handleDocumentsProducedSelection}
-                    />
-                  }
-                  label="Termo de Residência"
-                  style={{
-                    marginRight: '0px',
-                  }}
-                /> */}
-                {/* 
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      value="ruralDeclaration"
-                      checked={
-                        documentsProduced.includes('ruralDeclaration') ||
-                        documentsProduced
-                          .map((document: any) => document.document_type)
-                          .includes('ruralDeclaration')
-                      }
-                      onChange={handleDocumentsProducedSelection}
-                    />
-                  }
-                  label="Declaração Rural"
-                  style={{
-                    marginRight: '0px',
-                  }}
-                /> */}
               </Flex>
             </Box>
-
-            {/* Pending Documents */}
-            {/* <Box>
-              <Flex
-                style={{
-                  marginBottom: '8px',
-                }}
-              >
-                <Flex
-                  style={{
-                    alignItems: 'center',
-                  }}
-                >
-                  <Typography
-                    display={'flex'}
-                    alignItems={'center'}
-                    variant="h6"
-                    style={{ height: '40px' }}
-                  >
-                    {'Documentos Pendentes'}
-                  </Typography>
-                  <CustomTooltip
-                    title="Lista de documentos que o cliente deve fornecer ao escritório. Fique atento e notifique o cliente caso estes documentos não sejam entregues ao escritório."
-                    placement="right"
-                  >
-                    <span
-                      style={{
-                        display: 'flex',
-                      }}
-                    >
-                      <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
-                    </span>
-                  </CustomTooltip>
-
-                  {errors.pending_documents_attributes && pendingDocuments.length <= 0 && (
-                    <label className="flagError">{'*'}</label>
-                  )}
-                </Flex>
-              </Flex>
-
-              <Flex
-                style={{
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      value="rg"
-                      checked={
-                        pendingDocuments.includes('rg') ||
-                        pendingDocuments.map((document: any) => document.description).includes('rg')
-                      }
-                      onChange={handleDocumentsPendingSelection}
-                    />
-                  }
-                  label="Documento de Identidade"
-                />
-
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      value="proof_of_address"
-                      checked={
-                        pendingDocuments.includes('proof_of_address') ||
-                        pendingDocuments
-                          .map((document: any) => document.description)
-                          .includes('proof_of_address')
-                      }
-                      onChange={handleDocumentsPendingSelection}
-                    />
-                  }
-                  label="Comprovante de Residência"
-                />
-
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      value="inss_password"
-                      checked={
-                        pendingDocuments.includes('inss_password') ||
-                        pendingDocuments
-                          .map((document: any) => document.description)
-                          .includes('inss_password')
-                      }
-                      onChange={handleDocumentsPendingSelection}
-                    />
-                  }
-                  label="Senha do Meu INSS"
-                  style={{
-                    marginRight: '0px',
-                  }}
-                />
-
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      value="medical_documents"
-                      checked={
-                        pendingDocuments.includes('medical_documents') ||
-                        pendingDocuments
-                          .map((document: any) => document.description)
-                          .includes('medical_documents')
-                      }
-                      onChange={handleDocumentsPendingSelection}
-                    />
-                  }
-                  label="Documentos Médicos"
-                  style={{
-                    marginRight: '0px',
-                  }}
-                />
-
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      value="rural_documents"
-                      checked={
-                        pendingDocuments.includes('rural_documents') ||
-                        pendingDocuments
-                          .map((document: any) => document.description)
-                          .includes('rural_documents')
-                      }
-                      onChange={handleDocumentsPendingSelection}
-                    />
-                  }
-                  label="Documentos Rurais"
-                  style={{
-                    marginRight: '0px',
-                  }}
-                />
-
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      value="copy_of_requirements"
-                      checked={
-                        pendingDocuments.includes('copy_of_requirements') ||
-                        pendingDocuments
-                          .map((document: any) => document.description)
-                          .includes('copy_of_requirements')
-                      }
-                      onChange={handleDocumentsPendingSelection}
-                    />
-                  }
-                  label="Cópia de Requerimento(s)"
-                  style={{
-                    marginRight: '0px',
-                  }}
-                />
-              </Flex>
-            </Box> */}
           </Flex>
         </Flex>
       </>

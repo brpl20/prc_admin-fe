@@ -7,7 +7,7 @@ import React, {
   useEffect,
 } from 'react';
 
-import { colors, Flex } from '@/styles/globals';
+import { colors } from '@/styles/globals';
 import { Notification } from '@/components';
 import { Container, Input, OptionsArea } from './styles';
 
@@ -17,18 +17,11 @@ import CustomTooltip from '@/components/Tooltip';
 import { MdOutlineInfo } from 'react-icons/md';
 import { WorkContext } from '@/contexts/WorkContext';
 
-import {
-  Box,
-  FormControl,
-  FormControlLabel,
-  Typography,
-  Radio,
-  Select,
-  MenuItem,
-} from '@mui/material';
+import { FormControlLabel, Typography, Radio, Select, MenuItem } from '@mui/material';
 import { moneyMask, percentMask } from '@/utils/masks';
 import { useRouter } from 'next/router';
 import { z } from 'zod';
+import { set } from 'date-fns';
 
 const instalmentOptions = [
   '1x',
@@ -70,6 +63,7 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
 
   const [honoraryType, setHonoraryType] = useState('');
   const [valueOfFixed, setValueOfFixed] = useState<string>();
+  const [workPrev, setWorkPrev] = useState<number | null>(null);
   const [valueOfPercent, setValueOfPercent] = useState<string>();
 
   const [parcelling, setParcelling] = useState(false);
@@ -92,7 +86,7 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
       setIsVisibleOptionsArea(true);
     }
 
-    value.search('bonus') < 0 ? setIsVisibleOptionsArea(true) : setIsVisibleOptionsArea(false);
+    newValue.search('bonus') < 0 ? setIsVisibleOptionsArea(true) : setIsVisibleOptionsArea(false);
   };
 
   const handleSubmitForm = () => {
@@ -105,13 +99,18 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
         throw new Error('Preencha todos os campos obrigatórios.');
       }
 
+      if (honoraryType === 'work' && !workPrev) {
+        throw new Error('Preencha todos os campos obrigatórios.');
+      }
+
       if (honoraryType === 'work' && valueOfFixed === '') {
         throw new Error('Preencha todos os campos obrigatórios.');
       }
 
       if (
         (honoraryType === 'both' && valueOfFixed === '') ||
-        (honoraryType === 'both' && valueOfPercent === '')
+        (honoraryType === 'both' && valueOfPercent === '') ||
+        (honoraryType === 'both' && !workPrev)
       ) {
         throw new Error('Preencha todos os campos obrigatórios.');
       }
@@ -130,6 +129,7 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
               : '',
           fixed_honorary_value: valueOfFixed?.replace('R$ ', '').replace('.', '').replace(',', '.'),
           percent_honorary_value: valueOfPercent?.toString(),
+          work_prev: workPrev,
           parcelling: parcelling,
           parcelling_value: numberOfInstallments.replace('x', ''),
           honorary_type: honoraryType,
@@ -141,6 +141,7 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
           fixed_honorary_value: valueOfFixed?.replace('R$ ', '').replace('.', '').replace(',', '.'),
           percent_honorary_value: valueOfPercent?.toString(),
           parcelling: parcelling,
+          work_prev: workPrev,
           parcelling_value: numberOfInstallments.replace('x', ''),
           honorary_type: honoraryType,
         };
@@ -184,10 +185,10 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
 
     if (data) {
       const parsedData = JSON.parse(data);
-
       setHonoraryType(parsedData.honorary_attributes.honorary_type);
       setValueOfFixed(parsedData.honorary_attributes.fixed_honorary_value);
       setValueOfPercent(parsedData.honorary_attributes.percent_honorary_value);
+      setWorkPrev(parsedData.honorary_attributes.work_prev);
 
       if (
         parsedData.honorary_attributes.parcelling_value &&
@@ -250,7 +251,6 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
       if (draftWork.id) {
         if (draftWork.attributes) {
           const attributes = draftWork.attributes;
-
           if (attributes.honorary) {
             if (attributes.honorary.honorary_type) {
               setHonoraryType(attributes.honorary.honorary_type);
@@ -271,6 +271,10 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
 
             if (attributes.honorary.parcelling) {
               setParcelling(attributes.honorary.parcelling);
+            }
+
+            if (attributes.honorary.work_prev) {
+              setWorkPrev(attributes.honorary.work_prev);
             }
 
             if (attributes.honorary.parcelling_value) {
@@ -314,6 +318,7 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
         );
         setValueOfPercent(attributes.honorary.percent_honorary_value);
         setParcelling(attributes.honorary.parcelling);
+        setWorkPrev(attributes.honorary.work_prev);
         setNumberOfInstallments(
           attributes.honorary.parcelling_value ? `${attributes.honorary.parcelling_value}x` : '',
         );
@@ -363,16 +368,11 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
           onClose={() => setOpenSnackbar(false)}
         />
       )}
+
       <Container>
-        <Flex
-          style={{
-            flexDirection: 'row',
-            marginTop: '16px',
-            minHeight: '348px',
-          }}
-        >
-          <Flex style={{ flexDirection: 'column', width: '400px' }}>
-            <Flex>
+        <div className="flex flex-row mt-4 min-h-[348px]">
+          <div className="flex flex-col w-[400px]">
+            <div className="flex">
               <Typography
                 variant="h6"
                 sx={{ marginBottom: '8px', fontSize: '1.1rem' }}
@@ -385,16 +385,12 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
               {errors.honoraryType && honoraryType === '' && (
                 <label className="flagError">{'*'}</label>
               )}
-            </Flex>
+            </div>
 
-            <Box>
-              <Flex
-                style={{
-                  alignItems: 'center',
-                }}
-              >
+            <div>
+              <div className="flex items-center">
                 <FormControlLabel
-                  sx={{ width: '140px' }}
+                  sx={{ width: '200px' }}
                   control={
                     <Radio
                       size="small"
@@ -419,17 +415,13 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                     <MdOutlineInfo style={{ marginLeft: '-8px' }} size={20} />
                   </span>
                 </CustomTooltip>
-              </Flex>
-            </Box>
+              </div>
+            </div>
 
-            <Box>
-              <Flex
-                style={{
-                  alignItems: 'center',
-                }}
-              >
+            <div>
+              <div className="flex items-center">
                 <FormControlLabel
-                  sx={{ width: '140px' }}
+                  sx={{ width: '200px' }}
                   control={
                     <Radio
                       size="small"
@@ -454,17 +446,13 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                     <MdOutlineInfo style={{ marginLeft: '-8px' }} size={20} />
                   </span>
                 </CustomTooltip>
-              </Flex>
-            </Box>
+              </div>
+            </div>
 
-            <Box>
-              <Flex
-                style={{
-                  alignItems: 'center',
-                }}
-              >
+            <div>
+              <div className="flex items-center">
                 <FormControlLabel
-                  sx={{ width: '140px' }}
+                  sx={{ width: '200px' }}
                   control={
                     <Radio
                       size="small"
@@ -489,17 +477,13 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                     <MdOutlineInfo style={{ marginLeft: '-8px' }} size={20} />
                   </span>
                 </CustomTooltip>
-              </Flex>
-            </Box>
+              </div>
+            </div>
 
-            <Box>
-              <Flex
-                style={{
-                  alignItems: 'center',
-                }}
-              >
+            <div>
+              <div className="flex items-center">
                 <FormControlLabel
-                  sx={{ width: '140px' }}
+                  sx={{ width: '200px' }}
                   control={
                     <Radio
                       size="small"
@@ -524,15 +508,12 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                     <MdOutlineInfo style={{ marginLeft: '-8px' }} size={20} />
                   </span>
                 </CustomTooltip>
-              </Flex>
-            </Box>
+              </div>
+            </div>
+
             {honoraryType.search('work') >= 0 || honoraryType.search('both') >= 0 ? (
-              <Box sx={{ marginTop: '16px' }}>
-                <Flex
-                  style={{
-                    alignItems: 'center',
-                  }}
-                >
+              <div className="mt-4">
+                <div className="flex items-center">
                   <Typography
                     display={'flex'}
                     alignItems={'center'}
@@ -553,8 +534,9 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                       <MdOutlineInfo style={{ marginLeft: '11px' }} size={20} />
                     </span>
                   </CustomTooltip>
-                </Flex>
-                <Box>
+                </div>
+
+                <div>
                   <FormControlLabel
                     control={
                       <Radio
@@ -569,9 +551,9 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                     }
                     label="Sim"
                   />
-                </Box>
+                </div>
 
-                <Box>
+                <div>
                   <FormControlLabel
                     control={
                       <Radio
@@ -587,43 +569,75 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                     }
                     label="Não"
                   />
-                </Box>
-              </Box>
+                </div>
+              </div>
             ) : null}
-          </Flex>
+          </div>
+
           {isVisibleOptionsArea ? (
             <OptionsArea>
               {honoraryType == 'work' && (
-                <FormControl>
-                  <Box>
-                    <Typography
-                      variant="h6"
-                      sx={{ marginBottom: '8px' }}
-                      style={{
-                        color: valueOfFixed === '' ? '#FF0000' : 'black',
-                      }}
-                    >
+                <div>
+                  <div>
+                    <Typography variant="h6" sx={{ marginBottom: '8px' }}>
                       {'Valor de Honorários Fixos'}
                     </Typography>
-                    <Flex style={{ flexDirection: 'column' }}>
-                      <FormControl sx={{ width: '314px' }}>
+
+                    <div className="flex flex-col">
+                      <div>
                         <Input
+                          style={{
+                            borderColor: valueOfFixed === '' ? '#FF0000' : 'black',
+                          }}
                           id="honoraryValue"
                           placeholder="R$"
                           value={valueOfFixed}
                           onChange={(e: any) => {
                             const inputValue = e.target.value;
+                            if (inputValue.length === 0) {
+                              setValueOfFixed('');
+                              return;
+                            }
                             setValueOfFixed(`R$ ${moneyMask(inputValue)}`);
                           }}
                           min="0"
                         />
-                      </FormControl>
-                    </Flex>
-                  </Box>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col mt-4">
+                    <Typography variant="h6" mb={'8px'}>
+                      {'Valor de Honorários Previdenciários (Parcelas de Benefícios)'}
+                    </Typography>
+
+                    <div>
+                      <Input
+                        style={{
+                          borderColor: !workPrev ? '#FF0000' : 'black',
+                        }}
+                        id="honoraryValue"
+                        placeholder="0"
+                        value={workPrev}
+                        onChange={(e: any) => {
+                          const inputValue = Number(e.target.value);
+
+                          if (inputValue === 0) {
+                            setWorkPrev(null);
+                            return;
+                          }
+                          if (inputValue <= 99) {
+                            setWorkPrev(inputValue);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+
                   {honoraryType.search('work') >= 0 ? (
                     <>
                       {parcelling ? (
-                        <Box sx={{ marginTop: '16px' }}>
+                        <div className="mt-4">
                           <Typography
                             variant="h6"
                             sx={{ marginBottom: '8px' }}
@@ -634,61 +648,58 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                           >
                             {'Parcelamento'}
                           </Typography>
-                          <Flex style={{ flexDirection: 'column' }}>
-                            <FormControl sx={{ width: '314px', height: '40px' }}>
-                              <Select
-                                displayEmpty
-                                value={numberOfInstallments}
-                                inputProps={{
+
+                          <div className="flex flex-col w-[314px]">
+                            <Select
+                              displayEmpty
+                              value={numberOfInstallments}
+                              inputProps={{
+                                style: {
+                                  height: '100%',
+                                  color: colors.icons,
+                                },
+                              }}
+                              MenuProps={{
+                                PaperProps: {
                                   style: {
-                                    height: '100%',
-                                    color: colors.icons,
+                                    maxHeight: 32 * 4.5 + 8,
                                   },
-                                }}
-                                MenuProps={{
-                                  PaperProps: {
-                                    style: {
-                                      maxHeight: 32 * 4.5 + 8,
-                                      width: 250,
-                                    },
-                                  },
-                                }}
-                                onChange={(e: any) => setNumberOfInstallments(e.target.value)}
-                              >
-                                <MenuItem disabled value="">
-                                  <>{'Número de Parcelas'}</>
+                                },
+                              }}
+                              onChange={(e: any) => setNumberOfInstallments(e.target.value)}
+                            >
+                              <MenuItem disabled value="">
+                                <>{'Número de Parcelas'}</>
+                              </MenuItem>
+                              {instalmentOptions.map((value: string) => (
+                                <MenuItem key={value} value={value}>
+                                  {value}
                                 </MenuItem>
-                                {instalmentOptions.map((value: string) => (
-                                  <MenuItem key={value} value={value}>
-                                    {value}
-                                  </MenuItem>
-                                ))}
-                              </Select>
-                            </FormControl>
-                          </Flex>
-                        </Box>
+                              ))}
+                            </Select>
+                          </div>
+                        </div>
                       ) : null}
                     </>
                   ) : null}
-                </FormControl>
+                </div>
               )}
 
               {honoraryType == 'success' && (
-                <FormControl>
-                  <Box>
-                    <Typography
-                      variant="h6"
-                      sx={{ marginBottom: '8px' }}
-                      style={{
-                        color:
-                          honoraryType === 'success' && valueOfPercent === '' ? '#FF0000' : 'black',
-                      }}
-                    >
+                <div>
+                  <div>
+                    <Typography variant="h6" sx={{ marginBottom: '8px' }}>
                       {'Valor de Honorários Percentuais'}
                     </Typography>
-                    <Flex style={{ flexDirection: 'column' }}>
-                      <FormControl sx={{ width: '314px' }}>
+                    <div className="flex flex-col">
+                      <div className="w-[314px]">
                         <Input
+                          style={{
+                            borderColor:
+                              honoraryType === 'success' && valueOfPercent === ''
+                                ? '#FF0000'
+                                : 'black',
+                          }}
                           id="PercentageHonoraryValue"
                           placeholder="%"
                           min="0"
@@ -698,61 +709,105 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                             setValueOfPercent(percentMask(value));
                           }}
                         />
-                      </FormControl>
-                    </Flex>
-                  </Box>
-                </FormControl>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {honoraryType == 'both' && (
-                <FormControl>
-                  <Box>
+                <div>
+                  <div className="flex flex-col">
                     <Typography variant="h6" mb={'8px'}>
                       {'Valor de Honorários Fixos'}
                     </Typography>
-                    <Flex style={{ flexDirection: 'column' }}>
-                      <Box sx={{ width: '314px' }}>
-                        <Input
-                          id="honoraryValue"
-                          placeholder="R$"
-                          min="0"
-                          value={valueOfFixed}
-                          onChange={(e: any) => {
-                            const inputValue = e.target.value;
 
-                            setValueOfFixed(`R$ ${moneyMask(inputValue)}`);
-                          }}
-                          onInput={(e: any) => {
-                            const inputValue = e.target.value;
-                            setValueOfFixed(`R$ ${moneyMask(inputValue)}`);
-                          }}
-                        />
-                      </Box>
-                      <Box mt={'16px'}>
-                        <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                          {'Valor de Honorários Percentuais'}
-                        </Typography>
-                        <Flex style={{ flexDirection: 'column' }}>
-                          <FormControl sx={{ width: '314px' }}>
-                            <Input
-                              id="PercentageHonoraryValue"
-                              placeholder="%"
-                              min="0"
-                              value={valueOfPercent}
-                              onChange={(e: any) => {
-                                const value = e.target.value ? e.target.value : '';
-                                setValueOfPercent(percentMask(value));
-                              }}
-                            />
-                          </FormControl>
-                        </Flex>
-                      </Box>
-                    </Flex>
-                  </Box>
+                    <div>
+                      <Input
+                        style={{
+                          borderColor: valueOfFixed === '' ? '#FF0000' : 'black',
+                        }}
+                        id="honoraryValue"
+                        placeholder="R$"
+                        min="0"
+                        value={valueOfFixed}
+                        onChange={(e: any) => {
+                          const inputValue = e.target.value;
+                          if (inputValue.length === 0) {
+                            setValueOfFixed('');
+                            return;
+                          }
+                          setValueOfFixed(`R$ ${moneyMask(inputValue)}`);
+                        }}
+                        onInput={(e: any) => {
+                          const inputValue = e.target.value;
+                          if (inputValue.length === 0) {
+                            setValueOfFixed('');
+                            return;
+                          }
+                          setValueOfFixed(`R$ ${moneyMask(inputValue)}`);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col">
+                    <div className="mt-4">
+                      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+                        {'Valor de Honorários Percentuais'}
+                      </Typography>
+                      <div className="flex flex-col">
+                        <div className="w-[314px]">
+                          <Input
+                            style={{
+                              borderColor: valueOfPercent === '' ? '#FF0000' : 'black',
+                            }}
+                            id="PercentageHonoraryValue"
+                            placeholder="%"
+                            min="0"
+                            value={valueOfPercent}
+                            onChange={(e: any) => {
+                              const value = e.target.value ? e.target.value : '';
+                              setValueOfPercent(percentMask(value));
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col mt-4">
+                    <Typography variant="h6" mb={'8px'}>
+                      {'Valor de Honorários Previdenciários (Parcelas de Benefícios)'}
+                    </Typography>
+
+                    <div>
+                      <Input
+                        style={{
+                          borderColor: !workPrev ? '#FF0000' : 'black',
+                        }}
+                        id="honoraryValue"
+                        placeholder="0"
+                        value={workPrev}
+                        onChange={(e: any) => {
+                          const inputValue = Number(e.target.value);
+
+                          if (inputValue === 0) {
+                            setWorkPrev(null);
+                            return;
+                          }
+                          if (inputValue <= 99) {
+                            setWorkPrev(inputValue);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+
                   {honoraryType.search('both') >= 0 ? (
                     <>
                       {parcelling ? (
-                        <Box mt={'16px'}>
+                        <div className="mt-4">
                           <Typography
                             variant="h6"
                             sx={{ marginBottom: '8px' }}
@@ -763,23 +818,15 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                           >
                             {'Parcelamento'}
                           </Typography>
-                          <Flex style={{ flexDirection: 'column' }}>
-                            <FormControl sx={{ width: '314px', height: '40px' }}>
+                          <div className="flex flex-col">
+                            <div className="flex flex-col w-[314px]">
                               <Select
                                 displayEmpty
                                 value={numberOfInstallments}
-                                inputProps={{
-                                  style: {
-                                    height: '100%',
-
-                                    color: colors.icons,
-                                  },
-                                }}
                                 MenuProps={{
                                   PaperProps: {
                                     style: {
                                       maxHeight: 32 * 4.5 + 8,
-                                      width: 250,
                                     },
                                   },
                                 }}
@@ -794,17 +841,17 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                                   </MenuItem>
                                 ))}
                               </Select>
-                            </FormControl>
-                          </Flex>
-                        </Box>
+                            </div>
+                          </div>
+                        </div>
                       ) : null}
                     </>
                   ) : null}
-                </FormControl>
+                </div>
               )}
             </OptionsArea>
           ) : null}
-        </Flex>
+        </div>
       </Container>
     </>
   );
