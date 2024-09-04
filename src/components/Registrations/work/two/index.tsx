@@ -21,7 +21,6 @@ import { FormControlLabel, Typography, Radio, Select, MenuItem } from '@mui/mate
 import { moneyMask, percentMask } from '@/utils/masks';
 import { useRouter } from 'next/router';
 import { z } from 'zod';
-import { set } from 'date-fns';
 
 const instalmentOptions = [
   '1x',
@@ -99,7 +98,7 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
         throw new Error('Preencha todos os campos obrigatórios.');
       }
 
-      if (honoraryType === 'work' && !workPrev) {
+      if (honoraryType === 'work' && !workPrev && workForm.subject === 'social_security') {
         throw new Error('Preencha todos os campos obrigatórios.');
       }
 
@@ -110,7 +109,7 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
       if (
         (honoraryType === 'both' && valueOfFixed === '') ||
         (honoraryType === 'both' && valueOfPercent === '') ||
-        (honoraryType === 'both' && !workPrev)
+        (honoraryType === 'both' && !workPrev && workForm.subject === 'social_security')
       ) {
         throw new Error('Preencha todos os campos obrigatórios.');
       }
@@ -164,7 +163,6 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
       smooth: 'easeInOutQuart',
     });
   };
-
   const handleFormError = (error: any) => {
     const newErrors = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
@@ -606,33 +604,35 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                     </div>
                   </div>
 
-                  <div className="flex flex-col mt-4">
-                    <Typography variant="h6" mb={'8px'}>
-                      {'Valor de Honorários Previdenciários (Parcelas de Benefícios)'}
-                    </Typography>
+                  {workForm.subject === 'social_security' ? (
+                    <div className="flex flex-col mt-4">
+                      <Typography variant="h6" mb={'8px'}>
+                        {'Valor de Honorários Previdenciários (Parcelas de Benefícios)'}
+                      </Typography>
 
-                    <div>
-                      <Input
-                        style={{
-                          borderColor: !workPrev ? '#FF0000' : 'black',
-                        }}
-                        id="honoraryValue"
-                        placeholder="0"
-                        value={workPrev}
-                        onChange={(e: any) => {
-                          const inputValue = Number(e.target.value);
+                      <div>
+                        <Input
+                          style={{
+                            borderColor: !workPrev ? '#FF0000' : 'black',
+                          }}
+                          id="honoraryValue"
+                          placeholder="0"
+                          value={workPrev}
+                          onChange={(e: any) => {
+                            const inputValue = Number(e.target.value);
 
-                          if (inputValue === 0) {
-                            setWorkPrev(null);
-                            return;
-                          }
-                          if (inputValue <= 99) {
-                            setWorkPrev(inputValue);
-                          }
-                        }}
-                      />
+                            if (inputValue === 0) {
+                              setWorkPrev(null);
+                              return;
+                            }
+                            if (inputValue <= 99) {
+                              setWorkPrev(inputValue);
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  ) : null}
 
                   {honoraryType.search('work') >= 0 ? (
                     <>
@@ -776,33 +776,35 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
                     </div>
                   </div>
 
-                  <div className="flex flex-col mt-4">
-                    <Typography variant="h6" mb={'8px'}>
-                      {'Valor de Honorários Previdenciários (Parcelas de Benefícios)'}
-                    </Typography>
+                  {workForm.subject === 'social_security' ? (
+                    <div className="flex flex-col mt-4">
+                      <Typography variant="h6" mb={'8px'}>
+                        {'Valor de Honorários Previdenciários (Parcelas de Benefícios)'}
+                      </Typography>
 
-                    <div>
-                      <Input
-                        style={{
-                          borderColor: !workPrev ? '#FF0000' : 'black',
-                        }}
-                        id="honoraryValue"
-                        placeholder="0"
-                        value={workPrev}
-                        onChange={(e: any) => {
-                          const inputValue = Number(e.target.value);
+                      <div>
+                        <Input
+                          style={{
+                            borderColor: !workPrev ? '#FF0000' : 'black',
+                          }}
+                          id="honoraryValue"
+                          placeholder="0"
+                          value={workPrev}
+                          onChange={(e: any) => {
+                            const inputValue = Number(e.target.value);
 
-                          if (inputValue === 0) {
-                            setWorkPrev(null);
-                            return;
-                          }
-                          if (inputValue <= 99) {
-                            setWorkPrev(inputValue);
-                          }
-                        }}
-                      />
+                            if (inputValue === 0) {
+                              setWorkPrev(null);
+                              return;
+                            }
+                            if (inputValue <= 99) {
+                              setWorkPrev(inputValue);
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  ) : null}
 
                   {honoraryType.search('both') >= 0 ? (
                     <>
