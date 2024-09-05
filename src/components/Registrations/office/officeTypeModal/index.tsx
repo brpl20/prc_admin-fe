@@ -81,7 +81,9 @@ const OfficeTypeModal = ({ isOpen, onClose, handleSave }: IOfficeTypeModalProps)
       <Modal open={isOpen} style={{ overflowY: 'auto' }}>
         <Content>
           <Box display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
-            <Title style={{ fontSize: '28px' }}>Novo Tipo de Escritório</Title>
+            <label style={{ fontSize: '28px', color: '#2A3F54', fontWeight: '500' }}>
+              Novo Tipo de Escritório
+            </label>
             <Box sx={{ cursor: 'pointer' }} onClick={onClose}>
               <MdClose size={26} />
             </Box>

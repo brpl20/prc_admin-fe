@@ -27,7 +27,7 @@ import { Container, Title, BirthdayContainer } from './styles';
 import { colors, ContentContainer } from '@/styles/globals';
 
 import dayjs from 'dayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { IoMdTrash } from 'react-icons/io';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
@@ -56,7 +56,7 @@ interface FormData {
   civil_status: string;
   birth: string;
   origin: string;
-
+  oab: string;
   cep: string;
   address: string;
   state: string;
@@ -81,32 +81,33 @@ interface props {
 }
 
 const userSchema = z.object({
-  name: z.string().nonempty({ message: 'O campo Nome é obrigatório.' }),
-  last_name: z.string().nonempty({ message: 'O campo Sobrenome é obrigatório.' }),
-  cpf: z.string().nonempty({ message: 'O campo CPF é obrigatório.' }),
-  rg: z.string().nonempty({ message: 'O campo RG é obrigatório.' }),
-  mother_name: z.string().nonempty({ message: 'O campo Nome da Mãe é obrigatório.' }),
-  gender: z.string().nonempty({ message: 'O campo Gênero é obrigatório.' }),
-  civil_status: z.string().nonempty({ message: 'O campo Estado Civil é obrigatório.' }),
-  nationality: z.string().nonempty({ message: 'O campo Naturalidade é obrigatório.' }),
-  phone: z.string().nonempty({ message: 'O campo Telefone é obrigatório.' }),
-  email: z.string().nonempty({ message: 'O campo E-mail é obrigatório.' }),
-  userType: z.string().nonempty({ message: 'O campo Tipo do Usuário é obrigatório.' }),
-  bank_name: z.string().nonempty({ message: 'O campo Banco é obrigatório.' }),
-  agency: z.string().nonempty({ message: 'O campo Agência é obrigatório.' }),
-  op: z.string().nonempty({ message: 'O campo Operação é obrigatório.' }),
-  account: z.string().nonempty({ message: 'O campo Conta é obrigatório.' }),
-  pix: z.string().nonempty({ message: 'O campo Chave Pix é obrigatório.' }),
-  userEmail: z.string().nonempty({ message: 'O campo E-mail é obrigatório.' }),
-  city: z.string().nonempty({ message: 'O campo Cidade é obrigatório.' }),
-  state: z.string().nonempty({ message: 'O campo Estado é obrigatório.' }),
-  address: z.string().nonempty({ message: 'O campo Endereço é obrigatório.' }),
+  name: z.string().min(2, { message: 'O campo Nome é obrigatório.' }),
+  last_name: z.string().min(2, { message: 'O campo Sobrenome é obrigatório.' }),
+  cpf: z.string().min(2, { message: 'O campo CPF é obrigatório.' }),
+  rg: z.string().min(2, { message: 'O campo RG é obrigatório.' }),
+  mother_name: z.string().min(2, { message: 'O campo Nome da Mãe é obrigatório.' }),
+  gender: z.string().min(2, { message: 'O campo Gênero é obrigatório.' }),
+  civil_status: z.string().min(2, { message: 'O campo Estado Civil é obrigatório.' }),
+  nationality: z.string().min(2, { message: 'O campo Naturalidade é obrigatório.' }),
+  phone: z.string().min(2, { message: 'O campo Telefone é obrigatório.' }),
+  email: z.string().min(2, { message: 'O campo E-mail é obrigatório.' }),
+  userType: z.string().min(2, { message: 'O campo Tipo do Usuário é obrigatório.' }),
+  bank_name: z.string().min(2, { message: 'O campo Banco é obrigatório.' }),
+  agency: z.string().min(1, { message: 'O campo Agência é obrigatório.' }),
+  op: z.string().min(1, { message: 'O campo Operação é obrigatório.' }),
+  account: z.string().min(2, { message: 'O campo Conta é obrigatório.' }),
+  pix: z.string().min(2, { message: 'O campo Chave Pix é obrigatório.' }),
+  userEmail: z.string().min(2, { message: 'O campo E-mail é obrigatório.' }),
+  city: z.string().min(2, { message: 'O campo Cidade é obrigatório.' }),
+  state: z.string().min(2, { message: 'O campo Estado é obrigatório.' }),
+  address: z.string().min(2, { message: 'O campo Endereço é obrigatório.' }),
   number: z.number().min(1, { message: 'O campo Número é obrigatório.' }),
-  cep: z.string().nonempty({ message: 'O campo CEP é obrigatório.' }),
+  cep: z.string().min(2, { message: 'O campo CEP é obrigatório.' }),
 });
 
 const User = ({ dataToEdit }: props) => {
   const { data: session } = useSession();
+  const today = new Date().toISOString().split('T')[0];
 
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
@@ -125,7 +126,6 @@ const User = ({ dataToEdit }: props) => {
   const [passwordHasNumber, setPasswordHasNumber] = useState(false);
 
   const [errors, setErrors] = useState({} as any);
-
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
@@ -136,6 +136,7 @@ const User = ({ dataToEdit }: props) => {
     last_name: '',
     cpf: '',
     rg: '',
+    agency: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -159,6 +160,22 @@ const User = ({ dataToEdit }: props) => {
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
+
+    if (name === 'agency' || name === 'account' || name === 'op') {
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value.replace(/\D/g, ''),
+      }));
+      return;
+    }
+
+    if (name === 'cpf') {
+      setFormData(prevData => ({
+        ...prevData,
+        cpf: cpfMask(value),
+      }));
+      return;
+    }
 
     if (name === 'cep') {
       setFormData(prevData => ({
@@ -285,7 +302,7 @@ const User = ({ dataToEdit }: props) => {
           mother_name: formData.mother_name,
           role: formData.role,
           status: 'active',
-          oab: '0000',
+          oab: formData.oab,
           origin: formData.origin,
         };
 
@@ -307,7 +324,7 @@ const User = ({ dataToEdit }: props) => {
 
       if (!isEditing) {
         data = {
-          oab: '0000',
+          oab: formData.oab,
           name: formData.name,
           last_name: formData.last_name,
           cpf: formData.cpf,
@@ -373,6 +390,14 @@ const User = ({ dataToEdit }: props) => {
   const handleFormError = (error: any) => {
     const newErrors = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
+
+    if (error.response && error.response.status === 400 && error.response.data.errors[0].code) {
+      setMessage(error.response.data.errors[0].code[0]);
+      setType('error');
+      setOpenSnackbar(true);
+      return;
+    }
+
     setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
@@ -388,6 +413,7 @@ const User = ({ dataToEdit }: props) => {
   const renderInputField = (
     name: keyof FormData,
     title: string,
+    length: number,
     placeholderText: string,
     error?: boolean,
   ) => (
@@ -401,6 +427,7 @@ const User = ({ dataToEdit }: props) => {
         fullWidth
         name={name}
         size="small"
+        inputProps={{ maxLength: length }}
         value={formData[name] || ''}
         autoComplete="off"
         placeholder={`${placeholderText}`}
@@ -505,7 +532,10 @@ const User = ({ dataToEdit }: props) => {
       try {
         const response = await getAllBanks();
         const uniqueBanks = removeDuplicateBanks(response);
-        setBankList(uniqueBanks);
+        const filteredBanks = uniqueBanks.filter(
+          bank => bank.name !== 'Selic' && bank.name !== 'Bacen',
+        );
+        setBankList(filteredBanks);
       } catch (error: any) {}
     };
 
@@ -555,7 +585,7 @@ const User = ({ dataToEdit }: props) => {
 
   useEffect(() => {
     const getOffices = async () => {
-      const response = await getAllOffices();
+      const response = await getAllOffices('');
       setOfficesList(response.data);
     };
 
@@ -638,6 +668,7 @@ const User = ({ dataToEdit }: props) => {
           civil_status: attributes.civil_status ? attributes.civil_status : '',
           birth: attributes.birth ? attributes.birth : '',
           origin: attributes.origin ? attributes.origin : '',
+          oab: attributes.oab ? attributes.oab : '',
         });
 
         const office = officesList.find(office => office.id == attributes.office_id);
@@ -665,6 +696,30 @@ const User = ({ dataToEdit }: props) => {
   useEffect(() => {
     setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro de' : 'Alterar'} Usuário`);
   }, [route, setPageTitle]);
+
+  const handleRemoveContact = (removeIndex: number, inputArrayName: string) => {
+    if (inputArrayName === 'phoneInputFields') {
+      if (contactData.phoneInputFields.length === 1) return;
+
+      const updatedEducationals = [...contactData.phoneInputFields];
+      updatedEducationals.splice(removeIndex, 1);
+      setContactData(prevData => ({
+        ...prevData,
+        phoneInputFields: updatedEducationals,
+      }));
+    }
+
+    if (inputArrayName === 'emailInputFields') {
+      if (contactData.emailInputFields.length === 1) return;
+
+      const updatedEducationals = [...contactData.emailInputFields];
+      updatedEducationals.splice(removeIndex, 1);
+      setContactData(prevData => ({
+        ...prevData,
+        emailInputFields: updatedEducationals,
+      }));
+    }
+  };
 
   return (
     <>
@@ -719,18 +774,19 @@ const User = ({ dataToEdit }: props) => {
                   }}
                 >
                   <Flex style={{ gap: '24px' }}>
-                    {renderInputField('name', 'Nome', 'Nome do Usuário', !!errors.name)}
+                    {renderInputField('name', 'Nome', 99, 'Nome do Usuário', !!errors.name)}
                     {renderInputField(
                       'last_name',
                       'Sobrenome',
+                      99,
                       'Sobrenome do Usuário',
                       !!errors.last_name,
                     )}
                   </Flex>
 
                   <Flex style={{ gap: '24px' }}>
-                    {renderInputField('cpf', 'CPF', 'Informe o CPF', !!errors.cpf)}
-                    {renderInputField('rg', 'RG', 'Informe o RG', !!errors.rg)}
+                    {renderInputField('cpf', 'CPF', 14, 'Informe o CPF', !!errors.cpf)}
+                    {renderInputField('rg', 'RG', 16, 'Informe o RG', !!errors.rg)}
                   </Flex>
 
                   <Flex style={{ gap: '24px' }}>
@@ -745,6 +801,7 @@ const User = ({ dataToEdit }: props) => {
                         <input
                           type="date"
                           name="birth"
+                          max={today}
                           value={formData.birth}
                           onChange={handleInputChange}
                           style={{
@@ -760,7 +817,13 @@ const User = ({ dataToEdit }: props) => {
                         />
                       </LocalizationProvider>
                     </BirthdayContainer>
-                    {renderInputField('mother_name', 'Nome da Mãe', 'Informe o Nome', !!errors.rg)}
+                    {renderInputField(
+                      'mother_name',
+                      'Nome da Mãe',
+                      60,
+                      'Informe o Nome',
+                      !!errors.rg,
+                    )}
                   </Flex>
                 </Box>
 
@@ -799,26 +862,33 @@ const User = ({ dataToEdit }: props) => {
 
               <Box display={'flex'} gap={'24px'} flex={1}>
                 <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                  {renderInputField('cep', 'CEP', 'Informe o CEP', !!errors.cep)}
+                  {renderInputField('cep', 'CEP', 60, 'Informe o CEP', !!errors.cep)}
                   <Flex style={{ gap: '16px' }}>
                     {renderInputField(
                       'address',
                       'Endereço',
+                      99,
                       'Informe o Endereço',
 
                       !!errors.address,
                     )}
                     <Box maxWidth={'30%'}>
-                      {renderInputField('number', 'Número', 'N.º', !!errors.address)}
+                      {renderInputField('number', 'Número', 16, 'N.º', !!errors.address)}
                     </Box>
                   </Flex>
-                  {renderInputField('description', 'Complemento', 'Informe o Complemento')}
+                  {renderInputField('description', 'Complemento', 99, 'Informe o Complemento')}
                 </Box>
 
                 <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                  {renderInputField('neighborhood', 'Bairro', 'Informe o Estado', !!errors.state)}
-                  {renderInputField('city', 'Cidade', 'Informe a Cidade', !!errors.city)}
-                  {renderInputField('state', 'Estado', 'Informe o Estado', !!errors.state)}
+                  {renderInputField(
+                    'neighborhood',
+                    'Bairro',
+                    99,
+                    'Informe o Bairro',
+                    !!errors.state,
+                  )}
+                  {renderInputField('city', 'Cidade', 99, 'Informe a Cidade', !!errors.city)}
+                  {renderInputField('state', 'Estado', 99, 'Informe o Estado', !!errors.state)}
                 </Box>
               </Box>
             </Flex>
@@ -841,6 +911,7 @@ const User = ({ dataToEdit }: props) => {
                   <Typography style={{ marginBottom: '8px' }} variant="h6">
                     {'Telefone'}
                   </Typography>
+
                   {contactData.phoneInputFields.map((inputValue, index) => (
                     <Flex
                       key={index}
@@ -850,23 +921,43 @@ const User = ({ dataToEdit }: props) => {
                         gap: '6px',
                       }}
                     >
-                      <TextField
-                        id="outlined-basic"
-                        variant="outlined"
-                        fullWidth
-                        name="phone"
-                        size="small"
-                        placeholder="Informe o Telefone"
-                        value={inputValue.phone_number || ''}
-                        onChange={(e: any) =>
-                          handleContactChange(index, e.target.value, 'phoneInputFields')
-                        }
-                        autoComplete="off"
-                        error={!!errors.phone}
-                      />
+                      <div className="flex flex-row gap-1">
+                        <TextField
+                          id="outlined-basic"
+                          variant="outlined"
+                          fullWidth
+                          name="phone"
+                          size="small"
+                          placeholder="Informe o Telefone"
+                          value={inputValue.phone_number || ''}
+                          onChange={(e: any) =>
+                            handleContactChange(index, e.target.value, 'phoneInputFields')
+                          }
+                          autoComplete="off"
+                          error={!!errors.phone}
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleRemoveContact(index, 'phoneInputFields');
+                          }}
+                        >
+                          <div
+                            className={`flex  ${
+                              contactData.phoneInputFields.length > 1 ? '' : 'hidden'
+                            }`}
+                          >
+                            <IoMdTrash size={20} color="#a50000" />
+                          </div>
+                        </button>
+                      </div>
+
                       {index === contactData.phoneInputFields.length - 1 && (
                         <IoAddCircleOutline
-                          style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                          className={`cursor-pointer ml-auto ${
+                            contactData.phoneInputFields.length > 1 ? 'mr-6' : ''
+                          }`}
                           onClick={() => handleAddInput('phoneInputFields')}
                           color={colors.quartiary}
                           size={20}
@@ -884,6 +975,7 @@ const User = ({ dataToEdit }: props) => {
                   <Typography style={{ marginBottom: '8px' }} variant="h6">
                     {'E-mail'}
                   </Typography>
+
                   {contactData.emailInputFields.map((inputValue, index) => (
                     <Flex
                       key={index}
@@ -893,23 +985,44 @@ const User = ({ dataToEdit }: props) => {
                         gap: '6px',
                       }}
                     >
-                      <TextField
-                        variant="outlined"
-                        fullWidth
-                        name="email"
-                        size="small"
-                        style={{ flex: 1 }}
-                        placeholder="Informe o Email"
-                        value={inputValue.email || ''}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          handleContactChange(index, e.target.value, 'emailInputFields')
-                        }
-                        error={!!errors.email}
-                        autoComplete="off"
-                      />
+                      <div className="flex flex-row gap-1">
+                        <TextField
+                          id="outlined-basic"
+                          variant="outlined"
+                          fullWidth
+                          name="email"
+                          size="small"
+                          style={{ flex: 1 }}
+                          placeholder="Informe o Email"
+                          value={inputValue.email}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            handleContactChange(index, e.target.value, 'emailInputFields')
+                          }
+                          error={!!errors.email}
+                          autoComplete="off"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleRemoveContact(index, 'emailInputFields');
+                          }}
+                        >
+                          <div
+                            className={`flex  ${
+                              contactData.emailInputFields.length > 1 ? '' : 'hidden'
+                            }`}
+                          >
+                            <IoMdTrash size={20} color="#a50000" />
+                          </div>
+                        </button>
+                      </div>
+
                       {index === contactData.emailInputFields.length - 1 && (
                         <IoAddCircleOutline
-                          style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                          className={`cursor-pointer ml-auto ${
+                            contactData.emailInputFields.length > 1 ? 'mr-6' : ''
+                          }`}
                           onClick={() => handleAddInput('emailInputFields')}
                           color={colors.quartiary}
                           size={20}
@@ -927,7 +1040,7 @@ const User = ({ dataToEdit }: props) => {
           <Flex>
             <Box width={'210px'}>
               <Typography variant="h6" sx={{ marginRight: 'auto' }}>
-                {'Dados Pessoais'}
+                {'Informações Adicionais'}
               </Typography>
             </Box>
 
@@ -940,7 +1053,10 @@ const User = ({ dataToEdit }: props) => {
                   flex: 1,
                 }}
               >
-                {renderInputField('origin', 'Origin', 'Informe a Origin')}
+                <Flex style={{ gap: '24px' }}>
+                  {renderInputField('oab', 'OAB', 60, 'Informe a OAB')}
+                  {renderInputField('origin', 'Origin', 60, 'Informe a Origem')}
+                </Flex>
                 <Flex style={{ gap: '24px' }}>
                   {renderSelectField(
                     'Tipo do Usuário',
@@ -1026,13 +1142,21 @@ const User = ({ dataToEdit }: props) => {
               />
 
               <Flex style={{ gap: '16px' }}>
-                {renderInputField('agency', 'Agência', 'Número da agencia', !!errors.agency)}
-                <Box width={'100px'}>{renderInputField('op', 'Operação', 'Op.', !!errors.op)}</Box>
-                {renderInputField('account', 'Conta', 'Número da conta', !!errors.account)}
+                {renderInputField('agency', 'Agência', 99, 'Número da agencia', !!errors.agency)}
+                <Box width={'100px'}>
+                  {renderInputField('op', 'Operação', 20, 'Op.', !!errors.op)}
+                </Box>
+                {renderInputField('account', 'Conta', 99, 'Número da conta', !!errors.account)}
               </Flex>
 
               <Box>
-                {renderInputField('pix', 'Cadastrar Chave Pix', 'Informe a chave', !!errors.pix)}
+                {renderInputField(
+                  'pix',
+                  'Cadastrar Chave Pix',
+                  99,
+                  'Informe a chave',
+                  !!errors.pix,
+                )}
               </Box>
             </Box>
           </Flex>
@@ -1048,7 +1172,7 @@ const User = ({ dataToEdit }: props) => {
 
             <Box style={{ flex: 1 }}>
               <Flex style={{ gap: '24px' }}>
-                {renderInputField('email', 'E-mail', 'Informe seu e-mail', !!errors.userEmail)}
+                {renderInputField('email', 'E-mail', 99, 'Informe seu e-mail', !!errors.userEmail)}
               </Flex>
 
               {!isEditing && (

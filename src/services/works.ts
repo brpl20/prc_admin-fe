@@ -13,9 +13,11 @@ const createWork = async (data: any) => {
   }
 };
 
-const getAllWorks = async () => {
+const getAllWorks = async (typeOfParams: string) => {
+  const url = typeOfParams !== '' ? `/works?deleted=${typeOfParams}` : '/works';
+
   try {
-    const response = await api.get('/works');
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     throw error;
@@ -43,7 +45,6 @@ const getWorkByCustomerId = async (id: string) => {
 const updateWork = async (id: string, data: any) => {
   const payload = {
     work: data,
-    regenerate_documents: true,
   };
 
   try {
@@ -72,6 +73,30 @@ const getAllDraftWorks = async () => {
   }
 };
 
+const inactiveWork = async (id: string) => {
+  try {
+    await api.delete(`/works/${id}`);
+  } catch (error) {
+    throw error;
+  }
+};
+
+const deleteWork = async (id: string) => {
+  try {
+    await api.delete(`/works/${id}?destroy_fully=true`);
+  } catch (error) {
+    throw error;
+  }
+};
+
+const restoreWork = async (id: string) => {
+  try {
+    await api.post(`/works/${id}/restore`);
+  } catch (error) {
+    throw error;
+  }
+};
+
 export {
   createWork,
   getAllWorks,
@@ -80,4 +105,7 @@ export {
   createDraftWork,
   getAllDraftWorks,
   getWorkByCustomerId,
+  inactiveWork,
+  deleteWork,
+  restoreWork,
 };

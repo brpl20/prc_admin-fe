@@ -27,6 +27,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { Flex, Divider } from '@/styles/globals';
+import { IoMdTrash } from 'react-icons/io';
 
 import { getAllOfficeTypes } from '@/services/offices';
 import { getAllBanks, getCEPDetails } from '@/services/brasilAPI';
@@ -69,26 +70,24 @@ interface props {
 }
 
 const officeSchema = z.object({
-  name: z.string().nonempty({ message: 'Informe o Nome do Escritório' }),
-  office_type: z.string().nonempty({ message: 'Selecione o Tipo de Escritório' }),
-  oab: z.string().nonempty({ message: 'Informe o Identificador OAB' }),
-  cnpj_cpf: z.string().nonempty({ message: 'Informe o CNPJ/CPF' }),
-  society_type: z.string().nonempty({ message: 'Informe o Tipo de Sociedade' }),
-  cep: z.string().nonempty({ message: 'Informe o CEP' }),
-  address: z.string().nonempty({ message: 'Informe o Endereço' }),
-  state: z.string().nonempty({ message: 'Informe o Estado' }),
-  city: z.string().nonempty({ message: 'Informe a Cidade' }),
-  number: z.string().nonempty({ message: 'Informe o Número' }),
-  neighborhood: z.string().nonempty({ message: 'Informe o Bairro' }),
-  accounting_type: z.string().nonempty({ message: 'Selecione o Enquadramento Contábil' }),
-  phone: z.string().nonempty({ message: 'Informe o Telefone' }),
-  email: z.string().nonempty({ message: 'Informe o Email' }),
+  name: z.string().min(2, { message: 'Informe o Nome do Escritório' }),
+  office_type: z.string().min(1, { message: 'Selecione o Tipo de Escritório' }),
+  oab: z.string().min(2, { message: 'Informe o Identificador OAB' }),
+  cnpj_cpf: z.string().min(2, { message: 'Informe o CNPJ/CPF' }),
+  society_type: z.string().min(2, { message: 'Informe o Tipo de Sociedade' }),
+  cep: z.string().min(2, { message: 'Informe o CEP' }),
+  address: z.string().min(2, { message: 'Informe o Endereço' }),
+  state: z.string().min(2, { message: 'Informe o Estado' }),
+  city: z.string().min(2, { message: 'Informe a Cidade' }),
+  number: z.string().min(2, { message: 'Informe o Número' }),
+  neighborhood: z.string().min(2, { message: 'Informe o Bairro' }),
+  accounting_type: z.string().min(2, { message: 'Selecione o Enquadramento Contábil' }),
+  phone: z.string().min(2, { message: 'Informe o Telefone' }),
+  email: z.string().min(2, { message: 'Informe o Email' }),
 });
 
 const Office = ({ dataToEdit }: props) => {
   const route = useRouter();
-
-  const { data: session } = useSession();
 
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
@@ -151,6 +150,14 @@ const Office = ({ dataToEdit }: props) => {
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
+
+    if (name === 'agency' || name === 'account' || name === 'op') {
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value.replace(/\D/g, ''),
+      }));
+      return;
+    }
 
     setFormData(prevData => ({
       ...prevData,
@@ -361,7 +368,7 @@ const Office = ({ dataToEdit }: props) => {
   };
 
   const getAdmins = async () => {
-    const response = await getAllAdmins();
+    const response = await getAllAdmins('');
     setAdminsList(response.data);
   };
 
@@ -426,7 +433,10 @@ const Office = ({ dataToEdit }: props) => {
       try {
         const response = await getAllBanks();
         const uniqueBanks = removeDuplicateBanks(response);
-        setBankList(uniqueBanks);
+        const filteredBanks = uniqueBanks.filter(
+          bank => bank.name !== 'Selic' && bank.name !== 'Bacen',
+        );
+        setBankList(filteredBanks);
       } catch (error: any) {}
     };
 
@@ -547,6 +557,30 @@ const Office = ({ dataToEdit }: props) => {
     setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro de ' : 'Alterar'} Escritório`);
   }, [route, setPageTitle]);
 
+  const handleRemoveContact = (removeIndex: number, inputArrayName: string) => {
+    if (inputArrayName === 'phoneInputFields') {
+      if (contactData.phoneInputFields.length === 1) return;
+
+      const updatedEducationals = [...contactData.phoneInputFields];
+      updatedEducationals.splice(removeIndex, 1);
+      setContactData(prevData => ({
+        ...prevData,
+        phoneInputFields: updatedEducationals,
+      }));
+    }
+
+    if (inputArrayName === 'emailInputFields') {
+      if (contactData.emailInputFields.length === 1) return;
+
+      const updatedEducationals = [...contactData.emailInputFields];
+      updatedEducationals.splice(removeIndex, 1);
+      setContactData(prevData => ({
+        ...prevData,
+        emailInputFields: updatedEducationals,
+      }));
+    }
+  };
+
   return (
     <>
       {openSnackbar && (
@@ -620,7 +654,7 @@ const Office = ({ dataToEdit }: props) => {
                         />
                       )}
                       sx={{ backgroundColor: 'white', zIndex: 1, width: '49%' }}
-                      noOptionsText="Nenhum Tipo de Escritório Encontrado"
+                      noOptionsText="Não Encontrado"
                       onChange={(event, value) => {
                         value ? setSelectedOfficeType(value) : setSelectedOfficeType('');
                       }}
@@ -815,6 +849,7 @@ const Office = ({ dataToEdit }: props) => {
                   <Typography style={{ marginBottom: '8px' }} variant="h6">
                     {'Telefone'}
                   </Typography>
+
                   {contactData.phoneInputFields.map((inputValue, index) => (
                     <Flex
                       key={index}
@@ -824,23 +859,43 @@ const Office = ({ dataToEdit }: props) => {
                         gap: '6px',
                       }}
                     >
-                      <TextField
-                        id="outlined-basic"
-                        variant="outlined"
-                        fullWidth
-                        name="phone"
-                        size="small"
-                        placeholder="Informe o Telefone"
-                        value={inputValue.phone_number || ''}
-                        onChange={(e: any) =>
-                          handleContactChange(index, e.target.value, 'phoneInputFields')
-                        }
-                        autoComplete="off"
-                        error={!!errors.phone}
-                      />
+                      <div className="flex flex-row gap-1">
+                        <TextField
+                          id="outlined-basic"
+                          variant="outlined"
+                          fullWidth
+                          name="phone"
+                          size="small"
+                          placeholder="Informe o Telefone"
+                          value={inputValue.phone_number || ''}
+                          onChange={(e: any) =>
+                            handleContactChange(index, e.target.value, 'phoneInputFields')
+                          }
+                          autoComplete="off"
+                          error={!!errors.phone}
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleRemoveContact(index, 'phoneInputFields');
+                          }}
+                        >
+                          <div
+                            className={`flex  ${
+                              contactData.phoneInputFields.length > 1 ? '' : 'hidden'
+                            }`}
+                          >
+                            <IoMdTrash size={20} color="#a50000" />
+                          </div>
+                        </button>
+                      </div>
+
                       {index === contactData.phoneInputFields.length - 1 && (
                         <IoAddCircleOutline
-                          style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                          className={`cursor-pointer ml-auto ${
+                            contactData.phoneInputFields.length > 1 ? 'mr-6' : ''
+                          }`}
                           onClick={() => handleAddInput('phoneInputFields')}
                           color={colors.quartiary}
                           size={20}
@@ -858,6 +913,7 @@ const Office = ({ dataToEdit }: props) => {
                   <Typography style={{ marginBottom: '8px' }} variant="h6">
                     {'E-mail'}
                   </Typography>
+
                   {contactData.emailInputFields.map((inputValue, index) => (
                     <Flex
                       key={index}
@@ -867,24 +923,44 @@ const Office = ({ dataToEdit }: props) => {
                         gap: '6px',
                       }}
                     >
-                      <TextField
-                        id="outlined-basic"
-                        variant="outlined"
-                        fullWidth
-                        name="email"
-                        size="small"
-                        style={{ flex: 1 }}
-                        placeholder="Informe o Email"
-                        value={inputValue.email || ''}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          handleContactChange(index, e.target.value, 'emailInputFields')
-                        }
-                        error={!!errors.email}
-                        autoComplete="off"
-                      />
+                      <div className="flex flex-row gap-1">
+                        <TextField
+                          id="outlined-basic"
+                          variant="outlined"
+                          fullWidth
+                          name="email"
+                          size="small"
+                          style={{ flex: 1 }}
+                          placeholder="Informe o Email"
+                          value={inputValue.email}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            handleContactChange(index, e.target.value, 'emailInputFields')
+                          }
+                          error={!!errors.email}
+                          autoComplete="off"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleRemoveContact(index, 'emailInputFields');
+                          }}
+                        >
+                          <div
+                            className={`flex  ${
+                              contactData.emailInputFields.length > 1 ? '' : 'hidden'
+                            }`}
+                          >
+                            <IoMdTrash size={20} color="#a50000" />
+                          </div>
+                        </button>
+                      </div>
+
                       {index === contactData.emailInputFields.length - 1 && (
                         <IoAddCircleOutline
-                          style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                          className={`cursor-pointer ml-auto ${
+                            contactData.emailInputFields.length > 1 ? 'mr-6' : ''
+                          }`}
                           onClick={() => handleAddInput('emailInputFields')}
                           color={colors.quartiary}
                           size={20}

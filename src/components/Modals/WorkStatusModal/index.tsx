@@ -13,8 +13,7 @@ import {
 import { Flex, colors } from '@/styles/globals';
 
 import { MdClose } from 'react-icons/md';
-import { Content, Title } from './styles';
-import { useRouter } from 'next/router';
+import { Content } from './styles';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Notification } from '@/components';
@@ -34,9 +33,9 @@ interface FormData {
 }
 
 const statusSchema = z.object({
-  description: z.string().nonempty({ message: 'Descrição é obrigatória' }),
-  status: z.string().nonempty({ message: 'Status é obrigatório' }),
-  date: z.string().nonempty({ message: 'Data é obrigatória' }),
+  description: z.string().min(3, { message: 'Descrição é obrigatória' }),
+  status: z.string().min(3, { message: 'Status é obrigatório' }),
+  date: z.string().min(3, { message: 'Data é obrigatória' }),
 });
 
 const WorkStatusModal = ({ isOpen, onClose, workId, workStatus }: IWorkStatusModalProps) => {
@@ -129,7 +128,9 @@ const WorkStatusModal = ({ isOpen, onClose, workId, workStatus }: IWorkStatusMod
       <Modal open={isOpen} onClose={onClose} style={{ overflowY: 'auto' }}>
         <Content>
           <Box display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
-            <Title style={{ fontSize: '28px' }}>{'Atualização do Trabalho'}</Title>
+            <label style={{ fontSize: '28px', color: '#2A3F54', fontWeight: '500' }}>
+              {'Atualização do Trabalho'}
+            </label>
             <Box sx={{ cursor: 'pointer' }} onClick={onClose}>
               <MdClose size={26} onClick={handleClose} />
             </Box>

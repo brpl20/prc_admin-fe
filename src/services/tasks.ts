@@ -13,9 +13,11 @@ const createTask = async (data: any) => {
   }
 };
 
-const getAllTasks = async () => {
+const getAllTasks = async (typeOfParams: string) => {
+  const url = typeOfParams !== '' ? `/jobs?deleted=${typeOfParams}` : '/jobs';
+
   try {
-    const response = await api.get('/jobs');
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     throw error;
@@ -44,4 +46,28 @@ const updateTask = async (id: string, data: any) => {
   }
 };
 
-export { createTask, getAllTasks, getTaskById, updateTask };
+const inactiveJob = async (id: string) => {
+  try {
+    await api.delete(`/jobs/${id}`);
+  } catch (error) {
+    throw error;
+  }
+};
+
+const deleteJob = async (id: string) => {
+  try {
+    await api.delete(`/jobs/${id}?destroy_fully=true`);
+  } catch (error) {
+    throw error;
+  }
+};
+
+const restoreJob = async (id: string) => {
+  try {
+    await api.post(`/jobs/${id}/restore`);
+  } catch (error) {
+    throw error;
+  }
+};
+
+export { createTask, getAllTasks, getTaskById, updateTask, inactiveJob, deleteJob, restoreJob };

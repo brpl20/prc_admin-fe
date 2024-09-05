@@ -28,16 +28,16 @@ import {
 } from '@/utils/constants';
 
 import { z } from 'zod';
-import { DescriptionText, Flex, colors } from '@/styles/globals';
-import Notification from '@/components/OfficeModals/Notification';
+import { DescriptionText, colors } from '@/styles/globals';
+import { Notification } from '@/components';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
 
-import dayjs from 'dayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { cpfMask } from '@/utils/masks';
+
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { getAllCustomers } from '@/services/customers';
+import { getAllProfileCustomer } from '@/services/customers';
 import CustomTooltip from '@/components/Tooltip';
 import { MdOutlineAddCircle, MdOutlineInfo } from 'react-icons/md';
 import RepresentativeModal from '../../representative/representativeModal';
@@ -66,15 +66,15 @@ interface FormData {
 }
 
 const stepOneSchema = z.object({
-  name: z.string().nonempty(),
-  last_name: z.string().nonempty(),
-  cpf: z.string().nonempty('CPF obrigatório'),
-  rg: z.string().nonempty('RG obrigatório'),
+  name: z.string().min(1),
+  last_name: z.string().min(1),
+  cpf: z.string().min(6, { message: 'CPF obrigatório' }),
+  rg: z.string().min(6, { message: 'RG obrigatório' }),
   birth: z.string().optional(),
-  nationality: z.string().nonempty('Naturalidade obrigatória'),
-  gender: z.string().nonempty('Sexo obrigatório'),
-  civil_status: z.string().nonempty('Estado civil obrigatório'),
-  capacity: z.string().nonempty('Capacidade obrigatória'),
+  nationality: z.string().min(2, { message: 'Naturalidade obrigatória' }),
+  gender: z.string().min(2, { message: 'Sexo obrigatório' }),
+  civil_status: z.string().min(2, { message: 'Estado civil obrigatório' }),
+  capacity: z.string().min(2, { message: 'Capacidade obrigatória' }),
 });
 
 const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IStepOneProps> = (
@@ -82,17 +82,15 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   ref,
 ) => {
   const [isModalRegisterRepresentativeOpen, setIsModalRegisterRepresentativeOpen] = useState(false);
-  const [isRepresentativeFinished, setIsRepresentativeFinished] = useState(false);
-  const currentDate = dayjs();
+
   const [errors, setErrors] = useState({} as any);
   const { setPageTitle } = useContext(PageTitleContext);
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
-
+  const today = new Date().toISOString().split('T')[0];
   const [representorsList, setRepresentorsList] = useState([] as any);
-  const [selectedDate, setSelectedDate] = useState(currentDate);
   const [formData, setFormData] = useState<FormData>({
     name: customerForm.name,
     last_name: customerForm.last_name,
@@ -106,23 +104,31 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     representor: {},
   });
 
+  const getRepresentors = async () => {
+    const allCustomers = await getAllProfileCustomer('');
+    const response = allCustomers.data;
+
+    const representors = response.filter(
+      (customer: any) => customer.attributes.customer_type === 'representative',
+    );
+
+    setRepresentorsList(representors);
+  };
+
   useEffect(() => {
-    const getRepresentors = async () => {
-      const allCustomers = await getAllCustomers();
-      const response = allCustomers.data;
-
-      const representors = response.filter(
-        (customer: any) => customer.attributes.customer_type === 'representative',
-      );
-
-      setRepresentorsList(representors);
-    };
-
     getRepresentors();
-  }, [isRepresentativeFinished]);
+  }, []);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
+
+    if (name === 'cpf') {
+      setFormData(prevData => ({
+        ...prevData,
+        cpf: cpfMask(value),
+      }));
+      return;
+    }
 
     setFormData(prevData => ({
       ...prevData,
@@ -138,7 +144,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       setFormData({
         name: parsedData.name,
         last_name: parsedData.last_name,
-        cpf: parsedData.cpf,
+        cpf: cpfMask(parsedData.cpf),
         rg: parsedData.rg,
         birth: parsedData.birth,
         nationality: parsedData.nationality,
@@ -169,15 +175,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     }));
   };
 
-  const handleBirthDate = (date: any) => {
-    const birthDate = new Date(date).toLocaleDateString('pt-BR');
-    setSelectedDate(date);
-    setFormData((prevData: any) => ({
-      ...prevData,
-      ['birth']: birthDate,
-    }));
-  };
-
   const handleSubmitForm = () => {
     try {
       stepOneSchema.parse(formData);
@@ -204,7 +201,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       saveDataLocalStorage({
         name: formData.name,
         last_name: formData.last_name,
-        cpf: formData.cpf,
+        cpf: formData.cpf.replace(/\D/g, ''),
         rg: formData.rg,
         birth: birthDate,
         nationality: formData.nationality,
@@ -217,7 +214,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       if (editMode) {
         customerForm.data.attributes.name = formData.name;
         customerForm.data.attributes.last_name = formData.last_name;
-        customerForm.data.attributes.cpf = formData.cpf;
+        customerForm.data.attributes.cpf = formData.cpf.replace(/\D/g, '');
         customerForm.data.attributes.rg = formData.rg;
         customerForm.data.attributes.birth = birthDate;
         customerForm.data.attributes.gender = formData.gender;
@@ -256,7 +253,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       if (formData) {
         customerForm.name = formData.name;
         customerForm.last_name = formData.last_name;
-        customerForm.cpf = formData.cpf;
+        customerForm.cpf = formData.cpf.replace(/\D/g, '');
         customerForm.rg = formData.rg;
         customerForm.birth = birthDate;
         customerForm.gender = formData.gender;
@@ -314,7 +311,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   };
 
   const customTitleWithInfo = (title: string, tooltipText: string) => (
-    <Flex style={{ alignItems: 'center' }}>
+    <div style={{ display: 'flex', alignItems: 'center' }}>
       <Typography display={'flex'} alignItems={'center'} variant="h6" style={{ height: '40px' }}>
         {title}
       </Typography>
@@ -323,11 +320,16 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
         </span>
       </CustomTooltip>
-    </Flex>
+    </div>
   );
 
-  const renderInputField = (label: string, name: keyof FormData, error: boolean) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
+  const renderInputField = (
+    label: string,
+    name: keyof FormData,
+    length: number,
+    error: boolean,
+  ) => (
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
       </Typography>
@@ -339,12 +341,13 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         type="text"
         name={name}
         size="small"
+        inputProps={{ maxLength: length }}
         value={formData[name] || ''}
         autoComplete="off"
         placeholder={`Informe o ${label}`}
         onChange={handleInputChange}
       />
-    </Flex>
+    </div>
   );
 
   const renderSelectField = (
@@ -353,7 +356,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     options: { label: string; value: string }[],
     error?: boolean,
   ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
       </Typography>
@@ -372,7 +375,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           ))}
         </Select>
       </FormControl>
-    </Flex>
+    </div>
   );
 
   useEffect(() => {
@@ -387,7 +390,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           ...prevData,
           name: attributes.name,
           last_name: attributes.last_name,
-          cpf: attributes.cpf ? attributes.cpf : '',
+          cpf: attributes.cpf ? cpfMask(attributes.cpf) : '',
           rg: attributes.rg ? attributes.rg : '',
           birth: attributes.birth,
           nationality: attributes.nationality,
@@ -398,7 +401,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         }));
 
         customerForm.represent = attributes.represent;
-        setSelectedDate(dayjs(attributes.birth));
       }
     };
 
@@ -440,32 +442,33 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           pageTitle="Cadastro de Representante"
           isOpen={isModalRegisterRepresentativeOpen}
           handleClose={() => setIsModalRegisterRepresentativeOpen(false)}
-          handleRegistrationFinished={() => setIsRepresentativeFinished(true)}
+          handleRegistrationFinished={getRepresentors}
         />
       )}
 
       <Container>
         <form>
           <Box maxWidth={'812px'} display={'flex'} flexDirection={'column'} gap={'16px'}>
-            <Flex style={{ gap: '24px' }}>
-              {renderInputField('Nome', 'name', !!errors.name)}
-              {renderInputField('Sobrenome', 'last_name', !!errors.last_name)}
-            </Flex>
-            <Flex style={{ gap: '24px' }}>
-              {renderInputField('CPF', 'cpf', !!errors.cpf)}
-              {renderInputField('RG', 'rg', !!errors.rg)}
-            </Flex>
-            <Flex style={{ gap: '24px' }}>
+            <div style={{ display: 'flex', gap: '24px' }}>
+              {renderInputField('Nome', 'name', 99, !!errors.name)}
+              {renderInputField('Sobrenome', 'last_name', 99, !!errors.last_name)}
+            </div>
+            <div style={{ display: 'flex', gap: '24px' }}>
+              {renderInputField('CPF', 'cpf', 16, !!errors.cpf)}
+              {renderInputField('RG', 'rg', 12, !!errors.rg)}
+            </div>
+            <div style={{ display: 'flex', gap: '24px' }}>
               <BirthdayContainer>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <Flex>
+                  <div style={{ display: 'flex' }}>
                     <Typography mb={'8px'} variant="h6">
                       {'Data de Nascimento'}
                     </Typography>
-                  </Flex>
+                  </div>
                   <input
                     type="date"
                     name="birth"
+                    max={today}
                     value={formData.birth}
                     onChange={handleInputChange}
                     style={{
@@ -487,7 +490,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                 nationalityOptions,
                 !!errors.nationality,
               )}
-            </Flex>
+            </div>
           </Box>
 
           <Box display={'flex'} gap={4} mt={'24px'} maxWidth={'812px'}>
@@ -503,15 +506,23 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           </Box>
 
           {(formData.capacity === 'relatively' || formData.capacity === 'unable') && (
-            <Flex style={{ gap: '24px', maxWidth: '812px', marginTop: '24px' }}>
-              <Flex
+            <div style={{ display: 'flex', gap: '24px', maxWidth: '812px', marginTop: '24px' }}>
+              <div
                 style={{
+                  display: 'flex',
                   flexDirection: 'column',
                   gap: '24px',
                   width: '50%',
                 }}
               >
-                <Flex className="inputContainer" style={{ flexDirection: 'column', width: '100%' }}>
+                <div
+                  className="inputContainer"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    width: '100%',
+                  }}
+                >
                   {customTitleWithInfo(
                     'Representante',
                     'Selecione quando necessário um Representante.',
@@ -529,13 +540,18 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                     getOptionLabel={(option: any) => option?.attributes?.name ?? ''}
                     onChange={(event, value) => handleRepresentorChange('representor', value)}
                     renderInput={params => (
-                      <TextField {...params} placeholder={'Informe o Representante'} size="small" />
+                      <TextField
+                        error={!formData.representor?.id}
+                        {...params}
+                        placeholder={'Informe o Representante'}
+                        size="small"
+                      />
                     )}
                     noOptionsText={`Nenhum Representante Encontrado`}
                   />
-                </Flex>
-              </Flex>
-              <Flex>
+                </div>
+              </div>
+              <div style={{ display: 'flex' }}>
                 <Button
                   variant="contained"
                   color="primary"
@@ -555,8 +571,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                   </DescriptionText>
                   <MdOutlineAddCircle size={20} />
                 </Button>
-              </Flex>
-            </Flex>
+              </div>
+            </div>
           )}
         </form>
       </Container>

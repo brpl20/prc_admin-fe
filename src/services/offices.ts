@@ -9,9 +9,11 @@ const createOffice = async (data: any) => {
   }
 };
 
-const getAllOffices = async () => {
+const getAllOffices = async (typeOfParams: string) => {
+  const url = typeOfParams !== '' ? `/offices?deleted=${typeOfParams}` : '/offices';
+
   try {
-    const response = await api.get('/offices');
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     throw error;
@@ -63,6 +65,30 @@ const createOfficeType = async (data: any) => {
   }
 };
 
+const inactiveOffice = async (id: string) => {
+  try {
+    await api.delete(`/offices/${id}`);
+  } catch (error) {
+    throw error;
+  }
+};
+
+const deleteOffice = async (id: string) => {
+  try {
+    await api.delete(`/offices/${id}?destroy_fully=true`);
+  } catch (error) {
+    throw error;
+  }
+};
+
+const restoreOffice = async (id: string) => {
+  try {
+    await api.post(`/offices/${id}/restore`);
+  } catch (error) {
+    throw error;
+  }
+};
+
 export {
   createOffice,
   getAllOffices,
@@ -71,4 +97,7 @@ export {
   getOfficesWithLaws,
   getAllOfficeTypes,
   createOfficeType,
+  inactiveOffice,
+  deleteOffice,
+  restoreOffice,
 };

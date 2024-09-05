@@ -6,7 +6,6 @@ interface titleProps {
 }
 
 import { colors, border } from '@/styles/globals';
-import { IMenuUserProps } from '@/interfaces/ILayout';
 
 export const ContentContainer = styled.span``;
 
@@ -110,7 +109,7 @@ export const MenuItem = styled(Box)`
   height: 32px;
 `;
 
-export const SelectContainer = styled.div<IMenuUserProps>`
+export const SelectContainer = styled.div<any>`
   width: 180px;
   display: flex;
   justify-content: center;
@@ -171,7 +170,7 @@ export const SelectContainer = styled.div<IMenuUserProps>`
     `}
 `;
 
-export const CloseDropdown = styled.div`
+export const CloseDropdown = styled.div<any>`
   display: none;
   cursor: default;
   position: fixed;

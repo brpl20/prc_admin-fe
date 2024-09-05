@@ -17,10 +17,10 @@ import { colors, Flex } from '@/styles/globals';
 import { MdOutlineInfo, MdDelete } from 'react-icons/md';
 
 import { WorkContext } from '@/contexts/WorkContext';
-import Notification from '@/components/OfficeModals/Notification';
+import { Notification } from '@/components';
 
 import { ICustomerProps } from '@/interfaces/ICustomer';
-import { getAllCustomers } from '@/services/customers';
+import { getAllProfileCustomer } from '@/services/customers';
 
 import {
   Container,
@@ -67,9 +67,9 @@ interface IStepOneProps {
 }
 
 const stepOneSchema = z.object({
-  profile_customer_ids: z.array(z.string()).nonempty(),
-  procedures: z.array(z.string()).nonempty(),
-  subject: z.string().nonempty(),
+  profile_customer_ids: z.array(z.string()).min(1),
+  procedures: z.array(z.string()).min(1),
+  subject: z.string().min(2),
 });
 
 const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps> = (
@@ -96,7 +96,6 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File[] | null>(null);
-  const [tributaryArea, setTributaryArea] = useState<string>('');
   const [compensationsLastYears, setCompensationsLastYears] = useState('');
   const [officialCompensation, setOfficialCompensation] = useState('');
   const [hasALawsuit, setHasALawsuit] = useState('');
@@ -427,7 +426,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
 
   useEffect(() => {
     const getCustomers = async () => {
-      const response = await getAllCustomers();
+      const response = await getAllProfileCustomer('');
       setCustomersList(response.data);
     };
 
@@ -683,7 +682,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                   <TextField placeholder="Selecione uma Pré-definição" {...params} size="small" />
                 )}
                 sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
-                noOptionsText="Nenhuma Pré-definição Encontrada"
+                noOptionsText="Não Encontrado"
                 onChange={(event, draftWork) => {
                   setSelectedDraftWork(draftWork);
                 }}
@@ -1185,7 +1184,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                             onInput={(e: any) => {
                               e.target.value = e.target.value.replace(/[^0-9.,]/g, '');
                             }}
-                            onBlur={e => {
+                            onBlur={(e: any) => {
                               const inputValue = e.target.value;
                               const numericValue = parseFloat(inputValue.replace(',', '.'));
 

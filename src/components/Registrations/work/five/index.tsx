@@ -13,7 +13,7 @@ import { Box, Typography, TextField, Autocomplete } from '@mui/material';
 import { MdOutlineInfo } from 'react-icons/md';
 
 import { ICustomerProps } from '@/interfaces/ICustomer';
-import { getAllCustomers } from '@/services/customers';
+import { getAllProfileCustomer } from '@/services/customers';
 
 import CustomTooltip from '@/components/Tooltip';
 import { WorkContext } from '@/contexts/WorkContext';
@@ -33,6 +33,10 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
   { nextStep },
   ref,
 ) => {
+  const router = useRouter();
+
+  const isEdit = router.asPath.includes('alterar');
+
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
@@ -44,8 +48,6 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
   const [percentage, setPercentage] = useState<string>();
   const [commission, setCommission] = useState<string>();
   const [selectedCustomer, setSelectedCustomer] = useState<ICustomerProps>();
-
-  const route = useRouter();
 
   useImperativeHandle(ref, () => ({
     handleSubmitForm,
@@ -63,7 +65,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
   useEffect(() => {
     const getCustomers = async () => {
-      const response = await getAllCustomers();
+      const response = await getAllProfileCustomer('');
       setCustomersList(response.data);
     };
 
@@ -86,7 +88,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
         ...workForm,
       };
 
-      if (route.asPath.includes('alterar') && selectedCustomer) {
+      if (isEdit && selectedCustomer) {
         data.recommendations_attributes = [
           {
             id: workForm.data.attributes.recommendations?.[0]?.id,
@@ -208,7 +210,10 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
         handlePercentage(parsedData.recommendations_attributes?.[0].percentage ?? '');
 
-        if (parsedData.recommendations_attributes[0].commission) {
+        if (
+          parsedData.recommendations_attributes &&
+          parsedData.recommendations_attributes[0].commission
+        ) {
           setCommission(
             `R$ ${parseFloat(parsedData.recommendations_attributes[0].commission)
               .toFixed(2)
@@ -217,7 +222,10 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
           );
         }
 
-        if (parsedData.recommendations_attributes[0].profile_customer_id) {
+        if (
+          parsedData.recommendations_attributes &&
+          parsedData.recommendations_attributes[0].profile_customer_id
+        ) {
           if (customersList.length === 0) {
             return;
           }

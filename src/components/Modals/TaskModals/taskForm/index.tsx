@@ -22,7 +22,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { z } from 'zod';
 import { getAllWorks, getWorkByCustomerId, getWorkById } from '@/services/works';
 import { IModalProps } from '@/interfaces/IModal';
-import { getAllCustomers } from '@/services/customers';
+import { getAllProfileCustomer } from '@/services/customers';
 import { createTask, getTaskById, updateTask } from '@/services/tasks';
 
 import { Content, Title, Input, DeadlineContainer } from './styles';
@@ -46,11 +46,11 @@ interface FormData {
 }
 
 const taskSchema = z.object({
-  description: z.string().nonempty({ message: 'Descrição é obrigatória' }),
-  status: z.string().nonempty({ message: 'Status é obrigatório' }),
-  priority: z.string().nonempty({ message: 'Prioridade é obrigatória' }),
-  profile_customer_id: z.string().nonempty({ message: 'Cliente é obrigatório' }),
-  profile_admin_id: z.string().nonempty({ message: 'Responsável é obrigatório' }),
+  description: z.string().min(2, { message: 'Descrição é obrigatória' }),
+  status: z.string().min(2, { message: 'Status é obrigatório' }),
+  priority: z.string().min(1, { message: 'Prioridade é obrigatória' }),
+  profile_customer_id: z.string().min(2, { message: 'Cliente é obrigatório' }),
+  profile_admin_id: z.string().min(1, { message: 'Responsável é obrigatório' }),
 });
 
 const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
@@ -162,12 +162,12 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
   const getData = async () => {
     setDataLoaded(true);
     try {
-      const works = await getAllWorks();
+      const works = await getAllWorks('');
       const data = works.data;
       const idsArray = data.map((item: any) => item.id);
       setWorkList(idsArray);
 
-      const customers = await getAllCustomers();
+      const customers = await getAllProfileCustomer('');
       const dataCustomers = customers.data;
 
       if (dataCustomers) {
@@ -284,9 +284,9 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
 
   const renderTitle = () => {
     return (
-      <Title style={{ fontSize: '28px' }}>
+      <label style={{ fontSize: '28px', color: '#2A3F54', fontWeight: '500' }}>
         {dataToEdit && Object.values(dataToEdit).length > 0 ? 'Editar Tarefa' : 'Nova Tarefa'}
-      </Title>
+      </label>
     );
   };
 

@@ -2,22 +2,13 @@ import { getOfficeById } from '@/services/offices';
 
 import { useEffect, useState } from 'react';
 
-import {
-  Title,
-  ButtonShowData,
-  ContainerDetails,
-  Flex,
-  DetailsWrapper,
-  BoxInfo,
-  GridInfo,
-  ButtonShowContact,
-} from '../styles';
+import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
 import { cnpjMask, phoneMask } from '@/utils/masks';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import { Box, Button, CircularProgress } from '@mui/material';
 import Link from 'next/link';
 import { IAdminProps } from '@/interfaces/IAdmin';
-import { getAllCustomers } from '@/services/customers';
+import { getAllAdmins } from '@/services/admins';
 import { FiMinusCircle } from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
 
@@ -38,13 +29,14 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
   const getAdmins = async () => {
     const response: {
       data: IAdminProps[];
-    } = await getAllCustomers();
+    } = await getAllAdmins('');
     SetAllLawyers(response.data);
   };
 
   const getLawyerName = (lawyerId: number) => {
     if (lawyerId) {
       const lawyer = allLawyers.find((lawyer: any) => lawyer.id == lawyerId);
+
       return (
         lawyer &&
         `${lawyer?.attributes.name ? lawyer?.attributes.name : ''} ${
@@ -79,7 +71,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
           phones: data.attributes.phones ? data.attributes.phones : '',
           emails: data.attributes.emails ? data.attributes.emails : '',
           site: data.attributes.site ? data.attributes.site : '',
-          responsible_lawyer: data.attributes.responsible_lawyer_id
+          responsible_lawyer_id: data.attributes.responsible_lawyer_id
             ? getLawyerName(data.attributes.responsible_lawyer_id)
             : '',
         };
@@ -87,7 +79,6 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
         setOfficeData(newData);
       }
     } catch (error) {
-      console.log(error);
     } finally {
       setLoading(false);
     }
@@ -342,7 +333,13 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {officeData.society ? officeData.society : 'Não Informado'}
+                          {officeData.society === 'company'
+                            ? 'Empresarial'
+                            : officeData.society === 'sole_proprietorship'
+                            ? 'Sociedade Simples'
+                            : officeData.society === 'individual'
+                            ? 'Sociedade Empresária'
+                            : 'Não Informado'}
                         </span>
                       </Flex>
                       <Flex
@@ -1038,7 +1035,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                           flexDirection: 'column',
                           gap: '8px',
                           alignItems: 'flex-start',
-                          width: '300px',
+                          width: '330px',
                         }}
                       >
                         <span
@@ -1057,8 +1054,8 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {officeData.responsible_lawyer
-                            ? officeData.responsible_lawyer
+                          {officeData.responsible_lawyer_id
+                            ? officeData.responsible_lawyer_id
                             : 'Não Informado'}
                         </span>
                       </Flex>

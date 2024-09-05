@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
 import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
-import { cpfMask, rgMask } from '@/utils/masks';
 import { Box, Button, CircularProgress } from '@mui/material';
 import { getAdminByID } from '@/services/admins';
 import { getAllOffices } from '@/services/offices';
@@ -27,7 +26,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
   const getOffices = async () => {
     const response: {
       data: any;
-    } = await getAllOffices();
+    } = await getAllOffices('');
     setAllOffices(response.data);
   };
 
@@ -96,7 +95,6 @@ export default function UserDetails({ id }: UserDetailsProps) {
         setUserData(newData);
       }
     } catch (error) {
-      console.log(error);
     } finally {
       setLoading(false);
     }
@@ -278,7 +276,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {userData.rg ? rgMask(userData.rg) : 'Não Informado'}
+                          {userData.rg ? userData.rg : 'Não Informado'}
                         </span>
                       </Flex>
 
@@ -408,13 +406,15 @@ export default function UserDetails({ id }: UserDetailsProps) {
                         >
                           {userData.civil_status
                             ? userData.civil_status === 'single'
-                              ? 'Solteiro(a)'
+                              ? 'Solteiro'
+                              : userData.civil_status === 'union'
+                              ? 'União Estável'
                               : userData.civil_status === 'married'
-                              ? 'Casado(a)'
+                              ? 'Casado'
                               : userData.civil_status === 'divorced'
-                              ? 'Divorciado(a)'
+                              ? 'Divorciado'
                               : userData.civil_status === 'widower'
-                              ? 'Viúvo(a)'
+                              ? 'Viúvo'
                               : ''
                             : ''}
                         </span>
@@ -1051,7 +1051,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                             fontWeight: '500',
                           }}
                         >
-                          Origin
+                          Origem
                         </span>
                         <span
                           style={{
@@ -1087,7 +1087,17 @@ export default function UserDetails({ id }: UserDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {userData.role ? userData.role : 'Não Informado'}
+                          {userData.role === 'lawyer'
+                            ? 'Advogado'
+                            : userData.role === 'paralegal'
+                            ? 'Paralegal'
+                            : userData.role === 'trainee'
+                            ? 'Estagiário'
+                            : userData.role === 'secretary'
+                            ? 'Secretário(a)'
+                            : userData.role === 'counter'
+                            ? 'Contador(a)'
+                            : ''}
                         </span>
                       </Flex>
                       <Flex

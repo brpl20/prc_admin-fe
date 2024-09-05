@@ -20,12 +20,13 @@ import { CustomerContext } from '@/contexts/CustomerContext';
 import { Container, Title } from './styles';
 import { colors, ContentContainer } from '@/styles/globals';
 
-import { Flex, Divider } from '@/styles/globals';
+import { Divider } from '@/styles/globals';
 import { createProfileCustomer, createCustomer, updateProfileCustomer } from '@/services/customers';
 import { animateScroll as scroll } from 'react-scroll';
 
 import Router, { useRouter } from 'next/router';
-import { cpfMask } from '@/utils/masks';
+import { IoMdTrash } from 'react-icons/io';
+import { phoneMask } from '@/utils/masks';
 import { z } from 'zod';
 
 interface FormData {
@@ -44,11 +45,11 @@ interface props {
 }
 
 const counterSchema = z.object({
-  name: z.string().nonempty('Nome é obrigatório'),
-  last_name: z.string().nonempty('Sobrenome é obrigatório'),
-  accountant_id: z.string().nonempty('Registro Profissional é obrigatório'),
-  phone_number: z.string().nonempty('Telefone Obrigatório'),
-  email: z.string().nonempty('Email Obrigatório'),
+  name: z.string().min(4, 'Nome é obrigatório'),
+  last_name: z.string().min(4, 'Sobrenome é obrigatório'),
+  accountant_id: z.string().min(4, 'Registro Profissional é obrigatório'),
+  phone_number: z.string().min(4, 'Telefone Obrigatório'),
+  email: z.string().min(4, 'Email Obrigatório'),
 });
 
 const Counter = ({ pageTitle }: props) => {
@@ -123,7 +124,7 @@ const Counter = ({ pageTitle }: props) => {
         if (newInputFields[index]) {
           newInputFields[index] = {
             ...newInputFields[index],
-            phone_number: value,
+            phone_number: phoneMask(value),
           };
         } else {
           newInputFields.push({ phone_number: value });
@@ -165,7 +166,7 @@ const Counter = ({ pageTitle }: props) => {
           customer_id: Number(customer_id),
         };
 
-        const res = await createProfileCustomer(newData);
+        await createProfileCustomer(newData);
 
         Router.push('/clientes');
         resetValues();
@@ -304,7 +305,7 @@ const Counter = ({ pageTitle }: props) => {
     placeholderText: string,
     error?: boolean,
   ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {title}
       </Typography>
@@ -320,7 +321,7 @@ const Counter = ({ pageTitle }: props) => {
         onChange={handleInputChange}
         error={error && !formData[name]}
       />
-    </Flex>
+    </div>
   );
 
   const renderSelectField = (
@@ -329,7 +330,7 @@ const Counter = ({ pageTitle }: props) => {
     options: { label: string; value: string }[],
     error?: boolean,
   ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
       </Typography>
@@ -348,7 +349,7 @@ const Counter = ({ pageTitle }: props) => {
           ))}
         </Select>
       </FormControl>
-    </Flex>
+    </div>
   );
 
   const handleAddInput = (inputArrayName: keyof typeof contactData) => {
@@ -425,6 +426,30 @@ const Counter = ({ pageTitle }: props) => {
     setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro de' : 'Alterar'} Contador`);
   }, [route, setPageTitle]);
 
+  const handleRemoveContact = (removeIndex: number, inputArrayName: string) => {
+    if (inputArrayName === 'phoneInputFields') {
+      if (contactData.phoneInputFields.length === 1) return;
+
+      const updatedEducationals = [...contactData.phoneInputFields];
+      updatedEducationals.splice(removeIndex, 1);
+      setContactData(prevData => ({
+        ...prevData,
+        phoneInputFields: updatedEducationals,
+      }));
+    }
+
+    if (inputArrayName === 'emailInputFields') {
+      if (contactData.emailInputFields.length === 1) return;
+
+      const updatedEducationals = [...contactData.emailInputFields];
+      updatedEducationals.splice(removeIndex, 1);
+      setContactData(prevData => ({
+        ...prevData,
+        emailInputFields: updatedEducationals,
+      }));
+    }
+  };
+
   return (
     <>
       {openSnackbar && (
@@ -462,7 +487,7 @@ const Counter = ({ pageTitle }: props) => {
         <ContentContainer>
           <form>
             <Box display={'flex'} flexDirection={'column'} gap={'16px'}>
-              <Flex style={{ gap: '32px' }}>
+              <div style={{ display: 'flex', gap: '32px' }}>
                 <Box width={'210px'}>
                   <Typography variant="h6" sx={{ marginRight: 'auto' }}>
                     {'Registro Profissional'}
@@ -478,25 +503,27 @@ const Counter = ({ pageTitle }: props) => {
                     )}
                   </Box>
                 </Box>
-              </Flex>
+              </div>
 
               <Divider />
 
-              <Flex style={{ gap: '32px' }}>
+              <div style={{ display: 'flex', gap: '32px' }}>
                 <Box width={'210px'}>
                   <Typography variant="h6" sx={{ marginRight: 'auto' }}>
                     {'Dados do Contador'}
                   </Typography>
                 </Box>
 
-                <Flex
+                <div
                   style={{
+                    display: 'flex',
                     flexDirection: 'column',
                     flex: 1,
                   }}
                 >
-                  <Flex
+                  <div
                     style={{
+                      display: 'flex',
                       gap: '32px',
                       flex: 1,
                       marginTop: '24px',
@@ -514,20 +541,20 @@ const Counter = ({ pageTitle }: props) => {
                         !!errors.last_name,
                       )}
                     </Box>
-                  </Flex>
-                </Flex>
-              </Flex>
+                  </div>
+                </div>
+              </div>
 
               <Divider />
 
-              <Flex style={{ gap: '32px' }}>
+              <div style={{ display: 'flex', gap: '32px' }}>
                 <Box width={'210px'}>
                   <Typography variant="h6" sx={{ marginRight: 'auto' }}>
                     {'Contato'}
                   </Typography>
                 </Box>
 
-                <Flex style={{ gap: '32px', flex: 1 }}>
+                <div style={{ display: 'flex', gap: '32px', flex: 1 }}>
                   <Box
                     style={{
                       flex: 1,
@@ -536,38 +563,59 @@ const Counter = ({ pageTitle }: props) => {
                     <Typography style={{ marginBottom: '8px' }} variant="h6">
                       {'Telefone'}
                     </Typography>
+
                     {contactData.phoneInputFields.map((inputValue, index) => (
-                      <Flex
+                      <div
                         key={index}
                         style={{
+                          display: 'flex',
                           flexDirection: 'column',
                           marginBottom: '8px',
                           gap: '6px',
                         }}
                       >
-                        <TextField
-                          id="outlined-basic"
-                          variant="outlined"
-                          fullWidth
-                          name="phone"
-                          size="small"
-                          placeholder="Informe o Telefone"
-                          value={inputValue.phone_number || ''}
-                          onChange={(e: any) =>
-                            handleContactChange(index, e.target.value, 'phoneInputFields')
-                          }
-                          autoComplete="off"
-                          error={!!errors.phone_number}
-                        />
+                        <div className="flex flex-row gap-1">
+                          <TextField
+                            id="outlined-basic"
+                            variant="outlined"
+                            fullWidth
+                            name="phone"
+                            size="small"
+                            placeholder="Informe o Telefone"
+                            value={inputValue.phone_number || ''}
+                            onChange={(e: any) =>
+                              handleContactChange(index, e.target.value, 'phoneInputFields')
+                            }
+                            autoComplete="off"
+                            error={!!errors.phone_number}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleRemoveContact(index, 'phoneInputFields');
+                            }}
+                          >
+                            <div
+                              className={`flex  ${
+                                contactData.phoneInputFields.length > 1 ? '' : 'hidden'
+                              }`}
+                            >
+                              <IoMdTrash size={20} color="#a50000" />
+                            </div>
+                          </button>
+                        </div>
+
                         {index === contactData.phoneInputFields.length - 1 && (
                           <IoAddCircleOutline
-                            style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                            className={`cursor-pointer ml-auto ${
+                              contactData.phoneInputFields.length > 1 ? 'mr-6' : ''
+                            }`}
                             onClick={() => handleAddInput('phoneInputFields')}
                             color={colors.quartiary}
                             size={20}
                           />
                         )}
-                      </Flex>
+                      </div>
                     ))}
                   </Box>
                   <Box
@@ -578,43 +626,65 @@ const Counter = ({ pageTitle }: props) => {
                     <Typography style={{ marginBottom: '8px' }} variant="h6">
                       {'E-mail'}
                     </Typography>
+
                     {contactData.emailInputFields.map((inputValue, index) => (
-                      <Flex
+                      <div
                         key={index}
                         style={{
+                          display: 'flex',
                           flexDirection: 'column',
                           marginBottom: '8px',
                           gap: '6px',
                         }}
                       >
-                        <TextField
-                          id="outlined-basic"
-                          variant="outlined"
-                          fullWidth
-                          name="email"
-                          size="small"
-                          style={{ flex: 1 }}
-                          placeholder="Informe o Email"
-                          value={inputValue.email || ''}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleContactChange(index, e.target.value, 'emailInputFields')
-                          }
-                          autoComplete="off"
-                          error={!!errors.email}
-                        />
+                        <div className="flex flex-row gap-1">
+                          <TextField
+                            id="outlined-basic"
+                            variant="outlined"
+                            fullWidth
+                            name="email"
+                            size="small"
+                            style={{ flex: 1 }}
+                            placeholder="Informe o Email"
+                            value={inputValue.email || ''}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                              handleContactChange(index, e.target.value, 'emailInputFields')
+                            }
+                            autoComplete="off"
+                            error={!!errors.email}
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleRemoveContact(index, 'emailInputFields');
+                            }}
+                          >
+                            <div
+                              className={`flex  ${
+                                contactData.emailInputFields.length > 1 ? '' : 'hidden'
+                              }`}
+                            >
+                              <IoMdTrash size={20} color="#a50000" />
+                            </div>
+                          </button>
+                        </div>
+
                         {index === contactData.emailInputFields.length - 1 && (
                           <IoAddCircleOutline
-                            style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                            className={`cursor-pointer ml-auto ${
+                              contactData.emailInputFields.length > 1 ? 'mr-6' : ''
+                            }`}
                             onClick={() => handleAddInput('emailInputFields')}
                             color={colors.quartiary}
                             size={20}
                           />
                         )}
-                      </Flex>
+                      </div>
                     ))}
                   </Box>
-                </Flex>
-              </Flex>
+                </div>
+              </div>
             </Box>
           </form>
 

@@ -1,12 +1,20 @@
 import styles from './style.module.css';
 
 import React, { useEffect, useState, useContext } from 'react';
-import Router, { useRouter } from 'next/router';
+import Router from 'next/router';
 import Link from 'next/link';
 
 import { PageTitleContext } from '@/contexts/PageTitleContext';
+import {
+  getAllCustomers,
+  getAllProfileCustomer,
+  updateCustomer,
+  inactiveCustomer,
+  restoreProfileCustomer,
+} from '@/services/customers';
 
-import { getAllCustomers } from '@/services/customers';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 
 import {
   colors,
@@ -21,178 +29,316 @@ import {
 
 import {
   MdSearch,
-  MdVisibility,
-  MdModeEdit,
-  MdGavel,
+  MdMoreHoriz,
   MdKeyboardArrowDown,
   MdKeyboardArrowRight,
+  MdOutlineVisibility,
+  MdOutlineCreate,
+  MdOutlineArchive,
+  MdDeleteOutline,
+  MdOutlineUnarchive,
 } from 'react-icons/md';
+import { BsFilterCircle } from 'react-icons/bs';
 
 import { Box, Button, Typography, LinearProgress } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
-import { Footer } from '@/components';
+import IconButton from '@mui/material/IconButton';
+
+import { Footer, Notification, Spinner, ModalOfRemove } from '@/components';
+
 import dynamic from 'next/dynamic';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 import { ICustomerProps } from '@/interfaces/ICustomer';
-import { cnpjMask, cpfMask, phoneMask } from '@/utils/masks';
+import { phoneMask } from '@/utils/masks';
 
 import { CustomerContext } from '@/contexts/CustomerContext';
-import { getSession } from 'next-auth/react';
+import { AuthContext } from '@/contexts/AuthContext';
+import { getSession, useSession } from 'next-auth/react';
+
+export type CustomersProps = {
+  id: string;
+  email: '';
+};
+
+type TranslatedCustomer = {
+  id: string;
+  attributes: {
+    [key: string]: any;
+  };
+};
+
+type AllCustomer = {
+  attributes: {
+    email: string;
+    profile_customer_id: number;
+  };
+};
 
 const Customers = () => {
+  const { saveToken } = useContext(AuthContext);
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if (session) {
+      const token = session.token;
+      if (token) {
+        saveToken(token);
+      }
+    }
+  }, []);
+
   const legend = [
     {
       id: 1,
-      name: 'Pessoa Jurídica',
-      color: '#29A74466',
+      name: 'Pessoa Juridica',
+      color: '#57a72160',
     },
     {
       id: 2,
-      name: 'Pessoa Física',
-      color: '#fa768c66',
+      name: 'Pessoa Fisica',
+      color: '#3281f75b',
     },
     {
       id: 3,
       name: 'Contador',
-      color: '#FEC03233',
+      color: '#fa9c0e8e',
     },
     {
       id: 4,
       name: 'Representante Legal',
-      color: '#1D79FB66',
+      color: '#c9c9c92a',
     },
   ];
 
   const getRowClassName = (params: any) => {
-    return params.row.type === 'Pessoa Física'
+    return params.row.type === 'Pessoa Fisica'
       ? styles.physicalPerson
-      : params.row.type === 'Pessoa Jurídica'
+      : params.row.type === 'Pessoa Juridica'
       ? styles.legalPerson
       : params.row.type === 'Contador'
       ? styles.counter
       : styles.representative;
   };
 
-  const { setCustomerForm } = useContext(CustomerContext);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [rowItem, setRowItem] = useState<ICustomerProps>({} as ICustomerProps);
+  const open = Boolean(anchorEl);
+  const [openRemoveModal, setOpenRemoveModal] = useState<boolean>(false);
 
+  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+    setRowItem({} as ICustomerProps);
+  };
+
+  const [loadingEmailChange, setLoadingEmailChange] = useState<boolean>(false);
+  const [refetch, setRefetch] = useState<boolean>(false);
+
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [message, setMessage] = useState('');
+  const [typeMessage, setTypeMessage] = useState<'success' | 'error'>('success');
+
+  const { setCustomerForm } = useContext(CustomerContext);
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
 
+  const [getForStatus, setGetForStatus] = useState<string>('active');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [openCreationMenu, setOpenCreationMenu] = useState<boolean>(false);
   const [searchFor, setSearchFor] = useState<string>('name');
-  const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
-  const [customersListFiltered, setCustomersListFiltered] = useState<ICustomerProps[]>([]);
+  const [profileCustomersList, setProfileCustomersList] = useState<ICustomerProps[]>([]);
+  const [customerList, setCustomerList] = useState<ICustomerProps[]>([]);
+  const [profileCustomersListFiltered, setProfileCustomersListFiltered] = useState<
+    ICustomerProps[]
+  >([]);
+  const [openModal, setOpenModal] = useState<boolean>(false);
+  const [customerToChange, setCustomerToChange] = useState<CustomersProps>();
 
   const handleSearch = (search: string) => {
     const regex = new RegExp(search, 'i');
 
     let filteredList = [];
 
-    if (!customersList) {
+    if (!profileCustomersList) {
       return;
     }
 
     switch (searchFor) {
       case 'name':
-        filteredList = customersList.filter((customer: ICustomerProps) =>
-          regex.test(customer.attributes.name),
+        filteredList = profileCustomersList.filter((profileCustomer: ICustomerProps) =>
+          regex.test(profileCustomer.attributes.name),
         );
         break;
 
       case 'type':
-        filteredList = customersList.filter((customer: ICustomerProps) =>
-          regex.test(customer.attributes.customer_type),
+        filteredList = profileCustomersList.filter((profileCustomer: ICustomerProps) =>
+          regex.test(profileCustomer.attributes.customer_type),
         );
         break;
 
       case 'identification':
-        filteredList = customersList.filter((customer: ICustomerProps) =>
-          regex.test(customer.attributes.cpf),
+        filteredList = profileCustomersList.filter((profileCustomer: ICustomerProps) =>
+          regex.test(profileCustomer.attributes.cpf),
         );
         break;
 
       default:
-        filteredList = [...customersList];
+        filteredList = [...profileCustomersList];
         break;
     }
 
-    setCustomersListFiltered(filteredList);
+    setProfileCustomersListFiltered(filteredList);
   };
 
-  const handleEdit = (customer: ICustomerProps) => {
-    const customerTypeUnformatted = customer.type;
-    const customerType =
-      customerTypeUnformatted == 'Pessoa Física'
+  const handleEdit = (profileCustomer: ICustomerProps) => {
+    const customerTypeUnformatted = profileCustomer.type;
+    const profileCustomerType =
+      customerTypeUnformatted == 'Pessoa Fisica'
         ? 'physical_person'
-        : customerTypeUnformatted == 'Pessoa Jurídica'
+        : customerTypeUnformatted == 'Pessoa Juridica'
         ? 'legal_person'
         : customerTypeUnformatted == 'Contador'
         ? 'counter'
         : 'representative';
 
-    switch (customerType) {
+    switch (profileCustomerType) {
       case 'physical_person':
-        Router.push(`/alterar?type=cliente/pessoa_fisica&id=${customer.id}`);
+        Router.push(`/alterar?type=cliente/pessoa_fisica&id=${profileCustomer.id}`);
         break;
       case 'legal_person':
-        Router.push(`/alterar?type=cliente/pessoa_juridica&id=${customer.id}`);
+        Router.push(`/alterar?type=cliente/pessoa_juridica&id=${profileCustomer.id}`);
         break;
       case 'counter':
-        Router.push(`/alterar?type=cliente/contador&id=${customer.id}`);
+        Router.push(`/alterar?type=cliente/contador&id=${profileCustomer.id}`);
         break;
       case 'representative':
-        Router.push(`/alterar?type=cliente/representante&id=${customer.id}`);
+        Router.push(`/alterar?type=cliente/representante&id=${profileCustomer.id}`);
         break;
       default:
         break;
     }
   };
 
-  const handleDetails = (customer: ICustomerProps) => {
-    const customerTypeUnformatted = customer.type;
-    const customerType =
-      customerTypeUnformatted == 'Pessoa Física'
+  const handleDetails = (profileCustomer: ICustomerProps) => {
+    const customerTypeUnformatted = profileCustomer.type;
+    const profileCustomerType =
+      customerTypeUnformatted == 'Pessoa Fisica'
         ? 'physical_person'
-        : customerTypeUnformatted == 'Pessoa Jurídica'
+        : customerTypeUnformatted == 'Pessoa Juridica'
         ? 'legal_person'
         : customerTypeUnformatted == 'Contador'
         ? 'counter'
         : 'representative';
 
-    switch (customerType) {
+    switch (profileCustomerType) {
       case 'physical_person':
-        Router.push(`/detalhes?type=cliente/pessoa_fisica&id=${customer.id}`);
+        Router.push(`/detalhes?type=cliente/pessoa_fisica&id=${profileCustomer.id}`);
         break;
       case 'legal_person':
-        Router.push(`/detalhes?type=cliente/pessoa_juridica&id=${customer.id}`);
+        Router.push(`/detalhes?type=cliente/pessoa_juridica&id=${profileCustomer.id}`);
         break;
       case 'counter':
-        Router.push(`/detalhes?type=cliente/contador&id=${customer.id}`);
+        Router.push(`/detalhes?type=cliente/contador&id=${profileCustomer.id}`);
         break;
       case 'representative':
-        Router.push(`/detalhes?type=cliente/representante&id=${customer.id}`);
+        Router.push(`/detalhes?type=cliente/representante&id=${profileCustomer.id}`);
         break;
       default:
         break;
     }
+  };
+
+  const handleRestore = async (profileCustomer: ICustomerProps) => {
+    try {
+      await restoreProfileCustomer(profileCustomer.id);
+      setMessage('Cliente restaurado com sucesso!');
+      setTypeMessage('success');
+      setOpenSnackbar(true);
+      setRefetch(!refetch);
+    } catch (error: any) {
+      setMessage('Erro ao restaurar cliente');
+      setTypeMessage('error');
+      setOpenSnackbar(true);
+    }
+  };
+
+  const handleInactive = async (profileCustomer: ICustomerProps) => {
+    try {
+      await inactiveCustomer(profileCustomer.id);
+      setMessage('Cliente inativado com sucesso!');
+      setTypeMessage('success');
+      setOpenSnackbar(true);
+      setRefetch(!refetch);
+    } catch (error: any) {
+      setMessage('Erro ao inativar cliente');
+      setTypeMessage('error');
+      setOpenSnackbar(true);
+    }
+  };
+
+  const handleDelete = async (profileCustomer: ICustomerProps) => {
+    setRowItem(profileCustomer);
+    setOpenRemoveModal(true);
+  };
+
+  const translateCustomerType = (profileCustomerType: string) => {
+    switch (profileCustomerType) {
+      case 'physical_person':
+        return 'Pessoa Fisica';
+      case 'legal_person':
+        return 'Pessoa Juridica';
+      case 'counter':
+        return 'Contador';
+      case 'representative':
+        return 'Representante Legal';
+      default:
+        return profileCustomerType;
+    }
+  };
+
+  const getProfileCustomers = async () => {
+    const requestParams = getForStatus === 'active' ? '' : getForStatus;
+
+    const allProfileCustomer = await getAllProfileCustomer(requestParams);
+    const allCustomer = await getAllCustomers();
+
+    setCustomerList(allCustomer.data);
+
+    const translatedCustomers = allProfileCustomer.data.map((profileCustomer: ICustomerProps) => ({
+      ...profileCustomer,
+      attributes: {
+        ...profileCustomer.attributes,
+        customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
+      },
+    }));
+
+    translatedCustomers.forEach((translatedCustomer: TranslatedCustomer) => {
+      const matchingCustomer = allCustomer.data.find(
+        (customer: AllCustomer) =>
+          customer.attributes.profile_customer_id === Number(translatedCustomer.id),
+      );
+
+      if (matchingCustomer) {
+        translatedCustomer.attributes.customer_email = matchingCustomer.attributes.email;
+      }
+    });
+
+    setProfileCustomersList(translatedCustomers);
+    setProfileCustomersListFiltered(translatedCustomers);
+    setIsLoading(false);
   };
 
   useEffect(() => {
     setIsLoading(true);
-    const getCustomers = async () => {
-      const response = await getAllCustomers();
-      setCustomersList(response.data);
-      setCustomersListFiltered(response.data);
-      setIsLoading(false);
-    };
 
-    getCustomers();
-
+    getProfileCustomers();
     setCustomerForm({});
-  }, []);
+  }, [refetch, getForStatus]);
 
   useEffect(() => {
     const updateScrollPosition = () => {
@@ -210,16 +356,357 @@ const Customers = () => {
     };
   }, []);
 
+  const handleProcessRowUpdate = (newRow: any, oldRow: any) => {
+    const updatedRow = { ...oldRow, ...newRow };
+
+    const customerId = customerList.find(
+      customer => customer.attributes.profile_customer_id === Number(updatedRow.id),
+    );
+
+    if (oldRow.customer_email === updatedRow.customer_email) {
+      return updatedRow;
+    }
+
+    if (customerId && customerId.id) {
+      setCustomerToChange({
+        id: customerId.id,
+        email: updatedRow.customer_email,
+      });
+      setOpenModal(true);
+    }
+
+    return updatedRow;
+  };
+
+  const handleEmailChange = async () => {
+    setLoadingEmailChange(true);
+
+    try {
+      if (!customerToChange) {
+        throw new Error('Erro ao alterar e-mail');
+      }
+
+      await updateCustomer(customerToChange).finally(() => {
+        setOpenModal(false);
+        setMessage('E-mail alterado com sucesso!');
+        setTypeMessage('success');
+        setOpenSnackbar(true);
+
+        setRefetch(!refetch);
+      });
+
+      getProfileCustomers();
+    } catch (error: any) {
+      const message = error[0].code[0] ? error[0].code[0] : 'Erro ao alterar e-mail';
+
+      setMessage(message);
+      setTypeMessage('error');
+      setOpenSnackbar(true);
+    }
+
+    setLoadingEmailChange(false);
+  };
+
+  const orderByClick = (id: number) => {
+    let filteredList = [];
+
+    switch (id) {
+      case 1:
+        filteredList = profileCustomersList.filter(
+          (profileCustomer: ICustomerProps) =>
+            profileCustomer.attributes.customer_type === 'Pessoa Juridica',
+        );
+        break;
+      case 2:
+        filteredList = profileCustomersList.filter(
+          (profileCustomer: ICustomerProps) =>
+            profileCustomer.attributes.customer_type === 'Pessoa Fisica',
+        );
+        break;
+      case 3:
+        filteredList = profileCustomersList.filter(
+          (profileCustomer: ICustomerProps) =>
+            profileCustomer.attributes.customer_type === 'Contador',
+        );
+        break;
+      case 4:
+        filteredList = profileCustomersList.filter(
+          (profileCustomer: ICustomerProps) =>
+            profileCustomer.attributes.customer_type === 'Representante Legal',
+        );
+        break;
+      default:
+        filteredList = [...profileCustomersList];
+        break;
+    }
+
+    setProfileCustomersListFiltered(filteredList);
+  };
+
   return (
     <>
+      {openModal && (
+        <div
+          className="relative z-10"
+          aria-labelledby="modal-title"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+            aria-hidden="true"
+          />
+
+          <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+              <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                  <div className="sm:flex sm:items-start">
+                    <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                      <svg
+                        className="h-6 w-6 text-red-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                      <h3
+                        className="text-base font-semibold leading-6 text-gray-900"
+                        id="modal-title"
+                      >
+                        Alteração de E-mail
+                      </h3>
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500">
+                          {`Tem certeza que deseja alterar o endereço de e-mail? 
+                      Um email de confirmação sera enviado ao cliente para que uma nova senha seja cadastrada.`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                  <button
+                    onClick={handleEmailChange}
+                    type="button"
+                    className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
+                  >
+                    <div className="w-[70px]">
+                      {loadingEmailChange ? <Spinner className="text-white" /> : 'Alterar'}
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpenModal(false);
+                      setCustomerToChange({
+                        id: '',
+                        email: '',
+                      });
+                    }}
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                  >
+                    <div className="w-[70px]">Cancelar</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {openSnackbar && (
+        <Notification
+          open={openSnackbar}
+          message={message}
+          severity={typeMessage}
+          onClose={() => setOpenSnackbar(false)}
+        />
+      )}
+
+      {rowItem.id && (
+        <Menu
+          id="long-menu"
+          MenuListProps={{
+            'aria-labelledby': 'long-button',
+          }}
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleCloseMenu}
+          slotProps={{
+            paper: {
+              style: {
+                width: '20ch',
+              },
+            },
+          }}
+        >
+          <div className="flex flex-col items-start gap-1">
+            {rowItem.deleted === true ? (
+              <>
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleCloseMenu();
+                    handleRestore(rowItem);
+                  }}
+                >
+                  <MdOutlineUnarchive size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Ativar</label>
+                </MenuItem>
+
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleCloseMenu();
+                    handleDelete(rowItem);
+                  }}
+                >
+                  <MdDeleteOutline size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Remover</label>
+                </MenuItem>
+              </>
+            ) : null}
+
+            {!rowItem.deleted ? (
+              <>
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleCloseMenu();
+                    handleDetails(rowItem);
+                  }}
+                >
+                  <MdOutlineVisibility size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Detalhes</label>
+                </MenuItem>
+
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleCloseMenu();
+                    handleEdit(rowItem);
+                  }}
+                >
+                  <MdOutlineCreate size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Alterar</label>
+                </MenuItem>
+
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleCloseMenu();
+                    handleInactive(rowItem);
+                  }}
+                >
+                  <MdOutlineArchive size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Inativar</label>
+                </MenuItem>
+
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleCloseMenu();
+                    handleDelete(rowItem);
+                  }}
+                >
+                  <MdDeleteOutline size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Remover</label>
+                </MenuItem>
+              </>
+            ) : null}
+          </div>
+        </Menu>
+      )}
+
+      {openRemoveModal && (
+        <ModalOfRemove
+          isOpen={openRemoveModal}
+          onClose={() => setOpenRemoveModal(false)}
+          id={rowItem.id}
+          textConfirmation={`cliente/${rowItem.name}`}
+          handleCloseModal={() => {
+            setRefetch(!refetch);
+            setOpenRemoveModal(false);
+          }}
+          model={'cliente'}
+        />
+      )}
+
       <Layout>
         <Container>
-          <PageTitle showTitle={showTitle}>{'Clientes'}</PageTitle>
+          <div className="flex flex-row justify-between">
+            <PageTitle showTitle={showTitle}>{'Clientes'}</PageTitle>
+
+            <div className="flex items-center gap-1 relative font-medium text-[#2A3F54]">
+              <span className="w-[62px] text-[18px]">Ativo:</span>
+
+              <div className="flex items-center gap-[20px]">
+                <div className="flex items-center gap-[6px] cursor-pointer">
+                  <input
+                    type="radio"
+                    id="active"
+                    name="status"
+                    value="active"
+                    disabled={isLoading}
+                    checked={getForStatus === 'active'}
+                    className="w-[16px] h-[16px] cursor-pointer"
+                    onChange={() => setGetForStatus('active')}
+                  />
+                  <label htmlFor="active" className="text-[16px] cursor-pointer">
+                    Sim
+                  </label>
+                </div>
+                <div className="flex items-center gap-[6px] cursor-pointer">
+                  <input
+                    type="radio"
+                    id="only_deleted"
+                    name="status"
+                    value="only_deleted"
+                    disabled={isLoading}
+                    checked={getForStatus === 'only_deleted'}
+                    className="w-[16px] h-[16px] cursor-pointer"
+                    onChange={() => setGetForStatus('only_deleted')}
+                  />
+                  <label htmlFor="only_deleted" className="text-[16px] cursor-pointer">
+                    Não
+                  </label>
+                </div>
+                <div className="flex items-center gap-[6px] cursor-pointer">
+                  <input
+                    type="radio"
+                    id="with_deleted"
+                    name="status"
+                    value="with_deleted"
+                    disabled={isLoading}
+                    checked={getForStatus === 'with_deleted'}
+                    className="w-[16px] h-[16px] cursor-pointer"
+                    onChange={() => setGetForStatus('with_deleted')}
+                  />
+                  <label htmlFor="with_deleted" className="text-[16px] cursor-pointer">
+                    Todos
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <ContentContainer>
             <Box>
               <Typography mb={'8px'} variant="h6">
                 {'Buscar Por'}
               </Typography>
+
               <Box display={'flex'} gap={'16px'} justifyContent={'space-between'}>
                 <Box display={'flex'} gap={'16px'}>
                   <Box display={'flex'} gap={'16px'}>
@@ -234,6 +721,7 @@ const Customers = () => {
                     >
                       {'Nome'}
                     </Button>
+
                     <Button
                       value="type"
                       onClick={() => setSearchFor('type')}
@@ -246,6 +734,7 @@ const Customers = () => {
                     >
                       {'Tipo'}
                     </Button>
+
                     <Button
                       onClick={() => setSearchFor('identification')}
                       variant={searchFor === 'identification' ? 'contained' : 'outlined'}
@@ -283,13 +772,13 @@ const Customers = () => {
                     <Flex className="selectItemsContainer">
                       <Link href={'/cadastrar?type=cliente/pessoa_fisica'}>
                         <Box className={'item'}>
-                          <Typography variant="subtitle2">{'Pessoa Física'}</Typography>
+                          <Typography variant="subtitle2">{'Pessoa Fisica'}</Typography>
                           <MdKeyboardArrowRight size={24} color={colors.white} />
                         </Box>
                       </Link>
                       <Link href={'/cadastrar?type=cliente/pessoa_juridica'}>
                         <Box className={'item'}>
-                          <Typography variant="subtitle2">{'Pessoa Jurídica'}</Typography>
+                          <Typography variant="subtitle2">{'Pessoa Juridica'}</Typography>
                           <MdKeyboardArrowRight size={24} color={colors.white} />
                         </Box>
                       </Link>
@@ -310,75 +799,117 @@ const Customers = () => {
                 </SelectContainer>
               </Box>
             </Box>
+
             {
-              <Flex
-                style={{
-                  marginTop: '26px',
-                  gap: '40px',
-                }}
-              >
+              <div className="flex items-center mt-8 gap-[40px]">
                 {legend.map((item, index) => (
-                  <Flex
+                  <div
+                    className="flex gap-[10px] cursor-pointer items-center"
                     key={index}
-                    style={{
-                      gap: '10px',
-                    }}
+                    onClick={() => orderByClick(item.id)}
                   >
                     <Box
+                      className="cursor-pointer w-[20px] h-[20px] rounded-[50%]"
                       sx={{
-                        width: '20px',
-                        height: '20px',
-                        borderRadius: '50%',
                         backgroundColor: item.color,
                       }}
                     />
                     <Typography variant="subtitle2">{item.name}</Typography>
-                  </Flex>
+                  </div>
                 ))}
-              </Flex>
+
+                <div
+                  className="flex gap-[10px] cursor-pointer items-center"
+                  onClick={() => {
+                    setProfileCustomersListFiltered(profileCustomersList);
+                  }}
+                >
+                  <BsFilterCircle size={20} color="#a50000" />
+
+                  <Typography variant="subtitle2">Listar Todos</Typography>
+                </div>
+              </div>
             }
+
             <Box mt={'20px'} sx={{ height: 450 }}>
               <DataGrid
                 disableColumnMenu
                 disableRowSelectionOnClick
                 loading={isLoading}
                 getRowClassName={getRowClassName}
-                components={{
-                  LoadingOverlay: LinearProgress,
+                slots={{
+                  loadingOverlay: LinearProgress,
                 }}
                 rows={
-                  customersListFiltered &&
-                  customersListFiltered.map((customer: ICustomerProps) => ({
-                    id: customer.id,
-                    name: customer.attributes.name,
-                    type:
-                      customer.attributes.customer_type === 'physical_person'
-                        ? 'Pessoa Física'
-                        : customer.attributes.customer_type === 'legal_person'
-                        ? 'Pessoa Jurídica'
-                        : customer.attributes.customer_type === 'counter'
-                        ? 'Contador'
-                        : 'Representante Legal',
+                  profileCustomersListFiltered &&
+                  profileCustomersListFiltered.map((profileCustomer: ICustomerProps) => ({
+                    id: profileCustomer.id,
+                    name: profileCustomer.attributes.name,
+                    deleted: profileCustomer.attributes.deleted,
+                    type: profileCustomer.attributes.customer_type,
                     cpf:
-                      (customer.attributes.cpf &&
-                        customer.attributes.customer_type === 'physical_person') ||
-                      customer.attributes.customer_type === 'counter' ||
-                      customer.attributes.customer_type === 'representative'
-                        ? customer.attributes.cpf
-                        : customer.attributes.cnpj &&
-                          customer.attributes.customer_type === 'legal_person'
-                        ? customer.attributes.cnpj
+                      (profileCustomer.attributes.cpf &&
+                        profileCustomer.attributes.customer_type === 'Pessoa Fisica') ||
+                      profileCustomer.attributes.customer_type === 'Contador' ||
+                      profileCustomer.attributes.customer_type === 'Representante Legal'
+                        ? profileCustomer.attributes.cpf
+                        : profileCustomer.attributes.cnpj &&
+                          profileCustomer.attributes.customer_type === 'Pessoa Juridica'
+                        ? profileCustomer.attributes.cnpj
                         : '',
-                    email: customer.attributes.default_email,
-                    city: customer.attributes.city,
-                    contact: customer.attributes.default_phone
-                      ? phoneMask(customer.attributes.default_phone)
+                    customer_email: profileCustomer.attributes.customer_email,
+                    city: profileCustomer.attributes.city,
+                    contact: profileCustomer.attributes.default_phone
+                      ? phoneMask(profileCustomer.attributes.default_phone)
                       : '',
                   }))
                 }
                 columns={[
                   {
+                    width: 80,
+                    field: 'id',
+                    headerName: 'ID',
+                    cellClassName: 'font-medium text-black',
+                    align: 'center',
+                    headerAlign: 'center',
+                  },
+                  {
+                    width: 210,
+                    field: 'name',
+                    headerName: 'Nome',
+                    cellClassName: 'font-medium text-black',
+                    align: 'left',
+                    headerAlign: 'left',
+                  },
+                  {
+                    flex: 1,
+                    minWidth: 210,
+                    editable: true,
+                    field: 'customer_email',
+                    headerName: 'E-mail de Acesso',
+                    align: 'left',
+                    cellClassName: 'font-medium text-black',
+                    sortable: false,
+                  },
+                  {
                     width: 180,
+                    field: 'cpf',
+                    headerName: 'CPF/CNPJ',
+                    cellClassName: 'font-medium text-black',
+                    align: 'left',
+                    sortable: false,
+                  },
+                  {
+                    width: 150,
+                    field: 'contact',
+                    headerName: 'Contato',
+                    cellClassName: 'font-medium text-black',
+                    align: 'left',
+                    sortable: false,
+                  },
+                  {
+                    width: 100,
+                    maxWidth: 100,
                     field: 'actions',
                     headerName: 'Ações',
                     align: 'center',
@@ -386,59 +917,25 @@ const Customers = () => {
                     sortable: false,
                     editable: false,
                     renderCell: (params: any) => (
-                      <Box width={'100%'} display={'flex'} justifyContent={'space-around'}>
-                        <MdVisibility
-                          size={22}
-                          color={colors.icons}
-                          cursor={'pointer'}
-                          onClick={() => handleDetails(params.row)}
-                        />
-                        <MdModeEdit
-                          size={22}
-                          color={colors.icons}
-                          cursor={'pointer'}
-                          onClick={() => handleEdit(params.row)}
-                        />
-                      </Box>
+                      <div>
+                        <IconButton
+                          aria-label="more"
+                          id="long-button"
+                          aria-controls={open ? 'long-menu' : undefined}
+                          aria-expanded={open ? 'true' : undefined}
+                          aria-haspopup="true"
+                          onClick={e => {
+                            setRowItem(params.row);
+                            handleOpenMenu(e);
+                          }}
+                        >
+                          <MdMoreHoriz size={22} color={colors.icons} cursor={'pointer'} />
+                        </IconButton>
+                      </div>
                     ),
                   },
-                  {
-                    width: 200,
-                    field: 'name',
-                    headerName: 'Nome',
-                    align: 'left',
-                    headerAlign: 'left',
-                  },
-                  {
-                    width: 180,
-                    field: 'type',
-                    headerName: 'Tipo',
-                  },
-                  {
-                    width: 180,
-                    field: 'cpf',
-                    headerName: 'CPF/CNPJ',
-                    sortable: false,
-                  },
-                  {
-                    width: 250,
-                    field: 'email',
-                    headerName: 'E-mail',
-                    sortable: false,
-                  },
-                  {
-                    width: 140,
-                    field: 'city',
-                    headerName: 'Cidade',
-                    sortable: false,
-                  },
-                  {
-                    width: 180,
-                    field: 'contact',
-                    headerName: 'Contato',
-                    sortable: false,
-                  },
                 ]}
+                processRowUpdate={handleProcessRowUpdate}
                 initialState={{
                   pagination: { paginationModel: { pageSize: 10 } },
                 }}
@@ -465,7 +962,7 @@ const Customers = () => {
 export default Customers;
 
 export const getServerSideProps = async (ctx: any) => {
-  const session = await getSession(ctx);
+  await getSession(ctx);
 
   return {
     props: {},

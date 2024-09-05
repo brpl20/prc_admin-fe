@@ -1,56 +1,30 @@
-import { createContext, useState, useEffect, useContext } from 'react';
-import { setCookie, destroyCookie, parseCookies } from 'nookies';
-import { useSession } from 'next-auth/react';
+import { createContext, useState } from 'react';
+import { setCookie, destroyCookie } from 'nookies';
 import jwt from 'jsonwebtoken';
 
-import { signInRequest, loginWithGoogle, logoutRequest } from '../services/auth';
+import { signInRequest, logoutRequest } from '../services/auth';
 import Router from 'next/router';
 
-import { IAuthContextType, IUser, ISignInData } from '@/interfaces/IAuth';
+import { IAuthContextType, IUser } from '@/interfaces/IAuth';
 import api from '@/services/api';
 
 export const AuthContext = createContext({} as IAuthContextType);
 
-export function AuthProvider({ children }: any) {
-  const { data: session, status } = useSession();
+const AuthProvider = ({ children }: any) => {
   const [user, setUser] = useState<IUser>({} as IUser);
-
   const isAuthenticated = !!user;
 
-  const saveToken = async (token: string) => {
+  const saveToken = (token: string) => {
     const decodedToken = jwt.decode(token) as any;
     const { admin_id } = decodedToken;
-
     setCookie(undefined, 'nextauth.token', token, {
       maxAge: 60 * 60 * 1,
       // 1 hour duration
     });
 
+    setUser({ admin_id } as IUser);
     setCookie(undefined, 'admin_id', admin_id);
     setCookie(undefined, 'nextauth.isAuth', 'true');
-    api.defaults.headers['Authorization'] = `Bearer ${token}`;
-
-    Router.push('/clientes');
-  };
-
-  async function localAuthentication({ email, password }: ISignInData) {
-    try {
-      const { token } = await signInRequest({
-        email,
-        password,
-      });
-
-      saveToken(token);
-    } catch (error: any) {
-      throw error;
-    }
-  }
-
-  const handleGoogleLogin = async (session: Object) => {
-    try {
-      const response = await loginWithGoogle(session);
-      saveToken(response.token);
-    } catch (error: any) {}
   };
 
   const handleLogout = async () => {
@@ -63,16 +37,11 @@ export function AuthProvider({ children }: any) {
     } catch (error: any) {}
   };
 
-  useEffect(() => {
-    const { ['nextauth.isAuth']: authenticate } = parseCookies();
-    if (session && status === 'authenticated' && !authenticate) {
-      handleGoogleLogin(session);
-    }
-  }, [session, status]);
-
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, localAuthentication, handleLogout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, handleLogout, saveToken }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
+
+export default AuthProvider;

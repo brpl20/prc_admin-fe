@@ -21,16 +21,17 @@ import { gendersOptions, civilStatusOptions, nationalityOptions } from '@/utils/
 
 import { Container, Title } from './styles';
 import { colors, ContentContainer } from '@/styles/globals';
+import { IoMdTrash } from 'react-icons/io';
+import { phoneMask } from '@/utils/masks';
 
 import dayjs, { Dayjs } from 'dayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { Flex, Divider } from '@/styles/globals';
 import {
   createProfileCustomer,
-  getAllCustomers,
+  getAllProfileCustomer,
   createCustomer as createCustomerApi,
   updateProfileCustomer,
 } from '@/services/customers';
@@ -43,6 +44,7 @@ import { ICustomerProps } from '@/interfaces/ICustomer';
 
 interface FormData {
   represent_id: string;
+  profession: string;
   name: string;
   last_name: string;
   CPF: string;
@@ -63,28 +65,29 @@ interface FormData {
 interface props {
   pageTitle: string;
 }
-
-const representativeSchema = z.object({
-  represent_id: z.string().nonempty({ message: 'Selecione o Representado.' }),
-  name: z.string().nonempty({ message: 'Preencha o campo Nome.' }),
-  last_name: z.string().nonempty({ message: 'Preencha o campo Sobrenome.' }),
-  CPF: z.string().nonempty({ message: 'Preencha o campo CPF.' }),
-  RG: z.string().nonempty({ message: 'Preencha o campo RG.' }),
-  gender: z.string().nonempty('Gênero é obrigatório'),
-  civil_status: z.string().nonempty('Estado Civil é obrigatório'),
-  nationality: z.string().nonempty('Naturalidade é obrigatório'),
-  phone_number: z.string().nonempty('Telefone Obrigatório'),
-  email: z.string().nonempty('Email Obrigatório'),
-  cep: z.string().nonempty({ message: 'Preencha o campo CEP.' }),
-  street: z.string().nonempty({ message: 'Preencha o campo Endereço.' }),
-  number: z.string().nonempty({ message: 'Preencha o campo Número.' }),
+export const representativeSchema = z.object({
+  represent_id: z.string().min(1, { message: 'Selecione o Representado.' }),
+  name: z.string().min(3, { message: 'Preencha o campo Nome.' }),
+  last_name: z.string().min(3, { message: 'Preencha o campo Sobrenome.' }),
+  CPF: z.string().min(5, { message: 'Preencha o campo CPF.' }),
+  RG: z.string().min(5, { message: 'Preencha o campo RG.' }),
+  gender: z.string().min(3, 'Gênero é obrigatório'),
+  civil_status: z.string().min(1, 'Estado Civil é obrigatório'),
+  nationality: z.string().min(1, 'Naturalidade é obrigatório'),
+  phone_number: z.string().min(6, 'Telefone Obrigatório'),
+  email: z.string().min(1, 'Email Obrigatório'),
+  cep: z.string().min(4, { message: 'Preencha o campo CEP.' }),
+  street: z.string().min(4, { message: 'Preencha o campo Endereço.' }),
+  number: z.string().min(4, { message: 'Preencha o campo Número.' }),
   description: z.string(),
-  neighborhood: z.string().nonempty({ message: 'Preencha o campo Bairro.' }),
-  city: z.string().nonempty({ message: 'Preencha o campo Cidade.' }),
-  state: z.string().nonempty({ message: 'Preencha o campo Estado.' }),
+  profession: z.string().min(1, { message: 'Preencha o campo Profissão.' }),
+  neighborhood: z.string().min(4, { message: 'Preencha o campo Bairro.' }),
+  city: z.string().min(4, { message: 'Preencha o campo Cidade.' }),
+  state: z.string().min(1, { message: 'Preencha o campo Estado.' }),
 });
 
 const Representative = ({ pageTitle }: props) => {
+  const today = new Date().toISOString().split('T')[0];
   const [errors, setErrors] = useState({} as any);
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
@@ -95,7 +98,6 @@ const Representative = ({ pageTitle }: props) => {
   const { setShowTitle, setPageTitle } = useContext(PageTitleContext);
 
   const currentDate = dayjs();
-  const [selectedDate, setSelectedDate] = useState(currentDate);
 
   const [message, setMessage] = useState('');
   const [type, setType] = useState<'success' | 'error'>('success');
@@ -103,25 +105,7 @@ const Representative = ({ pageTitle }: props) => {
 
   const route = useRouter();
 
-  const [formData, setFormData] = useState<FormData>({
-    represent_id: '',
-    name: '',
-    last_name: '',
-    CPF: '',
-    RG: '',
-    gender: '',
-    civil_status: '',
-    nationality: '',
-    birth: currentDate,
-    cep: '',
-    street: '',
-    number: '',
-    description: '',
-    neighborhood: '',
-    city: '',
-    state: '',
-  });
-
+  const [formData, setFormData] = useState<FormData>({} as FormData);
   const [contactData, setContactData] = useState({
     phoneInputFields: [{ phone_number: '' }],
     emailInputFields: [{ email: '' }],
@@ -132,6 +116,7 @@ const Representative = ({ pageTitle }: props) => {
       represent_id: '',
       name: '',
       last_name: '',
+      profession: '',
       CPF: '',
       RG: '',
       gender: '',
@@ -185,7 +170,7 @@ const Representative = ({ pageTitle }: props) => {
         if (newInputFields[index]) {
           newInputFields[index] = {
             ...newInputFields[index],
-            phone_number: value,
+            phone_number: phoneMask(value),
           };
         } else {
           newInputFields.push({ phone_number: value });
@@ -233,7 +218,7 @@ const Representative = ({ pageTitle }: props) => {
           customer_id: Number(customer_id),
         };
 
-        const res = await createProfileCustomer(newData);
+        await createProfileCustomer(newData);
 
         Router.push('/clientes');
         resetValues();
@@ -258,6 +243,7 @@ const Representative = ({ pageTitle }: props) => {
         last_name: formData.last_name,
         CPF: formData.CPF,
         RG: formData.RG,
+        profession: formData.profession,
         gender: formData.gender,
         nationality: formData.nationality,
         civil_status: formData.civil_status,
@@ -314,9 +300,9 @@ const Representative = ({ pageTitle }: props) => {
       } else {
         const data = {
           capacity: 'able',
-          profession: 'representative',
+          profession: formData.profession,
           customer_type: 'representative',
-          cpf: formData.CPF,
+          cpf: formData.CPF.replace(/\D/g, ''),
           rg: formData.RG,
           gender: formData.gender,
           nationality: formData.nationality,
@@ -469,15 +455,6 @@ const Representative = ({ pageTitle }: props) => {
     });
   };
 
-  const handleBirthDate = (date: any) => {
-    const birthDate = new Date(date).toLocaleDateString('pt-BR');
-    setSelectedDate(date);
-    setFormData((prevData: any) => ({
-      ...prevData,
-      ['birth']: birthDate,
-    }));
-  };
-
   useEffect(() => {
     const handleDataForm = () => {
       const attributes = customerForm.data.attributes;
@@ -485,7 +462,7 @@ const Representative = ({ pageTitle }: props) => {
       if (attributes) {
         const name = attributes.name ? attributes.name : '';
         const last_name = attributes.last_name ? attributes.last_name : '';
-        const cpf = attributes.cpf ? attributes.cpf : '';
+        const cpf = attributes.cpf ? cpfMask(attributes.cpf) : '';
         const rg = attributes.rg ? attributes.rg : '';
         const gender = attributes.gender ? attributes.gender : '';
         const civil_status = attributes.civil_status ? attributes.civil_status : '';
@@ -498,6 +475,7 @@ const Representative = ({ pageTitle }: props) => {
           represent_id: represent_id.toString(),
           last_name: last_name,
           CPF: cpf,
+          profession: attributes.profession,
           RG: rg,
           gender: gender,
           civil_status: civil_status,
@@ -539,7 +517,7 @@ const Representative = ({ pageTitle }: props) => {
     const getAdmins = async () => {
       const response: {
         data: ICustomerProps[];
-      } = await getAllCustomers();
+      } = await getAllProfileCustomer('');
 
       if (response) {
         setCustomersList(response.data);
@@ -576,6 +554,30 @@ const Representative = ({ pageTitle }: props) => {
   useEffect(() => {
     setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro' : 'Alterar'} de Representante`);
   }, [route, setPageTitle]);
+
+  const handleRemoveContact = (removeIndex: number, inputArrayName: string) => {
+    if (inputArrayName === 'phoneInputFields') {
+      if (contactData.phoneInputFields.length === 1) return;
+
+      const updatedEducationals = [...contactData.phoneInputFields];
+      updatedEducationals.splice(removeIndex, 1);
+      setContactData(prevData => ({
+        ...prevData,
+        phoneInputFields: updatedEducationals,
+      }));
+    }
+
+    if (inputArrayName === 'emailInputFields') {
+      if (contactData.emailInputFields.length === 1) return;
+
+      const updatedEducationals = [...contactData.emailInputFields];
+      updatedEducationals.splice(removeIndex, 1);
+      setContactData(prevData => ({
+        ...prevData,
+        emailInputFields: updatedEducationals,
+      }));
+    }
+  };
 
   return (
     <>
@@ -695,6 +697,7 @@ const Representative = ({ pageTitle }: props) => {
                         <input
                           type="date"
                           name="birth"
+                          max={today}
                           value={formData.birth as string}
                           onChange={handleInputChange}
                           style={{
@@ -732,6 +735,19 @@ const Representative = ({ pageTitle }: props) => {
                       !!errors.civil_status,
                     )}
                   </Flex>
+
+                  <Flex
+                    style={{
+                      gap: '32px',
+                    }}
+                  >
+                    {renderInputField(
+                      'profession',
+                      'Profissão',
+                      'Informe a Profissão',
+                      !!errors.profession,
+                    )}
+                  </Flex>
                 </Flex>
               </Flex>
 
@@ -752,7 +768,6 @@ const Representative = ({ pageTitle }: props) => {
                         'street',
                         'Endereço',
                         'Informe o Endereço',
-
                         !!errors.street,
                       )}
                       <Box maxWidth={'30%'}>
@@ -765,7 +780,7 @@ const Representative = ({ pageTitle }: props) => {
                     {renderInputField(
                       'neighborhood',
                       'Bairro',
-                      'Informe o Estado',
+                      'Informe o Bairro',
                       !!errors.neighborhood,
                     )}
                     {renderInputField('city', 'Cidade', 'Informe a Cidade', !!errors.city)}
@@ -792,6 +807,7 @@ const Representative = ({ pageTitle }: props) => {
                     <Typography style={{ marginBottom: '8px' }} variant="h6">
                       {'Telefone'}
                     </Typography>
+
                     {contactData.phoneInputFields.map((inputValue, index) => (
                       <Flex
                         key={index}
@@ -801,23 +817,43 @@ const Representative = ({ pageTitle }: props) => {
                           gap: '6px',
                         }}
                       >
-                        <TextField
-                          id="outlined-basic"
-                          variant="outlined"
-                          fullWidth
-                          name="phone"
-                          size="small"
-                          placeholder="Informe o Telefone"
-                          value={inputValue.phone_number || ''}
-                          onChange={(e: any) =>
-                            handleContactChange(index, e.target.value, 'phoneInputFields')
-                          }
-                          autoComplete="off"
-                          error={!!errors.phone_number}
-                        />
+                        <div className="flex flex-row gap-1">
+                          <TextField
+                            id="outlined-basic"
+                            variant="outlined"
+                            fullWidth
+                            name="phone"
+                            size="small"
+                            placeholder="Informe o Telefone"
+                            value={inputValue.phone_number || ''}
+                            onChange={(e: any) =>
+                              handleContactChange(index, e.target.value, 'phoneInputFields')
+                            }
+                            autoComplete="off"
+                            error={!!errors.phone_number}
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleRemoveContact(index, 'phoneInputFields');
+                            }}
+                          >
+                            <div
+                              className={`flex  ${
+                                contactData.phoneInputFields.length > 1 ? '' : 'hidden'
+                              }`}
+                            >
+                              <IoMdTrash size={20} color="#a50000" />
+                            </div>
+                          </button>
+                        </div>
+
                         {index === contactData.phoneInputFields.length - 1 && (
                           <IoAddCircleOutline
-                            style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                            className={`cursor-pointer ml-auto ${
+                              contactData.phoneInputFields.length > 1 ? 'mr-6' : ''
+                            }`}
                             onClick={() => handleAddInput('phoneInputFields')}
                             color={colors.quartiary}
                             size={20}
@@ -835,6 +871,7 @@ const Representative = ({ pageTitle }: props) => {
                     <Typography style={{ marginBottom: '8px' }} variant="h6">
                       {'E-mail'}
                     </Typography>
+
                     {contactData.emailInputFields.map((inputValue, index) => (
                       <Flex
                         key={index}
@@ -844,24 +881,44 @@ const Representative = ({ pageTitle }: props) => {
                           gap: '6px',
                         }}
                       >
-                        <TextField
-                          id="outlined-basic"
-                          variant="outlined"
-                          fullWidth
-                          name="email"
-                          size="small"
-                          style={{ flex: 1 }}
-                          placeholder="Informe o Email"
-                          value={inputValue.email}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleContactChange(index, e.target.value, 'emailInputFields')
-                          }
-                          error={!!errors.email}
-                          autoComplete="off"
-                        />
+                        <div className="flex flex-row gap-1">
+                          <TextField
+                            id="outlined-basic"
+                            variant="outlined"
+                            fullWidth
+                            name="email"
+                            size="small"
+                            style={{ flex: 1 }}
+                            placeholder="Informe o Email"
+                            value={inputValue.email}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                              handleContactChange(index, e.target.value, 'emailInputFields')
+                            }
+                            error={!!errors.email}
+                            autoComplete="off"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleRemoveContact(index, 'emailInputFields');
+                            }}
+                          >
+                            <div
+                              className={`flex  ${
+                                contactData.emailInputFields.length > 1 ? '' : 'hidden'
+                              }`}
+                            >
+                              <IoMdTrash size={20} color="#a50000" />
+                            </div>
+                          </button>
+                        </div>
+
                         {index === contactData.emailInputFields.length - 1 && (
                           <IoAddCircleOutline
-                            style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                            className={`cursor-pointer ml-auto ${
+                              contactData.emailInputFields.length > 1 ? 'mr-6' : ''
+                            }`}
                             onClick={() => handleAddInput('emailInputFields')}
                             color={colors.quartiary}
                             size={20}

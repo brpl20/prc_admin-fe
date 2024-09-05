@@ -1,12 +1,14 @@
-import { getCustomerById } from '@/services/customers';
+import { getCustomerById, getAllProfileCustomer } from '@/services/customers';
+
 import { useEffect, useState } from 'react';
 
-import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
-import { cnpjMask, cpfMask, rgMask } from '@/utils/masks';
+import { ContainerDetails, DetailsWrapper, ButtonShowContact } from '../styles';
 import { FiMinusCircle } from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
 import { Box, Button, CircularProgress } from '@mui/material';
 import { useSession } from 'next-auth/react';
+
+import { phoneMask, cpfMask, rgMask } from '@/utils/masks';
 
 interface PersonalDataProps {
   id: string | string[];
@@ -36,10 +38,15 @@ interface PersonalData {
   mother_name: string;
   customer_type: string;
   company: string;
-  professional: string;
+  profession: string;
   number_benefit: string;
   nit: string;
   inss_password: string;
+  represent: {
+    id: number;
+    profile_customer_id: number;
+    representor_id: number;
+  };
   emails: [
     {
       email: string;
@@ -66,7 +73,10 @@ interface PersonalData {
 const PersonalData = ({ id, type }: PersonalDataProps) => {
   const { data: session } = useSession();
 
+  const [representorsList, setRepresentorsList] = useState([] as any);
+
   const [personalData, setPersonalData] = useState({} as PersonalData);
+  const [handleGender, setHandleGender] = useState('o');
   const [personalDataIsOpen, setPersonalDataIsOpen] = useState(true);
   const [addressIsOpen, setAddressIsOpen] = useState(true);
   const [contactIsOpen, setContactIsOpen] = useState(true);
@@ -118,12 +128,17 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
           mother_name: data.attributes.mother_name ? data.attributes.mother_name : '',
           customer_type: data.attributes.customer_type ? data.attributes.customer_type : '',
           bank_accounts: data.attributes.bank_accounts ? data.attributes.bank_accounts : '',
-          professional: data.attributes.professional ? data.attributes.professional : '',
+          profession: data.attributes.profession ? data.attributes.profession : '',
           company: data.attributes.company ? data.attributes.company : '',
           number_benefit: data.attributes.number_benefit ? data.attributes.number_benefit : '',
           nit: data.attributes.nit ? data.attributes.nit : '',
+          represent: data.attributes.represent ? data.attributes.represent : '',
           inss_password: data.attributes.inss_password ? data.attributes.inss_password : '',
         };
+
+        if (data.attributes.gender === 'female') {
+          setHandleGender('a');
+        }
 
         setPersonalData(customerData as PersonalData);
       }
@@ -134,9 +149,68 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
     }
   };
 
+  const EmailList =
+    personalData.emails && personalData.emails.length > 0
+      ? personalData.emails.map((phone, index) => (
+          <span key={index} style={{ display: 'block' }}>
+            {phone.email}
+          </span>
+        ))
+      : 'Não Informado';
+
+  const phoneNumbers =
+    personalData.phones && personalData.phones.length > 0
+      ? personalData.phones.map((phone, index) => (
+          <span key={index} style={{ display: 'block' }}>
+            {phoneMask(phone.phone_number)}
+          </span>
+        ))
+      : 'Não Informado';
+
   useEffect(() => {
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    const getRepresentors = async () => {
+      const allCustomers = await getAllProfileCustomer('');
+      const response = allCustomers.data;
+
+      const representors = response.filter(
+        (customer: any) => customer.attributes.customer_type === 'representative',
+      );
+
+      setRepresentorsList(representors);
+    };
+
+    getRepresentors();
+  }, []);
+
+  const handleCapacity = () => {
+    switch (personalData.capacity) {
+      case 'able':
+        return 'Capaz';
+      case 'relatively':
+        return 'Relativamente Incapaz';
+      default:
+        return 'Absolutamente Incapaz';
+    }
+  };
+
+  const handleTranslationGender = (civilStatus: string) => {
+    switch (civilStatus) {
+      case 'single':
+        return `Solteir${handleGender}`;
+      case 'married':
+        return `Casad${handleGender}`;
+      case 'divorced':
+        return `Divorciad${handleGender}`;
+      case 'widower':
+        return `Viúv${handleGender}`;
+      default:
+        return 'Não Informado';
+    }
+  };
 
   return (
     <div
@@ -177,7 +251,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
               }}
             >
               <>
-                <Flex
+                <div
+                  className="flex"
                   style={{
                     padding: '20px 32px 20px 32px',
                     borderBottom: '1px solid #C0C0C0',
@@ -209,7 +284,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                       />
                     )}
                   </ButtonShowContact>
-                </Flex>
+                </div>
                 {personalDataIsOpen && (
                   <div
                     style={{
@@ -227,7 +302,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         padding: '0 32px',
                       }}
                     >
-                      <Flex
+                      <div
+                        className="flex"
                         style={{
                           flexDirection: 'column',
                           gap: '8px',
@@ -254,18 +330,12 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             personalData.last_name ? personalData.last_name : ''
                           }`}
                         </span>
-                      </Flex>
+                      </div>
 
                       {(personalData.customer_type === 'physical_person' ||
                         personalData.customer_type === 'counter' ||
                         personalData.customer_type === 'representative') && (
-                        <Flex
-                          style={{
-                            flexDirection: 'column',
-                            gap: '8px',
-                            alignItems: 'flex-start',
-                          }}
-                        >
+                        <div className="flex flex-col gap-[8px] items-start">
                           <span
                             style={{
                               color: '#344054',
@@ -282,19 +352,13 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                               fontWeight: '400',
                             }}
                           >
-                            {personalData.cpf ? personalData.cpf : 'Não Informado'}
+                            {personalData.cpf ? cpfMask(personalData.cpf) : 'Não Informado'}
                           </span>
-                        </Flex>
+                        </div>
                       )}
 
                       {personalData.customer_type === 'legal_person' && (
-                        <Flex
-                          style={{
-                            flexDirection: 'column',
-                            gap: '8px',
-                            alignItems: 'flex-start',
-                          }}
-                        >
+                        <div className="flex flex-col gap-[8px] items-start">
                           <span
                             style={{
                               color: '#344054',
@@ -313,19 +377,13 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                           >
                             {personalData.cnpj ? personalData.cnpj : 'Não Informado'}
                           </span>
-                        </Flex>
+                        </div>
                       )}
 
                       {(personalData.customer_type === 'physical_person' ||
                         personalData.customer_type === 'representative' ||
                         personalData.customer_type === 'counter') && (
-                        <Flex
-                          style={{
-                            flexDirection: 'column',
-                            gap: '8px',
-                            alignItems: 'flex-start',
-                          }}
-                        >
+                        <div className="flex flex-col gap-[8px] items-start">
                           <span
                             style={{
                               color: '#344054',
@@ -344,19 +402,13 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                           >
                             {personalData.rg ? rgMask(personalData.rg) : 'Não Informado'}
                           </span>
-                        </Flex>
+                        </div>
                       )}
 
                       {(personalData.customer_type === 'representative' ||
                         personalData.customer_type === 'counter' ||
                         personalData.customer_type === 'physical_person') && (
-                        <Flex
-                          style={{
-                            flexDirection: 'column',
-                            gap: '8px',
-                            alignItems: 'flex-start',
-                          }}
-                        >
+                        <div className="flex flex-col gap-[8px] items-start">
                           <span
                             style={{
                               color: '#344054',
@@ -376,16 +428,10 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                               ? personalData.birth.split('-').reverse().join('/')
                               : 'Não Informado'}
                           </span>
-                        </Flex>
+                        </div>
                       )}
 
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      ></Flex>
+                      <div className="flex flex-col gap-[8px] items-start"></div>
                     </div>
 
                     <div
@@ -396,13 +442,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         padding: '0 32px',
                       }}
                     >
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
+                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
                             color: '#344054',
@@ -421,14 +461,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         >
                           {personalData.mother_name ? personalData.mother_name : 'Não Informado'}
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
+                      </div>
+                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
                             color: '#344054',
@@ -447,18 +481,12 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         >
                           {personalData.nationality
                             ? personalData.nationality === 'brazilian'
-                              ? 'Brasileiro'
-                              : 'Estrangeiro'
+                              ? `Brasileir${handleGender}`
+                              : `Estrangeir${handleGender}`
                             : 'Não Informado'}
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
+                      </div>
+                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
                             color: '#344054',
@@ -475,26 +503,10 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             fontWeight: '400',
                           }}
                         >
-                          {personalData.civil_status
-                            ? personalData.civil_status === 'single'
-                              ? 'Solteiro(a)'
-                              : personalData.civil_status === 'married'
-                              ? 'Casado(a)'
-                              : personalData.civil_status === 'divorced'
-                              ? 'Divorciado(a)'
-                              : personalData.civil_status === 'widower'
-                              ? 'Viúvo(a)'
-                              : ''
-                            : ''}
+                          {handleTranslationGender(personalData.civil_status)}
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
+                      </div>
+                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
                             color: '#344054',
@@ -517,14 +529,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                               : 'Feminino'
                             : ''}
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
+                      </div>
+                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
                             color: '#344054',
@@ -541,13 +547,47 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             fontWeight: '400',
                           }}
                         >
-                          {personalData.capacity
-                            ? personalData.capacity === 'able'
-                              ? 'Capaz'
-                              : 'Incapaz'
-                            : ''}
+                          {handleCapacity()}
                         </span>
-                      </Flex>
+                      </div>
+
+                      {personalData.represent && (
+                        <div className="flex flex-col gap-[8px] items-start">
+                          <span
+                            style={{
+                              color: '#344054',
+                              fontSize: '20px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            Representante
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '18px',
+                              color: '#344054',
+                              fontWeight: '400',
+                            }}
+                          >
+                            <a
+                              href={`/detalhes?type=cliente/representante&id=${personalData.represent.representor_id}`}
+                              style={{
+                                color: '#344054',
+                              }}
+                            >
+                              <span className="underline">
+                                {representorsList.map((representor: any) => {
+                                  if (
+                                    Number(representor.id) === personalData.represent.representor_id
+                                  ) {
+                                    return `${representor.id} - ${representor.attributes.name}`;
+                                  }
+                                })}
+                              </span>
+                            </a>
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -567,7 +607,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
               }}
             >
               <>
-                <Flex
+                <div
+                  className="flex"
                   style={{
                     padding: '20px 32px 20px 32px',
                     borderBottom: '1px solid #C0C0C0',
@@ -599,7 +640,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                       />
                     )}
                   </ButtonShowContact>
-                </Flex>
+                </div>
                 {addressIsOpen && (
                   <div
                     style={{
@@ -617,13 +658,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         padding: '0 32px',
                       }}
                     >
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
+                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
                             color: '#344054',
@@ -642,14 +677,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         >
                           {`${personalData.street ? personalData.street : 'Não Informado'}`}
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
+                      </div>
+                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
                             color: '#344054',
@@ -668,14 +697,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         >
                           {`${personalData.number ? personalData.number : 'Não Informado'}`}
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
+                      </div>
+                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
                             color: '#344054',
@@ -694,14 +717,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         >
                           Não Informado
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
+                      </div>
+                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
                             color: '#344054',
@@ -720,14 +737,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         >
                           {personalData.zip_code ? personalData.zip_code : 'Não Informado'}
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      ></Flex>
+                      </div>
                     </div>
                     <div
                       style={{
@@ -737,13 +747,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         padding: '0 32px',
                       }}
                     >
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
+                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
                             color: '#344054',
@@ -762,14 +766,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         >
                           {`${personalData.city ? personalData.city : 'Não Informado'}`}
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
+                      </div>
+                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
                             color: '#344054',
@@ -790,14 +788,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             personalData.neighborhood ? personalData.neighborhood : 'Não Informado'
                           }`}
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
+                      </div>
+                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
                             color: '#344054',
@@ -816,14 +808,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         >
                           {`${personalData.state ? personalData.state : 'Não Informado'}`}
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
+                      </div>
+                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
                             color: '#344054',
@@ -838,14 +824,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             fontWeight: '400',
                           }}
                         ></span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
+                      </div>
+                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
                             color: '#344054',
@@ -860,7 +840,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             fontWeight: '400',
                           }}
                         ></span>
-                      </Flex>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -880,7 +860,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
               }}
             >
               <>
-                <Flex
+                <div
+                  className="flex"
                   style={{
                     padding: '20px 32px 20px 32px',
                     borderBottom: '1px solid #C0C0C0',
@@ -912,7 +893,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                       />
                     )}
                   </ButtonShowContact>
-                </Flex>
+                </div>
                 {contactIsOpen && (
                   <div
                     style={{
@@ -930,7 +911,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         padding: '0 32px',
                       }}
                     >
-                      <Flex
+                      <div
+                        className="flex"
                         style={{
                           flexDirection: 'column',
                           gap: '8px',
@@ -952,18 +934,16 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             fontSize: '18px',
                             color: '#344054',
                             fontWeight: '400',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
                           }}
                         >
-                          {`${
-                            personalData.phones &&
-                            personalData.phones[0] &&
-                            personalData.phones[0].phone_number
-                              ? personalData.phones[0].phone_number
-                              : 'Não Informado'
-                          }`}
+                          {phoneNumbers}
                         </span>
-                      </Flex>
-                      <Flex
+                      </div>
+                      <div
+                        className="flex"
                         style={{
                           flexDirection: 'column',
                           gap: '8px',
@@ -985,18 +965,16 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             fontSize: '18px',
                             color: '#344054',
                             fontWeight: '400',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
                           }}
                         >
-                          {`${
-                            personalData.emails &&
-                            personalData.emails[0] &&
-                            personalData.emails[0].email
-                              ? personalData.emails[0].email
-                              : 'Não Informado'
-                          }`}
+                          {EmailList}
                         </span>
-                      </Flex>
-                      <Flex
+                      </div>
+                      <div
+                        className="flex"
                         style={{
                           flexDirection: 'column',
                           gap: '8px',
@@ -1018,8 +996,9 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             fontWeight: '400',
                           }}
                         ></span>
-                      </Flex>
-                      <Flex
+                      </div>
+                      <div
+                        className="flex"
                         style={{
                           flexDirection: 'column',
                           gap: '8px',
@@ -1041,15 +1020,16 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             fontWeight: '400',
                           }}
                         ></span>
-                      </Flex>
-                      <Flex
+                      </div>
+                      <div
+                        className="flex"
                         style={{
                           flexDirection: 'column',
                           gap: '8px',
                           alignItems: 'flex-start',
                           width: '220px',
                         }}
-                      ></Flex>
+                      ></div>
                     </div>
                   </div>
                 )}
@@ -1071,7 +1051,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
               <>
                 {session?.role != 'trainee' && (
                   <>
-                    <Flex
+                    <div
+                      className="flex"
                       style={{
                         padding: '20px 32px 20px 32px',
                         borderBottom: '1px solid #C0C0C0',
@@ -1103,7 +1084,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                           />
                         )}
                       </ButtonShowContact>
-                    </Flex>
+                    </div>
                     {bankIsOpen && (
                       <div
                         style={{
@@ -1121,7 +1102,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             padding: '0 32px',
                           }}
                         >
-                          <Flex
+                          <div
+                            className="flex"
                             style={{
                               flexDirection: 'column',
                               gap: '8px',
@@ -1150,8 +1132,9 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                                 ? personalData.bank_accounts[0].bank_name
                                 : 'Não Informado'}
                             </span>
-                          </Flex>
-                          <Flex
+                          </div>
+                          <div
+                            className="flex"
                             style={{
                               flexDirection: 'column',
                               gap: '8px',
@@ -1179,8 +1162,9 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                                 ? personalData.bank_accounts[0].agency
                                 : 'Não Informado'}
                             </span>
-                          </Flex>
-                          <Flex
+                          </div>
+                          <div
+                            className="flex"
                             style={{
                               flexDirection: 'column',
                               gap: '8px',
@@ -1209,8 +1193,9 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                                 ? personalData.bank_accounts[0].operation
                                 : 'Não Informado'}
                             </span>
-                          </Flex>
-                          <Flex
+                          </div>
+                          <div
+                            className="flex"
                             style={{
                               flexDirection: 'column',
                               gap: '8px',
@@ -1239,15 +1224,16 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                                 ? personalData.bank_accounts[0].account
                                 : 'Não Informado'}
                             </span>
-                          </Flex>
-                          <Flex
+                          </div>
+                          <div
+                            className="flex"
                             style={{
                               flexDirection: 'column',
                               gap: '8px',
                               alignItems: 'flex-start',
                               width: '220px',
                             }}
-                          ></Flex>
+                          ></div>
                         </div>
 
                         <div
@@ -1258,7 +1244,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             padding: '0 32px',
                           }}
                         >
-                          <Flex
+                          <div
+                            className="flex"
                             style={{
                               flexDirection: 'column',
                               gap: '8px',
@@ -1286,7 +1273,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                                 ? personalData.bank_accounts[0].pix
                                 : 'Não Informado'}
                             </span>
-                          </Flex>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1296,258 +1283,268 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
             </ContainerDetails>
           </DetailsWrapper>
 
-          <DetailsWrapper
-            style={{
-              borderBottom: '1px solid #C0C0C0',
-              boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
-            }}
-          >
-            <ContainerDetails
+          {type !== 'cliente/pessoa_juridica' && (
+            <DetailsWrapper
               style={{
-                gap: '18px',
+                borderBottom: '1px solid #C0C0C0',
+                boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
               }}
             >
-              <>
-                <Flex
-                  style={{
-                    padding: '20px 32px 20px 32px',
-                    borderBottom: '1px solid #C0C0C0',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '22px',
-                      fontWeight: '500',
-                      color: '#344054',
-                    }}
-                  >
-                    Informações Adicionais
-                  </span>
-                  <ButtonShowContact>
-                    {aditionalIsOpen ? (
-                      <FiMinusCircle
-                        size={24}
-                        color="#344054"
-                        onClick={() => setAditionalIsOpen(!aditionalIsOpen)}
-                      />
-                    ) : (
-                      <GoPlusCircle
-                        size={24}
-                        color="#344054"
-                        onClick={() => setAditionalIsOpen(!aditionalIsOpen)}
-                      />
-                    )}
-                  </ButtonShowContact>
-                </Flex>
-                {aditionalIsOpen && (
+              <ContainerDetails
+                style={{
+                  gap: '18px',
+                }}
+              >
+                <>
                   <div
+                    className="flex"
                     style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '18px',
-                      paddingBottom: '20px',
+                      padding: '20px 32px 20px 32px',
+                      borderBottom: '1px solid #C0C0C0',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
                     }}
                   >
-                    <div
+                    <span
                       style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: '18px',
-                        padding: '0 32px',
+                        fontSize: '22px',
+                        fontWeight: '500',
+                        color: '#344054',
                       }}
                     >
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '300px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Profissão
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {personalData.professional ? personalData.professional : 'Não Informado'}
-                        </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Empresa Atual
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {personalData.company ? personalData.company : 'Não Informado'}
-                        </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Número de Benefício
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {personalData.number_benefit
-                            ? personalData.number_benefit
-                            : 'Não Informado'}
-                        </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          NIT
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {personalData.nit ? personalData.nit : 'Não Informado'}
-                        </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      ></Flex>
-                    </div>
-
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: '18px',
-                        padding: '0 32px',
-                      }}
-                    >
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '300px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Nome da Mãe
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {personalData.mother_name ? personalData.mother_name : 'Não Informado'}
-                        </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '300px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Senha do meu INSS
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {personalData.inss_password
-                            ? personalData.inss_password
-                            : 'Não Informado'}
-                        </span>
-                      </Flex>
-                    </div>
+                      Informações Adicionais
+                    </span>
+                    <ButtonShowContact>
+                      {aditionalIsOpen ? (
+                        <FiMinusCircle
+                          size={24}
+                          color="#344054"
+                          onClick={() => setAditionalIsOpen(!aditionalIsOpen)}
+                        />
+                      ) : (
+                        <GoPlusCircle
+                          size={24}
+                          color="#344054"
+                          onClick={() => setAditionalIsOpen(!aditionalIsOpen)}
+                        />
+                      )}
+                    </ButtonShowContact>
                   </div>
-                )}
-              </>
-            </ContainerDetails>
-          </DetailsWrapper>
+                  {aditionalIsOpen && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '18px',
+                        paddingBottom: '20px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                          gap: '18px',
+                          padding: '0 32px',
+                        }}
+                      >
+                        <div
+                          className="flex"
+                          style={{
+                            flexDirection: 'column',
+                            gap: '8px',
+                            alignItems: 'flex-start',
+                            width: '300px',
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: '#344054',
+                              fontSize: '20px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            Profissão
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '18px',
+                              color: '#344054',
+                              fontWeight: '400',
+                            }}
+                          >
+                            {personalData.profession ? personalData.profession : 'Não Informado'}
+                          </span>
+                        </div>
+                        <div
+                          className="flex"
+                          style={{
+                            flexDirection: 'column',
+                            gap: '8px',
+                            alignItems: 'flex-start',
+                            width: '220px',
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: '#344054',
+                              fontSize: '20px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            Empresa Atual
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '18px',
+                              color: '#344054',
+                              fontWeight: '400',
+                            }}
+                          >
+                            {personalData.company ? personalData.company : 'Não Informado'}
+                          </span>
+                        </div>
+                        <div
+                          className="flex"
+                          style={{
+                            flexDirection: 'column',
+                            gap: '8px',
+                            alignItems: 'flex-start',
+                            width: '220px',
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: '#344054',
+                              fontSize: '20px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            Número de Benefício
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '18px',
+                              color: '#344054',
+                              fontWeight: '400',
+                            }}
+                          >
+                            {personalData.number_benefit
+                              ? personalData.number_benefit
+                              : 'Não Informado'}
+                          </span>
+                        </div>
+                        <div
+                          className="flex"
+                          style={{
+                            flexDirection: 'column',
+                            gap: '8px',
+                            alignItems: 'flex-start',
+                            width: '220px',
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: '#344054',
+                              fontSize: '20px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            NIT
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '18px',
+                              color: '#344054',
+                              fontWeight: '400',
+                            }}
+                          >
+                            {personalData.nit ? personalData.nit : 'Não Informado'}
+                          </span>
+                        </div>
+                        <div
+                          className="flex"
+                          style={{
+                            flexDirection: 'column',
+                            gap: '8px',
+                            alignItems: 'flex-start',
+                            width: '220px',
+                          }}
+                        ></div>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                          gap: '18px',
+                          padding: '0 32px',
+                        }}
+                      >
+                        <div
+                          className="flex"
+                          style={{
+                            flexDirection: 'column',
+                            gap: '8px',
+                            alignItems: 'flex-start',
+                            width: '300px',
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: '#344054',
+                              fontSize: '20px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            Nome da Mãe
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '18px',
+                              color: '#344054',
+                              fontWeight: '400',
+                            }}
+                          >
+                            {personalData.mother_name ? personalData.mother_name : 'Não Informado'}
+                          </span>
+                        </div>
+                        <div
+                          className="flex"
+                          style={{
+                            flexDirection: 'column',
+                            gap: '8px',
+                            alignItems: 'flex-start',
+                            width: '300px',
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: '#344054',
+                              fontSize: '20px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            Senha do meu INSS
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '18px',
+                              color: '#344054',
+                              fontWeight: '400',
+                            }}
+                          >
+                            {personalData.inss_password
+                              ? personalData.inss_password
+                              : 'Não Informado'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              </ContainerDetails>
+            </DetailsWrapper>
+          )}
         </div>
       )}
 

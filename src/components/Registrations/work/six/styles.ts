@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { colors } from '@/styles/globals';
 
-export const Container = styled.div`
+export const Container = styled.div<any>`
   .flagError {
     margin-left: 4px;
     color: ${colors.red};

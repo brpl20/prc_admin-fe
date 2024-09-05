@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, useEffect, useContext } from 'react';
+import { useState, ChangeEvent, useEffect } from 'react';
 import { IoAddCircleOutline } from 'react-icons/io5';
 
 import {
@@ -10,43 +10,34 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Autocomplete,
   CircularProgress,
   Modal,
 } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
+import { getCEPDetails } from '@/services/brasilAPI';
+import { phoneMask } from '@/utils/masks';
 
-import { PageTitleContext } from '@/contexts/PageTitleContext';
-import { CustomerContext } from '@/contexts/CustomerContext';
 import { gendersOptions, civilStatusOptions, nationalityOptions } from '@/utils/constants';
 
 import { Container } from '../styles';
 import { colors, ContentContainer } from '@/styles/globals';
 
-import dayjs, { Dayjs } from 'dayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { Dayjs } from 'dayjs';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { Flex, Divider } from '@/styles/globals';
-import {
-  createProfileCustomer,
-  getAllCustomers,
-  createCustomer as createCustomerApi,
-  updateProfileCustomer,
-} from '@/services/customers';
+import { createProfileCustomer, createCustomer as createCustomerApi } from '@/services/customers';
 import { animateScroll as scroll } from 'react-scroll';
 
-import Router, { useRouter } from 'next/router';
-import { cpfMask } from '@/utils/masks';
+import { IoMdTrash } from 'react-icons/io';
 import { z } from 'zod';
-import { ICustomerProps } from '@/interfaces/ICustomer';
 
 interface FormData {
-  represent_id: string;
   name: string;
   last_name: string;
   CPF: string;
+  profession: string;
   RG: string;
   gender: string;
   civil_status: string;
@@ -68,23 +59,23 @@ interface props {
 }
 
 const representativeSchema = z.object({
-  represent_id: z.string(),
-  name: z.string().nonempty({ message: 'Preencha o campo Nome.' }),
-  last_name: z.string().nonempty({ message: 'Preencha o campo Sobrenome.' }),
-  CPF: z.string().nonempty({ message: 'Preencha o campo CPF.' }),
-  RG: z.string().nonempty({ message: 'Preencha o campo RG.' }),
-  gender: z.string().nonempty('Gênero é obrigatório'),
-  civil_status: z.string().nonempty('Estado Civil é obrigatório'),
-  nationality: z.string().nonempty('Naturalidade é obrigatório'),
-  phone_number: z.string().nonempty('Telefone Obrigatório'),
-  email: z.string().nonempty('Email Obrigatório'),
-  cep: z.string().nonempty({ message: 'Preencha o campo CEP.' }),
-  street: z.string().nonempty({ message: 'Preencha o campo Endereço.' }),
-  number: z.string().nonempty({ message: 'Preencha o campo Número.' }),
+  name: z.string().min(3, { message: 'Preencha o campo Nome.' }),
+  last_name: z.string().min(3, { message: 'Preencha o campo Sobrenome.' }),
+  CPF: z.string().min(5, { message: 'Preencha o campo CPF.' }),
+  RG: z.string().min(5, { message: 'Preencha o campo RG.' }),
+  gender: z.string().min(3, 'Gênero é obrigatório'),
+  civil_status: z.string().min(1, 'Estado Civil é obrigatório'),
+  nationality: z.string().min(1, 'Naturalidade é obrigatório'),
+  phone_number: z.string().min(6, 'Telefone Obrigatório'),
+  email: z.string().min(1, 'Email Obrigatório'),
+  cep: z.string().min(4, { message: 'Preencha o campo CEP.' }),
+  street: z.string().min(4, { message: 'Preencha o campo Endereço.' }),
+  number: z.string().min(4, { message: 'Preencha o campo Número.' }),
   description: z.string(),
-  neighborhood: z.string().nonempty({ message: 'Preencha o campo Bairro.' }),
-  city: z.string().nonempty({ message: 'Preencha o campo Cidade.' }),
-  state: z.string().nonempty({ message: 'Preencha o campo Estado.' }),
+  profession: z.string().min(4, { message: 'Preencha o campo Profissão.' }),
+  neighborhood: z.string().min(2, { message: 'Preencha o campo Bairro.' }),
+  city: z.string().min(4, { message: 'Preencha o campo Cidade.' }),
+  state: z.string().min(2, { message: 'Preencha o campo Estado.' }),
 });
 
 const RepresentativeModal = ({
@@ -97,38 +88,14 @@ const RepresentativeModal = ({
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
 
-  const { customerForm } = useContext(CustomerContext);
-  const { setShowTitle, setPageTitle } = useContext(PageTitleContext);
-
-  const currentDate = dayjs();
-  const [selectedDate, setSelectedDate] = useState(currentDate);
+  const today = new Date().toISOString().split('T')[0];
 
   const [message, setMessage] = useState('');
   const [type, setType] = useState<'success' | 'error'>('success');
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const route = useRouter();
-
-  const [formData, setFormData] = useState<FormData>({
-    represent_id: '',
-    name: '',
-    last_name: '',
-    CPF: '',
-    RG: '',
-    gender: '',
-    civil_status: '',
-    nationality: '',
-    birth: '',
-    cep: '',
-    street: '',
-    number: '',
-    description: '',
-    neighborhood: '',
-    city: '',
-    state: '',
-  });
+  const [formData, setFormData] = useState<FormData>({} as FormData);
 
   const [contactData, setContactData] = useState({
     phoneInputFields: [{ phone_number: '' }],
@@ -136,24 +103,8 @@ const RepresentativeModal = ({
   });
 
   const resetValues = () => {
-    setFormData({
-      represent_id: '',
-      name: '',
-      last_name: '',
-      CPF: '',
-      RG: '',
-      gender: '',
-      civil_status: '',
-      nationality: '',
-      birth: '',
-      cep: '',
-      street: '',
-      number: '',
-      description: '',
-      neighborhood: '',
-      city: '',
-      state: '',
-    });
+    setFormData({} as FormData);
+
     setContactData({
       phoneInputFields: [{ phone_number: '' }],
       emailInputFields: [{ email: '' }],
@@ -166,6 +117,11 @@ const RepresentativeModal = ({
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
+
+    if (errors[name]) {
+      delete errors[name];
+      setErrors(errors);
+    }
 
     setFormData(prevData => ({
       ...prevData,
@@ -185,7 +141,7 @@ const RepresentativeModal = ({
         if (newInputFields[index]) {
           newInputFields[index] = {
             ...newInputFields[index],
-            phone_number: value,
+            phone_number: phoneMask(value),
           };
         } else {
           newInputFields.push({ phone_number: value });
@@ -210,7 +166,6 @@ const RepresentativeModal = ({
 
   const createCustomer = async (data: any) => {
     const response = await createCustomerApi(data);
-
     return response;
   };
 
@@ -233,7 +188,7 @@ const RepresentativeModal = ({
           customer_id: Number(customer_id),
         };
 
-        const res = await createProfileCustomer(newData);
+        await createProfileCustomer(newData);
 
         handleClose();
         resetValues();
@@ -253,7 +208,6 @@ const RepresentativeModal = ({
 
     try {
       representativeSchema.parse({
-        represent_id: formData.represent_id,
         name: formData.name,
         last_name: formData.last_name,
         CPF: formData.CPF,
@@ -266,6 +220,7 @@ const RepresentativeModal = ({
         cep: formData.cep,
         street: formData.street,
         number: formData.number,
+        profession: formData.profession,
         description: formData.description,
         neighborhood: formData.neighborhood,
         city: formData.city,
@@ -274,9 +229,9 @@ const RepresentativeModal = ({
 
       const data = {
         capacity: 'able',
-        profession: 'representative',
+        profession: formData.profession,
         customer_type: 'representative',
-        cpf: formData.CPF,
+        cpf: formData.CPF.replace(/\D/g, ''),
         rg: formData.RG,
         gender: formData.gender,
         nationality: formData.nationality,
@@ -286,9 +241,7 @@ const RepresentativeModal = ({
         civil_status: formData.civil_status,
         phones_attributes: contactData.phoneInputFields,
         emails_attributes: contactData.emailInputFields,
-        represent_attributes: {
-          representor_id: formData.represent_id ? Number(formData.represent_id) : '',
-        },
+
         addresses_attributes: [
           {
             zip_code: formData.cep,
@@ -349,6 +302,7 @@ const RepresentativeModal = ({
   const renderInputField = (
     name: keyof FormData,
     title: string,
+    length: number,
     placeholderText: string,
     error?: boolean,
   ) => (
@@ -362,6 +316,7 @@ const RepresentativeModal = ({
         fullWidth
         name={name}
         size="small"
+        inputProps={{ maxLength: length }}
         value={formData[name]}
         autoComplete="off"
         placeholder={`${placeholderText}`}
@@ -400,13 +355,6 @@ const RepresentativeModal = ({
     </Flex>
   );
 
-  const handleCustomerChange = (name: any, value: any) => {
-    setFormData(prevData => ({
-      ...prevData,
-      [name as string]: value,
-    }));
-  };
-
   const handleSelectChange = (event: any) => {
     const { name, value } = event.target;
     setFormData(prevData => ({
@@ -429,45 +377,6 @@ const RepresentativeModal = ({
     });
   };
 
-  const handleBirthDate = (date: any) => {
-    const birthDate = new Date(date).toLocaleDateString('pt-BR');
-    setSelectedDate(date);
-    setFormData((prevData: any) => ({
-      ...prevData,
-      ['birth']: birthDate,
-    }));
-  };
-
-  useEffect(() => {
-    const getAdmins = async () => {
-      const response: {
-        data: ICustomerProps[];
-      } = await getAllCustomers();
-
-      if (response) {
-        setCustomersList(response.data);
-      }
-    };
-
-    getAdmins();
-  }, []);
-
-  useEffect(() => {
-    const updateScrollPosition = () => {
-      if (window.scrollY >= 49) {
-        setShowTitle(true);
-      } else if (window.scrollY <= 32) {
-        setShowTitle(false);
-      }
-    };
-
-    window.addEventListener('scroll', updateScrollPosition);
-
-    return () => {
-      window.removeEventListener('scroll', updateScrollPosition);
-    };
-  }, []);
-
   useEffect(() => {
     if (pageTitle.search('terar') !== -1) {
       setIsEditing(true);
@@ -475,6 +384,57 @@ const RepresentativeModal = ({
       setIsEditing(false);
     }
   }, [pageTitle]);
+
+  useEffect(() => {
+    const fetchCEPDetails = async () => {
+      const numericCEP = formData.cep.replace(/\D/g, '');
+
+      if (numericCEP.length === 8) {
+        try {
+          const response = await getCEPDetails(numericCEP);
+          setFormData(prevData => ({
+            ...prevData,
+            state: response.state,
+            city: response.city,
+            street: response.street,
+            neighborhood: response.neighborhood,
+          }));
+        } catch (error: any) {
+          setMessage('CEP inválido.');
+          setType('error');
+          setOpenSnackbar(true);
+        }
+      }
+    };
+
+    if (formData.cep) {
+      fetchCEPDetails();
+    }
+  }, [formData.cep]);
+
+  const handleRemoveContact = (removeIndex: number, inputArrayName: string) => {
+    if (inputArrayName === 'phoneInputFields') {
+      if (contactData.phoneInputFields.length === 1) return;
+
+      const updatedEducationals = [...contactData.phoneInputFields];
+      updatedEducationals.splice(removeIndex, 1);
+      setContactData(prevData => ({
+        ...prevData,
+        phoneInputFields: updatedEducationals,
+      }));
+    }
+
+    if (inputArrayName === 'emailInputFields') {
+      if (contactData.emailInputFields.length === 1) return;
+
+      const updatedEducationals = [...contactData.emailInputFields];
+      updatedEducationals.splice(removeIndex, 1);
+      setContactData(prevData => ({
+        ...prevData,
+        emailInputFields: updatedEducationals,
+      }));
+    }
+  };
 
   return (
     <>
@@ -521,18 +481,19 @@ const RepresentativeModal = ({
                         gap: '32px',
                       }}
                     >
-                      {renderInputField('name', 'Nome', 'Nome do Representante', !!errors.name)}
+                      {renderInputField('name', 'Nome', 99, 'Nome do Representante', !!errors.name)}
                       {renderInputField(
                         'last_name',
                         'Sobrenome',
+                        99,
                         'Sobrenome do Representante',
                         !!errors.last_name,
                       )}
                     </Flex>
 
                     <Flex style={{ gap: '32px' }}>
-                      {renderInputField('CPF', 'CPF', 'Informe o CPF', !!errors.CPF)}
-                      {renderInputField('RG', 'RG', 'Informe o RG', !!errors.RG)}
+                      {renderInputField('CPF', 'CPF', 16, 'Informe o CPF', !!errors.CPF)}
+                      {renderInputField('RG', 'RG', 12, 'Informe o RG', !!errors.RG)}
                     </Flex>
 
                     <Flex style={{ gap: '24px' }}>
@@ -546,6 +507,7 @@ const RepresentativeModal = ({
                           <input
                             type="date"
                             name="birth"
+                            max={today}
                             value={formData.birth as string}
                             onChange={handleInputChange}
                             style={{
@@ -583,6 +545,20 @@ const RepresentativeModal = ({
                         !!errors.civil_status,
                       )}
                     </Flex>
+
+                    <Flex
+                      style={{
+                        gap: '32px',
+                      }}
+                    >
+                      {renderInputField(
+                        'profession',
+                        'Profissão',
+                        99,
+                        'Informe a Profissão',
+                        !!errors.profession,
+                      )}
+                    </Flex>
                   </Flex>
                 </Flex>
 
@@ -597,30 +573,32 @@ const RepresentativeModal = ({
 
                   <Flex style={{ gap: '32px', flex: 1 }}>
                     <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                      {renderInputField('cep', 'CEP', 'Informe o CEP', !!errors.cep)}
+                      {renderInputField('cep', 'CEP', 20, 'Informe o CEP', !!errors.cep)}
                       <Flex style={{ gap: '16px' }}>
                         {renderInputField(
                           'street',
                           'Endereço',
+                          99,
                           'Informe o Endereço',
 
                           !!errors.street,
                         )}
                         <Box maxWidth={'30%'}>
-                          {renderInputField('number', 'Número', 'N.º', !!errors.number)}
+                          {renderInputField('number', 'Número', 16, 'N.º', !!errors.number)}
                         </Box>
                       </Flex>
-                      {renderInputField('description', 'Complemento', 'Informe o Estado')}
+                      {renderInputField('description', 'Complemento', 99, 'Informe o Estado')}
                     </Box>
                     <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
                       {renderInputField(
                         'neighborhood',
                         'Bairro',
+                        99,
                         'Informe o Estado',
                         !!errors.neighborhood,
                       )}
-                      {renderInputField('city', 'Cidade', 'Informe a Cidade', !!errors.city)}
-                      {renderInputField('state', 'Estado', 'Informe o Estado', !!errors.state)}
+                      {renderInputField('city', 'Cidade', 99, 'Informe a Cidade', !!errors.city)}
+                      {renderInputField('state', 'Estado', 99, 'Informe o Estado', !!errors.state)}
                     </Box>
                   </Flex>
                 </Flex>
@@ -641,6 +619,7 @@ const RepresentativeModal = ({
                       <Typography style={{ marginBottom: '8px' }} variant="h6">
                         {'Telefone'}
                       </Typography>
+
                       {contactData.phoneInputFields.map((inputValue, index) => (
                         <Flex
                           key={index}
@@ -650,23 +629,43 @@ const RepresentativeModal = ({
                             gap: '6px',
                           }}
                         >
-                          <TextField
-                            id="outlined-basic"
-                            variant="outlined"
-                            fullWidth
-                            name="phone"
-                            size="small"
-                            placeholder="Informe o Telefone"
-                            value={inputValue.phone_number || ''}
-                            onChange={(e: any) =>
-                              handleContactChange(index, e.target.value, 'phoneInputFields')
-                            }
-                            autoComplete="off"
-                            error={!!errors.phone_number}
-                          />
+                          <div className="flex flex-row gap-1">
+                            <TextField
+                              id="outlined-basic"
+                              variant="outlined"
+                              fullWidth
+                              name="phone"
+                              size="small"
+                              placeholder="Informe o Telefone"
+                              value={inputValue.phone_number || ''}
+                              onChange={(e: any) =>
+                                handleContactChange(index, e.target.value, 'phoneInputFields')
+                              }
+                              autoComplete="off"
+                              error={!!errors.phone_number}
+                            />
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleRemoveContact(index, 'phoneInputFields');
+                              }}
+                            >
+                              <div
+                                className={`flex  ${
+                                  contactData.phoneInputFields.length > 1 ? '' : 'hidden'
+                                }`}
+                              >
+                                <IoMdTrash size={20} color="#a50000" />
+                              </div>
+                            </button>
+                          </div>
+
                           {index === contactData.phoneInputFields.length - 1 && (
                             <IoAddCircleOutline
-                              style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                              className={`cursor-pointer ml-auto ${
+                                contactData.phoneInputFields.length > 1 ? 'mr-6' : ''
+                              }`}
                               onClick={() => handleAddInput('phoneInputFields')}
                               color={colors.quartiary}
                               size={20}
@@ -684,6 +683,7 @@ const RepresentativeModal = ({
                       <Typography style={{ marginBottom: '8px' }} variant="h6">
                         {'E-mail'}
                       </Typography>
+
                       {contactData.emailInputFields.map((inputValue, index) => (
                         <Flex
                           key={index}
@@ -693,24 +693,44 @@ const RepresentativeModal = ({
                             gap: '6px',
                           }}
                         >
-                          <TextField
-                            id="outlined-basic"
-                            variant="outlined"
-                            fullWidth
-                            name="email"
-                            size="small"
-                            style={{ flex: 1 }}
-                            placeholder="Informe o Email"
-                            value={inputValue.email}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                              handleContactChange(index, e.target.value, 'emailInputFields')
-                            }
-                            error={!!errors.email}
-                            autoComplete="off"
-                          />
+                          <div className="flex flex-row gap-1">
+                            <TextField
+                              id="outlined-basic"
+                              variant="outlined"
+                              fullWidth
+                              name="email"
+                              size="small"
+                              style={{ flex: 1 }}
+                              placeholder="Informe o Email"
+                              value={inputValue.email}
+                              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                handleContactChange(index, e.target.value, 'emailInputFields')
+                              }
+                              error={!!errors.email}
+                              autoComplete="off"
+                            />
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleRemoveContact(index, 'emailInputFields');
+                              }}
+                            >
+                              <div
+                                className={`flex  ${
+                                  contactData.emailInputFields.length > 1 ? '' : 'hidden'
+                                }`}
+                              >
+                                <IoMdTrash size={20} color="#a50000" />
+                              </div>
+                            </button>
+                          </div>
+
                           {index === contactData.emailInputFields.length - 1 && (
                             <IoAddCircleOutline
-                              style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                              className={`cursor-pointer ml-auto ${
+                                contactData.emailInputFields.length > 1 ? 'mr-6' : ''
+                              }`}
                               onClick={() => handleAddInput('emailInputFields')}
                               color={colors.quartiary}
                               size={20}

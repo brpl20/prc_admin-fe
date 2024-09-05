@@ -1,5 +1,5 @@
 interface IAdminPropsAttributes {
-  id: number;
+  id: string;
   admin_id: number;
   office_id: number;
   birth: string;
@@ -15,13 +15,16 @@ interface IAdminPropsAttributes {
   rg: string;
   role: string;
   status: string;
+  email: string;
   updated_at: string;
+  deleted: boolean;
 }
 
 interface IAdminProps {
   id: string;
   type: string;
   attributes: IAdminPropsAttributes;
+  deleted: boolean;
 }
 
 export type { IAdminProps, IAdminPropsAttributes };

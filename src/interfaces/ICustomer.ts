@@ -73,16 +73,20 @@ interface IAttributesProps {
   emails_attributes: any;
   data: any;
   representor?: any;
+  issue_documents?: boolean;
+  customer_email: string;
 
   cep?: any;
-  address?: any;
+  street?: any;
   state?: any;
   city?: any;
   number?: any;
   description?: any;
   neighborhood?: any;
   represent_attributes?: any;
+  profile_customer_id?: number;
   represent?: any;
+  deleted: boolean;
 }
 
 interface IRelationshipsProps {
@@ -95,6 +99,8 @@ interface IRelationshipsProps {
 interface ICustomerProps {
   id: string;
   type: string;
+  name: string;
+  deleted: boolean;
   attributes: IAttributesProps;
   relationships: IRelationshipsProps;
 }

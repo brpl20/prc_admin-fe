@@ -7,7 +7,6 @@ import {
   useImperativeHandle,
 } from 'react';
 
-import { parseCookies } from 'nookies';
 import { getAllAdmins } from '@/services/admins';
 import { getOfficesWithLaws } from '@/services/offices';
 
@@ -69,9 +68,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   const [selectedLawyers, setSelectedLawyers] = useState<any[]>([]);
   const [trainee, SetTrainee] = useState<IAdminPropsAttributes[]>([]);
   const [paralegal, SetParalegal] = useState<IAdminPropsAttributes[]>([]);
-  const [initialService, SetInitialService] = useState<IAdminPropsAttributes[]>([]);
-  const [responsibleLawyer, SetResponsibleLawyer] = useState<IAdminPropsAttributes[]>([]);
-
+  const [lawyers, SetLawyers] = useState<IAdminPropsAttributes[]>([]);
   const [isLegalPerson, setIsLegalPerson] = useState(true);
 
   const [legalPersonError, setLegalPersonError] = useState(false);
@@ -233,7 +230,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   const getAdmins = async () => {
     const response: {
       data: IAdminProps[];
-    } = await getAllAdmins();
+    } = await getAllAdmins('');
     SetAllLawyers(response.data);
   };
 
@@ -243,8 +240,10 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
       SetTrainee(trainees);
 
       const paralegals = allLawyers.filter((lawyer: any) => lawyer.attributes.role == 'paralegal');
-
       SetParalegal(paralegals);
+
+      const lawyerlList = allLawyers.filter((lawyer: any) => lawyer.attributes.role == 'lawyer');
+      SetLawyers(lawyerlList);
     }
   }, [allLawyers]);
 
@@ -558,7 +557,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
                   />
                 )}
                 sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
-                noOptionsText="Nenhum Escritório Encontrado"
+                noOptionsText="Não Encontrado"
                 onChange={(event, value) => {
                   handleSelectedOffice(value);
                 }}
@@ -601,7 +600,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
                     error={legalPersonError}
                   />
                 )}
-                noOptionsText={`Nenhuma Advogado Encontrado`}
+                noOptionsText={`Não Encontrado`}
               />
             </Flex>
           )}
@@ -617,13 +616,13 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               id="multiple-limit-tags"
               value={
                 formData.responsible_lawyer
-                  ? allLawyers.find(
+                  ? lawyers.find(
                       (lawyer: IAdminPropsAttributes) =>
                         lawyer.id.toString() == formData.responsible_lawyer,
                     )
                   : ''
               }
-              options={allLawyers}
+              options={lawyers}
               getOptionLabel={(option: any) =>
                 option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
               }
@@ -631,7 +630,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               renderInput={params => (
                 <TextField {...params} placeholder={'Informe o Responsável'} size="small" />
               )}
-              noOptionsText={`Nenhuma Responsável Encontrado`}
+              noOptionsText={`Não Encontrado`}
             />
           </Flex>
 
@@ -660,36 +659,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               renderInput={params => (
                 <TextField {...params} placeholder={'Informe o Responsavel'} size="small" />
               )}
-              noOptionsText={`Nenhuma Advogado Encontrado`}
-            />
-          </Flex>
-
-          <Flex className="inputContainer">
-            {customTitleWithInfo(
-              'Outorgado por Advogado Parceiro?',
-              'O termo "Outorgado por Advogado Parceiro" indica que a autorização vem de um advogado que é parceiro do escritório, fortalecendo a colaboração e a sinergia entre eles.',
-            )}
-
-            <Autocomplete
-              limitTags={1}
-              id="multiple-limit-tags"
-              value={
-                formData.partner_lawyer
-                  ? allLawyers.find(
-                      (lawyer: IAdminPropsAttributes) =>
-                        lawyer.id.toString() == formData.partner_lawyer,
-                    )
-                  : ''
-              }
-              options={allLawyers}
-              getOptionLabel={(option: any) =>
-                option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
-              }
-              onChange={(event, value) => handleSelectChange('partner_lawyer', value)}
-              renderInput={params => (
-                <TextField {...params} placeholder={'Selecione um Advogado Externo'} size="small" />
-              )}
-              noOptionsText={`Nenhuma Advogado Encontrado`}
+              noOptionsText={`Não Encontrado`}
             />
           </Flex>
 
@@ -717,7 +687,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               renderInput={params => (
                 <TextField {...params} placeholder={'Selecione um Estagiário'} size="small" />
               )}
-              noOptionsText={`Nenhuma Advogado Encontrado`}
+              noOptionsText={`Não Encontrado`}
             />
           </Flex>
 
@@ -743,7 +713,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               renderInput={params => (
                 <TextField {...params} placeholder={'Selecione um Paralegal'} size="small" />
               )}
-              noOptionsText={`Nenhuma Advogado Encontrado`}
+              noOptionsText={`Não Encontrado`}
             />
           </Flex>
         </Box>

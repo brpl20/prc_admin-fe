@@ -7,7 +7,6 @@ import React, {
   useEffect,
 } from 'react';
 
-import { Flex } from '@/styles/globals';
 import { Container } from '../styles';
 import { CustomerContext } from '@/contexts/CustomerContext';
 
@@ -33,10 +32,10 @@ interface FormData {
 }
 
 const stepFiveSchema = z.object({
-  profession: z.string().nonempty('Profissão é obrigatório'),
+  profession: z.string().min(3, 'Profissão é obrigatório'),
   company: z.string(),
   number_benefit: z.string(),
-  mother_name: z.string().nonempty('Nome da Mãe é obrigatório'),
+  mother_name: z.string().min(3, 'Nome da Mãe é obrigatório'),
 });
 
 const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, IStepFiveProps> = (
@@ -161,16 +160,18 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
   const renderInputField = (
     label: string,
     name: keyof FormData,
+    length: number,
     placeholderValue: string,
     error?: boolean,
   ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
       </Typography>
       <TextField
         id="outlined-basic"
         variant="outlined"
+        inputProps={{ maxLength: length }}
         fullWidth
         name={name}
         size="small"
@@ -181,7 +182,7 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
         onChange={handleInputChange}
         error={error && !formData[name]}
       />
-    </Flex>
+    </div>
   );
 
   useEffect(() => {
@@ -220,35 +221,44 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
 
       <Container>
         <Box maxWidth={'812px'} display={'flex'} flexDirection={'column'} gap={'16px'}>
-          <Flex style={{ gap: '24px' }}>
+          <div style={{ display: 'flex', gap: '24px' }}>
             {renderInputField(
               'Profissão',
               'profession',
+              99,
               'Informe a Profissão',
               !!errors.profession,
             )}
             {renderInputField(
               'Empresa Atual',
               'company',
+              99,
               'Informe a Empersa Atual',
               !!errors.company,
             )}
-          </Flex>
+          </div>
 
-          <Flex style={{ gap: '24px' }}>
+          <div style={{ display: 'flex', gap: '24px' }}>
             {renderInputField(
               'Número de Benefício',
               'number_benefit',
-              '000.00000-00-0',
+              99,
+              'Informe o Número de Benefício',
               !!errors.number_benefit,
             )}
-            {renderInputField('NIT', 'nit', '000.00000-00-0')}
-          </Flex>
+            {renderInputField('NIT', 'nit', 30, 'Informe o Número do NIT')}
+          </div>
 
-          <Flex style={{ gap: '24px' }}>
-            {renderInputField('Nome da Mãe', 'mother_name', 'Informe o Nome', !!errors.mother_name)}
-            {renderInputField('Senha do meu INSS', 'inss_password', 'Informe a Senha')}
-          </Flex>
+          <div style={{ display: 'flex', gap: '24px' }}>
+            {renderInputField(
+              'Nome da Mãe',
+              'mother_name',
+              99,
+              'Informe o Nome',
+              !!errors.mother_name,
+            )}
+            {renderInputField('Senha do meu INSS', 'inss_password', 99, 'Informe a Senha')}
+          </div>
         </Box>
       </Container>
     </>

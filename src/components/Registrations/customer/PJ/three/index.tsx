@@ -8,7 +8,6 @@ import React, {
   ChangeEvent,
 } from 'react';
 
-import { Flex } from '@/styles/globals';
 import { Container } from '../styles';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
@@ -65,6 +64,14 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
+
+    if (name === 'agency' || name === 'account' || name === 'op') {
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value.replace(/\D/g, ''),
+      }));
+      return;
+    }
 
     setFormData(prevData => ({
       ...prevData,
@@ -201,7 +208,7 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
     widthValue: string,
     error?: boolean,
   ) => (
-    <Flex style={{ flexDirection: 'column', width: `${widthValue}` }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: `${widthValue}` }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
       </Typography>
@@ -218,7 +225,7 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
         onChange={handleInputChange}
         error={error && !formData[name]}
       />
-    </Flex>
+    </div>
   );
 
   useImperativeHandle(ref, () => ({
@@ -230,7 +237,10 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
       try {
         const response = await getAllBanks();
         const uniqueBanks = removeDuplicateBanks(response);
-        setBankList(uniqueBanks);
+        const filteredBanks = uniqueBanks.filter(
+          bank => bank.name !== 'Selic' && bank.name !== 'Bacen',
+        );
+        setBankList(filteredBanks);
       } catch (error: any) {}
     };
 
@@ -325,11 +335,11 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
           />
         </Box>
 
-        <Flex style={{ gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '16px' }}>
           {renderInputField('Agência', 'agency', 'Número da agencia', '100%', !!errors.agency)}
           {renderInputField('Operação', 'op', 'Op.', '100px', !!errors.operation)}
           {renderInputField('Conta', 'account', 'Número da conta', '100%', !!errors.account)}
-        </Flex>
+        </div>
 
         <Box>
           {renderInputField('Cadastrar Chave Pix', 'pix', 'Informe a chave', '100%', !!errors.pix)}

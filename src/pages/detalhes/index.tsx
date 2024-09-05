@@ -21,6 +21,7 @@ const Details = () => {
     const updateScrollPosition = () => {
       if (window.scrollY >= 49) {
         setShowTitle(true);
+
         setPageTitle(
           params.includes('cliente')
             ? 'Dados do Cliente'
@@ -40,7 +41,7 @@ const Details = () => {
     return () => {
       window.removeEventListener('scroll', updateScrollPosition);
     };
-  }, []);
+  }, [params, setPageTitle, setShowTitle]);
 
   return (
     <>
