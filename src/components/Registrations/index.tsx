@@ -64,7 +64,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
   const workStepFiveRef = useRef<IRefWorkStepFiveProps>(null);
   const workStepSixRef = useRef<IRefWorkStepSixProps>(null);
 
-  const { workForm, setWorkForm } = useContext(WorkContext);
+  const { workForm, updateWorkForm } = useContext(WorkContext);
   const { customerForm, setCustomerForm } = useContext(CustomerContext);
   const { showTitle, setShowTitle, pageTitle } = useContext(PageTitleContext);
   const route = useRouter();
@@ -235,7 +235,13 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
       try {
         if (route.asPath.includes('alterar')) {
           const id: any = router.query.id;
-          const res = await updateWork(id, workForm);
+
+          const payload = {
+            regenerate_documents: true,
+            work: updateWorkForm,
+          };
+
+          const res = await updateWork(id, payload);
 
           if (title != '') {
             const draftWork = {

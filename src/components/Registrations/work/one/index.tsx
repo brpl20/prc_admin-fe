@@ -45,7 +45,6 @@ import {
 import { useRouter } from 'next/router';
 import { getAllDraftWorks } from '@/services/works';
 import { useSession } from 'next-auth/react';
-import { PageTitleContext } from '@/contexts/PageTitleContext';
 
 interface Option {
   value: string;
@@ -80,10 +79,8 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
 
   const route = useRouter();
   const [isVisibleOptionsArea, setIsVisibleOptionsArea] = useState(false);
-  const { workForm, setWorkForm } = useContext(WorkContext);
-  const { setShowTitle, setPageTitle } = useContext(PageTitleContext);
+  const { workForm, setWorkForm, setUdateWorkForm } = useContext(WorkContext);
   const [errors, setErrors] = useState({} as any);
-
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
@@ -192,7 +189,6 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
       });
 
       let data: any = {
-        ...workForm,
         profile_customer_ids: customerSelectedList.map(customer => customer.id),
         number: processNumber,
         procedures: selectedProcedures,
@@ -256,8 +252,21 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
           break;
       }
 
-      saveDataLocalStorage(data);
-      setWorkForm(data);
+      if (route.pathname == '/alterar') {
+        setUdateWorkForm(data);
+        saveDataLocalStorage(data);
+      }
+
+      const dataAux = {
+        ...workForm,
+        ...data,
+      };
+
+      if (route.pathname !== '/alterar') {
+        saveDataLocalStorage(dataAux);
+      }
+
+      setWorkForm(dataAux);
       nextStep();
     } catch (err) {
       handleFormError(err);
@@ -575,10 +584,6 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   useEffect(() => {
     verifyDataLocalStorage();
   }, [customersList]);
-
-  useEffect(() => {
-    setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro de ' : 'Alterar'} Trabalho`);
-  }, [route, setPageTitle]);
 
   return (
     <>

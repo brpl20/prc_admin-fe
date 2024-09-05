@@ -43,12 +43,8 @@ const getWorkByCustomerId = async (id: string) => {
 };
 
 const updateWork = async (id: string, data: any) => {
-  const payload = {
-    work: data,
-  };
-
   try {
-    const response = await api.put(`/works/${id}`, payload);
+    const response = await api.put(`/works/${id}`, data);
     return response.data;
   } catch (error) {
     throw error;

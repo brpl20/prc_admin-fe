@@ -1,5 +1,3 @@
-import { jwtDecode } from 'jwt-decode';
-
 import React, { useEffect, useState, useContext } from 'react';
 import Link from 'next/link';
 
@@ -42,7 +40,6 @@ import { Footer, Notification, ModalOfRemove } from '@/components';
 import dynamic from 'next/dynamic';
 import Router from 'next/router';
 import { IAdminProps } from '@/interfaces/IAdmin';
-import { useSession } from 'next-auth/react';
 import { WorkStatusModal } from '@/components';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
@@ -58,7 +55,6 @@ const Works = () => {
   const [worksList, setWorksList] = useState<IWorksListProps[]>([]);
   const [worksListListFiltered, setWorksListFiltered] = useState<IWorksListProps[]>([]);
   const [allLawyers, SetAllLawyers] = useState<any>([]);
-  const [adminId, setAdminId] = useState<number>(0);
   const [statusModalisOpen, setStatusModalisOpen] = useState<boolean>(false);
   const [workId, setWorkId] = useState<string>('');
   const [workStatus, setWorkStatus] = useState<string>('');
@@ -71,8 +67,6 @@ const Works = () => {
   const [message, setMessage] = useState('');
   const [typeMessage, setTypeMessage] = useState<'success' | 'error'>('success');
 
-  const { data: session } = useSession();
-
   const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -81,15 +75,6 @@ const Works = () => {
     setAnchorEl(null);
     setRowItem({} as IWorksListProps);
   };
-
-  useEffect(() => {
-    if (session) {
-      const token: any = jwtDecode(session.token);
-      if (token) {
-        setAdminId(token.admin_id);
-      }
-    }
-  }, [session]);
 
   const handleSearch = (search: string) => {
     const regex = new RegExp(search, 'i');

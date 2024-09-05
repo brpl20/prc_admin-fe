@@ -6,6 +6,7 @@ import React, {
   ForwardRefRenderFunction,
   useImperativeHandle,
 } from 'react';
+import { useRouter } from 'next/router';
 
 import { DataGrid } from '@mui/x-data-grid';
 import { Box, LinearProgress, Typography } from '@mui/material';
@@ -14,7 +15,7 @@ import { WorkContext } from '@/contexts/WorkContext';
 import { getAllPowers } from '@/services/powers';
 import { Notification } from '@/components';
 import { z } from 'zod';
-import { useSession } from 'next-auth/react';
+
 export interface IRefWorkStepThreeProps {
   handleSubmitForm: () => void;
 }
@@ -31,15 +32,13 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
   { nextStep },
   ref,
 ) => {
-  const { data: session } = useSession();
-
-  const [errors, setErrors] = useState({} as any);
+  const route = useRouter();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
 
-  const { workForm, setWorkForm } = useContext(WorkContext);
+  const { workForm, setWorkForm, updateWorkForm, setUdateWorkForm } = useContext(WorkContext);
   const [powersSelected, setPowersSelected] = useState<number[]>([]);
   const [allPowers, setAllPowers] = useState<any>([]);
   const [filteredPowers, setFilteredPowers] = useState<any>([]);
@@ -53,13 +52,26 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
       stepThreeSchema.parse({ power_ids: powersSelected });
 
       if (powersSelected.length > 0) {
+        if (route.pathname == '/alterar') {
+          let dataAux = {
+            ...updateWorkForm,
+            power_ids: powersSelected,
+          };
+
+          setUdateWorkForm(dataAux);
+          saveDataLocalStorage(dataAux);
+        }
+
         const data = {
           ...workForm,
           power_ids: powersSelected,
         };
 
+        if (route.pathname !== '/alterar') {
+          saveDataLocalStorage(data);
+        }
+
         setWorkForm(data);
-        saveDataLocalStorage(data);
       }
 
       nextStep();
@@ -80,7 +92,6 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
         errorObject[field] = newErrors[field][0] as string;
       }
     }
-    setErrors(errorObject);
   };
 
   const verifyDataLocalStorage = async () => {
