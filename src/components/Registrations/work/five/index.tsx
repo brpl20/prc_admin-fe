@@ -41,10 +41,9 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
 
-  const { workForm, setWorkForm } = useContext(WorkContext);
+  const { workForm, setWorkForm, updateWorkForm, setUdateWorkForm } = useContext(WorkContext);
   const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
 
-  const [costumerId, setCostumerId] = useState<string>();
   const [percentage, setPercentage] = useState<string>();
   const [commission, setCommission] = useState<string>();
   const [selectedCustomer, setSelectedCustomer] = useState<ICustomerProps>();
@@ -74,10 +73,8 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
   const handleSelectedCustomer = (customer: ICustomerProps) => {
     if (customer) {
-      setCostumerId(customer.id);
       setSelectedCustomer(customer);
     } else {
-      setCostumerId(undefined);
       setSelectedCustomer(undefined);
     }
   };
@@ -111,8 +108,26 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
         ];
       }
 
-      setWorkForm(data);
-      saveDataLocalStorage(data);
+      if (router.pathname == '/alterar') {
+        let dataAux = {
+          ...updateWorkForm,
+          recommendations_attributes: data.recommendations_attributes,
+        };
+
+        setUdateWorkForm(dataAux);
+        saveDataLocalStorage(dataAux);
+      }
+
+      const dataAux = {
+        ...workForm,
+        ...data,
+      };
+
+      if (router.pathname !== '/alterar') {
+        saveDataLocalStorage(dataAux);
+      }
+
+      setWorkForm(dataAux);
       nextStep();
     } catch (err) {
       handleFormError(err);
@@ -156,7 +171,6 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
                 customer => customer.id == attributes.recommendations[0].profile_customer_id,
               );
 
-              setCostumerId(customer?.id);
               setSelectedCustomer(customer);
             }
           }
@@ -169,7 +183,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
       if (attributes) {
         if (attributes.recommendations) {
-          handlePercentage(attributes.recommendations_attributes?.[0]?.percentage ?? '');
+          handlePercentage(attributes.recommendations?.[0]?.percentage ?? '');
 
           setCommission(
             `R$ ${parseFloat(attributes.recommendations?.[0]?.commission ?? 0)
@@ -182,7 +196,6 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
             customer => customer.id == attributes.recommendations?.[0]?.profile_customer_id,
           );
 
-          setCostumerId(customer?.id);
           setSelectedCustomer(customer);
         }
       }

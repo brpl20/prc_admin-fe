@@ -42,7 +42,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
 
   const isEdit = router.asPath.includes('alterar');
 
-  const { workForm, setWorkForm } = useContext(WorkContext);
+  const { workForm, setWorkForm, updateWorkForm, setUdateWorkForm } = useContext(WorkContext);
 
   const [errors, setErrors] = useState({} as any);
 
@@ -87,7 +87,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
         );
       });
 
-      let data = {};
+      let workData = {};
 
       if (router.pathname.includes('alterar')) {
         let newProducedDocumentsArray = [] as any;
@@ -135,20 +135,15 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
           });
         });
 
-        data = {
-          regenerate_documents: true,
-          work: {
-            ...workForm,
-            documents_attributes: newProducedDocumentsArray,
-            pending_documents_attributes: pendingDocuments,
-            extra_pending_document: otherDocuments,
-            folder: folder,
-            note: gradesInGeneral,
-          },
+        workData = {
+          documents_attributes: newProducedDocumentsArray,
+          pending_documents_attributes: pendingDocuments,
+          extra_pending_document: otherDocuments,
+          folder: folder,
+          note: gradesInGeneral,
         };
       } else {
-        data = {
-          ...workForm,
+        workData = {
           documents_attributes: documentsProducedArray,
           pending_documents_attributes: pendingDocuments,
           extra_pending_document: otherDocuments,
@@ -157,9 +152,26 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
         };
       }
 
-      setWorkForm(data);
+      if (router.pathname == '/alterar') {
+        let dataAux = {
+          ...updateWorkForm,
+          ...workData,
+        };
 
-      saveDataLocalStorage(data);
+        setUdateWorkForm(dataAux);
+        saveDataLocalStorage(dataAux);
+      }
+
+      const dataAux = {
+        ...workForm,
+        ...workData,
+      };
+
+      if (router.pathname !== '/alterar') {
+        saveDataLocalStorage(dataAux);
+      }
+
+      setWorkForm(dataAux);
       confirmation();
     } catch (err) {
       handleFormError(err);

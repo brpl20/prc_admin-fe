@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
 import Router from 'next/router';
-import jwt from 'jsonwebtoken';
 
 import { getAllAdmins } from '@/services/admins';
 import { PageTitleContext } from '@/contexts/PageTitleContext';

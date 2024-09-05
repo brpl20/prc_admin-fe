@@ -54,7 +54,7 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
   ref,
 ) => {
   const [isVisibleOptionsArea, setIsVisibleOptionsArea] = useState(false);
-  const { workForm, setWorkForm } = useContext(WorkContext);
+  const { workForm, setWorkForm, updateWorkForm, setUdateWorkForm } = useContext(WorkContext);
   const [errors, setErrors] = useState({} as any);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -146,13 +146,26 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
         };
       }
 
+      if (route.pathname == '/alterar') {
+        let dataAux = {
+          ...updateWorkForm,
+          honorary_attributes: honorary_attributes,
+        };
+
+        setUdateWorkForm(dataAux);
+        saveDataLocalStorage(dataAux);
+      }
+
       const data = {
         ...workForm,
         honorary_attributes: honorary_attributes,
       } as any;
 
+      if (route.pathname !== '/alterar') {
+        saveDataLocalStorage(data);
+      }
+
       setWorkForm(data);
-      saveDataLocalStorage(data);
       nextStep();
     } catch (error: any) {
       handleFormError(error);

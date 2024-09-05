@@ -6,6 +6,7 @@ import {
   ForwardRefRenderFunction,
   useImperativeHandle,
 } from 'react';
+import { useRouter } from 'next/router';
 
 import { getAllAdmins } from '@/services/admins';
 import { getOfficesWithLaws } from '@/services/offices';
@@ -59,9 +60,9 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   ref,
 ) => {
   const [openSubTable, setOpenSubTable] = useState(true);
-  const [errors, setErrors] = useState({} as any);
+  const route = useRouter();
 
-  const { workForm, setWorkForm } = useContext(WorkContext);
+  const { workForm, setWorkForm, updateWorkForm, setUdateWorkForm } = useContext(WorkContext);
   const [allLawyers, SetAllLawyers] = useState<any>([]);
   const [offices, setOffices] = useState<IOfficeProps[]>([]);
   const [officesSelected, setOfficesSelected] = useState<any>([]);
@@ -114,7 +115,6 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
       }
 
       const data = {
-        ...workForm,
         profile_admin_ids: selectedLawyers.map((lawyer: any) => Number(lawyer)),
         office_ids: officesIDs,
 
@@ -126,8 +126,26 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
         responsible_lawyer: updatedFormData.responsible_lawyer,
       };
 
-      saveDataLocalStorage(data);
-      setWorkForm(data);
+      if (route.pathname == '/alterar') {
+        let dataAux = {
+          ...updateWorkForm,
+          ...data,
+        };
+
+        setUdateWorkForm(dataAux);
+        saveDataLocalStorage(dataAux);
+      }
+
+      const dataAux = {
+        ...workForm,
+        ...data,
+      };
+
+      if (route.pathname !== '/alterar') {
+        saveDataLocalStorage(dataAux);
+      }
+
+      setWorkForm(dataAux);
       nextStep();
     } catch (err) {
       handleFormError(err);
@@ -146,7 +164,6 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
         errorObject[field] = newErrors[field][0] as string;
       }
     }
-    setErrors(errorObject);
   };
 
   const saveDataLocalStorage = (data: any) => {
