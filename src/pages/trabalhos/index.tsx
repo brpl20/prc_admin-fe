@@ -586,12 +586,14 @@ const Works = () => {
                     headerAlign: 'center',
                   },
                   {
-                    width: 210,
+                    flex: 1,
+                    minWidth: 210,
                     field: 'client',
                     headerName: 'Cliente',
                   },
                   {
-                    width: 200,
+                    flex: 1,
+                    minWidth: 200,
                     field: 'procedure',
                     headerName: 'Procedimento',
                   },

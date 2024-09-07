@@ -32,7 +32,8 @@ const PFCustomerStepSix: ForwardRefRenderFunction<IRefPFCustomerStepSixProps, IS
 ) => {
   const router = useRouter();
   const isEdit = router.asPath.includes('alterar');
-  const { customerForm, setCustomerForm } = useContext(CustomerContext);
+  const { customerForm, setCustomerForm, newCustomerForm, setNewCustomerForm } =
+    useContext(CustomerContext);
   const [checkedItems, setCheckedItems] = useState({
     issue_documents: false,
   });
@@ -45,13 +46,12 @@ const PFCustomerStepSix: ForwardRefRenderFunction<IRefPFCustomerStepSixProps, IS
       [name]: checked,
     }));
   };
-
   const handleSubmitForm = () => {
     let data = {};
 
     if (checkedItems.issue_documents) {
       data = {
-        ...customerForm,
+        customer_type: 'physical_person',
         issue_documents: checkedItems.issue_documents,
         customer_files_attributes: [
           {
@@ -63,13 +63,20 @@ const PFCustomerStepSix: ForwardRefRenderFunction<IRefPFCustomerStepSixProps, IS
 
     if (!checkedItems.issue_documents) {
       data = {
-        ...customerForm,
         customer_type: 'physical_person',
         issue_documents: checkedItems.issue_documents,
       };
     }
 
-    setCustomerForm(data);
+    setNewCustomerForm({
+      ...newCustomerForm,
+      ...data,
+    });
+
+    setCustomerForm({
+      ...customerForm,
+      ...data,
+    });
     confirmation();
 
     scroll.scrollToTop({

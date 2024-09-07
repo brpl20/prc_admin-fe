@@ -50,7 +50,8 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
-  const { customerForm, setCustomerForm } = useContext(CustomerContext);
+  const { customerForm, setCustomerForm, newCustomerForm, setNewCustomerForm } =
+    useContext(CustomerContext);
   const [customersList, setCustomersList] = useState<any[]>([]);
   const [profileAdmin, setProfileAdmin] = useState('' as any);
 
@@ -155,8 +156,8 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
           represent_attributes: {
             profile_admin_id: Number(profileAdmin?.id),
           },
-          phones: formData.phones_attributes,
-          emails: formData.emails_attributes,
+          phones_attributes: formData.phones_attributes,
+          emails_attributes: formData.emails_attributes,
         };
 
         customerForm.data.attributes.represent_attributes = {
@@ -170,6 +171,12 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
 
         saveDataLocalStorage(data);
         setCustomerForm(customerForm);
+
+        setNewCustomerForm({
+          ...newCustomerForm,
+          ...data,
+        });
+
         nextStep();
         return;
       }
@@ -299,8 +306,6 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
       }));
     }
   };
-
-  useEffect(() => {}, [formData]);
 
   return (
     <>

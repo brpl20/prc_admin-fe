@@ -28,8 +28,8 @@ interface IStepThreeProps {
 }
 
 const stepThreeSchema = z.object({
-  phone_number: z.string().nonempty('Telefone Obrigatório'),
-  email: z.string().nonempty('Email Obrigatório'),
+  phone_number: z.string().min(6, 'Telefone Obrigatório'),
+  email: z.string().min(6, 'Email Obrigatório'),
 });
 
 const PFCustomerStepThree: ForwardRefRenderFunction<
@@ -40,7 +40,8 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
-  const { customerForm, setCustomerForm } = useContext(CustomerContext);
+  const { customerForm, setCustomerForm, newCustomerForm, setNewCustomerForm } =
+    useContext(CustomerContext);
   const [formData, setFormData] = useState({
     phoneInputFields: [{ phone_number: '' }],
     emailInputFields: [{ email: '' }],
@@ -170,6 +171,11 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
           phones_attributes: formData.phoneInputFields,
           emails_attributes: formData.emailInputFields,
         };
+
+        setNewCustomerForm({
+          ...newCustomerForm,
+          ...data,
+        });
 
         saveDataLocalStorage(data);
         setCustomerForm(customerForm);

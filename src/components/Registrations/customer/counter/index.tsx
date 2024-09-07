@@ -1,5 +1,6 @@
-import { useState, ChangeEvent, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, ChangeEvent } from 'react';
 import { IoAddCircleOutline } from 'react-icons/io5';
+import { IoMdTrash } from 'react-icons/io';
 
 import {
   TextField,
@@ -13,19 +14,13 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
-
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { CustomerContext } from '@/contexts/CustomerContext';
-
 import { Container, Title } from './styles';
-import { colors, ContentContainer } from '@/styles/globals';
-
-import { Divider } from '@/styles/globals';
+import { colors, ContentContainer, Divider } from '@/styles/globals';
 import { createProfileCustomer, createCustomer, updateProfileCustomer } from '@/services/customers';
 import { animateScroll as scroll } from 'react-scroll';
-
 import Router, { useRouter } from 'next/router';
-import { IoMdTrash } from 'react-icons/io';
 import { phoneMask } from '@/utils/masks';
 import { z } from 'zod';
 
@@ -40,21 +35,21 @@ interface FormData {
   rg: string;
 }
 
-interface props {
+interface Props {
   pageTitle: string;
 }
 
 const counterSchema = z.object({
   name: z.string().min(4, 'Nome é obrigatório'),
   last_name: z.string().min(4, 'Sobrenome é obrigatório'),
-  accountant_id: z.string().min(4, 'Registro Profissional é obrigatório'),
+  accountant_id: z.string().min(1, 'Registro Profissional é obrigatório'),
   phone_number: z.string().min(4, 'Telefone Obrigatório'),
   email: z.string().min(4, 'Email Obrigatório'),
 });
 
-const Counter = ({ pageTitle }: props) => {
+const Counter = ({ pageTitle }: Props) => {
   const route = useRouter();
-  const [errors, setErrors] = useState({} as any);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -99,17 +94,11 @@ const Counter = ({ pageTitle }: props) => {
     });
   };
 
-  const handleCloseModal = () => {
-    setOpenModal(false);
-  };
+  const handleCloseModal = () => setOpenModal(false);
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setFormData(prevData => ({ ...prevData, [name]: value }));
   };
 
   const handleContactChange = (
@@ -119,91 +108,48 @@ const Counter = ({ pageTitle }: props) => {
   ) => {
     setContactData(prevData => {
       const newInputFields = [...prevData[inputArrayName]];
+      newInputFields[index] =
+        inputArrayName === 'phoneInputFields'
+          ? { phone_number: phoneMask(value) }
+          : { email: value };
 
-      if (inputArrayName === 'phoneInputFields') {
-        if (newInputFields[index]) {
-          newInputFields[index] = {
-            ...newInputFields[index],
-            phone_number: phoneMask(value),
-          };
-        } else {
-          newInputFields.push({ phone_number: value });
-        }
-      } else if (inputArrayName === 'emailInputFields') {
-        if (newInputFields[index]) {
-          newInputFields[index] = {
-            ...newInputFields[index],
-            email: value,
-          };
-        } else {
-          newInputFields.push({ email: value });
-        }
-      }
-
-      return {
-        ...prevData,
-        [inputArrayName]: newInputFields,
-      };
+      return { ...prevData, [inputArrayName]: newInputFields };
     });
   };
 
   const completeRegistration = async (data: any) => {
     try {
-      const data_customer = {
-        customer: {
-          email: data.emails_attributes[0].email,
-        },
-      };
+      const data_customer = { customer: { email: data.emails_attributes[0].email } };
       const customer_data = await createCustomer(data_customer);
 
-      if (!customer_data.data.attributes.email) {
-        throw new Error('E-mail já está em uso !');
-      } else {
-        const customer_id = customer_data.data.id;
+      if (!customer_data.data.attributes.email) throw new Error('E-mail já está em uso !');
 
-        const newData = {
-          ...data,
-          customer_id: Number(customer_id),
-        };
+      const customer_id = customer_data.data.id;
+      const newData = { ...data, customer_id: Number(customer_id) };
+      await createProfileCustomer(newData);
 
-        await createProfileCustomer(newData);
-
-        Router.push('/clientes');
-        resetValues();
-      }
+      Router.push('/clientes');
+      resetValues();
     } catch (error: any) {
       handleFormError(error);
-
-      scroll.scrollToTop({
-        duration: 500,
-        smooth: 'easeInOutQuart',
-      });
+      scroll.scrollToTop({ duration: 500, smooth: 'easeInOutQuart' });
     }
   };
 
   const handleSubmitForm = async () => {
     setLoading(true);
-
     try {
       counterSchema.parse({
         name: formData.name,
         last_name: formData.last_name,
         gender: formData.gender,
         accountant_id: formData.accountant_id.toString(),
-        customer_type: 'counter',
         phone_number: contactData.phoneInputFields[0].phone_number,
         email: contactData.emailInputFields[0].email,
-        capacity: 'able',
-        cpf: formData.cpf,
-        nationality: 'brazilian',
-        profession: 'counter',
-        civil_status: formData.civil_status,
-        rg: formData.rg,
       });
 
       const data = {
-        name: formData.name,
-        last_name: formData.last_name,
+        ...formData,
         gender: 'male',
         accountant_id: Number(formData.accountant_id),
         customer_type: 'counter',
@@ -217,37 +163,8 @@ const Counter = ({ pageTitle }: props) => {
         rg: '000000',
       };
 
-      if (pageTitle.search('terar') !== -1) {
-        customerForm.data.attributes.name = data.name;
-        customerForm.data.attributes.last_name = data.last_name;
-        customerForm.data.attributes.gender = data.gender;
-        customerForm.data.attributes.accountant_id = data.accountant_id;
-        customerForm.data.attributes.phones = data.phones_attributes;
-        customerForm.data.attributes.emails = data.emails_attributes;
-        customerForm.data.attributes.capacity = data.capacity;
-        customerForm.data.attributes.gender = data.gender;
-        customerForm.data.attributes.civil_status = data.civil_status;
-        customerForm.data.attributes.rg = data.rg;
-        customerForm.data.attributes.cpf = data.cpf;
-
-        const newData = {
-          name: customerForm.data.attributes.name,
-          last_name: customerForm.data.attributes.last_name,
-          gender: customerForm.data.attributes.gender,
-          accountant_id: customerForm.data.attributes.accountant_id,
-          customer_type: 'counter',
-          phones_attributes: customerForm.data.attributes.phones,
-          emails_attributes: customerForm.data.attributes.emails,
-          capacity: 'able',
-          cpf: customerForm.data.attributes.cpf,
-          nationality: 'brazilian',
-          profession: 'counter',
-          civil_status: customerForm.data.attributes.civil_status,
-          rg: customerForm.data.attributes.rg,
-        };
-
-        const res = await updateProfileCustomer(customerForm.data.id, newData);
-
+      if (isEditing) {
+        const res = await updateProfileCustomer(customerForm.data.id, data);
         Router.push('/clientes');
         resetValues();
       } else {
@@ -269,13 +186,14 @@ const Counter = ({ pageTitle }: props) => {
 
   const handleFormError = (error: any) => {
     const newErrors = error?.formErrors?.fieldErrors ?? {};
-    const errorObject: { [key: string]: string } = {};
+    const errorObject: Record<string, string> = {};
     const codeErrors = error?.response?.data?.errors;
+
     setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
 
-    if (codeErrors && codeErrors.length > 0) {
+    if (codeErrors?.length) {
       codeErrors.forEach((error: any) => {
         setMessage(error.code);
         setType('error');
@@ -284,7 +202,7 @@ const Counter = ({ pageTitle }: props) => {
     }
 
     for (const field in newErrors) {
-      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
+      if (newErrors.hasOwnProperty(field)) {
         errorObject[field] = newErrors[field][0] as string;
       }
     }
@@ -293,10 +211,7 @@ const Counter = ({ pageTitle }: props) => {
 
   const handleSelectChange = (event: any) => {
     const { name, value } = event.target;
-    setFormData(prevData => ({
-      ...prevData,
-      [name as string]: value,
-    }));
+    setFormData(prevData => ({ ...prevData, [name]: value }));
   };
 
   const renderInputField = (
@@ -310,14 +225,13 @@ const Counter = ({ pageTitle }: props) => {
         {title}
       </Typography>
       <TextField
-        id="outlined-basic"
         variant="outlined"
         fullWidth
         name={name}
         size="small"
         value={formData[name] || ''}
         autoComplete="off"
-        placeholder={`${placeholderText}`}
+        placeholder={placeholderText}
         onChange={handleInputChange}
         error={error && !formData[name]}
       />
@@ -359,95 +273,59 @@ const Counter = ({ pageTitle }: props) => {
         [inputArrayName === 'phoneInputFields' ? 'phone_number' : 'email']: '',
       });
 
-      return {
-        ...prevData,
-        [inputArrayName]: newInputFields,
-      };
+      return { ...prevData, [inputArrayName]: newInputFields };
     });
   };
 
   useEffect(() => {
-    const handleDataForm = () => {
-      const attributes = customerForm.data.attributes;
+    if (customerForm.data?.attributes) {
+      setFormData({
+        name: customerForm.data.attributes.name || '',
+        last_name: customerForm.data.attributes.last_name || '',
+        gender: customerForm.data.attributes.gender || '',
+        accountant_id: customerForm.data.attributes.accountant_id || '',
+        civil_status: customerForm.data.attributes.civil_status || '',
+        capacity: customerForm.data.attributes.capacity || '',
+        cpf: customerForm.data.attributes.cpf || '',
+        rg: customerForm.data.attributes.rg || '',
+      });
 
-      if (attributes) {
-        setFormData({
-          name: attributes.name ? attributes.name : '',
-          last_name: attributes.last_name ? attributes.last_name : '',
-          gender: attributes.gender ? attributes.gender : '',
-          accountant_id: attributes.accountant_id ? attributes.accountant_id : '',
-          civil_status: attributes.civil_status ? attributes.civil_status : '',
-          capacity: attributes.capacity ? attributes.capacity : '',
-          cpf: attributes.cpf ? attributes.cpf : '',
-          rg: attributes.rg ? attributes.rg : '',
-        });
-
-        setContactData({
-          phoneInputFields:
-            attributes.phones && attributes.phones.length > 0
-              ? attributes.phones
-              : [{ phone_number: '' }],
-          emailInputFields:
-            attributes.emails && attributes.emails.length > 0 ? attributes.emails : [{ email: '' }],
-        });
-      }
-    };
-
-    if (customerForm.data) {
-      handleDataForm();
+      setContactData({
+        phoneInputFields: customerForm.data.attributes.phones?.length
+          ? customerForm.data.attributes.phones
+          : [{ phone_number: '' }],
+        emailInputFields: customerForm.data.attributes.emails?.length
+          ? customerForm.data.attributes.emails
+          : [{ email: '' }],
+      });
     }
   }, [customerForm]);
 
   useEffect(() => {
     const updateScrollPosition = () => {
-      if (window.scrollY >= 49) {
-        setShowTitle(true);
-      } else if (window.scrollY <= 32) {
-        setShowTitle(false);
-      }
+      setShowTitle(window.scrollY >= 49);
     };
 
     window.addEventListener('scroll', updateScrollPosition);
-
-    return () => {
-      window.removeEventListener('scroll', updateScrollPosition);
-    };
-  }, []);
+    return () => window.removeEventListener('scroll', updateScrollPosition);
+  }, [setShowTitle]);
 
   useEffect(() => {
-    if (pageTitle.search('terar') !== -1) {
-      setIsEditing(true);
-    } else {
-      setIsEditing(false);
-    }
+    setIsEditing(pageTitle.includes('terar'));
   }, [pageTitle]);
 
   useEffect(() => {
     setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro de' : 'Alterar'} Contador`);
   }, [route, setPageTitle]);
 
-  const handleRemoveContact = (removeIndex: number, inputArrayName: string) => {
-    if (inputArrayName === 'phoneInputFields') {
-      if (contactData.phoneInputFields.length === 1) return;
+  const handleRemoveContact = (removeIndex: number, inputArrayName: keyof typeof contactData) => {
+    setContactData(prevData => {
+      if (prevData[inputArrayName].length === 1) return prevData;
 
-      const updatedEducationals = [...contactData.phoneInputFields];
-      updatedEducationals.splice(removeIndex, 1);
-      setContactData(prevData => ({
-        ...prevData,
-        phoneInputFields: updatedEducationals,
-      }));
-    }
-
-    if (inputArrayName === 'emailInputFields') {
-      if (contactData.emailInputFields.length === 1) return;
-
-      const updatedEducationals = [...contactData.emailInputFields];
-      updatedEducationals.splice(removeIndex, 1);
-      setContactData(prevData => ({
-        ...prevData,
-        emailInputFields: updatedEducationals,
-      }));
-    }
+      const updatedFields = [...prevData[inputArrayName]];
+      updatedFields.splice(removeIndex, 1);
+      return { ...prevData, [inputArrayName]: updatedFields };
+    });
   };
 
   return (
@@ -473,28 +351,23 @@ const Counter = ({ pageTitle }: props) => {
 
       <Container>
         <Box
-          display={'flex'}
-          alignItems={'center'}
-          justifyContent={'space-between'}
-          sx={{
-            marginBottom: '24px',
-            maxWidth: '1600px',
-          }}
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ marginBottom: '24px', maxWidth: '1600px' }}
         >
-          <Title>{`${pageTitle}`}</Title>
+          <Title>{pageTitle}</Title>
         </Box>
 
         <ContentContainer>
           <form>
-            <Box display={'flex'} flexDirection={'column'} gap={'16px'}>
+            <Box display="flex" flexDirection="column" gap="16px">
               <div style={{ display: 'flex', gap: '32px' }}>
-                <Box width={'210px'}>
-                  <Typography variant="h6" sx={{ marginRight: 'auto' }}>
-                    {'Registro Profissional'}
-                  </Typography>
+                <Box width="210px">
+                  <Typography variant="h6">Registro Profissional</Typography>
                 </Box>
-                <Box style={{ flex: 1 }}>
-                  <Box width={'50%'} pr={'15.5px'}>
+                <Box flex={1}>
+                  <Box width="50%" pr="15.5px">
                     {renderInputField(
                       'accountant_id',
                       'Número do Registro',
@@ -508,32 +381,17 @@ const Counter = ({ pageTitle }: props) => {
               <Divider />
 
               <div style={{ display: 'flex', gap: '32px' }}>
-                <Box width={'210px'}>
-                  <Typography variant="h6" sx={{ marginRight: 'auto' }}>
-                    {'Dados do Contador'}
-                  </Typography>
+                <Box width="210px">
+                  <Typography variant="h6">Dados do Contador</Typography>
                 </Box>
 
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    flex: 1,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: '32px',
-                      flex: 1,
-                      marginTop: '24px',
-                    }}
-                  >
-                    <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  <div style={{ display: 'flex', gap: '32px', flex: 1, marginTop: '24px' }}>
+                    <Box display="flex" flexDirection="column" gap="16px" flex={1}>
                       {renderInputField('name', 'Nome', 'Nome do Contador', !!errors.name)}
                     </Box>
 
-                    <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
+                    <Box display="flex" flexDirection="column" gap="16px" flex={1}>
                       {renderInputField(
                         'last_name',
                         'Sobrenome',
@@ -548,20 +406,14 @@ const Counter = ({ pageTitle }: props) => {
               <Divider />
 
               <div style={{ display: 'flex', gap: '32px' }}>
-                <Box width={'210px'}>
-                  <Typography variant="h6" sx={{ marginRight: 'auto' }}>
-                    {'Contato'}
-                  </Typography>
+                <Box width="210px">
+                  <Typography variant="h6">Contato</Typography>
                 </Box>
 
                 <div style={{ display: 'flex', gap: '32px', flex: 1 }}>
-                  <Box
-                    style={{
-                      flex: 1,
-                    }}
-                  >
+                  <Box flex={1}>
                     <Typography style={{ marginBottom: '8px' }} variant="h6">
-                      {'Telefone'}
+                      Telefone
                     </Typography>
 
                     {contactData.phoneInputFields.map((inputValue, index) => (
@@ -576,14 +428,13 @@ const Counter = ({ pageTitle }: props) => {
                       >
                         <div className="flex flex-row gap-1">
                           <TextField
-                            id="outlined-basic"
                             variant="outlined"
                             fullWidth
                             name="phone"
                             size="small"
                             placeholder="Informe o Telefone"
                             value={inputValue.phone_number || ''}
-                            onChange={(e: any) =>
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
                               handleContactChange(index, e.target.value, 'phoneInputFields')
                             }
                             autoComplete="off"
@@ -591,12 +442,10 @@ const Counter = ({ pageTitle }: props) => {
                           />
                           <button
                             type="button"
-                            onClick={() => {
-                              handleRemoveContact(index, 'phoneInputFields');
-                            }}
+                            onClick={() => handleRemoveContact(index, 'phoneInputFields')}
                           >
                             <div
-                              className={`flex  ${
+                              className={`flex ${
                                 contactData.phoneInputFields.length > 1 ? '' : 'hidden'
                               }`}
                             >
@@ -618,13 +467,9 @@ const Counter = ({ pageTitle }: props) => {
                       </div>
                     ))}
                   </Box>
-                  <Box
-                    style={{
-                      flex: 1,
-                    }}
-                  >
+                  <Box flex={1}>
                     <Typography style={{ marginBottom: '8px' }} variant="h6">
-                      {'E-mail'}
+                      E-mail
                     </Typography>
 
                     {contactData.emailInputFields.map((inputValue, index) => (
@@ -639,12 +484,10 @@ const Counter = ({ pageTitle }: props) => {
                       >
                         <div className="flex flex-row gap-1">
                           <TextField
-                            id="outlined-basic"
                             variant="outlined"
                             fullWidth
                             name="email"
                             size="small"
-                            style={{ flex: 1 }}
                             placeholder="Informe o Email"
                             value={inputValue.email || ''}
                             onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -653,15 +496,12 @@ const Counter = ({ pageTitle }: props) => {
                             autoComplete="off"
                             error={!!errors.email}
                           />
-
                           <button
                             type="button"
-                            onClick={() => {
-                              handleRemoveContact(index, 'emailInputFields');
-                            }}
+                            onClick={() => handleRemoveContact(index, 'emailInputFields')}
                           >
                             <div
-                              className={`flex  ${
+                              className={`flex ${
                                 contactData.emailInputFields.length > 1 ? '' : 'hidden'
                               }`}
                             >
@@ -690,33 +530,23 @@ const Counter = ({ pageTitle }: props) => {
 
           <Divider />
 
-          <Box width={'100%'} display={'flex'} justifyContent={'end'} mt={'16px'}>
+          <Box display="flex" justifyContent="end" mt="16px">
             <Button
               color="primary"
               variant="outlined"
-              sx={{
-                width: '100px',
-                height: '36px',
-              }}
+              sx={{ width: '100px', height: '36px' }}
               onClick={() => {
                 resetValues();
                 Router.push('/clientes');
               }}
             >
-              {'Cancelar'}
+              Cancelar
             </Button>
             <Button
               variant="contained"
-              sx={{
-                width: '100px',
-                height: '36px',
-                color: colors.white,
-                marginLeft: '16px',
-              }}
+              sx={{ width: '100px', height: '36px', color: colors.white, marginLeft: '16px' }}
               color="secondary"
-              onClick={() => {
-                handleSubmitForm();
-              }}
+              onClick={handleSubmitForm}
             >
               {loading ? <CircularProgress size={20} sx={{ color: colors.white }} /> : 'Salvar'}
             </Button>

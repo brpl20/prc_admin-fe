@@ -65,7 +65,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
   const workStepSixRef = useRef<IRefWorkStepSixProps>(null);
 
   const { workForm, updateWorkForm } = useContext(WorkContext);
-  const { customerForm, setCustomerForm } = useContext(CustomerContext);
+  const { customerForm, setCustomerForm, newCustomerForm } = useContext(CustomerContext);
   const { showTitle, setShowTitle, pageTitle } = useContext(PageTitleContext);
   const route = useRouter();
 
@@ -149,7 +149,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
             ];
 
           const prof_aux = {
-            ...customerForm.data.attributes,
+            ...newCustomerForm,
             customer_files_attributes: [
               {
                 id: lastCustomerFile && lastCustomerFile.id ? lastCustomerFile.id : '',
@@ -163,14 +163,14 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
             regenerate_documents: customerForm.issue_documents,
           };
 
-          const payload = isPhisical === true ? data : customerForm;
+          const payload = isPhisical === true ? data : newCustomerForm;
 
           if (id) {
             const res = await updateProfileCustomer(id, payload);
-            const url = res.data.attributes.customer_files;
+            const files = res.data.attributes.customer_files;
 
-            if (url && url.length > 0) {
-              setUrlsDocuments(url);
+            if (files && files.length > 0 && isPhisical && customerForm.issue_documents) {
+              setUrlsDocuments(files);
               setOpenModal(false);
               setOpenDownloadModal(true);
             } else {
@@ -213,10 +213,10 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
           customerForm.issue_documents === true && isPhisical === true ? prof_aux : customerForm;
 
         const res = await createProfileCustomer(payload);
-        const url = res.data.attributes.customer_files;
+        const files = res.data.attributes.customer_files;
 
-        if (url && url.length > 0) {
-          setUrlsDocuments(url);
+        if (files && files.length > 0) {
+          setUrlsDocuments(files);
           setOpenModal(false);
           setOpenDownloadModal(true);
         } else {

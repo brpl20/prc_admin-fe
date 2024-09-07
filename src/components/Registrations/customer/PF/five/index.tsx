@@ -13,6 +13,7 @@ import { CustomerContext } from '@/contexts/CustomerContext';
 import { Box, TextField, Typography } from '@mui/material';
 import { Notification } from '@/components';
 import { z } from 'zod';
+import { set } from 'date-fns';
 
 export interface IRefPFCustomerStepFiveProps {
   handleSubmitForm: () => void;
@@ -46,7 +47,8 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
-  const { customerForm, setCustomerForm } = useContext(CustomerContext);
+  const { customerForm, setCustomerForm, newCustomerForm, setNewCustomerForm } =
+    useContext(CustomerContext);
   const [formData, setFormData] = useState<FormData>({
     profession: '',
     company: '',
@@ -134,6 +136,16 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
         customerForm.data.attributes.nit = formData.nit;
         customerForm.data.attributes.mother_name = formData.mother_name;
         customerForm.data.attributes.inss_password = formData.inss_password;
+
+        setNewCustomerForm({
+          ...newCustomerForm,
+          profession: formData.profession,
+          company: formData.company,
+          number_benefit: formData.number_benefit,
+          nit: formData.nit,
+          mother_name: formData.mother_name,
+          inss_password: formData.inss_password,
+        });
 
         setCustomerForm(customerForm);
         nextStep();
