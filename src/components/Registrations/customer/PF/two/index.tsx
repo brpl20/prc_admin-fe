@@ -54,7 +54,8 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
 
-  const { customerForm, setCustomerForm } = useContext(CustomerContext);
+  const { customerForm, setCustomerForm, newCustomerForm, setNewCustomerForm } =
+    useContext(CustomerContext);
   const [formData, setFormData] = useState<FormData>({
     cep: customerForm.cep,
     street: customerForm.street,
@@ -67,6 +68,18 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
+
+    if (name === 'cep') {
+      setFormData(prevData => ({
+        ...prevData,
+        ['street']: '',
+        ['number']: '',
+        ['description']: '',
+        ['state']: '',
+        ['city']: '',
+        ['neighborhood']: '',
+      }));
+    }
 
     if (name === 'cep') {
       setFormData(prevData => ({
@@ -157,11 +170,26 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
         ];
 
         setCustomerForm(customerForm);
+        setNewCustomerForm({
+          ...newCustomerForm,
+          addresses_attributes: [
+            {
+              id: customerForm?.data?.attributes?.addresses[0]?.id ?? '',
+              description: formData.description,
+              zip_code: formData.cep,
+              street: formData.street,
+              number: formData.number,
+              neighborhood: formData.neighborhood,
+              city: formData.city,
+              state: formData.state,
+            },
+          ],
+        });
         nextStep();
         return;
       }
 
-      const data = {
+      setCustomerForm({
         ...customerForm,
         addresses_attributes: [
           {
@@ -174,9 +202,8 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
             state: formData.state,
           },
         ],
-      };
+      });
 
-      setCustomerForm(data);
       nextStep();
     } catch (error: any) {
       handleFormError(error);
@@ -271,6 +298,10 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
 
   useEffect(() => {
     const fetchCEPDetails = async () => {
+      if (formData.street !== '') {
+        return;
+      }
+
       const numericCEP = formData.cep.replace(/\D/g, '');
 
       if (numericCEP.length === 8) {

@@ -7,12 +7,65 @@ import { getAllOffices } from '@/services/offices';
 import { FiMinusCircle } from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
 
+import { phoneMask } from '@/utils/masks';
+
 interface UserDetailsProps {
   id: string | string[];
 }
 
+interface IUserDetails {
+  name: string;
+  last_name: string;
+  birth: string;
+  civil_status: string;
+  cpf: string;
+  rg: string;
+  role: string;
+  status: string;
+  email: string;
+  origin: string;
+  office_id: number;
+  oab: string;
+  mother_name: string;
+  nationality: string;
+  gender: string;
+
+  addresses: [
+    {
+      zip_code: string;
+      neighborhood: string;
+      state: string;
+      street: string;
+      number: string;
+      city: string;
+    },
+  ];
+
+  bank_accounts: [
+    {
+      bank_name: string;
+      agency: string;
+      account: string;
+      type_account: string;
+      pix: string;
+      operation: string;
+    },
+  ];
+
+  emails: [
+    {
+      email: string;
+    },
+  ];
+  phones: [
+    {
+      phone_number: string;
+    },
+  ];
+}
+
 export default function UserDetails({ id }: UserDetailsProps) {
-  const [userData, setUserData] = useState<any>([]);
+  const [userData, setUserData] = useState({} as IUserDetails);
   const [loading, setLoading] = useState(false);
   const [personalDataIsOpen, setPersonalDataIsOpen] = useState(true);
   const [userAddressIsOpen, setUserAddressIsOpen] = useState(true);
@@ -99,6 +152,24 @@ export default function UserDetails({ id }: UserDetailsProps) {
       setLoading(false);
     }
   };
+
+  const emailList =
+    userData.emails && userData.emails.length > 0
+      ? userData.emails.map((phone, index) => (
+          <span key={index} style={{ display: 'block' }}>
+            {phone.email}
+          </span>
+        ))
+      : 'Não Informado';
+
+  const phoneNumbers =
+    userData.phones && userData.phones.length > 0
+      ? userData.phones.map((phone, index) => (
+          <span key={index} style={{ display: 'block' }}>
+            {phoneMask(phone.phone_number)}
+          </span>
+        ))
+      : 'Não Informado';
 
   useEffect(() => {
     fetchData();
@@ -875,11 +946,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {`${
-                            userData.phones && userData.phones[0] && userData.phones[0].phone_number
-                              ? userData.phones[0].phone_number
-                              : 'Não Informado'
-                          }`}
+                          {phoneNumbers}
                         </span>
                       </Flex>
                       <Flex
@@ -906,11 +973,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {`${
-                            userData.emails && userData.emails[0] && userData.emails[0].email
-                              ? userData.emails[0].email
-                              : 'Não Informado'
-                          }`}
+                          {emailList}
                         </span>
                       </Flex>
                       <Flex

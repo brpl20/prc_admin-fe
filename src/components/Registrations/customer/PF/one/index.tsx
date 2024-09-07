@@ -85,7 +85,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 
   const [errors, setErrors] = useState({} as any);
   const { setPageTitle } = useContext(PageTitleContext);
-  const { customerForm, setCustomerForm } = useContext(CustomerContext);
+  const { customerForm, setCustomerForm, setNewCustomerForm } = useContext(CustomerContext);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
@@ -227,6 +227,22 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         };
 
         setCustomerForm(customerForm);
+
+        setNewCustomerForm({
+          name: formData.name,
+          last_name: formData.last_name,
+          cpf: formData.cpf.replace(/\D/g, ''),
+          rg: formData.rg,
+          birth: birthDate,
+          gender: formData.gender,
+          nationality: formData.nationality,
+          civil_status: formData.civil_status,
+          capacity: formData.capacity,
+          represent_attributes: {
+            id: customerForm.data.attributes.represent?.id,
+            representor_id: formData.representor?.id,
+          },
+        });
 
         const representName = representorsList.find(
           (customer: any) => customer.id == formData.representor?.id,

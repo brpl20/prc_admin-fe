@@ -38,7 +38,8 @@ const PJCustomerStepFour: ForwardRefRenderFunction<IRefPJCustomerStepFourProps, 
   const router = useRouter();
   const isEdit = router.asPath.includes('alterar');
 
-  const { customerForm, setCustomerForm } = useContext<any>(CustomerContext);
+  const { customerForm, setCustomerForm, newCustomerForm, setNewCustomerForm } =
+    useContext<any>(CustomerContext);
   const [checkedItems, setCheckedItems] = useState({
     issue_documents: false,
   });
@@ -59,6 +60,12 @@ const PJCustomerStepFour: ForwardRefRenderFunction<IRefPJCustomerStepFourProps, 
     };
 
     setCustomerForm(data);
+
+    setNewCustomerForm({
+      ...newCustomerForm,
+      ...data,
+    });
+
     confirmation();
 
     scroll.scrollToTop({

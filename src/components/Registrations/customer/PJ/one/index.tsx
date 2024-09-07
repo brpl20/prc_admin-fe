@@ -18,7 +18,7 @@ import { Notification } from '@/components';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
-import { cepMask, cnpjMask } from '@/utils/masks';
+import { cepMask } from '@/utils/masks';
 import { useRouter } from 'next/router';
 
 export interface IRefPJCustomerStepOneProps {
@@ -57,7 +57,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
 ) => {
   const route = useRouter();
   const [errors, setErrors] = useState({} as any);
-  const { customerForm, setCustomerForm } = useContext(CustomerContext);
+  const { customerForm, setCustomerForm, setNewCustomerForm } = useContext(CustomerContext);
   const { setPageTitle } = useContext(PageTitleContext);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -152,6 +152,31 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
         ];
 
         setCustomerForm(customerForm);
+
+        setNewCustomerForm({
+          name: formData.name,
+          cnpj: formData.cnpj ? formData.cnpj : '',
+          gender: formData.gender,
+          capacity: 'able',
+          civil_status: 'single',
+          cpf: '00000000000',
+          rg: '000000000',
+          nationality: 'brazilian',
+          profession: 'company',
+          addresses_attributes: [
+            {
+              id: customerForm?.data?.attributes?.addresses[0]?.id,
+              zip_code: formData.zip_code,
+              street: formData.street,
+              state: formData.state,
+              city: formData.city,
+              number: formData.number,
+              description: formData.description,
+              neighborhood: formData.neighborhood,
+            },
+          ],
+        });
+
         nextStep();
         return;
       }

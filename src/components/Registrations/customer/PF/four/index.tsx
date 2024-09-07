@@ -54,7 +54,8 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
 
-  const { customerForm, setCustomerForm } = useContext(CustomerContext);
+  const { customerForm, setCustomerForm, newCustomerForm, setNewCustomerForm } =
+    useContext(CustomerContext);
   const [formData, setFormData] = useState<FormData>({
     bank: '',
     agency: '',
@@ -167,6 +168,24 @@ const PFCustomerStepFour: ForwardRefRenderFunction<IRefPFCustomerStepFourProps, 
             pix: formData.pix,
           },
         ];
+
+        setNewCustomerForm({
+          ...newCustomerForm,
+          bank_accounts_attributes: [
+            {
+              id:
+                customerForm.data.attributes.bank_accounts[0] &&
+                customerForm.data.attributes.bank_accounts[0].id
+                  ? customerForm.data.attributes.bank_accounts[0].id
+                  : '',
+              bank_name: formData.bank,
+              agency: formData.agency,
+              operation: formData.op,
+              account: formData.account,
+              pix: formData.pix,
+            },
+          ],
+        });
 
         setCustomerForm(customerForm);
         nextStep();

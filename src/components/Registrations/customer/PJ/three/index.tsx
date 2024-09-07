@@ -53,7 +53,8 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
 
-  const { customerForm, setCustomerForm } = useContext(CustomerContext);
+  const { customerForm, setCustomerForm, newCustomerForm, setNewCustomerForm } =
+    useContext(CustomerContext);
   const [formData, setFormData] = useState<FormData>({
     bank: '',
     agency: '',
@@ -162,6 +163,20 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
         }
 
         setCustomerForm(customerForm);
+
+        setNewCustomerForm({
+          ...newCustomerForm,
+          bank_accounts_attributes: [
+            {
+              bank_name: formData.bank,
+              agency: formData.agency,
+              operation: formData.op,
+              account: formData.account,
+              pix: formData.pix,
+            },
+          ],
+        });
+
         nextStep();
         return;
       }
