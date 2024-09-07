@@ -38,6 +38,7 @@ import { Footer, TaskModal, ViewDetailsModal, ModalOfRemove, Notification } from
 import dynamic from 'next/dynamic';
 import { getSession, useSession } from 'next-auth/react';
 import { jwtDecode } from 'jwt-decode';
+import { ptBR } from 'date-fns/locale';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Tasks = () => {
@@ -484,7 +485,9 @@ const Tasks = () => {
                         priority: task.attributes.priority,
                         comment: task.attributes.comment,
                         created_by_id: task.attributes.created_by_id,
-                        deadline: format(new Date(task.attributes.deadline), 'dd MMMM yyyy'),
+                        deadline: format(new Date(task.attributes.deadline), 'dd MMMM yyyy', {
+                          locale: ptBR,
+                        }),
                         status:
                           task.attributes.status === 'pending'
                             ? 'Pendente'
