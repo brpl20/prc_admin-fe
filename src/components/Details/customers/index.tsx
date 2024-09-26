@@ -3,7 +3,14 @@ import { getCustomerById, getAllProfileCustomer } from '@/services/customers';
 import { useEffect, useState } from 'react';
 
 import { ContainerDetails, DetailsWrapper, ButtonShowContact } from '../styles';
-import { FiMinusCircle } from 'react-icons/fi';
+import {
+  FiMinusCircle,
+  FiDollarSign,
+  FiUser,
+  FiMapPin,
+  FiAlertCircle,
+  FiMail,
+} from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
 import { Box, Button, CircularProgress } from '@mui/material';
 import { useSession } from 'next-auth/react';
@@ -254,7 +261,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                 >
                   <>
                     <div
-                      className="flex"
+                      className="flex bg-white"
                       style={{
                         padding: '20px 32px 20px 32px',
                         borderBottom: '1px solid #C0C0C0',
@@ -262,15 +269,22 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         justifyContent: 'space-between',
                       }}
                     >
-                      <span
-                        style={{
-                          fontSize: '22px',
-                          fontWeight: '500',
-                          color: '#344054',
-                        }}
-                      >
-                        Dados Pessoais
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <FiUser size={24} color="#344054" />
+
+                        <div className="w-[2px] bg-gray-300 h-8" />
+
+                        <span
+                          style={{
+                            fontSize: '22px',
+                            fontWeight: '500',
+                            color: '#344054',
+                          }}
+                        >
+                          Dados Pessoais
+                        </span>
+                      </div>
+
                       <ButtonShowContact>
                         {personalDataIsOpen ? (
                           <FiMinusCircle
@@ -614,7 +628,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                 >
                   <>
                     <div
-                      className="flex"
+                      className="flex bg-white"
                       style={{
                         padding: '20px 32px 20px 32px',
                         borderBottom: '1px solid #C0C0C0',
@@ -622,15 +636,21 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         justifyContent: 'space-between',
                       }}
                     >
-                      <span
-                        style={{
-                          fontSize: '22px',
-                          fontWeight: '500',
-                          color: '#344054',
-                        }}
-                      >
-                        Endereço
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <FiMapPin size={24} color="#344054" />
+
+                        <div className="w-[2px] bg-gray-300 h-8" />
+                        <span
+                          style={{
+                            fontSize: '22px',
+                            fontWeight: '500',
+                            color: '#344054',
+                          }}
+                        >
+                          Endereço
+                        </span>
+                      </div>
+
                       <ButtonShowContact>
                         {addressIsOpen ? (
                           <FiMinusCircle
@@ -647,6 +667,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         )}
                       </ButtonShowContact>
                     </div>
+
                     {addressIsOpen && (
                       <div
                         style={{
@@ -821,38 +842,6 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                               {`${personalData.state ? personalData.state : 'Não Informado'}`}
                             </span>
                           </div>
-                          <div className="flex flex-col gap-[8px] items-start">
-                            <span
-                              style={{
-                                color: '#344054',
-                                fontSize: '20px',
-                                fontWeight: '500',
-                              }}
-                            ></span>
-                            <span
-                              style={{
-                                fontSize: '18px',
-                                color: '#344054',
-                                fontWeight: '400',
-                              }}
-                            ></span>
-                          </div>
-                          <div className="flex flex-col gap-[8px] items-start">
-                            <span
-                              style={{
-                                color: '#344054',
-                                fontSize: '20px',
-                                fontWeight: '500',
-                              }}
-                            ></span>
-                            <span
-                              style={{
-                                fontSize: '18px',
-                                color: '#344054',
-                                fontWeight: '400',
-                              }}
-                            ></span>
-                          </div>
                         </div>
                       </div>
                     )}
@@ -873,7 +862,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                 >
                   <>
                     <div
-                      className="flex"
+                      className="flex bg-white"
                       style={{
                         padding: '20px 32px 20px 32px',
                         borderBottom: '1px solid #C0C0C0',
@@ -881,15 +870,22 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         justifyContent: 'space-between',
                       }}
                     >
-                      <span
-                        style={{
-                          fontSize: '22px',
-                          fontWeight: '500',
-                          color: '#344054',
-                        }}
-                      >
-                        Contato
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <FiMail size={24} color="#344054" />
+
+                        <div className="w-[2px] bg-gray-300 h-8" />
+
+                        <span
+                          style={{
+                            fontSize: '22px',
+                            fontWeight: '500',
+                            color: '#344054',
+                          }}
+                        >
+                          Contato
+                        </span>
+                      </div>
+
                       <ButtonShowContact>
                         {contactIsOpen ? (
                           <FiMinusCircle
@@ -985,54 +981,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                               {emailList}
                             </span>
                           </div>
-                          <div
-                            className="flex"
-                            style={{
-                              flexDirection: 'column',
-                              gap: '8px',
-                              alignItems: 'flex-start',
-                              width: '220px',
-                            }}
-                          >
-                            <span
-                              style={{
-                                color: '#344054',
-                                fontSize: '20px',
-                                fontWeight: '500',
-                              }}
-                            ></span>
-                            <span
-                              style={{
-                                fontSize: '18px',
-                                color: '#344054',
-                                fontWeight: '400',
-                              }}
-                            ></span>
-                          </div>
-                          <div
-                            className="flex"
-                            style={{
-                              flexDirection: 'column',
-                              gap: '8px',
-                              alignItems: 'flex-start',
-                              width: '220px',
-                            }}
-                          >
-                            <span
-                              style={{
-                                color: '#344054',
-                                fontSize: '20px',
-                                fontWeight: '500',
-                              }}
-                            ></span>
-                            <span
-                              style={{
-                                fontSize: '18px',
-                                color: '#344054',
-                                fontWeight: '400',
-                              }}
-                            ></span>
-                          </div>
+
                           <div
                             className="flex"
                             style={{
@@ -1064,7 +1013,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                     {session?.role != 'trainee' && (
                       <>
                         <div
-                          className="flex"
+                          className="flex bg-white"
                           style={{
                             padding: '20px 32px 20px 32px',
                             borderBottom: '1px solid #C0C0C0',
@@ -1072,15 +1021,22 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             justifyContent: 'space-between',
                           }}
                         >
-                          <span
-                            style={{
-                              fontSize: '22px',
-                              fontWeight: '500',
-                              color: '#344054',
-                            }}
-                          >
-                            Dados Bancários
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <FiDollarSign size={24} color="#344054" />
+
+                            <div className="w-[2px] bg-gray-300 h-8" />
+
+                            <span
+                              style={{
+                                fontSize: '22px',
+                                fontWeight: '500',
+                                color: '#344054',
+                              }}
+                            >
+                              Dados Bancários
+                            </span>
+                          </div>
+
                           <ButtonShowContact>
                             {bankIsOpen ? (
                               <FiMinusCircle
@@ -1311,7 +1267,7 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                   >
                     <>
                       <div
-                        className="flex"
+                        className="flex bg-white"
                         style={{
                           padding: '20px 32px 20px 32px',
                           borderBottom: '1px solid #C0C0C0',
@@ -1319,15 +1275,22 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                           justifyContent: 'space-between',
                         }}
                       >
-                        <span
-                          style={{
-                            fontSize: '22px',
-                            fontWeight: '500',
-                            color: '#344054',
-                          }}
-                        >
-                          Informações Adicionais
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <FiAlertCircle size={24} color="#344054" />
+
+                          <div className="w-[2px] bg-gray-300 h-8" />
+
+                          <span
+                            style={{
+                              fontSize: '22px',
+                              fontWeight: '500',
+                              color: '#344054',
+                            }}
+                          >
+                            Informações Adicionais
+                          </span>
+                        </div>
+
                         <ButtonShowContact>
                           {aditionalIsOpen ? (
                             <FiMinusCircle

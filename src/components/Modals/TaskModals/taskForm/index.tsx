@@ -32,7 +32,6 @@ import Notification from '../../OfficeModals/Notification';
 import { MdClose } from 'react-icons/md';
 import { getAdmins } from '@/services/admins';
 import { useRouter } from 'next/router';
-import { useSession } from 'next-auth/react';
 
 interface FormData {
   description: string;
@@ -49,7 +48,6 @@ const taskSchema = z.object({
   description: z.string().min(2, { message: 'Descrição é obrigatória' }),
   status: z.string().min(2, { message: 'Status é obrigatório' }),
   priority: z.string().min(1, { message: 'Prioridade é obrigatória' }),
-  profile_customer_id: z.string().min(2, { message: 'Cliente é obrigatório' }),
   profile_admin_id: z.string().min(1, { message: 'Responsável é obrigatório' }),
 });
 
@@ -88,9 +86,18 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
   };
 
   const handleFormError = (error: any) => {
+    const apiError =
+      error?.response?.data?.errors[0]?.code[0] !== ''
+        ? error?.response?.data?.errors[0]?.code[0]
+        : '';
+
     const newErrors = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
-    setMessage('Preencha todos os campos obrigatórios.');
+    setMessage(
+      apiError !== '' && apiError !== undefined
+        ? `${apiError}`
+        : 'Preencha todos os campos obrigatórios.',
+    );
     setType('error');
     setOpenSnackbar(true);
 
@@ -123,7 +130,6 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
         description: formData.description,
         status: formData.status,
         priority: formData.priority,
-        profile_customer_id: formData.profile_customer_id,
         profile_admin_id: formData.profile_admin_id,
         work_id: formData.work_id,
       });
@@ -284,7 +290,7 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
 
   const renderTitle = () => {
     return (
-      <label style={{ fontSize: '28px', color: '#2A3F54', fontWeight: '500' }}>
+      <label style={{ fontSize: '28px', color: '#01013D', fontWeight: '500' }}>
         {dataToEdit && Object.values(dataToEdit).length > 0 ? 'Editar Tarefa' : 'Nova Tarefa'}
       </label>
     );

@@ -515,7 +515,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
                             activeStep > index
                               ? '#26B99A'
                               : activeStep === index
-                              ? '#2A3F54'
+                              ? '#01013D'
                               : '#A8A8B3',
                           cursor: 'pointer',
                         },
@@ -527,7 +527,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
                             activeStep > index
                               ? '#26B99A'
                               : activeStep === index
-                              ? '#2A3F54'
+                              ? '#01013D'
                               : '#A8A8B3',
                           cursor: 'pointer',
                         }}
@@ -544,7 +544,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
               sx={{
                 width: '100% !important',
                 height: '2px',
-                backgroundColor: '#2A3F54',
+                backgroundColor: '#01013D',
                 marginTop: '24px',
               }}
             >

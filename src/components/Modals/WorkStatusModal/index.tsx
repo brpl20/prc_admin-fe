@@ -128,7 +128,7 @@ const WorkStatusModal = ({ isOpen, onClose, workId, workStatus }: IWorkStatusMod
       <Modal open={isOpen} onClose={onClose} style={{ overflowY: 'auto' }}>
         <Content>
           <Box display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
-            <label style={{ fontSize: '28px', color: '#2A3F54', fontWeight: '500' }}>
+            <label style={{ fontSize: '28px', color: '#01013D', fontWeight: '500' }}>
               {'Atualização do Trabalho'}
             </label>
             <Box sx={{ cursor: 'pointer' }} onClick={onClose}>

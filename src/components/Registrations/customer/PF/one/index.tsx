@@ -471,7 +471,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
             </div>
             <div style={{ display: 'flex', gap: '24px' }}>
               {renderInputField('CPF', 'cpf', 16, !!errors.cpf)}
-              {renderInputField('RG', 'rg', 12, !!errors.rg)}
+              {renderInputField('RG', 'rg', 25, !!errors.rg)}
             </div>
             <div style={{ display: 'flex', gap: '24px' }}>
               <BirthdayContainer>

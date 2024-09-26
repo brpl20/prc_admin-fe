@@ -13,10 +13,11 @@ export const DetailsWrapper = styled.div<any>`
   gap: 32px;
   background-color: #fff;
   border-radius: 4px;
+  background-color: #f1f3f5;
 `;
 
 export const ButtonShowData = styled.button`
-  color: #2a3f54;
+  color: #01013d;
   font-size: 1.2rem;
   outline: none;
   border: none;

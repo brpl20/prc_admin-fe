@@ -76,7 +76,7 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
     <Modal open={isOpen} onClose={onClose} style={{ overflowY: 'auto' }}>
       <Content>
         <Box display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
-          <label style={{ fontSize: '28px', color: '#2A3F54', fontWeight: '500' }}>
+          <label style={{ fontSize: '28px', color: '#01013D', fontWeight: '500' }}>
             {'Arquivos para Download'}
           </label>
           <Box sx={{ cursor: 'pointer' }} onClick={onClose}>

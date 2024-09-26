@@ -63,7 +63,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
     <Modal open={isOpen} style={{ overflowY: 'auto' }}>
       <Content>
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <label style={{ fontSize: '28px', color: '#2A3F54', fontWeight: '500' }}>
+          <label style={{ fontSize: '28px', color: '#01013D', fontWeight: '500' }}>
             {'Detalhes da Tarefa'}
           </label>
           <MdClose size={26} cursor="pointer" onClick={onClose} />

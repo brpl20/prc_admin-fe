@@ -4,7 +4,15 @@ import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../st
 import { Box, Button, CircularProgress } from '@mui/material';
 import { getAdminByID } from '@/services/admins';
 import { getAllOffices } from '@/services/offices';
-import { FiMinusCircle } from 'react-icons/fi';
+import {
+  FiMinusCircle,
+  FiDollarSign,
+  FiUser,
+  FiMapPin,
+  FiAlertCircle,
+  FiMail,
+  FiFileText,
+} from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
 
 import { phoneMask } from '@/utils/masks';
@@ -218,7 +226,8 @@ export default function UserDetails({ id }: UserDetailsProps) {
               }}
             >
               <>
-                <Flex
+                <div
+                  className="flex bg-white"
                   style={{
                     padding: '20px 32px 20px 32px',
                     borderBottom: '1px solid #C0C0C0',
@@ -226,15 +235,22 @@ export default function UserDetails({ id }: UserDetailsProps) {
                     justifyContent: 'space-between',
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: '22px',
-                      fontWeight: '500',
-                      color: '#344054',
-                    }}
-                  >
-                    Dados Pessoais
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <FiUser size={24} color="#344054" />
+
+                    <div className="w-[2px] bg-gray-300 h-8" />
+
+                    <span
+                      style={{
+                        fontSize: '22px',
+                        fontWeight: '500',
+                        color: '#344054',
+                      }}
+                    >
+                      Dados Pessoais
+                    </span>
+                  </div>
+
                   <ButtonShowContact>
                     {personalDataIsOpen ? (
                       <FiMinusCircle
@@ -250,7 +266,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                       />
                     )}
                   </ButtonShowContact>
-                </Flex>
+                </div>
                 {personalDataIsOpen && (
                   <div
                     style={{
@@ -539,7 +555,8 @@ export default function UserDetails({ id }: UserDetailsProps) {
               }}
             >
               <>
-                <Flex
+                <div
+                  className="flex bg-white"
                   style={{
                     padding: '20px 32px 20px 32px',
                     borderBottom: '1px solid #C0C0C0',
@@ -547,15 +564,21 @@ export default function UserDetails({ id }: UserDetailsProps) {
                     justifyContent: 'space-between',
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: '22px',
-                      fontWeight: '500',
-                      color: '#344054',
-                    }}
-                  >
-                    Endereço
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <FiMapPin size={24} color="#344054" />
+
+                    <div className="w-[2px] bg-gray-300 h-8" />
+                    <span
+                      style={{
+                        fontSize: '22px',
+                        fontWeight: '500',
+                        color: '#344054',
+                      }}
+                    >
+                      Endereço
+                    </span>
+                  </div>
+
                   <ButtonShowContact>
                     {userAddressIsOpen ? (
                       <FiMinusCircle
@@ -571,7 +594,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                       />
                     )}
                   </ButtonShowContact>
-                </Flex>
+                </div>
                 {userAddressIsOpen && (
                   <div
                     style={{
@@ -809,50 +832,6 @@ export default function UserDetails({ id }: UserDetailsProps) {
                             : 'Não Informado'}
                         </span>
                       </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
                     </div>
                   </div>
                 )}
@@ -872,7 +851,8 @@ export default function UserDetails({ id }: UserDetailsProps) {
               }}
             >
               <>
-                <Flex
+                <div
+                  className="flex bg-white"
                   style={{
                     padding: '20px 32px 20px 32px',
                     borderBottom: '1px solid #C0C0C0',
@@ -880,15 +860,22 @@ export default function UserDetails({ id }: UserDetailsProps) {
                     justifyContent: 'space-between',
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: '22px',
-                      fontWeight: '500',
-                      color: '#344054',
-                    }}
-                  >
-                    Contato
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <FiMail size={24} color="#344054" />
+
+                    <div className="w-[2px] bg-gray-300 h-8" />
+
+                    <span
+                      style={{
+                        fontSize: '22px',
+                        fontWeight: '500',
+                        color: '#344054',
+                      }}
+                    >
+                      Contato
+                    </span>
+                  </div>
+
                   <ButtonShowContact>
                     {userContactIsOpen ? (
                       <FiMinusCircle
@@ -904,7 +891,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                       />
                     )}
                   </ButtonShowContact>
-                </Flex>
+                </div>
                 {userContactIsOpen && (
                   <div
                     style={{
@@ -976,52 +963,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                           {emailList}
                         </span>
                       </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
+
                       <Flex
                         style={{
                           flexDirection: 'column',
@@ -1049,7 +991,8 @@ export default function UserDetails({ id }: UserDetailsProps) {
               }}
             >
               <>
-                <Flex
+                <div
+                  className="flex bg-white"
                   style={{
                     padding: '20px 32px 20px 32px',
                     borderBottom: '1px solid #C0C0C0',
@@ -1057,15 +1000,22 @@ export default function UserDetails({ id }: UserDetailsProps) {
                     justifyContent: 'space-between',
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: '22px',
-                      fontWeight: '500',
-                      color: '#344054',
-                    }}
-                  >
-                    Dados Gerais
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <FiFileText size={24} color="#344054" />
+
+                    <div className="w-[2px] bg-gray-300 h-8" />
+
+                    <span
+                      style={{
+                        fontSize: '22px',
+                        fontWeight: '500',
+                        color: '#344054',
+                      }}
+                    >
+                      Dados Gerais
+                    </span>
+                  </div>
+
                   <ButtonShowContact>
                     {userGeneralData ? (
                       <FiMinusCircle
@@ -1081,7 +1031,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                       />
                     )}
                   </ButtonShowContact>
-                </Flex>
+                </div>
                 {userGeneralData && (
                   <div
                     style={{
@@ -1217,29 +1167,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                           {userData.oab ? userData.oab : 'Não Informado'}
                         </span>
                       </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
+
                       <Flex
                         style={{
                           flexDirection: 'column',
@@ -1267,7 +1195,8 @@ export default function UserDetails({ id }: UserDetailsProps) {
               }}
             >
               <>
-                <Flex
+                <div
+                  className="flex bg-white"
                   style={{
                     padding: '20px 32px 20px 32px',
                     borderBottom: '1px solid #C0C0C0',
@@ -1275,15 +1204,22 @@ export default function UserDetails({ id }: UserDetailsProps) {
                     justifyContent: 'space-between',
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: '22px',
-                      fontWeight: '500',
-                      color: '#344054',
-                    }}
-                  >
-                    Dados Bancários
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <FiDollarSign size={24} color="#344054" />
+
+                    <div className="w-[2px] bg-gray-300 h-8" />
+
+                    <span
+                      style={{
+                        fontSize: '22px',
+                        fontWeight: '500',
+                        color: '#344054',
+                      }}
+                    >
+                      Dados Bancários
+                    </span>
+                  </div>
+
                   <ButtonShowContact>
                     {userBankDataIsOpen ? (
                       <FiMinusCircle
@@ -1299,7 +1235,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                       />
                     )}
                   </ButtonShowContact>
-                </Flex>
+                </div>
                 {userBankDataIsOpen && (
                   <div
                     style={{
@@ -1509,7 +1445,8 @@ export default function UserDetails({ id }: UserDetailsProps) {
               }}
             >
               <>
-                <Flex
+                <div
+                  className="flex bg-white"
                   style={{
                     padding: '20px 32px 20px 32px',
                     borderBottom: '1px solid #C0C0C0',
@@ -1517,15 +1454,22 @@ export default function UserDetails({ id }: UserDetailsProps) {
                     justifyContent: 'space-between',
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: '22px',
-                      fontWeight: '500',
-                      color: '#344054',
-                    }}
-                  >
-                    Acesso ao Sistema
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <FiAlertCircle size={24} color="#344054" />
+
+                    <div className="w-[2px] bg-gray-300 h-8" />
+
+                    <span
+                      style={{
+                        fontSize: '22px',
+                        fontWeight: '500',
+                        color: '#344054',
+                      }}
+                    >
+                      Acesso ao Sistema
+                    </span>
+                  </div>
+
                   <ButtonShowContact>
                     {userAccessDataIsOpen ? (
                       <FiMinusCircle
@@ -1541,7 +1485,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                       />
                     )}
                   </ButtonShowContact>
-                </Flex>
+                </div>
                 {userAccessDataIsOpen && (
                   <div
                     style={{
@@ -1586,75 +1530,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                           {userData.email ? userData.email : 'Não Informado'}
                         </span>
                       </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
+
                       <Flex
                         style={{
                           flexDirection: 'column',

@@ -131,7 +131,8 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
               }}
             >
               <>
-                <Flex
+                <div
+                  className="flex bg-white"
                   style={{
                     padding: '20px 32px 20px 32px',
                     borderBottom: '1px solid #C0C0C0',
@@ -148,6 +149,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                   >
                     Identificação do Escritório
                   </span>
+
                   <ButtonShowContact>
                     {officeDataIsOpen ? (
                       <FiMinusCircle
@@ -163,7 +165,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                       />
                     )}
                   </ButtonShowContact>
-                </Flex>
+                </div>
                 {officeDataIsOpen && (
                   <div
                     style={{
@@ -370,72 +372,6 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             : 'Não Informado'}
                         </span>
                       </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
                     </div>
                   </div>
                 )}
@@ -455,7 +391,8 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
               }}
             >
               <>
-                <Flex
+                <div
+                  className="flex bg-white"
                   style={{
                     padding: '20px 32px 20px 32px',
                     borderBottom: '1px solid #C0C0C0',
@@ -487,7 +424,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                       />
                     )}
                   </ButtonShowContact>
-                </Flex>
+                </div>
                 {officeAddressIsOpen && (
                   <div
                     style={{
@@ -703,50 +640,6 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                           {`${officeData.state ? officeData.state : 'Não Informado'}`}
                         </span>
                       </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
                     </div>
                   </div>
                 )}
@@ -766,7 +659,8 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
               }}
             >
               <>
-                <Flex
+                <div
+                  className="flex bg-white"
                   style={{
                     padding: '20px 32px 20px 32px',
                     borderBottom: '1px solid #C0C0C0',
@@ -798,7 +692,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                       />
                     )}
                   </ButtonShowContact>
-                </Flex>
+                </div>
                 {officeContactIsOpen && (
                   <div
                     style={{
@@ -880,52 +774,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                           }`}
                         </span>
                       </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
+
                       <Flex
                         style={{
                           flexDirection: 'column',
@@ -953,7 +802,8 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
               }}
             >
               <>
-                <Flex
+                <div
+                  className="flex bg-white"
                   style={{
                     padding: '20px 32px 20px 32px',
                     borderBottom: '1px solid #C0C0C0',
@@ -985,7 +835,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                       />
                     )}
                   </ButtonShowContact>
-                </Flex>
+                </div>
                 {officeAdicionalIsOpen && (
                   <div
                     style={{
@@ -1059,52 +909,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                             : 'Não Informado'}
                         </span>
                       </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        ></span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        ></span>
-                      </Flex>
+
                       <Flex
                         style={{
                           flexDirection: 'column',

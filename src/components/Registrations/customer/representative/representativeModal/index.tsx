@@ -493,7 +493,7 @@ const RepresentativeModal = ({
 
                     <Flex style={{ gap: '32px' }}>
                       {renderInputField('CPF', 'CPF', 16, 'Informe o CPF', !!errors.CPF)}
-                      {renderInputField('RG', 'RG', 12, 'Informe o RG', !!errors.RG)}
+                      {renderInputField('RG', 'RG', 25, 'Informe o RG', !!errors.RG)}
                     </Flex>
 
                     <Flex style={{ gap: '24px' }}>

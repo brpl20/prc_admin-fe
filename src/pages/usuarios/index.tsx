@@ -334,7 +334,7 @@ const Admins = () => {
           <div className="flex flex-row justify-between">
             <PageTitle showTitle={showTitle}>{'Usuários'}</PageTitle>
 
-            <div className="flex items-center gap-1 relative font-medium text-[#2A3F54]">
+            <div className="flex items-center gap-1 relative font-medium text-[#01013D]">
               <span className="w-[62px] text-[18px]">Ativo:</span>
 
               <div className="flex items-center gap-[20px]">

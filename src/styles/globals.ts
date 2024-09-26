@@ -8,7 +8,7 @@ interface titleProps {
 export const theme = createTheme({
   palette: {
     primary: {
-      main: '#2A3F54',
+      main: '#01013D',
     },
 
     secondary: {
@@ -36,7 +36,7 @@ export const theme = createTheme({
 });
 
 export const colors = {
-  primary: '#2A3F54',
+  primary: '#01013D',
   primaryOpacity: 'rgba(42, 63, 84, 0.3)',
   secondary: '#1D79FB',
   tertiary: '#7F7F7F',
