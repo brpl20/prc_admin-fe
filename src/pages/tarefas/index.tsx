@@ -36,8 +36,7 @@ import { DataGrid } from '@mui/x-data-grid';
 
 import { Footer, TaskModal, ViewDetailsModal, ModalOfRemove, Notification } from '@/components';
 import dynamic from 'next/dynamic';
-import { getSession, useSession } from 'next-auth/react';
-import { jwtDecode } from 'jwt-decode';
+import { getSession } from 'next-auth/react';
 import { ptBR } from 'date-fns/locale';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
@@ -54,13 +53,9 @@ const Tasks = () => {
   const [searchFor, setSearchFor] = useState<string>('description');
   const [tasksList, setTasksList] = useState<ITaskProps[]>([]);
   const [filteredTasksList, setFilteredTasksList] = useState<ITaskProps[]>([]);
-  const [adminId, setAdminId] = useState<number>(0);
-
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [message, setMessage] = useState('');
   const [typeMessage, setTypeMessage] = useState<'success' | 'error'>('success');
-
-  const { data: session } = useSession();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [rowItem, setRowItem] = useState<IAttributesProps>({} as IAttributesProps);
@@ -76,15 +71,6 @@ const Tasks = () => {
     setAnchorEl(null);
     setRowItem({} as IAttributesProps);
   };
-
-  useEffect(() => {
-    if (session) {
-      const token: any = jwtDecode(session.token);
-      if (token) {
-        setAdminId(token.admin_id);
-      }
-    }
-  }, [session]);
 
   const getRowClassName = (params: any) => {
     const status = params.row.status;
@@ -480,7 +466,10 @@ const Tasks = () => {
                         description: task.attributes.description,
                         deleted: task.attributes.deleted,
                         work: task.attributes.work_number ? task.attributes.work_number : '-',
-                        customer: task.attributes.customer,
+                        customer:
+                          task.attributes.customer && task.attributes.customer?.length > 2
+                            ? task.attributes.customer
+                            : '-',
                         responsible: task.attributes.responsible,
                         priority: task.attributes.priority,
                         comment: task.attributes.comment,
