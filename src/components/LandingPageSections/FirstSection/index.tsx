@@ -13,7 +13,7 @@ const FirstSection = () => {
   }, [controls, imageControls]);
 
   return (
-    <section className="h-screen firstSection overflow-hidden" id="home">
+    <section className="h-screen min-h-[800px] firstSection overflow-hidden" id="home">
       <>
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -31,7 +31,7 @@ const FirstSection = () => {
       </>
 
       <div className="container mx-auto py-[10px] 2xl:py-[60px] px-[20px] lg:px-[115px]">
-        <motion.div className="flex flex-col items-center justify-between relative pt-[200px]">
+        <motion.div className="flex flex-col items-center justify-between relative pt-[160px]">
           <motion.div
             className="flex flex-col text-center justify-between"
             initial={{
