@@ -13,7 +13,7 @@ const FirstSection = () => {
   }, [controls, imageControls]);
 
   return (
-    <section className="h-screen min-h-[800px] firstSection overflow-hidden" id="home">
+    <section className="h-screen min-h-[720px] firstSection overflow-hidden" id="home">
       <>
         <div
           className="absolute inset-0 bg-cover bg-center"
