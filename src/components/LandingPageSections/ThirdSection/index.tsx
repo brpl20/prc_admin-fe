@@ -25,14 +25,14 @@ const ThirdSection = () => {
 
   return (
     <section className="relative bg-[#F8F9FA] h-[600px] " id="blue-section">
-      <div className="absolute bottom-0">
+      <div className="absolute -z-0 bottom-0">
         <img src="/pointer.svg" alt="Decoração" />
       </div>
 
       <div className="container mx-auto py-[10px] 2xl:py-[60px] px-[20px] lg:px-[115px]">
         <motion.div className="flex justify-between pt-[100px]">
-          <div className="w-[550px] z-50">
-            <img src="/third.png" alt="Decoração" />
+          <div className="w-[550px] z-10">
+            <img src="/third.png" alt="ProcStudio tasks" />
           </div>
 
           <motion.div
