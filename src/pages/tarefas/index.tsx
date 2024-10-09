@@ -587,7 +587,7 @@ export default Tasks;
 export const getServerSideProps = async (ctx: any) => {
   const session = await getSession(ctx);
 
-  if (session?.role === 'counter' || session?.role === 'secretary') {
+  if (session?.role === 'counter') {
     return {
       redirect: {
         destination: '/clientes',

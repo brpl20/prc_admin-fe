@@ -8,7 +8,6 @@ const Header = () => {
   const route = useRouter();
 
   const [isScrolled, setIsScrolled] = useState(false);
-  console.log('isScrolled', isScrolled);
 
   const goToLogin = () => {
     route.push('/login');
