@@ -332,40 +332,6 @@ const Layout = ({ children }: ILayoutProps) => {
                   </MenuItem>
                 </ActiveLink>
               )}
-
-              {/* <ActiveLink href="/reports">
-                <MenuItem
-                  sx={{
-                    backgroundColor:
-                      asPath === '/reports' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                  }}
-                >
-                  <MdOutlineListAlt size={24} className="icon" />
-                  {openSidebar && (
-                    <>
-                      <Typography fontWeight="regular">{'Relatórios'}</Typography>
-                      <MdOutlineArrowRight size={24} className="arrow" />
-                    </>
-                  )}
-                </MenuItem>
-              </ActiveLink> */}
-
-              {/* <ActiveLink href="/documents">
-                <MenuItem
-                  sx={{
-                    backgroundColor:
-                      asPath === '/documents' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                  }}
-                >
-                  <MdOutlineDescription size={24} className="icon" />
-                  {openSidebar && (
-                    <>
-                      <Typography fontWeight="regular">{'Documentos'}</Typography>
-                      <MdOutlineArrowRight size={24} className="arrow" />
-                    </>
-                  )}
-                </MenuItem>
-              </ActiveLink> */}
             </Stack>
           </Flex>
         </Drawer>

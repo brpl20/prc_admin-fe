@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import {
   Box,
@@ -25,7 +25,7 @@ import { IModalProps } from '@/interfaces/IModal';
 import { getAllProfileCustomer } from '@/services/customers';
 import { createTask, getTaskById, updateTask } from '@/services/tasks';
 
-import { Content, Title, Input, DeadlineContainer } from './styles';
+import { Content, Input, DeadlineContainer } from './styles';
 import { ICustomerProps } from '@/interfaces/ICustomer';
 import { colors, Flex } from '@/styles/globals';
 import Notification from '../../OfficeModals/Notification';
@@ -188,6 +188,7 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
         setResponsibleList(responsibleIncluded);
       }
     } catch (error: any) {
+      console.log('error', error);
       setMessage(error.message);
       setType('error');
       setOpenSnackbar(true);
