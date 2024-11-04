@@ -14,6 +14,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
+import { getCEPDetails } from '@/services/brasilAPI';
 
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import {
@@ -55,9 +56,9 @@ interface FormData {
   role: string;
   civil_status: string;
   birth: string;
-  origin: string;
   oab: string;
   cep: string;
+  street: string;
   address: string;
   state: string;
   city: string;
@@ -92,11 +93,6 @@ const userSchema = z.object({
   phone: z.string().min(2, { message: 'O campo Telefone é obrigatório.' }),
   email: z.string().min(2, { message: 'O campo E-mail é obrigatório.' }),
   userType: z.string().min(2, { message: 'O campo Tipo do Usuário é obrigatório.' }),
-  bank_name: z.string().min(2, { message: 'O campo Banco é obrigatório.' }),
-  agency: z.string().min(1, { message: 'O campo Agência é obrigatório.' }),
-  op: z.string().min(1, { message: 'O campo Operação é obrigatório.' }),
-  account: z.string().min(2, { message: 'O campo Conta é obrigatório.' }),
-  pix: z.string().min(2, { message: 'O campo Chave Pix é obrigatório.' }),
   userEmail: z.string().min(2, { message: 'O campo E-mail é obrigatório.' }),
   city: z.string().min(2, { message: 'O campo Cidade é obrigatório.' }),
   state: z.string().min(2, { message: 'O campo Estado é obrigatório.' }),
@@ -160,6 +156,30 @@ const User = ({ dataToEdit }: props) => {
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
+
+    if (name === 'cep') {
+      setFormData(prevData => ({
+        ...prevData,
+        ['street']: '',
+        ['number']: '',
+        ['description']: '',
+        ['state']: '',
+        ['city']: '',
+        ['neighborhood']: '',
+      }));
+    }
+
+    if (name === 'cep') {
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: cepMask(value),
+      }));
+
+      if (errors.cep) {
+        setErrors({});
+      }
+      return;
+    }
 
     if (name === 'agency' || name === 'account' || name === 'op') {
       setFormData(prevData => ({
@@ -303,7 +323,6 @@ const User = ({ dataToEdit }: props) => {
           role: formData.role,
           status: 'active',
           oab: formData.oab,
-          origin: formData.origin,
         };
 
         if (formData.officeId !== '') {
@@ -336,7 +355,6 @@ const User = ({ dataToEdit }: props) => {
           mother_name: formData.mother_name,
           role: formData.role,
           status: 'active',
-          origin: formData.origin,
           office_id: formData.officeId,
           addresses_attributes: [
             {
@@ -659,6 +677,7 @@ const User = ({ dataToEdit }: props) => {
           pix: bankAccounts.pix ? bankAccounts.pix : '',
           email: attributes.email ? attributes.email : '',
           password: '',
+          street: addresses.street ? addresses.street : '',
           confirmPassword: '',
           gender: attributes.gender ? attributes.gender : '',
           mother_name: attributes.mother_name ? attributes.mother_name : '',
@@ -667,7 +686,6 @@ const User = ({ dataToEdit }: props) => {
           role: attributes.role ? attributes.role : '',
           civil_status: attributes.civil_status ? attributes.civil_status : '',
           birth: attributes.birth ? attributes.birth : '',
-          origin: attributes.origin ? attributes.origin : '',
           oab: attributes.oab ? attributes.oab : '',
         });
 
@@ -720,6 +738,40 @@ const User = ({ dataToEdit }: props) => {
       }));
     }
   };
+
+  useEffect(() => {
+    const fetchCEPDetails = async () => {
+      if (formData.street !== '') {
+        return;
+      }
+
+      const numericCEP = formData.cep.replace(/\D/g, '');
+
+      if (numericCEP.length === 8) {
+        try {
+          const response = await getCEPDetails(numericCEP);
+          setFormData(prevData => ({
+            ...prevData,
+            state: response.state,
+            city: response.city,
+            street: response.street,
+            neighborhood: response.neighborhood,
+          }));
+        } catch (error: any) {
+          setErrors({
+            cep: 'CEP inválido.',
+          });
+          setMessage('CEP inválido.');
+          setType('error');
+          setOpenSnackbar(true);
+        }
+      }
+    };
+
+    if (formData.cep) {
+      fetchCEPDetails();
+    }
+  }, [formData.cep]);
 
   return (
     <>
@@ -1055,7 +1107,6 @@ const User = ({ dataToEdit }: props) => {
               >
                 <Flex style={{ gap: '24px' }}>
                   {renderInputField('oab', 'OAB', 60, 'Informe a OAB')}
-                  {renderInputField('origin', 'Origin', 60, 'Informe a Origem')}
                 </Flex>
                 <Flex style={{ gap: '24px' }}>
                   {renderSelectField(

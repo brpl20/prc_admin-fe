@@ -2,11 +2,9 @@ import { createContext, useState } from 'react';
 import { setCookie, destroyCookie } from 'nookies';
 import jwt from 'jsonwebtoken';
 
-import { signInRequest, logoutRequest } from '../services/auth';
-import Router from 'next/router';
+import { logoutRequest } from '../services/auth';
 
 import { IAuthContextType, IUser } from '@/interfaces/IAuth';
-import api from '@/services/api';
 
 export const AuthContext = createContext({} as IAuthContextType);
 

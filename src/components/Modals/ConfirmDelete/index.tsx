@@ -89,7 +89,7 @@ const ModalOfRemove = ({
           <div className="flex w-full justify-between p-4">
             <label className="text-lg font-medium w-[420px] truncate overflow-hidden whitespace-nowrap">{`Remover ${textConfirmation}`}</label>
 
-            <span className="flex justify-center items-center p-1 bg-[#2a3f543f] w-[30px] h-[30px] rounded">
+            <span className="flex justify-center items-center p-1 bg-[#01013D3f] w-[30px] h-[30px] rounded">
               <MdClose onClick={handleClose} size={20} className="cursor-pointer" />
             </span>
           </div>

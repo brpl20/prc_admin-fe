@@ -4,15 +4,6 @@ import { MdClose } from 'react-icons/md';
 import { Flex } from '@/styles/globals';
 
 const ViewDetails = ({ isOpen, onClose, details }: any) => {
-  const handleDeadline = (deadline: string) => {
-    const date = new Date(deadline);
-    const day = date.getDate() + 1;
-    const month = date.getMonth() + 1;
-    const year = date.getFullYear();
-
-    return `${day < 10 ? '0' + day : day}/${month < 10 ? '0' + month : month}/${year}`;
-  };
-
   return (
     <Modal open={isOpen}>
       <Content
@@ -36,7 +27,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
               justifyContent: 'space-between',
             }}
           >
-            <label style={{ fontSize: '28px', color: '#2A3F54', fontWeight: '500' }}>
+            <label style={{ fontSize: '28px', color: '#01013D', fontWeight: '500' }}>
               {'Informações sobre a Tarefa'}
             </label>
             <MdClose size={26} cursor="pointer" onClick={onClose} />
@@ -171,7 +162,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
                     fontWeight: '400',
                   }}
                 >
-                  {details.deadline ? handleDeadline(details.deadline) : 'Não Informado'}
+                  {details.deadline !== '' ? details.deadline : 'Não Informado'}
                 </span>
               </Flex>
             </div>

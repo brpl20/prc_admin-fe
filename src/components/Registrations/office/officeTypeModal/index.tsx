@@ -81,7 +81,7 @@ const OfficeTypeModal = ({ isOpen, onClose, handleSave }: IOfficeTypeModalProps)
       <Modal open={isOpen} style={{ overflowY: 'auto' }}>
         <Content>
           <Box display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
-            <label style={{ fontSize: '28px', color: '#2A3F54', fontWeight: '500' }}>
+            <label style={{ fontSize: '28px', color: '#01013D', fontWeight: '500' }}>
               Novo Tipo de Escritório
             </label>
             <Box sx={{ cursor: 'pointer' }} onClick={onClose}>
@@ -90,7 +90,7 @@ const OfficeTypeModal = ({ isOpen, onClose, handleSave }: IOfficeTypeModalProps)
           </Box>
 
           <Flex className="inputContainer">
-            <Typography variant="h6" sx={{ marginBottom: '6px', color: '#2A3F54' }}>
+            <Typography variant="h6" sx={{ marginBottom: '6px', color: '#01013D' }}>
               {'Tipo de Escritório'}
             </Typography>
             <Input>

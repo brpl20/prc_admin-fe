@@ -55,7 +55,7 @@ export const FileList = styled.div`
     background-color: #b4b4b4;
   }
 
-  scrollbar-color: #eeeeee #2a3f54;
+  scrollbar-color: #eeeeee #01013d;
   scrollbar-width: thin;
 
   .name {

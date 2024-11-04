@@ -1,15 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { Notification } from '@/components';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-} from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableRow, Paper } from '@mui/material';
 
 import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
 import {
@@ -33,6 +25,7 @@ import { IoCheckmarkOutline } from 'react-icons/io5';
 
 import { colors } from '@/styles/globals';
 import api from '@/services/api';
+import { useRouter } from 'next/router';
 
 import { moneyMask } from '@/utils/masks';
 
@@ -48,6 +41,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
   const [formData, setFormData] = useState<any>([]);
   const [isFormDataChanged, setIsFormDataChanged] = useState(false);
   const [status, setStatus] = useState('');
+  const router = useRouter();
 
   const [workData, setWorkData] = useState<any>([]);
   const [subject, setSubject] = useState<string>('');
@@ -403,7 +397,8 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                 }}
               >
                 <>
-                  <Flex
+                  <div
+                    className="flex bg-white"
                     style={{
                       padding: '20px 32px 20px 32px',
                       borderBottom: '1px solid #C0C0C0',
@@ -435,7 +430,8 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                         />
                       )}
                     </ButtonShowContact>
-                  </Flex>
+                  </div>
+
                   {cardOneIsOpen && (
                     <div
                       style={{
@@ -468,21 +464,20 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                             }}
                           >
                             Cliente
+                            {workData.attributes &&
+                            workData.attributes.profile_customers &&
+                            workData.attributes.profile_customers.length > 1
+                              ? 's'
+                              : ''}
                           </span>
-                          <span
-                            style={{
-                              fontSize: '18px',
-                              color: '#344054',
-                              fontWeight: '400',
-                            }}
-                          >
-                            {`${
-                              workData.attributes &&
-                              workData.attributes.profile_customers &&
-                              workData.attributes.profile_customers[0]
-                                ? workData.attributes.profile_customers[0].name
-                                : 'Não Informado'
-                            }`}
+                          <span className="flex flex-col gap-1 text-lg text-[#344054] font-normal">
+                            {workData.attributes &&
+                            workData.attributes.profile_customers &&
+                            workData.attributes.profile_customers[0]
+                              ? workData.attributes.profile_customers.map((customer: any) => {
+                                  return <span key={customer.id}>{customer.name}</span>;
+                                })
+                              : 'Não Informado'}
                           </span>
                         </Flex>
 
@@ -624,7 +619,8 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                 }}
               >
                 <>
-                  <Flex
+                  <div
+                    className="flex bg-white"
                     style={{
                       padding: '20px 32px 20px 32px',
                       borderBottom: '1px solid #C0C0C0',
@@ -656,7 +652,8 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                         />
                       )}
                     </ButtonShowContact>
-                  </Flex>
+                  </div>
+
                   {cardTwoIsOpen && (
                     <div
                       style={{
@@ -870,7 +867,8 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                 }}
               >
                 <>
-                  <Flex
+                  <div
+                    className="flex bg-white"
                     style={{
                       padding: '20px 32px 20px 32px',
                       borderBottom: '1px solid #C0C0C0',
@@ -902,7 +900,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                         />
                       )}
                     </ButtonShowContact>
-                  </Flex>
+                  </div>
                   {cardThreeIsOpen && (
                     <div
                       style={{
@@ -991,7 +989,8 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                 }}
               >
                 <>
-                  <Flex
+                  <div
+                    className="flex bg-white"
                     style={{
                       padding: '20px 32px 20px 32px',
                       borderBottom: '1px solid #C0C0C0',
@@ -1023,7 +1022,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                         />
                       )}
                     </ButtonShowContact>
-                  </Flex>
+                  </div>
                   {cardFourIsOpen && (
                     <div
                       style={{
@@ -1328,7 +1327,8 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                 }}
               >
                 <>
-                  <Flex
+                  <div
+                    className="flex bg-white"
                     style={{
                       padding: '20px 32px 20px 32px',
                       borderBottom: '1px solid #C0C0C0',
@@ -1360,7 +1360,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                         />
                       )}
                     </ButtonShowContact>
-                  </Flex>
+                  </div>
                   {cardFiveIsOpen && (
                     <div
                       style={{
@@ -1498,7 +1498,8 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                 }}
               >
                 <>
-                  <Flex
+                  <div
+                    className="flex bg-white"
                     style={{
                       padding: '20px 32px 20px 32px',
                       borderBottom: '1px solid #C0C0C0',
@@ -1530,7 +1531,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                         />
                       )}
                     </ButtonShowContact>
-                  </Flex>
+                  </div>
                   {cardSevenIsOpen && (
                     <div
                       style={{
@@ -1550,7 +1551,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                       >
                         <Box>
                           <Flex>
-                            <Typography variant="h6" color={'#2A3F54'}>
+                            <Typography variant="h6" color={'#01013D'}>
                               {'Status'}
                             </Typography>
                           </Flex>
@@ -1603,7 +1604,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                                     mb={'8px'}
                                     variant="h6"
                                     textAlign={'left'}
-                                    color={'#2A3F54'}
+                                    color={'#01013D'}
                                   >
                                     {'Data da Movimentação'}
                                   </Typography>
@@ -1661,7 +1662,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                               </div>
                             ))
                           ) : (
-                            <Typography variant="h6" color={'#2A3F54'}>
+                            <Typography variant="h6" color={'#01013D'}>
                               {'Sem Movimentações'}
                             </Typography>
                           )}
@@ -1677,7 +1678,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                             sx={{
                               width: '190px',
                               height: '36px',
-                              background: '#2A3F54',
+                              background: '#01013D',
                               color: '#fff',
                               textTransform: 'none',
                               borderRadius: '4px',
@@ -1716,7 +1717,8 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                 }}
               >
                 <>
-                  <Flex
+                  <div
+                    className="flex bg-white"
                     style={{
                       padding: '20px 32px 20px 32px',
                       borderBottom: '1px solid #C0C0C0',
@@ -1748,7 +1750,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                         />
                       )}
                     </ButtonShowContact>
-                  </Flex>
+                  </div>
                   {cardSixIsOpen && (
                     <div
                       style={{

@@ -67,7 +67,7 @@ export const Container = styled.span`
     }
 
     ::-webkit-scrollbar-track {
-      background-color: #2a3f54;
+      background-color: #01013d;
     }
 
     ::-webkit-scrollbar-thumb {
@@ -78,7 +78,7 @@ export const Container = styled.span`
       background-color: #b4b4b4;
     }
 
-    scrollbar-color: #2a3f54;
+    scrollbar-color: #01013d;
     scrollbar-width: thin;
   }
 `;

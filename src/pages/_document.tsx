@@ -52,11 +52,7 @@ MyDocument.getInitialProps = async (ctx: DocumentContext) => {
 
   ctx.renderPage = () =>
     originalRenderPage({
-      enhanceApp: (
-        App: React.ComponentType<
-          React.ComponentProps<AppType> & StudioAppProps
-        >,
-      ) =>
+      enhanceApp: (App: React.ComponentType<React.ComponentProps<AppType> & StudioAppProps>) =>
         function EnhanceApp(props) {
           return <App emotionCache={cache} {...props} />;
         },

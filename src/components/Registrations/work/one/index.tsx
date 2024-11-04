@@ -14,6 +14,7 @@ import Dropzone from 'react-dropzone';
 import { z } from 'zod';
 import CustomTooltip from '@/components/Tooltip';
 import { colors, Flex } from '@/styles/globals';
+import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { MdOutlineInfo, MdDelete } from 'react-icons/md';
 
 import { WorkContext } from '@/contexts/WorkContext';
@@ -179,6 +180,12 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
       setWorkForm({});
     }
   }, [route]);
+
+  const { setPageTitle } = useContext(PageTitleContext);
+
+  useEffect(() => {
+    setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastrar' : 'Alterar'} Trabalho`);
+  }, [route, setPageTitle]);
 
   const handleSubmitForm = () => {
     try {

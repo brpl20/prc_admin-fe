@@ -17,15 +17,12 @@ import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
 import { Typography, Stack, Toolbar, CssBaseline, IconButton } from '@mui/material';
 
 import {
-  MdHome,
   MdGroups,
   MdHandyman,
   MdOutlineFormatListNumbered,
   MdPerson,
   MdAccountBalance,
   MdOutlineArrowRight,
-  MdOutlineListAlt,
-  MdOutlineDescription,
   MdMenu,
   MdKeyboardArrowDown,
   MdKeyboardArrowLeft,
@@ -40,8 +37,6 @@ import { Container, SelectContainer, Flex, MenuItem, CloseDropdown, TitleWrapper
 
 import Logo from '../../assets/logo-white.png';
 import Profile from '../../assets/Profile.png';
-import { getAllAdmins } from '@/services/admins';
-import { UserContext } from '@/contexts/UserContext';
 import { useSession } from 'next-auth/react';
 import { jwtDecode } from 'jwt-decode';
 
@@ -246,23 +241,6 @@ const Layout = ({ children }: ILayoutProps) => {
 
           <Flex color={colors.white} sx={{ width: '100%' }}>
             <Stack spacing="8" sx={{ width: '100%' }}>
-              {/* <ActiveLink href="/home">
-                <MenuItem
-                  sx={{
-                    backgroundColor:
-                      asPath === '/home' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                  }}
-                >
-                  <MdHome size={24} className="icon" />
-                  {openSidebar && (
-                    <>
-                      <Typography fontWeight="regular">{'Página inicial'}</Typography>
-                      <MdOutlineArrowRight size={24} className="arrow" />
-                    </>
-                  )}
-                </MenuItem>
-              </ActiveLink> */}
-
               <ActiveLink href="/clientes">
                 <MenuItem
                   sx={{
@@ -298,7 +276,7 @@ const Layout = ({ children }: ILayoutProps) => {
                 </MenuItem>
               </ActiveLink>
 
-              {session?.role === 'secretary' || session?.role === 'counter' ? null : (
+              {session?.role === 'counter' ? null : (
                 <ActiveLink href="/tarefas">
                   <MenuItem
                     sx={{
@@ -354,40 +332,6 @@ const Layout = ({ children }: ILayoutProps) => {
                   </MenuItem>
                 </ActiveLink>
               )}
-
-              {/* <ActiveLink href="/reports">
-                <MenuItem
-                  sx={{
-                    backgroundColor:
-                      asPath === '/reports' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                  }}
-                >
-                  <MdOutlineListAlt size={24} className="icon" />
-                  {openSidebar && (
-                    <>
-                      <Typography fontWeight="regular">{'Relatórios'}</Typography>
-                      <MdOutlineArrowRight size={24} className="arrow" />
-                    </>
-                  )}
-                </MenuItem>
-              </ActiveLink> */}
-
-              {/* <ActiveLink href="/documents">
-                <MenuItem
-                  sx={{
-                    backgroundColor:
-                      asPath === '/documents' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                  }}
-                >
-                  <MdOutlineDescription size={24} className="icon" />
-                  {openSidebar && (
-                    <>
-                      <Typography fontWeight="regular">{'Documentos'}</Typography>
-                      <MdOutlineArrowRight size={24} className="arrow" />
-                    </>
-                  )}
-                </MenuItem>
-              </ActiveLink> */}
             </Stack>
           </Flex>
         </Drawer>

@@ -7,10 +7,10 @@ const CustomTooltip = styled(({ className, ...props }: any) => (
 ))`
   && {
     font-size: 14px;
-    background-color: #2a3f54;
+    background-color: #01013d;
 
     & .MuiTooltip-arrow {
-      color: #2a3f54;
+      color: #01013d;
     }
   }
 `;
