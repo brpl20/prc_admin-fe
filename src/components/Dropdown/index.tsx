@@ -15,7 +15,7 @@ const Dropdown: React.FC<DropdownProps> = ({ title, content }) => {
     setIsOpen(!isOpen);
   };
   return (
-    <div className="border-b border-gray-300 w-[780px] pb-4 mb-4">
+    <div className="border-b border-gray-300 w-full lg:w-[780px] pb-4 mb-4">
       <button
         onClick={toggleDropdown}
         className="flex items-center justify-between w-full text-left"
