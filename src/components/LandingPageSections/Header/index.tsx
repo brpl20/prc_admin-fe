@@ -39,13 +39,16 @@ const Header = () => {
         className={`left-0 right-0 fixed pt-8 2xl:pt-16 z-50 backdrop-filter 
           ${isScrolled ? 'backdrop-blur-lg' : 'backdrop-blur-sm'} pb-3`}
       >
-        <div className="container mx-auto px-5 lg:px-28 flex justify-between relative">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-28 flex justify-between relative">
           <div className="flex cursor-pointer left-0 top-0" onClick={() => route.push('/')}>
-            {isScrolled ? (
-              <Image src="/logo-color.png" alt="ProcStudio" width={260} height={47} />
-            ) : (
-              <Image src="/logo-white.png" alt="ProcStudio" width={260} height={47} />
-            )}
+            <div className="relative w-[140px] sm:w-[260px]">
+              <Image
+                src={isScrolled ? '/logo-color.png' : '/logo-white.png'}
+                alt="ProcStudio"
+                fill
+                className="object-contain"
+              />
+            </div>
           </div>
 
           <button
