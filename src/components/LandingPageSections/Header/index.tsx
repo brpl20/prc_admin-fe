@@ -67,7 +67,7 @@ const Header = () => {
                 isScrolled ? 'text-white' : 'text-[#0277EE]'
               } cursor-pointer font-medium`}
             >
-              Acessar{' '}
+              Acessar
               <span className="hidden min-[342px]:inline-block">
                 o <label className="font-semibold cursor-pointer">Procstudio</label>
               </span>

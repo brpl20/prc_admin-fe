@@ -50,9 +50,9 @@ const FirstSection = () => {
               </span>
 
               <span className="font-normal text-[20px] text-white leading-[26px]">
-                Diga adeus às planilhas e papéis! Nosso sistema transforma a forma como você
-                gerencia seus casos. Automatize tarefas, centralize informações e ganhe mais tempo
-                para focar no que realmente importa: seus clientes.
+                Nosso sistema transforma a forma como você gerencia seus casos. Automatize tarefas,
+                centralize informações e ganhe mais tempo para focar no que realmente importa: seus
+                clientes.
               </span>
             </>
           </motion.div>
