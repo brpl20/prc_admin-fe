@@ -41,7 +41,7 @@ const Header = () => {
       >
         <div className="container mx-auto px-3 sm:px-4 lg:px-28 flex justify-between relative">
           <div className="flex cursor-pointer left-0 top-0" onClick={() => route.push('/')}>
-            <div className="relative w-[140px] sm:w-[260px]">
+            <div className="relative h-[47px] w-[140px] sm:w-[260px]">
               <Image
                 src={isScrolled ? '/logo-color.png' : '/logo-white.png'}
                 alt="ProcStudio"

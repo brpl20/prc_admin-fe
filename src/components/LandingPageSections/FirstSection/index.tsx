@@ -13,14 +13,17 @@ const FirstSection = () => {
   }, [controls, imageControls]);
 
   return (
-    <section className="h-screen min-h-[720px] firstSection overflow-hidden" id="home">
+    <section
+      className="h-screen min-h-[950px] sm:min-h-[720px] firstSection overflow-hidden"
+      id="home"
+    >
       <>
         <div
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 w-full min-h-[920px] sm:min-h-[720px] bg-cover bg-center"
           style={{ backgroundImage: "url('/background-firstSection.png')" }}
         />
 
-        <div className="absolute inset-0 bg-[#0277EE] opacity-[0.88]" />
+        <div className="absolute inset-0 min-h-[920px] sm:min-h-[720px] bg-[#0277EE] opacity-[0.88]" />
 
         <div className="absolute top-0 right-20">
           <img src="/login.svg" alt="Login Decoração" />
@@ -31,7 +34,7 @@ const FirstSection = () => {
       </>
 
       <div className="container mx-auto py-[10px] 2xl:py-[60px] px-[20px] lg:px-[115px]">
-        <motion.div className="flex flex-col items-center justify-between relative pt-[160px]">
+        <motion.div className="flex flex-col items-center justify-between relative pt-24 sm:pt-40">
           <motion.div
             className="flex flex-col text-center justify-between"
             initial={{
@@ -50,21 +53,21 @@ const FirstSection = () => {
               </span>
 
               <span className="font-normal text-[20px] text-white leading-[26px]">
-                Nosso sistema transforma a forma como você gerencia seus casos. Automatize tarefas,
-                centralize informações e ganhe mais tempo para focar no que realmente importa: seus
-                clientes.
+                Diga adeus às planilhas e papéis! Nosso sistema transforma a forma como você
+                gerencia seus casos. Automatize tarefas, centralize informações e ganhe mais tempo
+                para focar no que realmente importa: seus clientes.
               </span>
             </>
           </motion.div>
 
           <motion.div
-            className="z-[2] hidden lg:block mt-11"
+            className="z-[2] lg:block mt-11"
             initial={{ opacity: 0, x: 100 }}
             animate={imageControls}
           >
-            <div className="flex gap-5">
+            <div className="flex flex-col sm:flex-row gap-5">
               <button
-                className="flex text-lg px-4 h-[42px] bg-white items-center rounded-md justify-center cursor-pointer"
+                className="flex text-lg px-4 py-[5px] bg-white items-center rounded-md justify-center cursor-pointer"
                 name="menu"
                 aria-label="menu"
                 aria-labelledby="menu"
@@ -75,9 +78,7 @@ const FirstSection = () => {
               </button>
 
               <button
-                className="flex text-lg px-4 h-[42px] bg-transparent items-center rounded-md justify-center cursor-pointer
-                  border-2 border-white
-                "
+                className="flex text-lg px-4 py-[5px] bg-transparent items-center rounded-md justify-center cursor-pointer border-2 border-white"
                 name="menu"
                 aria-label="menu"
                 aria-labelledby="menu"
