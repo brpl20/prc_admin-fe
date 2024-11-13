@@ -37,7 +37,7 @@ const SeventhSection = () => {
     >
       <div className="container mx-auto py-[10px] 2xl:py-[60px] px-[20px] lg:px-[115px]">
         <motion.section
-          className="container flex items-center text-center mx-auto px-[20px] lg:px-[115px] mt-[50px] lg:my-[120px]"
+          className="container flex items-center justify-center text-center mx-auto px-[20px] lg:px-[115px] mt-[50px] lg:my-[120px]"
           ref={ref}
           initial={{ opacity: 0, y: 200 }}
           animate={controls}
