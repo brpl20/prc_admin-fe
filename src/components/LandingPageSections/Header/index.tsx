@@ -22,11 +22,7 @@ const Header = () => {
       if (blueSection) {
         const blueTop = blueSection.offsetTop - 80;
 
-        if (scrollY >= blueTop) {
-          setIsScrolled(true);
-        } else {
-          setIsScrolled(false);
-        }
+        setIsScrolled(scrollY >= blueTop);
       }
     };
 
@@ -40,25 +36,25 @@ const Header = () => {
   return (
     <header>
       <nav
-        className={`left-0 right-0 fixed pt-[30px] 2xl:pt-[60px] z-50 backdrop-filter 
-          ${isScrolled ? 'backdrop-blur-lg' : 'backdrop-blur-sm'} pb-[10px]`}
+        className={`left-0 right-0 fixed pt-8 2xl:pt-16 z-50 backdrop-filter 
+          ${isScrolled ? 'backdrop-blur-lg' : 'backdrop-blur-sm'} pb-3`}
       >
-        <div className="container mx-auto px-[20px] lg:px-[115px] flex justify-between relative">
-          <div
-            className="flex gap-[12px] cursor-pointer left-0 top-0"
-            onClick={() => route.push('/')}
-          >
-            {isScrolled ? (
-              <Image src="/logo-color.png" alt="ProcStudio" width={260} height={47} />
-            ) : (
-              <Image src="/logo-white.png" alt="ProcStudio" width={260} height={47} />
-            )}
+        <div className="container mx-auto px-3 sm:px-4 lg:px-28 flex justify-between relative">
+          <div className="flex cursor-pointer left-0 top-0" onClick={() => route.push('/')}>
+            <div className="relative h-[47px] w-[140px] sm:w-[260px]">
+              <Image
+                src={isScrolled ? '/logo-color.png' : '/logo-white.png'}
+                alt="ProcStudio"
+                fill
+                className="object-contain"
+              />
+            </div>
           </div>
 
           <button
             onClick={goToLogin}
             className={`
-              flex w-[191px] ${
+              flex p-2 md:p-0 md:w-48 ${
                 isScrolled ? 'bg-[#0277EE]' : 'bg-white'
               }  items-center rounded-md justify-center h-10 cursor-pointer
               `}
@@ -71,7 +67,10 @@ const Header = () => {
                 isScrolled ? 'text-white' : 'text-[#0277EE]'
               } cursor-pointer font-medium`}
             >
-              Acessar o <label className="font-semibold cursor-pointer">Procstudio</label>
+              Acessar{' '}
+              <span className="hidden min-[342px]:inline-block">
+                o <label className="font-semibold cursor-pointer">Procstudio</label>
+              </span>
             </label>
           </button>
         </div>

@@ -35,7 +35,7 @@ const EighthSection = () => {
               <label className="font-bold text-[#0277EE] text-3xl">Perguntas frequentes</label>
             </div>
 
-            <div>
+            <div className="flex justify-center flex-col px-4 lg:px-0">
               <Dropdown
                 title="Para que serve o ProcStudio?"
                 content="É um sistema de gerenciamento de escritório combinando com a facilidade de gerar documentação jurídica de forma rápida e com qualidade. Nossa intenção é reduzir o uso de papel, automatizar fluxo de tarefas e a fricção entre advogado e cliente no momento da assinatura do contrato."
