@@ -23,11 +23,13 @@ const Dropdown: React.FC<DropdownProps> = ({ title, content }) => {
         className="flex items-center justify-between w-full text-left"
       >
         <span className="text-lg font-semibold">{title}</span>
-        <FiChevronDown
-          className={`text-xl text-[#0277EE] transition-transform duration-300 ${
-            isOpen ? 'rotate-180' : 'rotate-0'
-          }`}
-        />
+        <div>
+          <FiChevronDown
+            className={`text-xl text-[#0277EE] transition-transform duration-300 ${
+              isOpen ? 'rotate-180' : 'rotate-0'
+            }`}
+          />
+        </div>
       </button>
 
       <AnimatePresence>
