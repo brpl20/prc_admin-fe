@@ -743,6 +743,7 @@ const Customers = () => {
                         height: '36px',
                         width: '100px',
                         textTransform: 'none',
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       {'CPF/CNPJ'}
