@@ -14,7 +14,7 @@ const FirstSection = () => {
 
   return (
     <section
-      className="h-screen min-h-[950px] sm:min-h-[720px] firstSection overflow-hidden"
+      className="h-screen min-h-[1000px] min-[340px]:min-h-[950px] sm:min-h-[720px] firstSection overflow-hidden"
       id="home"
     >
       <>
