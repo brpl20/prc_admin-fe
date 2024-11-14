@@ -48,6 +48,9 @@ const Footer = () => {
             <Link href={'/trabalhos'} className="links">
               <Typography fontSize="sm">{'Trabalhos'}</Typography>
             </Link>
+            <Link href={'/documentos'} className="links">
+              <Typography fontSize="sm">{'Documentos'}</Typography>
+            </Link>
             <Link href={'/tarefas'} className="links">
               <Typography fontSize="sm">{'Tarefas'}</Typography>
             </Link>
@@ -62,9 +65,7 @@ const Footer = () => {
             <Typography fontSize="md" color={colors.black}>
               {`ProcStudio ${currentYear}`}
             </Typography>
-            <Typography fontSize="sm">
-              {'Licenciado para ProcStudio'}
-            </Typography>
+            <Typography fontSize="sm">{'Licenciado para ProcStudio'}</Typography>
             <Typography fontSize="sm">{'Rui Barbosa,'}</Typography>
             <Typography fontSize="sm">{'nº 262, Cascavel - PR'}</Typography>
           </Box>
