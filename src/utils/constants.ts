@@ -1,11 +1,3 @@
-const protectedRoutes = [
-  { label: 'Home', value: '/home' },
-  { label: 'Clientes', value: '/clientes' },
-  { label: 'Trabalhos', value: '/trabalhos' },
-  { label: 'Escritorios', value: '/escritorios' },
-  { label: 'Tarefas', value: '/tarefas' },
-];
-
 const workSteps = [
   'Procedimento/Assunto',
   'Honorários',
