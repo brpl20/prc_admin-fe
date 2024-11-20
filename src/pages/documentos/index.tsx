@@ -256,7 +256,6 @@ const Documents = () => {
                     flex: 1,
                     field: 'number',
                     headerName: 'Nº do trabalho',
-                    cellClassName: 'font-medium text-black',
                     align: 'center',
                     headerAlign: 'center',
                     valueFormatter: defaultTableValueFormatter,
@@ -269,7 +268,6 @@ const Documents = () => {
                         {'Data de criação do trabalho'}
                       </div>
                     ),
-                    cellClassName: 'font-medium text-black',
                     headerAlign: 'center',
                     align: 'center',
                     valueFormatter: defaultTableValueFormatter,
