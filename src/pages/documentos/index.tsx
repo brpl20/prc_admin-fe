@@ -83,6 +83,36 @@ const Documents = () => {
     }
   };
 
+  const handleSearch = (search: string) => {
+    const regex = new RegExp(search, 'i');
+    let filteredWorks = works;
+
+    if (search) {
+      switch (searchFor) {
+        case 'pending_review':
+          // Insert pending review filter funcionality here
+          break;
+
+        case 'pending_signature':
+          // Insert pending signature filter functionality here
+          break;
+
+        case 'signed':
+          // Insert signed documents filter functionality here
+          break;
+
+        default:
+          break;
+      }
+
+      filteredWorks = filteredWorks.filter((work: IWorksListProps) => {
+        return work.attributes.number !== null && regex.test(work.attributes.number.toString());
+      });
+    }
+
+    setFilteredWorks(filteredWorks);
+  };
+
   return (
     <>
       <Layout>
@@ -96,6 +126,54 @@ const Documents = () => {
                 {'Buscar Por'}
               </Typography>
               <Box display={'flex'} gap={'16px'} justifyContent={'space-between'}>
+                <Box display={'flex'} gap={'16px'}>
+                  <Box display={'flex'} gap={'16px'}>
+                    <Button
+                      onClick={() => setSearchFor('pending_review')}
+                      variant={searchFor === 'pending_review' ? 'contained' : 'outlined'}
+                      sx={{
+                        height: '36px',
+                        textTransform: 'none',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {'Pendentes de revisão'}
+                    </Button>
+
+                    <Button
+                      onClick={() => setSearchFor('pending_signature')}
+                      variant={searchFor === 'pending_signature' ? 'contained' : 'outlined'}
+                      sx={{
+                        height: '36px',
+                        textTransform: 'none',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {'Pendentes de assinatura'}
+                    </Button>
+
+                    <Button
+                      onClick={() => setSearchFor('signed')}
+                      variant={searchFor === 'signed' ? 'contained' : 'outlined'}
+                      sx={{
+                        height: '36px',
+                        textTransform: 'none',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {'Documentos assinados'}
+                    </Button>
+                  </Box>
+
+                  <Input>
+                    <input
+                      type="text"
+                      placeholder="Buscar"
+                      onChange={e => handleSearch(e.target.value)}
+                    />
+                    <MdSearch size={25} />
+                  </Input>
+                </Box>
                 <Link href="/cadastrar?type=trabalho">
                   <Button
                     variant="contained"
