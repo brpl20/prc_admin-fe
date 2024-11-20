@@ -231,6 +231,7 @@ const Documents = () => {
                       number: work.attributes.number,
                       created_by_id: work.attributes.created_by_id,
                       status: work.attributes.status,
+                      date: 'XX/XX/XXXX',
                     };
                   })
                 }
@@ -258,6 +259,19 @@ const Documents = () => {
                     cellClassName: 'font-medium text-black',
                     align: 'center',
                     headerAlign: 'center',
+                    valueFormatter: defaultTableValueFormatter,
+                  },
+                  {
+                    flex: 1,
+                    field: 'date',
+                    renderHeader: () => (
+                      <div className="font-medium text-black text-center text-wrap leading-5">
+                        {'Data de criação do trabalho'}
+                      </div>
+                    ),
+                    cellClassName: 'font-medium text-black',
+                    headerAlign: 'center',
+                    align: 'center',
                     valueFormatter: defaultTableValueFormatter,
                   },
                   {
