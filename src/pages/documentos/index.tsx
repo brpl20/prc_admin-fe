@@ -11,13 +11,14 @@ import {
   Input,
   PageTitle,
 } from '../../styles/globals';
-import { Box, Button, LinearProgress, Typography } from '@mui/material';
+import { Box, Button, IconButton, LinearProgress, Typography } from '@mui/material';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 import { IAdminProps } from '../../interfaces/IAdmin';
 import { getAllAdmins } from '../../services/admins';
 import { PageTitleContext } from '../../contexts/PageTitleContext';
 import { Footer } from '../../components';
 import { MdOutlineAddCircle, MdSearch } from 'react-icons/md';
+import { GrDocumentText } from 'react-icons/gr';
 import Link from 'next/link';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
@@ -263,9 +264,22 @@ const Documents = () => {
                     flex: 1,
                     field: 'open_docs',
                     align: 'center',
+                    editable: false,
                     headerAlign: 'center',
                     headerName: 'Abrir Documentação',
                     valueFormatter: defaultTableValueFormatter,
+                    renderCell: (params: any) => (
+                      <div>
+                        <IconButton
+                          aria-label="open"
+                          onClick={e => {
+                            // Redirect to signing and revision page
+                          }}
+                        >
+                          <GrDocumentText size={22} color={colors.icons} cursor={'pointer'} />
+                        </IconButton>
+                      </div>
+                    ),
                   },
                 ]}
                 initialState={{
