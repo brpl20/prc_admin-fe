@@ -29,7 +29,7 @@ import {
 } from 'react-icons/md';
 
 import { AiOutlineUser } from 'react-icons/ai';
-import { IoExitOutline } from 'react-icons/io5';
+import { IoDocumentText, IoExitOutline } from 'react-icons/io5';
 
 import Image from 'next/image';
 import { colors, HeaderPageTitle } from '@/styles/globals';
@@ -126,6 +126,8 @@ const Layout = ({ children }: ILayoutProps) => {
       ? 'Clientes'
       : route === '/trabalhos'
       ? 'Trabalhos'
+      : route === '/documentos'
+      ? 'Documentos'
       : route === '/tarefas'
       ? 'Tarefas'
       : route === '/usuarios'
@@ -269,6 +271,24 @@ const Layout = ({ children }: ILayoutProps) => {
                   {openSidebar && (
                     <>
                       <Typography fontWeight="regular">{'Trabalhos'}</Typography>
+
+                      <MdOutlineArrowRight size={24} className="arrow arrowWork" />
+                    </>
+                  )}
+                </MenuItem>
+              </ActiveLink>
+
+              <ActiveLink href="/documentos">
+                <MenuItem
+                  sx={{
+                    backgroundColor:
+                      asPath === '/documentos' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                  }}
+                >
+                  <IoDocumentText size={24} className="icon" />
+                  {openSidebar && (
+                    <>
+                      <Typography fontWeight="regular">{'Documentos'}</Typography>
 
                       <MdOutlineArrowRight size={24} className="arrow arrowWork" />
                     </>

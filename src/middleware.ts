@@ -20,5 +20,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ['/home', '/escritorios', '/clientes', '/trabalhos', '/tarefas'],
+  matcher: ['/home', '/clientes', '/trabalhos', '/documentos', '/escritorios', '/tarefas'],
 };
