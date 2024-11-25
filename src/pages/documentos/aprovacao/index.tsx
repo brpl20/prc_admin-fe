@@ -26,7 +26,7 @@ import { IWorksListProps } from '../../../interfaces/IWork';
 import { GrDocumentText } from 'react-icons/gr';
 import { TbDownload } from 'react-icons/tb';
 import { ContainerDetails, DetailsWrapper } from '../../../components/Details/styles';
-import GenericConfirmationModal from '../../../components/Modals/GenericConfirmationModal';
+import GenericModal from '../../../components/Modals/GenericModal';
 import { documentApprovalSteps, documentTypeToReadable } from '../../../utils/constants';
 import { DataGrid } from '@mui/x-data-grid';
 import IDocumentProps from '../../../interfaces/IDocument';
@@ -50,7 +50,7 @@ const DocumentApproval = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedDocuments, setSelectedDocuments] = useState<[]>([]);
+  const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
 
   const fetchWorkData = async (workId: string) => {
     try {
@@ -96,20 +96,26 @@ const DocumentApproval = () => {
     setIsOpen(true);
   };
 
-  const handleDocumentDownload = (row: any) => {
-    downloadFileByUrl(row.url);
+  const handleApproveDocuments = () => {
+    setDocuments(prevDocuments =>
+      prevDocuments.map(doc =>
+        selectedDocuments.includes(doc.id) ? { ...doc, pending_revision: false } : doc,
+      ),
+    );
+    setSelectedDocuments([]);
   };
 
   return (
     <>
-      <GenericConfirmationModal
+      <GenericModal
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         onConfirm={() => {
           router.push('/documentos');
         }}
         title="Atenção!"
-        cancelButtonText="Cancel"
+        showConfirmButton
+        cancelButtonText="Cancelar"
         confirmButtonText="Sim, voltar!"
         content={
           <>
@@ -155,6 +161,7 @@ const DocumentApproval = () => {
                 responsible={responsible}
                 number={workData.attributes.number}
               />
+
               <DetailsWrapper
                 style={{
                   marginTop: 32,
@@ -245,11 +252,13 @@ const DocumentApproval = () => {
                       }}
                     ></Box>
                   </Box>
-                  <Box sx={{ maxHeight: 300, width: '100%' }}>
+
+                  <Box sx={{ width: '100%' }}>
                     <DataGrid
                       disableColumnMenu
                       checkboxSelection
                       disableRowSelectionOnClick
+                      isRowSelectable={(params: any) => params.row.showCheckbox}
                       loading={loading}
                       slots={{
                         noRowsOverlay: () =>
@@ -280,6 +289,7 @@ const DocumentApproval = () => {
                             ? 'Pendente de Revisão'
                             : 'Documento Aprovado',
                           url: item.url,
+                          showCheckbox: item.pending_revision,
                         };
                       })}
                       columns={[
@@ -307,7 +317,7 @@ const DocumentApproval = () => {
                             <div>
                               <IconButton
                                 aria-label="open"
-                                onClick={e => handleDocumentDownload(params.row)}
+                                onClick={_ => downloadFileByUrl(params.row.url)}
                               >
                                 <TbDownload size={22} color={colors.icons} cursor={'pointer'} />
                               </IconButton>
@@ -332,6 +342,58 @@ const DocumentApproval = () => {
                       }}
                       rowSelectionModel={selectedDocuments}
                     />
+                  </Box>
+
+                  <Box
+                    width={'100%'}
+                    display={'flex'}
+                    justifyContent={'center'}
+                    gap={'12px'}
+                    mt={'20px'}
+                  >
+                    {selectedDocuments.length > 0 && (
+                      <>
+                        <Button
+                          color="primary"
+                          variant="outlined"
+                          sx={{
+                            height: '36px',
+                            textTransform: 'none',
+                          }}
+                          onClick={() => {}}
+                        >
+                          {'Revisar manualmente'}
+                        </Button>
+                        <Button
+                          variant="contained"
+                          sx={{
+                            height: '36px',
+                            color: colors.white,
+                            textTransform: 'none',
+                          }}
+                          color="secondary"
+                          onClick={handleApproveDocuments}
+                        >
+                          {'Aprovar documentos'}
+                        </Button>
+                      </>
+                    )}
+                    {documents.every(doc => !doc.pending_revision) && (
+                      <Button
+                        variant="contained"
+                        sx={{
+                          height: '36px',
+                          color: colors.white,
+                          textTransform: 'none',
+                        }}
+                        color="secondary"
+                        onClick={() => {
+                          /**/
+                        }}
+                      >
+                        {'Ir para assinaturas'}
+                      </Button>
+                    )}
                   </Box>
                 </ContentContainer>
               </DetailsWrapper>

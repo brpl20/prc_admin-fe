@@ -3,25 +3,27 @@ import { colors } from '@/styles/globals';
 import { MdClose } from 'react-icons/md';
 import { Content } from './styles';
 
-interface IGenericConfirmationModalProps {
+interface IGenericModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm?: () => void;
   title?: string;
   content: React.ReactNode;
+  showConfirmButton?: boolean;
   cancelButtonText?: string;
   confirmButtonText?: string;
 }
 
-const GenericConfirmationModal = ({
+const GenericModal = ({
   isOpen,
   onClose,
   onConfirm = onClose,
   title = 'Atenção!',
   content,
+  showConfirmButton = false,
   cancelButtonText = 'Cancelar',
   confirmButtonText = 'Ok',
-}: IGenericConfirmationModalProps) => {
+}: IGenericModalProps) => {
   return (
     <Modal open={isOpen} onClose={onClose} style={{ overflowY: 'auto' }}>
       <Content>
@@ -55,26 +57,28 @@ const GenericConfirmationModal = ({
           >
             {cancelButtonText}
           </Button>
-          <Button
-            variant="contained"
-            sx={{
-              width: '124px',
-              height: '36px',
-              color: colors.white,
-              textTransform: 'none',
-              marginLeft: '16px',
-            }}
-            color="secondary"
-            onClick={() => {
-              onConfirm && onConfirm();
-            }}
-          >
-            {confirmButtonText}
-          </Button>
+          {showConfirmButton && (
+            <Button
+              variant="contained"
+              sx={{
+                width: '124px',
+                height: '36px',
+                color: colors.white,
+                textTransform: 'none',
+                marginLeft: '16px',
+              }}
+              color="secondary"
+              onClick={() => {
+                onConfirm && onConfirm();
+              }}
+            >
+              {confirmButtonText}
+            </Button>
+          )}
         </Box>
       </Content>
     </Modal>
   );
 };
 
-export default GenericConfirmationModal;
+export default GenericModal;
