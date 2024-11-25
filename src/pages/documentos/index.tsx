@@ -227,8 +227,6 @@ const Documents = () => {
 
                     const responsible = getLawyerName(work.attributes.responsible_lawyer);
 
-                    const partner = getLawyerName(work.attributes.partner_lawyer);
-
                     const clients_names = work.attributes.profile_customers.map(
                       (customer: any) => customer.name,
                     );
@@ -240,13 +238,10 @@ const Documents = () => {
                           ? clients_names.map((name: string) => name.split(' ')[0]).join(', ')
                           : clients_names,
                       deleted: work.attributes.deleted,
-                      requestProcess: work.attributes.number,
                       responsible: responsible,
-                      partner: partner,
                       documents: work.attributes.documents,
                       number: work.attributes.number,
                       created_by_id: work.attributes.created_by_id,
-                      status: work.attributes.status,
                       date: 'XX/XX/XXXX',
                     };
                   })
@@ -306,11 +301,8 @@ const Documents = () => {
                               pathname: '/documentos/aprovacao',
                               query: {
                                 id: params.row.id,
-                                number: params.row.number,
                                 client: params.row.client,
                                 responsible: params.row.responsible,
-                                documents: params.row.documents,
-                                date: params.row.date,
                               },
                             });
                           }}
