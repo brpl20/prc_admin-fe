@@ -19,6 +19,7 @@ import { PageTitleContext } from '../../contexts/PageTitleContext';
 import { Footer } from '../../components';
 import { MdOutlineAddCircle, MdSearch } from 'react-icons/md';
 import { GrDocumentText } from 'react-icons/gr';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
@@ -26,6 +27,7 @@ const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 type DocumentSearchFilter = 'pending_review' | 'pending_signature' | 'signed';
 
 const Documents = () => {
+  const router = useRouter();
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
 
   const [works, setWorks] = useState<IWorksListProps[]>([]);
@@ -210,6 +212,8 @@ const Documents = () => {
                 rows={
                   filteredWorks &&
                   filteredWorks.map((work: IWorksListProps) => {
+                    console.log(work);
+
                     const responsible = getLawyerName(work.attributes.responsible_lawyer);
 
                     const partner = getLawyerName(work.attributes.partner_lawyer);
@@ -285,7 +289,17 @@ const Documents = () => {
                         <IconButton
                           aria-label="open"
                           onClick={e => {
-                            // Redirect to signing and revision page
+                            // Redirect to signing and approval page
+                            router.push({
+                              pathname: '/documentos/aprovacao',
+                              query: {
+                                id: params.row.id,
+                                number: params.row.number,
+                                client: params.row.client,
+                                responsible: params.row.responsible,
+                                date: params.row.date,
+                              },
+                            });
                           }}
                         >
                           <GrDocumentText size={22} color={colors.icons} cursor={'pointer'} />
