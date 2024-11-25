@@ -9,6 +9,7 @@ import { Button, CircularProgress } from '@mui/material';
 import { IWorksListProps } from '../../../interfaces/IWork';
 import { PiSuitcase } from 'react-icons/pi';
 import { ContainerDetails, DetailsWrapper } from '../../../components/Details/styles';
+import GenericConfirmationModal from '../../../components/Modals/GenericConfirmationModal';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const DocumentApproval = () => {
@@ -18,6 +19,8 @@ const DocumentApproval = () => {
 
   const [loading, setLoading] = useState(true);
   const [workData, setWorkData] = useState<IWorksListProps>({} as IWorksListProps);
+
+  const [isOpen, setIsOpen] = useState(false);
 
   const fetchWorkData = async (workId: string) => {
     try {
@@ -52,10 +55,28 @@ const DocumentApproval = () => {
     }
   }, [id]);
 
-  const handleReturn = () => {};
+  const handleReturn = () => {
+    setIsOpen(true);
+  };
 
   return (
     <>
+      <GenericConfirmationModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        onConfirm={() => {
+          router.push('/documentos');
+        }}
+        title="Atenção!"
+        cancelButtonText="Cancel"
+        confirmButtonText="Sim, voltar!"
+        content={
+          <>
+            Ao voltar para o dashboard de <strong>Revisão e Aprovação</strong>, todos os dados não
+            salvos serão perdidos, tem certeza que deseja realizar essa ação?
+          </>
+        }
+      />
       <Layout>
         <Container>
           <div className="flex flex-row justify-between">
