@@ -1,7 +1,13 @@
 import dynamic from 'next/dynamic';
 import { useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { Container, ContentContainer, DescriptionText, PageTitle } from '../../../styles/globals';
+import {
+  colors,
+  Container,
+  ContentContainer,
+  DescriptionText,
+  PageTitle,
+} from '../../../styles/globals';
 import { PageTitleContext } from '../../../contexts/PageTitleContext';
 import { Footer } from '../../../components';
 import { getWorkById } from '../../../services/works';
@@ -9,6 +15,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  IconButton,
   LinearProgress,
   Step,
   StepLabel,
@@ -17,12 +24,14 @@ import {
 } from '@mui/material';
 import { IWorksListProps } from '../../../interfaces/IWork';
 import { GrDocumentText } from 'react-icons/gr';
+import { TbDownload } from 'react-icons/tb';
 import { ContainerDetails, DetailsWrapper } from '../../../components/Details/styles';
 import GenericConfirmationModal from '../../../components/Modals/GenericConfirmationModal';
 import { documentApprovalSteps, documentTypeToReadable } from '../../../utils/constants';
 import { DataGrid } from '@mui/x-data-grid';
 import IDocumentProps from '../../../interfaces/IDocument';
 import WorkInfoCard from '../../../components/DocumentApproval/WorkInfoCard';
+import downloadFileByUrl from '../../../utils/downloadFileByUrl';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 interface IDocumentApprovalProps extends IDocumentProps {
@@ -85,6 +94,10 @@ const DocumentApproval = () => {
 
   const handleReturn = () => {
     setIsOpen(true);
+  };
+
+  const handleDocumentDownload = (row: any) => {
+    downloadFileByUrl(row.url);
   };
 
   return (
@@ -266,6 +279,7 @@ const DocumentApproval = () => {
                           status: item.pending_revision
                             ? 'Pendente de Revisão'
                             : 'Documento Aprovado',
+                          url: item.url,
                         };
                       })}
                       columns={[
@@ -289,6 +303,16 @@ const DocumentApproval = () => {
                           headerAlign: 'center',
                           headerName: 'Download',
                           align: 'center',
+                          renderCell: (params: any) => (
+                            <div>
+                              <IconButton
+                                aria-label="open"
+                                onClick={e => handleDocumentDownload(params.row)}
+                              >
+                                <TbDownload size={22} color={colors.icons} cursor={'pointer'} />
+                              </IconButton>
+                            </div>
+                          ),
                         },
                       ]}
                       initialState={{
