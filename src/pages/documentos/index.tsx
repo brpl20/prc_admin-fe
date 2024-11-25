@@ -36,7 +36,6 @@ const Documents = () => {
   const [responsibleLawyers, setResponsibleLawyers] = useState<any>([]);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [refetch, setRefetch] = useState(false);
 
   const [searchFor, setSearchFor] = useState<DocumentSearchFilter>('pending_review');
 
@@ -44,7 +43,7 @@ const Documents = () => {
     setIsLoading(true);
 
     fetchWorks();
-  }, [refetch]);
+  }, []);
 
   useEffect(() => {
     // Fetch responsible laywers
@@ -223,8 +222,6 @@ const Documents = () => {
                 rows={
                   filteredWorks &&
                   filteredWorks.map((work: IWorksListProps) => {
-                    console.log(work);
-
                     const responsible = getLawyerName(work.attributes.responsible_lawyer);
 
                     const clients_names = work.attributes.profile_customers.map(

@@ -3,7 +3,7 @@ interface IDocumentProps {
   profile_customer_id: number;
   work_id: number;
 
-  document_type: string;
+  document_type: 'honorary' | 'waiver' | 'deficiency_statement' | 'procuration';
   url: string;
 
   created_at: string;

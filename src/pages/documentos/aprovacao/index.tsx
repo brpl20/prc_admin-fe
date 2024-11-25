@@ -1,16 +1,33 @@
 import dynamic from 'next/dynamic';
 import { useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { Container, PageTitle } from '../../../styles/globals';
+import { Container, ContentContainer, DescriptionText, PageTitle } from '../../../styles/globals';
 import { PageTitleContext } from '../../../contexts/PageTitleContext';
 import { Footer } from '../../../components';
 import { getWorkById } from '../../../services/works';
-import { Button, CircularProgress } from '@mui/material';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  LinearProgress,
+  Step,
+  StepLabel,
+  Stepper,
+  Typography,
+} from '@mui/material';
 import { IWorksListProps } from '../../../interfaces/IWork';
-import { PiSuitcase } from 'react-icons/pi';
+import { GrDocumentText } from 'react-icons/gr';
 import { ContainerDetails, DetailsWrapper } from '../../../components/Details/styles';
 import GenericConfirmationModal from '../../../components/Modals/GenericConfirmationModal';
+import { documentApprovalSteps, documentTypeToReadable } from '../../../utils/constants';
+import { DataGrid } from '@mui/x-data-grid';
+import IDocumentProps from '../../../interfaces/IDocument';
+import WorkInfoCard from '../../../components/DocumentApproval/WorkInfoCard';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
+
+interface IDocumentApprovalProps extends IDocumentProps {
+  pending_revision: boolean;
+}
 
 const DocumentApproval = () => {
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
@@ -19,14 +36,25 @@ const DocumentApproval = () => {
 
   const [loading, setLoading] = useState(true);
   const [workData, setWorkData] = useState<IWorksListProps>({} as IWorksListProps);
+  const [documents, setDocuments] = useState<IDocumentApprovalProps[]>([]);
 
   const [isOpen, setIsOpen] = useState(false);
+
+  const [currentStep, setCurrentStep] = useState(0);
+  const [selectedDocuments, setSelectedDocuments] = useState<[]>([]);
 
   const fetchWorkData = async (workId: string) => {
     try {
       setLoading(true);
-      const { data } = await getWorkById(workId);
+      const { data }: { data: IWorksListProps } = await getWorkById(workId);
       setWorkData(data);
+
+      const updatedDocuments = data.attributes.documents.map(doc => ({
+        ...doc,
+        pending_revision: true,
+      }));
+
+      setDocuments(updatedDocuments);
     } catch (error) {
       console.error(`Error when fetching work of id=${workId}`, error);
     } finally {
@@ -108,155 +136,182 @@ const DocumentApproval = () => {
           ) : !workData ? (
             <p>Não foram encontrados dados para o trabalho.</p>
           ) : (
-            <DetailsWrapper
-              style={{
-                marginTop: 32,
-                borderBottom: '1px solid #C0C0C0',
-                boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
-              }}
-            >
-              <ContainerDetails
+            <>
+              <WorkInfoCard
+                client={client}
+                responsible={responsible}
+                number={workData.attributes.number}
+              />
+              <DetailsWrapper
                 style={{
-                  gap: '18px',
+                  marginTop: 32,
+                  borderBottom: '1px solid #C0C0C0',
+                  backgroundColor: '#fff',
+                  boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
                 }}
               >
-                <>
-                  <div
-                    className="flex bg-white"
-                    style={{
-                      padding: '20px 32px 20px 32px',
-                      borderBottom: '1px solid #C0C0C0',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <PiSuitcase size={24} color="#344054" />
-
-                      <div className="w-[2px] bg-gray-300 h-8" />
-
-                      <span
-                        style={{
-                          fontSize: '22px',
-                          fontWeight: '500',
-                          color: '#344054',
-                        }}
-                      >
-                        Dados do Trabalho
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '18px',
-                      paddingBottom: '20px',
-                    }}
-                  >
+                <ContainerDetails
+                  style={{
+                    gap: '18px',
+                  }}
+                >
+                  <>
                     <div
+                      className="flex bg-white"
                       style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: '18px',
-                        padding: '0 32px',
+                        padding: '20px 32px 20px 32px',
+                        borderBottom: '1px solid #C0C0C0',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
                       }}
                     >
-                      <div
-                        className="flex"
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Cliente:
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {client}
-                        </span>
-                      </div>
+                      <div className="flex items-center gap-2">
+                        <GrDocumentText size={22} color="#344054" />
 
-                      <div className="flex flex-col gap-[8px] items-start">
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Responsável:
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {responsible}
-                        </span>
-                      </div>
+                        <div className="w-[2px] bg-gray-300 h-8" />
 
-                      <div className="flex flex-col gap-[8px] items-start">
                         <span
                           style={{
-                            color: '#344054',
-                            fontSize: '20px',
+                            fontSize: '22px',
                             fontWeight: '500',
-                          }}
-                        >
-                          CNPJ
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
                             color: '#344054',
-                            fontWeight: '400',
                           }}
                         >
-                          {workData.attributes.number}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col gap-[8px] items-start">
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Data de criação do trabalho:
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {'XX/XX/XXXX'}
+                          Documentação
                         </span>
                       </div>
                     </div>
-                  </div>
-                </>
-              </ContainerDetails>
-            </DetailsWrapper>
+                  </>
+                </ContainerDetails>
+                <ContentContainer>
+                  <Box>
+                    <Stepper activeStep={currentStep}>
+                      {documentApprovalSteps.map((label: string, index: number) => (
+                        <Step
+                          key={label}
+                          onClick={() => {
+                            //*
+                          }}
+                        >
+                          <StepLabel
+                            StepIconProps={{
+                              style: {
+                                color:
+                                  currentStep > index
+                                    ? '#26B99A'
+                                    : currentStep === index
+                                    ? '#01013D'
+                                    : '#A8A8B3',
+                                cursor: 'pointer',
+                              },
+                            }}
+                          >
+                            <DescriptionText
+                              style={{
+                                color:
+                                  currentStep > index
+                                    ? '#26B99A'
+                                    : currentStep === index
+                                    ? '#01013D'
+                                    : '#A8A8B3',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {label}
+                            </DescriptionText>
+                          </StepLabel>
+                        </Step>
+                      ))}
+                    </Stepper>
+                    <Box
+                      sx={{
+                        width: '100% !important',
+                        height: '2px',
+                        backgroundColor: '#01013D',
+                        marginTop: '24px',
+                      }}
+                    ></Box>
+                  </Box>
+                  <Box sx={{ maxHeight: 300, width: '100%' }}>
+                    <DataGrid
+                      disableColumnMenu
+                      checkboxSelection
+                      disableRowSelectionOnClick
+                      loading={loading}
+                      slots={{
+                        noRowsOverlay: () =>
+                          loading ? (
+                            <Box
+                              sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <LinearProgress />
+                            </Box>
+                          ) : (
+                            <Typography variant="h6">{'Nenhum Poder Encontrado'}</Typography>
+                          ),
+                      }}
+                      rows={documents.map((item: IDocumentApprovalProps) => {
+                        return {
+                          id: item.id,
+                          type: documentTypeToReadable[item.document_type],
+                          status: item.pending_revision
+                            ? 'Pendente de Revisão'
+                            : 'Documento Aprovado',
+                        };
+                      })}
+                      columns={[
+                        {
+                          flex: 3,
+                          field: 'type',
+                          headerAlign: 'center',
+                          headerName: 'Documentos',
+                          align: 'center',
+                        },
+                        {
+                          flex: 1,
+                          field: 'status',
+                          headerAlign: 'center',
+                          headerName: 'Status',
+                          align: 'center',
+                        },
+                        {
+                          flex: 1,
+                          field: 'download',
+                          headerAlign: 'center',
+                          headerName: 'Download',
+                          align: 'center',
+                        },
+                      ]}
+                      initialState={{
+                        pagination: { paginationModel: { pageSize: 10 } },
+                      }}
+                      localeText={{
+                        MuiTablePagination: {
+                          labelRowsPerPage: 'Linhas por página',
+                          labelDisplayedRows(paginationInfo) {
+                            return `${paginationInfo.from}- ${paginationInfo.to} de ${paginationInfo.count}`;
+                          },
+                        },
+                      }}
+                      pageSizeOptions={[5, 10, 25]}
+                      onRowSelectionModelChange={(data: any) => {
+                        setSelectedDocuments(data);
+                      }}
+                      rowSelectionModel={selectedDocuments}
+                    />
+                  </Box>
+                </ContentContainer>
+              </DetailsWrapper>
+            </>
           )}
         </Container>
         <Footer />
