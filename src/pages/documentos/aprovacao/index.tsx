@@ -55,6 +55,8 @@ const DocumentApproval = () => {
 
   const [isBackModalOpen, setIsBackModalOpen] = useState(false);
   const [isQuickApproveModalOpen, setIsQuickApproveModalOpen] = useState(false);
+  const [isRevisionApproveModalOpen, setIsRevisionApproveModalOpen] = useState(false);
+  const [isUploadWarningModalOpen, setIsUploadWarningModalOpen] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
@@ -105,7 +107,7 @@ const DocumentApproval = () => {
     setIsBackModalOpen(true);
   };
 
-  const approveDocuments = () => {
+  const approveSelectedDocuments = () => {
     setDocuments(prevDocuments =>
       prevDocuments.map(doc =>
         selectedDocuments.includes(doc.id) ? { ...doc, pending_revision: false } : doc,
@@ -115,7 +117,7 @@ const DocumentApproval = () => {
   };
 
   const handleQuickApproveModalConfirm = () => {
-    approveDocuments();
+    approveSelectedDocuments();
     setIsQuickApproveModalOpen(false);
   };
 
@@ -143,7 +145,33 @@ const DocumentApproval = () => {
 
     setDocuments(prev => [...prev, ...docsToRestore]);
     setRevisionDocuments([]);
+    setIsRevisionApproveModalOpen(false);
     setIsRevisionActive(false);
+  };
+
+  const handleRevisionModalApprove = () => {
+    setDocuments(prevDocuments => [
+      ...prevDocuments,
+      ...revisionDocuments.map(doc => ({
+        ...doc,
+        pending_revision: false, // Mark as approved
+        pending_upload: undefined, // Remove revision-required property
+      })),
+    ]);
+
+    setRevisionDocuments([]);
+    setIsRevisionActive(false);
+    setIsRevisionApproveModalOpen(false);
+  };
+
+  const handleRevisionApproveButton = () => {
+    // If any revision documents are pending upload, show a warning
+    if (revisionDocuments.every(doc => doc.pending_upload)) {
+      return setIsUploadWarningModalOpen(true);
+    }
+
+    // else, let them be approved
+    setIsRevisionApproveModalOpen(true);
   };
 
   return (
@@ -177,6 +205,27 @@ const DocumentApproval = () => {
         confirmButtonText="Sim, aprovar!"
         cancelButtonText="Cancelar"
         content="Tem certeza de que deseja aprovar os documentos?"
+      />
+
+      {/* Revision Approve Modal */}
+      <GenericModal
+        isOpen={isRevisionApproveModalOpen}
+        onClose={() => setIsRevisionApproveModalOpen(false)}
+        onConfirm={handleRevisionModalApprove}
+        title="Atenção!"
+        showConfirmButton
+        confirmButtonText="Sim, aprovar!"
+        cancelButtonText="Cancelar"
+        content="Tem certeza de que deseja aprovar os documentos?"
+      />
+
+      {/* Revision Upload Warning Modal */}
+      <GenericModal
+        isOpen={isUploadWarningModalOpen}
+        onClose={() => setIsUploadWarningModalOpen(false)}
+        title="Atenção!"
+        cancelButtonText="Fechar"
+        content="Para aprovar a documentação, realize o upload de todos os documentos!"
       />
 
       <Layout>
@@ -443,7 +492,7 @@ const DocumentApproval = () => {
                         }}
                         color="secondary"
                         onClick={() => {
-                          /**/
+                          // TODO: navigate to next step
                         }}
                       >
                         {'Ir para assinaturas'}
@@ -555,8 +604,17 @@ const DocumentApproval = () => {
                             renderCell: (params: any) => (
                               <div>
                                 <IconButton
-                                  aria-label="open"
-                                  onClick={_ => downloadFileByUrl(params.row.url)}
+                                  onClick={_ => {
+                                    // TODO: handle file upload once the endpoint is ready
+
+                                    setRevisionDocuments(prev =>
+                                      prev.map(doc =>
+                                        doc.id === params.row.id
+                                          ? { ...doc, pending_upload: false }
+                                          : doc,
+                                      ),
+                                    );
+                                  }}
                                 >
                                   <TbUpload size={22} color={colors.icons} cursor={'pointer'} />
                                 </IconButton>
@@ -593,9 +651,9 @@ const DocumentApproval = () => {
                             height: '36px',
                             textTransform: 'none',
                           }}
-                          onClick={() => {}}
+                          onClick={handleCancelRevision}
                         >
-                          {'Aprovar documentos'}
+                          {'Cancelar revisão'}
                         </Button>
                         <Button
                           variant="contained"
@@ -605,9 +663,9 @@ const DocumentApproval = () => {
                             textTransform: 'none',
                           }}
                           color="secondary"
-                          onClick={handleCancelRevision}
+                          onClick={handleRevisionApproveButton}
                         >
-                          {'Cancelar revisão'}
+                          {'Aprovar documentos'}
                         </Button>
                       </>
                     </Box>
