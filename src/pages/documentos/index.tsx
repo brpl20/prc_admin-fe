@@ -66,10 +66,21 @@ const Documents = () => {
   }, []);
 
   const fetchWorks = async () => {
-    const response = await getAllWorks('active');
-    setWorks(response.data);
-    setFilteredWorks(response.data);
-    setIsLoading(false);
+    setIsLoading(true);
+
+    try {
+      const response = await getAllWorks('active');
+      const worksWithDocuments = response.data.filter((work: IWorksListProps) => {
+        return work.attributes.documents && work.attributes.documents.length > 0;
+      });
+
+      setWorks(worksWithDocuments);
+      setFilteredWorks(worksWithDocuments);
+    } catch (error) {
+      console.error('Error fetching works:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const fetchResponsibleLawyers = async () => {
@@ -232,6 +243,7 @@ const Documents = () => {
                       requestProcess: work.attributes.number,
                       responsible: responsible,
                       partner: partner,
+                      documents: work.attributes.documents,
                       number: work.attributes.number,
                       created_by_id: work.attributes.created_by_id,
                       status: work.attributes.status,
@@ -297,6 +309,7 @@ const Documents = () => {
                                 number: params.row.number,
                                 client: params.row.client,
                                 responsible: params.row.responsible,
+                                documents: params.row.documents,
                                 date: params.row.date,
                               },
                             });
