@@ -16,6 +16,12 @@ const PFCustomerSteps = [
   'Arquivos',
 ];
 
+const DocumentApprovalSteps = [
+  'Pendentes de Revisão',
+  'Pendentes de Assinatura',
+  'Documentos Assinados',
+];
+
 const userTypeOptions = [
   { label: 'Pessoa Física', value: 'physical' },
   { label: 'Pessoa Jurídica', value: 'legal' },
