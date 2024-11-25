@@ -166,7 +166,7 @@ const DocumentApproval = () => {
 
   const handleRevisionApproveButton = () => {
     // If any revision documents are pending upload, show a warning
-    if (revisionDocuments.every(doc => doc.pending_upload)) {
+    if (revisionDocuments.some(doc => doc.pending_upload)) {
       return setIsUploadWarningModalOpen(true);
     }
 
