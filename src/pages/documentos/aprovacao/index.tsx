@@ -24,7 +24,7 @@ import {
 } from '@mui/material';
 import { IWorksListProps } from '../../../interfaces/IWork';
 import { GrDocumentText } from 'react-icons/gr';
-import { TbDownload } from 'react-icons/tb';
+import { TbDownload, TbUpload } from 'react-icons/tb';
 import { ContainerDetails, DetailsWrapper } from '../../../components/Details/styles';
 import GenericModal from '../../../components/Modals/GenericModal';
 import { documentApprovalSteps, documentTypeToReadable } from '../../../utils/constants';
@@ -38,6 +38,10 @@ interface IDocumentApprovalProps extends IDocumentProps {
   pending_revision: boolean;
 }
 
+interface IDocumentRevisionProps extends IDocumentProps {
+  pending_upload: boolean;
+}
+
 const DocumentApproval = () => {
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
   const router = useRouter();
@@ -45,12 +49,17 @@ const DocumentApproval = () => {
 
   const [loading, setLoading] = useState(true);
   const [workData, setWorkData] = useState<IWorksListProps>({} as IWorksListProps);
-  const [documents, setDocuments] = useState<IDocumentApprovalProps[]>([]);
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [documents, setDocuments] = useState<IDocumentApprovalProps[]>([]);
+  const [revisionDocuments, setRevisionDocuments] = useState<IDocumentRevisionProps[]>([]);
+
+  const [isBackModalOpen, setIsBackModalOpen] = useState(false);
+  const [isQuickApproveModalOpen, setIsQuickApproveModalOpen] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
+
+  const [isRevisionActive, setIsRevisionActive] = useState(false);
 
   const fetchWorkData = async (workId: string) => {
     try {
@@ -93,10 +102,10 @@ const DocumentApproval = () => {
   }, [id]);
 
   const handleReturn = () => {
-    setIsOpen(true);
+    setIsBackModalOpen(true);
   };
 
-  const handleApproveDocuments = () => {
+  const approveDocuments = () => {
     setDocuments(prevDocuments =>
       prevDocuments.map(doc =>
         selectedDocuments.includes(doc.id) ? { ...doc, pending_revision: false } : doc,
@@ -105,11 +114,44 @@ const DocumentApproval = () => {
     setSelectedDocuments([]);
   };
 
+  const handleQuickApproveModalConfirm = () => {
+    approveDocuments();
+    setIsQuickApproveModalOpen(false);
+  };
+
+  const handleBeginRevision = () => {
+    const selectedDocsForRevision: IDocumentRevisionProps[] = documents
+      .filter(doc => selectedDocuments.includes(doc.id))
+      .map(doc => ({
+        ...doc,
+        pending_upload: true, // Add revision-required prop
+      }));
+
+    const remainingDocuments = documents.filter(doc => !selectedDocuments.includes(doc.id));
+
+    setDocuments(remainingDocuments);
+    setRevisionDocuments(prev => [...prev, ...selectedDocsForRevision]);
+    setSelectedDocuments([]);
+    setIsRevisionActive(true);
+  };
+
+  const handleCancelRevision = () => {
+    const docsToRestore = revisionDocuments.map(doc => ({
+      ...doc,
+      pending_revision: true, // Replace revision-required prop with approval-required prop
+    }));
+
+    setDocuments(prev => [...prev, ...docsToRestore]);
+    setRevisionDocuments([]);
+    setIsRevisionActive(false);
+  };
+
   return (
     <>
+      {/* Back Modal */}
       <GenericModal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        isOpen={isBackModalOpen}
+        onClose={() => setIsBackModalOpen(false)}
         onConfirm={() => {
           router.push('/documentos');
         }}
@@ -124,6 +166,19 @@ const DocumentApproval = () => {
           </>
         }
       />
+
+      {/* Quick Approve Modal */}
+      <GenericModal
+        isOpen={isQuickApproveModalOpen}
+        onClose={() => setIsQuickApproveModalOpen(false)}
+        onConfirm={handleQuickApproveModalConfirm}
+        title="Atenção!"
+        showConfirmButton
+        confirmButtonText="Sim, aprovar!"
+        cancelButtonText="Cancelar"
+        content="Tem certeza de que deseja aprovar os documentos?"
+      />
+
       <Layout>
         <Container>
           <div className="flex flex-row justify-between">
@@ -257,6 +312,7 @@ const DocumentApproval = () => {
                     <DataGrid
                       disableColumnMenu
                       checkboxSelection
+                      hideFooter
                       disableRowSelectionOnClick
                       isRowSelectable={(params: any) => params.row.showCheckbox}
                       loading={loading}
@@ -278,7 +334,7 @@ const DocumentApproval = () => {
                               <LinearProgress />
                             </Box>
                           ) : (
-                            <Typography variant="h6">{'Nenhum Poder Encontrado'}</Typography>
+                            <Typography variant="h6">{'Nenhum Documento Encontrado'}</Typography>
                           ),
                       }}
                       rows={documents.map((item: IDocumentApprovalProps) => {
@@ -286,8 +342,8 @@ const DocumentApproval = () => {
                           id: item.id,
                           type: documentTypeToReadable[item.document_type],
                           status: item.pending_revision
-                            ? 'Pendente de Revisão'
-                            : 'Documento Aprovado',
+                            ? 'Pendente de revisão'
+                            : 'Documento aprovado',
                           url: item.url,
                           showCheckbox: item.pending_revision,
                         };
@@ -336,7 +392,6 @@ const DocumentApproval = () => {
                           },
                         },
                       }}
-                      pageSizeOptions={[5, 10, 25]}
                       onRowSelectionModelChange={(data: any) => {
                         setSelectedDocuments(data);
                       }}
@@ -360,7 +415,7 @@ const DocumentApproval = () => {
                             height: '36px',
                             textTransform: 'none',
                           }}
-                          onClick={() => {}}
+                          onClick={handleBeginRevision}
                         >
                           {'Revisar manualmente'}
                         </Button>
@@ -372,13 +427,13 @@ const DocumentApproval = () => {
                             textTransform: 'none',
                           }}
                           color="secondary"
-                          onClick={handleApproveDocuments}
+                          onClick={() => setIsQuickApproveModalOpen(true)}
                         >
                           {'Aprovar documentos'}
                         </Button>
                       </>
                     )}
-                    {documents.every(doc => !doc.pending_revision) && (
+                    {documents.every(doc => !doc.pending_revision) && !isRevisionActive && (
                       <Button
                         variant="contained"
                         sx={{
@@ -397,6 +452,168 @@ const DocumentApproval = () => {
                   </Box>
                 </ContentContainer>
               </DetailsWrapper>
+
+              {isRevisionActive && (
+                <DetailsWrapper
+                  style={{
+                    marginTop: 32,
+                    borderBottom: '1px solid #C0C0C0',
+                    backgroundColor: '#fff',
+                    boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
+                  }}
+                >
+                  <ContainerDetails
+                    style={{
+                      gap: '18px',
+                    }}
+                  >
+                    <>
+                      <div
+                        className="flex bg-white"
+                        style={{
+                          padding: '20px 32px 20px 32px',
+                          borderBottom: '1px solid #C0C0C0',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <GrDocumentText size={22} color="#344054" />
+
+                          <div className="w-[2px] bg-gray-300 h-8" />
+
+                          <span
+                            style={{
+                              fontSize: '22px',
+                              fontWeight: '500',
+                              color: '#344054',
+                            }}
+                          >
+                            Revisar manualmente
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  </ContainerDetails>
+
+                  <ContentContainer>
+                    <Box sx={{ width: '100%' }}>
+                      <DataGrid
+                        disableColumnMenu
+                        hideFooter
+                        loading={loading}
+                        slots={{
+                          noRowsOverlay: () =>
+                            loading ? (
+                              <Box
+                                sx={{
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: 0,
+                                  width: '100%',
+                                  height: '100%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <LinearProgress />
+                              </Box>
+                            ) : (
+                              <Typography variant="h6">{'Nenhum Documento Encontrado'}</Typography>
+                            ),
+                        }}
+                        rows={revisionDocuments.map((item: IDocumentRevisionProps) => {
+                          return {
+                            id: item.id,
+                            type: documentTypeToReadable[item.document_type],
+                            status: item.pending_upload ? 'Pendente de upload' : 'Upload realizado',
+                            url: item.url,
+                          };
+                        })}
+                        columns={[
+                          {
+                            flex: 2,
+                            field: 'type',
+                            headerAlign: 'center',
+                            headerName: 'Documentos',
+                            align: 'center',
+                          },
+                          {
+                            flex: 2,
+                            field: 'status',
+                            headerAlign: 'center',
+                            headerName: 'Status do upload',
+                            align: 'center',
+                          },
+                          {
+                            flex: 1,
+                            field: 'upload',
+                            headerAlign: 'center',
+                            headerName: 'Upload de documento',
+                            align: 'center',
+                            renderCell: (params: any) => (
+                              <div>
+                                <IconButton
+                                  aria-label="open"
+                                  onClick={_ => downloadFileByUrl(params.row.url)}
+                                >
+                                  <TbUpload size={22} color={colors.icons} cursor={'pointer'} />
+                                </IconButton>
+                              </div>
+                            ),
+                          },
+                        ]}
+                        initialState={{
+                          pagination: { paginationModel: { pageSize: 10 } },
+                        }}
+                        localeText={{
+                          MuiTablePagination: {
+                            labelRowsPerPage: 'Linhas por página',
+                            labelDisplayedRows(paginationInfo) {
+                              return `${paginationInfo.from}- ${paginationInfo.to} de ${paginationInfo.count}`;
+                            },
+                          },
+                        }}
+                      />
+                    </Box>
+
+                    <Box
+                      width={'100%'}
+                      display={'flex'}
+                      justifyContent={'center'}
+                      gap={'12px'}
+                      mt={'20px'}
+                    >
+                      <>
+                        <Button
+                          color="primary"
+                          variant="outlined"
+                          sx={{
+                            height: '36px',
+                            textTransform: 'none',
+                          }}
+                          onClick={() => {}}
+                        >
+                          {'Aprovar documentos'}
+                        </Button>
+                        <Button
+                          variant="contained"
+                          sx={{
+                            height: '36px',
+                            color: colors.white,
+                            textTransform: 'none',
+                          }}
+                          color="secondary"
+                          onClick={handleCancelRevision}
+                        >
+                          {'Cancelar revisão'}
+                        </Button>
+                      </>
+                    </Box>
+                  </ContentContainer>
+                </DetailsWrapper>
+              )}
             </>
           )}
         </Container>
