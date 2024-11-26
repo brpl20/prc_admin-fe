@@ -57,7 +57,7 @@ const DocumentApproval = () => {
   const backModal = useModal();
   const quickApproveModal = useModal();
   const revisionApproveModal = useModal();
-  const uploadWarningModal = useModal();
+  const uploadPendingModal = useModal();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
@@ -168,7 +168,7 @@ const DocumentApproval = () => {
   const handleRevisionApproveButton = () => {
     // If any revision documents are pending upload, show a warning
     if (revisionDocuments.some(doc => doc.pending_upload)) {
-      return uploadWarningModal.open();
+      return uploadPendingModal.open();
     }
 
     // else, let them be approved
@@ -220,10 +220,10 @@ const DocumentApproval = () => {
         content="Tem certeza de que deseja aprovar os documentos?"
       />
 
-      {/* Revision Upload Warning Modal */}
+      {/* Revision Upload Pending Modal */}
       <GenericModal
-        isOpen={uploadWarningModal.isOpen}
-        onClose={uploadWarningModal.close}
+        isOpen={uploadPendingModal.isOpen}
+        onClose={uploadPendingModal.close}
         title="Atenção!"
         cancelButtonText="Fechar"
         content="Para aprovar a documentação, realize o upload de todos os documentos!"
