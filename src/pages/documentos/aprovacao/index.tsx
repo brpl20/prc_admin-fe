@@ -310,7 +310,7 @@ const DocumentApproval = () => {
                 </ContainerDetails>
                 <ContentContainer>
                   <Box>
-                    <Stepper activeStep={currentStep}>
+                    <Stepper activeStep={currentStep} sx={{ maxWidth: '50%' }}>
                       {documentApprovalSteps.map((label: string, index: number) => (
                         <Step
                           key={label}
@@ -358,7 +358,7 @@ const DocumentApproval = () => {
                     ></Box>
                   </Box>
 
-                  <Box sx={{ width: '100%' }}>
+                  <Box sx={{ width: '100%', height: '330px' }}>
                     <DataGrid
                       disableColumnMenu
                       checkboxSelection
@@ -367,7 +367,7 @@ const DocumentApproval = () => {
                       isRowSelectable={(params: any) => params.row.showCheckbox}
                       loading={loading}
                       slots={{
-                        noRowsOverlay: () =>
+                        noResultsOverlay: () =>
                           loading ? (
                             <Box
                               sx={{
@@ -435,6 +435,7 @@ const DocumentApproval = () => {
                         pagination: { paginationModel: { pageSize: 10 } },
                       }}
                       localeText={{
+                        noRowsLabel: 'Documentos aguardando revisão.',
                         MuiTablePagination: {
                           labelRowsPerPage: 'Linhas por página',
                           labelDisplayedRows(paginationInfo) {
@@ -553,7 +554,7 @@ const DocumentApproval = () => {
                         hideFooter
                         loading={loading}
                         slots={{
-                          noRowsOverlay: () =>
+                          noResultsOverlay: () =>
                             loading ? (
                               <Box
                                 sx={{
