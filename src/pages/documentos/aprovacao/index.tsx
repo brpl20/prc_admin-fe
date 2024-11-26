@@ -33,6 +33,7 @@ import IDocumentProps from '../../../interfaces/IDocument';
 import WorkInfoCard from '../../../components/DocumentApproval/WorkInfoCard';
 import downloadFileByUrl from '../../../utils/downloadFileByUrl';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
+import { useModal } from '../../../utils/useModal';
 
 interface IDocumentApprovalProps extends IDocumentProps {
   pending_revision: boolean;
@@ -53,10 +54,10 @@ const DocumentApproval = () => {
   const [documents, setDocuments] = useState<IDocumentApprovalProps[]>([]);
   const [revisionDocuments, setRevisionDocuments] = useState<IDocumentRevisionProps[]>([]);
 
-  const [isBackModalOpen, setIsBackModalOpen] = useState(false);
-  const [isQuickApproveModalOpen, setIsQuickApproveModalOpen] = useState(false);
-  const [isRevisionApproveModalOpen, setIsRevisionApproveModalOpen] = useState(false);
-  const [isUploadWarningModalOpen, setIsUploadWarningModalOpen] = useState(false);
+  const backModal = useModal();
+  const quickApproveModal = useModal();
+  const revisionApproveModal = useModal();
+  const uploadWarningModal = useModal();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
@@ -104,7 +105,7 @@ const DocumentApproval = () => {
   }, [id]);
 
   const handleReturn = () => {
-    setIsBackModalOpen(true);
+    backModal.open();
   };
 
   const approveSelectedDocuments = () => {
@@ -118,7 +119,7 @@ const DocumentApproval = () => {
 
   const handleQuickApproveModalConfirm = () => {
     approveSelectedDocuments();
-    setIsQuickApproveModalOpen(false);
+    quickApproveModal.close();
   };
 
   const handleBeginRevision = () => {
@@ -145,7 +146,7 @@ const DocumentApproval = () => {
 
     setDocuments(prev => [...prev, ...docsToRestore]);
     setRevisionDocuments([]);
-    setIsRevisionApproveModalOpen(false);
+    revisionApproveModal.close();
     setIsRevisionActive(false);
   };
 
@@ -161,25 +162,25 @@ const DocumentApproval = () => {
 
     setRevisionDocuments([]);
     setIsRevisionActive(false);
-    setIsRevisionApproveModalOpen(false);
+    revisionApproveModal.close();
   };
 
   const handleRevisionApproveButton = () => {
     // If any revision documents are pending upload, show a warning
     if (revisionDocuments.some(doc => doc.pending_upload)) {
-      return setIsUploadWarningModalOpen(true);
+      return uploadWarningModal.open();
     }
 
     // else, let them be approved
-    setIsRevisionApproveModalOpen(true);
+    revisionApproveModal.open();
   };
 
   return (
     <>
       {/* Back Modal */}
       <GenericModal
-        isOpen={isBackModalOpen}
-        onClose={() => setIsBackModalOpen(false)}
+        isOpen={backModal.isOpen}
+        onClose={backModal.close}
         onConfirm={() => {
           router.push('/documentos');
         }}
@@ -197,8 +198,8 @@ const DocumentApproval = () => {
 
       {/* Quick Approve Modal */}
       <GenericModal
-        isOpen={isQuickApproveModalOpen}
-        onClose={() => setIsQuickApproveModalOpen(false)}
+        isOpen={quickApproveModal.isOpen}
+        onClose={quickApproveModal.close}
         onConfirm={handleQuickApproveModalConfirm}
         title="Atenção!"
         showConfirmButton
@@ -209,8 +210,8 @@ const DocumentApproval = () => {
 
       {/* Revision Approve Modal */}
       <GenericModal
-        isOpen={isRevisionApproveModalOpen}
-        onClose={() => setIsRevisionApproveModalOpen(false)}
+        isOpen={revisionApproveModal.isOpen}
+        onClose={revisionApproveModal.close}
         onConfirm={handleRevisionModalApprove}
         title="Atenção!"
         showConfirmButton
@@ -221,8 +222,8 @@ const DocumentApproval = () => {
 
       {/* Revision Upload Warning Modal */}
       <GenericModal
-        isOpen={isUploadWarningModalOpen}
-        onClose={() => setIsUploadWarningModalOpen(false)}
+        isOpen={uploadWarningModal.isOpen}
+        onClose={uploadWarningModal.close}
         title="Atenção!"
         cancelButtonText="Fechar"
         content="Para aprovar a documentação, realize o upload de todos os documentos!"
@@ -476,7 +477,7 @@ const DocumentApproval = () => {
                             textTransform: 'none',
                           }}
                           color="secondary"
-                          onClick={() => setIsQuickApproveModalOpen(true)}
+                          onClick={quickApproveModal.open}
                         >
                           {'Aprovar documentos'}
                         </Button>
