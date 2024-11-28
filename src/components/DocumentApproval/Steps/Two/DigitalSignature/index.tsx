@@ -37,6 +37,15 @@ const DigitalSignature: React.FunctionComponent<DigitalSignatureProps> = ({
     setIsSigning(true);
     beginSignatureModal.close();
     setShowRadioButtons(false);
+
+    // TODO: proper await for signing API
+    const exampleTimeout = setTimeout(() => {
+      handleChangeStep('next');
+    }, 5 * 10 ** 3); // 5 seconds
+
+    return () => {
+      clearTimeout(exampleTimeout);
+    };
   };
 
   const handleCancelSignature = () => {
