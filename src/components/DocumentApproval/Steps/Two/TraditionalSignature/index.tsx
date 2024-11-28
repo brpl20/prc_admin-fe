@@ -37,6 +37,10 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
     confirmSignatureModal.open();
   };
 
+  const handleSignature = () => {
+    handleChangeStep('next');
+  };
+
   return (
     <>
       {/* Back Modal */}
@@ -63,7 +67,7 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
         content="Tem certeza que deseja confirmar todas as assinaturas?"
         isOpen={confirmSignatureModal.isOpen}
         onClose={confirmSignatureModal.close}
-        onConfirm={() => {}}
+        onConfirm={handleSignature}
         showConfirmButton
         cancelButtonText="Cancelar"
         confirmButtonText="Sim, confirmar!"
