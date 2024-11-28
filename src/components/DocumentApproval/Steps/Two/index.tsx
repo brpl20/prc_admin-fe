@@ -132,7 +132,7 @@ const SignatureContentHandler: React.FunctionComponent<SignatureContentHandlerPr
           setShowRadioButtons={setShowRadioButtons}
         />
       ) : (
-        <TraditionalSignature documents={documents} />
+        <TraditionalSignature documents={documents} handleChangeStep={handleChangeStep} />
       )}
     </Box>
   );
