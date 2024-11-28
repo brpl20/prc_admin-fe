@@ -1,13 +1,17 @@
-import { Box, Button, IconButton, Typography } from '@mui/material';
-import { IDocumentApprovalProps, IDocumentRevisionProps } from '../../../../interfaces/IDocument';
-import { DataGrid } from '@mui/x-data-grid';
-import { documentTypeToReadable } from '../../../../utils/constants';
-import { TbDownload, TbUpload } from 'react-icons/tb';
+import {
+  Box,
+  Button,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  IconButton,
+  Radio,
+  RadioGroup,
+  Typography,
+} from '@mui/material';
+import { IDocumentApprovalProps } from '../../../../interfaces/IDocument';
 import { colors, ContentContainer } from '../../../../styles/globals';
-import downloadFileByUrl from '../../../../utils/downloadFileByUrl';
-import { useModal } from '../../../../utils/useModal';
-import GenericModal from '../../../Modals/GenericModal';
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 import { ContainerDetails, DetailsWrapper } from '../../../Details/styles';
 import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
@@ -68,7 +72,27 @@ const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({
         </ContainerDetails>
         <ContentContainer>
           <DocumentApprovalStepper currentStep={1} />
-          {'teste'}
+
+          <FormControl className="mt-3">
+            <FormLabel
+              className="font-bold"
+              sx={{ color: colors.black }}
+              id="signature-radio-buttons-group-label"
+            >
+              Selecione o tipo de assinatura:
+            </FormLabel>
+            <RadioGroup
+              aria-labelledby="signature-radio-buttons-group-label"
+              className="flex flex-row"
+            >
+              <FormControlLabel value="digital" control={<Radio />} label="Assinatura digital" />
+              <FormControlLabel
+                value="traditional"
+                control={<Radio />}
+                label="Assinatura tradicional"
+              />
+            </RadioGroup>
+          </FormControl>
         </ContentContainer>
       </DetailsWrapper>
     </>

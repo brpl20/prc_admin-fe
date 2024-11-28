@@ -11,7 +11,7 @@ const DocumentApprovalStepper: React.FunctionComponent<DocumentApprovalStepperPr
 }) => {
   return (
     <Box>
-      <Stepper activeStep={currentStep} sx={{ maxWidth: '50%' }}>
+      <Stepper activeStep={currentStep} sx={{ minWidth: '665px', maxWidth: '50%' }}>
         {documentApprovalSteps.map((label: string, index: number) => (
           <Step key={label}>
             <StepLabel
