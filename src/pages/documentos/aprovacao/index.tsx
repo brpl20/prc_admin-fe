@@ -96,7 +96,7 @@ const DocumentApproval = () => {
     });
 
     if (currentStep === 0) {
-      fetchWorkData(id);
+      fetchWorkData(id as string);
     }
   };
 
