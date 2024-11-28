@@ -156,6 +156,14 @@ export const Container = styled.div<any>`
   .ml-8 {
     margin-right: 8px;
   }
+
+  .MuiStepper-horizontal {
+    justify-content: space-between;
+  }
+
+  .MuiStepConnector-horizontal {
+    display: none !important;
+  }
 `;
 
 export const ContentContainer = styled.div<any>`

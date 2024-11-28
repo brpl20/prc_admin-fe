@@ -19,6 +19,7 @@ import { PageTitleContext } from '../../contexts/PageTitleContext';
 import { Footer } from '../../components';
 import { MdOutlineAddCircle, MdSearch } from 'react-icons/md';
 import { GrDocumentText } from 'react-icons/gr';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
@@ -26,6 +27,7 @@ const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 type DocumentSearchFilter = 'pending_review' | 'pending_signature' | 'signed';
 
 const Documents = () => {
+  const router = useRouter();
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
 
   const [works, setWorks] = useState<IWorksListProps[]>([]);
@@ -34,7 +36,6 @@ const Documents = () => {
   const [responsibleLawyers, setResponsibleLawyers] = useState<any>([]);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [refetch, setRefetch] = useState(false);
 
   const [searchFor, setSearchFor] = useState<DocumentSearchFilter>('pending_review');
 
@@ -42,7 +43,7 @@ const Documents = () => {
     setIsLoading(true);
 
     fetchWorks();
-  }, [refetch]);
+  }, []);
 
   useEffect(() => {
     // Fetch responsible laywers
@@ -64,10 +65,21 @@ const Documents = () => {
   }, []);
 
   const fetchWorks = async () => {
-    const response = await getAllWorks('active');
-    setWorks(response.data);
-    setFilteredWorks(response.data);
-    setIsLoading(false);
+    setIsLoading(true);
+
+    try {
+      const response = await getAllWorks('active');
+      const worksWithDocuments = response.data.filter((work: IWorksListProps) => {
+        return work.attributes.documents && work.attributes.documents.length > 0;
+      });
+
+      setWorks(worksWithDocuments);
+      setFilteredWorks(worksWithDocuments);
+    } catch (error) {
+      console.error('Error fetching works:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const fetchResponsibleLawyers = async () => {
@@ -212,8 +224,6 @@ const Documents = () => {
                   filteredWorks.map((work: IWorksListProps) => {
                     const responsible = getLawyerName(work.attributes.responsible_lawyer);
 
-                    const partner = getLawyerName(work.attributes.partner_lawyer);
-
                     const clients_names = work.attributes.profile_customers.map(
                       (customer: any) => customer.name,
                     );
@@ -225,12 +235,10 @@ const Documents = () => {
                           ? clients_names.map((name: string) => name.split(' ')[0]).join(', ')
                           : clients_names,
                       deleted: work.attributes.deleted,
-                      requestProcess: work.attributes.number,
                       responsible: responsible,
-                      partner: partner,
+                      documents: work.attributes.documents,
                       number: work.attributes.number,
                       created_by_id: work.attributes.created_by_id,
-                      status: work.attributes.status,
                       date: 'XX/XX/XXXX',
                     };
                   })
@@ -285,7 +293,15 @@ const Documents = () => {
                         <IconButton
                           aria-label="open"
                           onClick={e => {
-                            // Redirect to signing and revision page
+                            // Redirect to signing and approval page
+                            router.push({
+                              pathname: '/documentos/aprovacao',
+                              query: {
+                                id: params.row.id,
+                                client: params.row.client,
+                                responsible: params.row.responsible,
+                              },
+                            });
                           }}
                         >
                           <GrDocumentText size={22} color={colors.icons} cursor={'pointer'} />

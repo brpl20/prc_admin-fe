@@ -1,3 +1,5 @@
+import IDocumentProps from './IDocument';
+
 interface IAttributesProps {
   id?: string;
   profile_customer_ids: string[];
@@ -57,6 +59,7 @@ interface IAttributesProps {
   profile_customers: IProfile_customersDataProps[];
 
   // #Documents
+  documents: IDocumentProps[];
   document_type: string;
   document_docx: string[];
 
