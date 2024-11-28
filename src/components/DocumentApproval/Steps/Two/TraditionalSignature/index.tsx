@@ -1,12 +1,13 @@
-import { Box, Button, IconButton, Typography } from '@mui/material';
+import { Box, Button, IconButton } from '@mui/material';
 import { IDocumentApprovalProps } from '../../../../../interfaces/IDocument';
 import { documentTypeToReadable } from '../../../../../utils/constants';
-import { openFileInNewTab } from '../../../../../utils/files';
-import { GrDocumentText } from 'react-icons/gr';
+import { downloadFileByUrl } from '../../../../../utils/files';
 import { colors } from '../../../../../styles/globals';
 import { DataGrid } from '@mui/x-data-grid';
 import { useModal } from '../../../../../utils/useModal';
 import GenericModal from '../../../../Modals/GenericModal';
+import { TbDownload, TbUpload } from 'react-icons/tb';
+import { useState } from 'react';
 
 interface TraditionalSignatureProps {
   documents: IDocumentApprovalProps[];
@@ -21,8 +22,19 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
   const uploadWarningModal = useModal();
   const confirmSignatureModal = useModal();
 
+  const [uploadedDocumentIds, setUploadedDocumentIds] = useState<number[]>([]);
+
   const handleGoBack = () => {
     handleChangeStep('previous');
+  };
+
+  const handleSignButton = () => {
+    const allUploaded = documents.every(doc => uploadedDocumentIds.includes(doc.id));
+    if (!allUploaded) {
+      return uploadWarningModal.open();
+    }
+
+    confirmSignatureModal.open();
   };
 
   return (
@@ -74,11 +86,14 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
                 id: item.id,
                 type: documentTypeToReadable[item.document_type],
                 url: item.url,
+                status: uploadedDocumentIds.includes(item.id)
+                  ? 'Upload realizado'
+                  : 'Pendente de upload',
               };
             })}
             columns={[
               {
-                flex: 4,
+                flex: 2,
                 field: 'type',
                 headerAlign: 'center',
                 headerName: 'Documentos',
@@ -88,17 +103,45 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
                 flex: 1,
                 field: 'download',
                 headerAlign: 'center',
-                headerName: 'Ver Documento',
+                headerName: 'Download de documento',
                 align: 'center',
                 renderCell: (params: any) => (
                   <Box>
                     <IconButton
                       aria-label="open"
                       onClick={_ => {
-                        openFileInNewTab(params.row.url);
+                        downloadFileByUrl(params.row.url);
                       }}
                     >
-                      <GrDocumentText size={22} color={colors.icons} cursor={'pointer'} />
+                      <TbDownload size={22} color={colors.icons} cursor={'pointer'} />
+                    </IconButton>
+                  </Box>
+                ),
+              },
+              {
+                flex: 2,
+                field: 'status',
+                headerAlign: 'center',
+                headerName: 'Status do upload',
+                align: 'center',
+              },
+              {
+                flex: 1,
+                field: 'upload',
+                headerAlign: 'center',
+                headerName: 'Upload de documento',
+                align: 'center',
+                renderCell: (params: any) => (
+                  <Box>
+                    <IconButton
+                      aria-label="open"
+                      onClick={_ => {
+                        // TODO: handle file upload once the endpoint is ready
+
+                        setUploadedDocumentIds(prevIds => [...prevIds, params.row.id]);
+                      }}
+                    >
+                      <TbUpload size={22} color={colors.icons} cursor={'pointer'} />
                     </IconButton>
                   </Box>
                 ),
@@ -127,7 +170,7 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
               textTransform: 'none',
             }}
             color="secondary"
-            onClick={beginSignatureModal.open}
+            onClick={handleSignButton}
           >
             {'Confirmar assinaturas'}
           </Button>
