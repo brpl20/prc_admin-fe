@@ -10,4 +10,14 @@ interface IDocumentProps {
   updated_at: string;
 }
 
+interface IDocumentApprovalProps extends IDocumentProps {
+  pending_revision: boolean;
+}
+
+interface IDocumentRevisionProps extends IDocumentProps {
+  pending_upload: boolean;
+}
+
 export default IDocumentProps;
+
+export type { IDocumentApprovalProps, IDocumentRevisionProps };
