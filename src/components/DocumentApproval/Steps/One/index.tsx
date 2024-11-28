@@ -4,24 +4,24 @@ import { DataGrid } from '@mui/x-data-grid';
 import { documentTypeToReadable } from '../../../../utils/constants';
 import { TbDownload, TbUpload } from 'react-icons/tb';
 import { colors, ContentContainer } from '../../../../styles/globals';
-import downloadFileByUrl from '../../../../utils/downloadFileByUrl';
 import { useModal } from '../../../../utils/useModal';
 import GenericModal from '../../../Modals/GenericModal';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { ContainerDetails, DetailsWrapper } from '../../../Details/styles';
 import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
+import { downloadFileByUrl } from '../../../../utils/files';
 
 interface DocumentApprovalStepOneProps {
   documents: IDocumentApprovalProps[];
   setDocuments: Dispatch<SetStateAction<IDocumentApprovalProps[]>>;
-  handleNextStep: () => void;
+  handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
 }
 
 const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   documents,
   setDocuments,
-  handleNextStep,
+  handleChangeStep,
 }) => {
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [revisionDocuments, setRevisionDocuments] = useState<IDocumentRevisionProps[]>([]);
@@ -288,7 +288,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                   textTransform: 'none',
                 }}
                 color="secondary"
-                onClick={handleNextStep}
+                onClick={() => handleChangeStep('next')}
               >
                 {'Ir para assinaturas'}
               </Button>

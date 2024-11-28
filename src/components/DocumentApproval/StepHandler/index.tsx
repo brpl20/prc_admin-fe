@@ -5,7 +5,7 @@ import DocumentApprovalStepOne from '../Steps/One';
 
 interface DocumentApprovalStepHandlerProps {
   step: number;
-  handleNextStep: () => void;
+  handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
   documents: IDocumentApprovalProps[];
   setDocuments: Dispatch<SetStateAction<IDocumentApprovalProps[]>>;
 }
@@ -14,19 +14,15 @@ const DocumentApprovalStepHandler: React.FunctionComponent<DocumentApprovalStepH
   step,
   documents,
   setDocuments,
-  handleNextStep,
+  handleChangeStep,
 }) => {
   const steps = [
     <DocumentApprovalStepOne
       documents={documents}
       setDocuments={setDocuments}
-      handleNextStep={handleNextStep}
+      handleChangeStep={handleChangeStep}
     />,
-    <DocumentApprovalStepTwo
-      documents={documents}
-      setDocuments={setDocuments}
-      handleNextStep={handleNextStep}
-    />,
+    <DocumentApprovalStepTwo documents={documents} handleChangeStep={handleChangeStep} />,
   ];
   return steps[step] || null;
 };

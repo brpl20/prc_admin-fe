@@ -1,28 +1,26 @@
-import { Box, Button, IconButton, Typography } from '@mui/material';
-import { IDocumentApprovalProps, IDocumentRevisionProps } from '../../../../interfaces/IDocument';
-import { DataGrid } from '@mui/x-data-grid';
-import { documentTypeToReadable } from '../../../../utils/constants';
-import { TbDownload, TbUpload } from 'react-icons/tb';
+import { Box, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup } from '@mui/material';
+import { IDocumentApprovalProps } from '../../../../interfaces/IDocument';
 import { colors, ContentContainer } from '../../../../styles/globals';
-import downloadFileByUrl from '../../../../utils/downloadFileByUrl';
-import { useModal } from '../../../../utils/useModal';
-import GenericModal from '../../../Modals/GenericModal';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { ContainerDetails, DetailsWrapper } from '../../../Details/styles';
 import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
+import DigitalSignature from './DigitalSignature';
+import TraditionalSignature from './TraditionalSignature';
+import { SignatureType } from '../../../../types/signature';
 
 interface DocumentApprovalStepTwoProps {
   documents: IDocumentApprovalProps[];
-  setDocuments: Dispatch<SetStateAction<IDocumentApprovalProps[]>>;
-  handleNextStep: () => void;
+  handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
 }
 
 const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({
   documents,
-  setDocuments,
-  handleNextStep,
+  handleChangeStep,
 }) => {
+  const [signatureType, setSignatureType] = useState<SignatureType>('');
+  const [showRadioButtons, setShowRadioButtons] = useState(true);
+
   return (
     <>
       <DetailsWrapper
@@ -68,10 +66,75 @@ const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({
         </ContainerDetails>
         <ContentContainer>
           <DocumentApprovalStepper currentStep={1} />
-          {'teste'}
+
+          {showRadioButtons && (
+            <FormControl className="mt-3">
+              <FormLabel
+                className="font-bold"
+                sx={{ color: colors.black }}
+                id="signature-radio-buttons-group-label"
+              >
+                Selecione o tipo de assinatura:
+              </FormLabel>
+              <RadioGroup
+                aria-labelledby="signature-radio-buttons-group-label"
+                className="flex flex-row"
+                onChange={e => setSignatureType(e.target.value as SignatureType)}
+                value={signatureType}
+              >
+                <FormControlLabel value="digital" control={<Radio />} label="Assinatura digital" />
+                <FormControlLabel
+                  value="traditional"
+                  control={<Radio />}
+                  label="Assinatura tradicional"
+                />
+              </RadioGroup>
+            </FormControl>
+          )}
+
+          {signatureType && (
+            <SignatureContentHandler
+              documents={documents}
+              signatureType={signatureType}
+              handleChangeStep={handleChangeStep}
+              setSignatureType={setSignatureType}
+              setShowRadioButtons={setShowRadioButtons}
+            />
+          )}
         </ContentContainer>
       </DetailsWrapper>
     </>
+  );
+};
+
+interface SignatureContentHandlerProps {
+  signatureType: SignatureType;
+  documents: IDocumentApprovalProps[];
+  handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
+  setSignatureType: Dispatch<SetStateAction<SignatureType>>;
+  setShowRadioButtons: Dispatch<SetStateAction<boolean>>;
+}
+
+const SignatureContentHandler: React.FunctionComponent<SignatureContentHandlerProps> = ({
+  signatureType,
+  documents,
+  handleChangeStep,
+  setSignatureType,
+  setShowRadioButtons,
+}) => {
+  return (
+    <Box className="mt-5">
+      {signatureType === 'digital' ? (
+        <DigitalSignature
+          documents={documents}
+          handleChangeStep={handleChangeStep}
+          setSignatureType={setSignatureType}
+          setShowRadioButtons={setShowRadioButtons}
+        />
+      ) : (
+        <TraditionalSignature documents={documents} />
+      )}
+    </Box>
   );
 };
 

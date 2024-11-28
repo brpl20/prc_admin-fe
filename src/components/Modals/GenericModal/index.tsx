@@ -61,7 +61,7 @@ const GenericModal = ({
             <Button
               variant="contained"
               sx={{
-                width: '124px',
+                minWidth: '124px',
                 height: '36px',
                 color: colors.white,
                 textTransform: 'none',
