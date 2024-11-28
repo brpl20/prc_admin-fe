@@ -1,32 +1,22 @@
-import {
-  Box,
-  Button,
-  FormControl,
-  FormControlLabel,
-  FormLabel,
-  IconButton,
-  Radio,
-  RadioGroup,
-  Typography,
-} from '@mui/material';
+import { Box, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup } from '@mui/material';
 import { IDocumentApprovalProps } from '../../../../interfaces/IDocument';
 import { colors, ContentContainer } from '../../../../styles/globals';
-import { Dispatch, SetStateAction } from 'react';
+import { useState } from 'react';
 import { ContainerDetails, DetailsWrapper } from '../../../Details/styles';
 import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
+import DigitalSignature from './DigitalSignature';
+import TraditionalSignature from './TraditionalSignature';
 
 interface DocumentApprovalStepTwoProps {
   documents: IDocumentApprovalProps[];
-  setDocuments: Dispatch<SetStateAction<IDocumentApprovalProps[]>>;
-  handleNextStep: () => void;
 }
 
-const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({
-  documents,
-  setDocuments,
-  handleNextStep,
-}) => {
+type SignatureType = 'digital' | 'traditional' | null;
+
+const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({ documents }) => {
+  const [signatureType, setSignatureType] = useState<SignatureType>();
+
   return (
     <>
       <DetailsWrapper
@@ -84,6 +74,7 @@ const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({
             <RadioGroup
               aria-labelledby="signature-radio-buttons-group-label"
               className="flex flex-row"
+              onChange={e => setSignatureType(e.target.value as SignatureType)}
             >
               <FormControlLabel value="digital" control={<Radio />} label="Assinatura digital" />
               <FormControlLabel
@@ -93,9 +84,33 @@ const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({
               />
             </RadioGroup>
           </FormControl>
+
+          {signatureType && (
+            <SignatureContentHandler documents={documents} signatureType={signatureType} />
+          )}
         </ContentContainer>
       </DetailsWrapper>
     </>
+  );
+};
+
+interface SignatureContentHandlerProps {
+  signatureType: SignatureType;
+  documents: IDocumentApprovalProps[];
+}
+
+const SignatureContentHandler: React.FunctionComponent<SignatureContentHandlerProps> = ({
+  signatureType,
+  documents,
+}) => {
+  return (
+    <Box className="mt-5">
+      {signatureType === 'digital' ? (
+        <DigitalSignature documents={documents} />
+      ) : (
+        <TraditionalSignature documents={documents} />
+      )}
+    </Box>
   );
 };
 

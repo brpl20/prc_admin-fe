@@ -4,13 +4,13 @@ import { DataGrid } from '@mui/x-data-grid';
 import { documentTypeToReadable } from '../../../../utils/constants';
 import { TbDownload, TbUpload } from 'react-icons/tb';
 import { colors, ContentContainer } from '../../../../styles/globals';
-import downloadFileByUrl from '../../../../utils/downloadFileByUrl';
 import { useModal } from '../../../../utils/useModal';
 import GenericModal from '../../../Modals/GenericModal';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { ContainerDetails, DetailsWrapper } from '../../../Details/styles';
 import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
+import { downloadFileByUrl } from '../../../../utils/files';
 
 interface DocumentApprovalStepOneProps {
   documents: IDocumentApprovalProps[];
