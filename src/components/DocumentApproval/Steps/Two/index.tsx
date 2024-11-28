@@ -19,7 +19,7 @@ const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({
   handleChangeStep,
 }) => {
   const [signatureType, setSignatureType] = useState<SignatureType>('');
-  const [showRadioButtons, setShowRadioButtons] = useState(false);
+  const [showRadioButtons, setShowRadioButtons] = useState(true);
 
   return (
     <>
