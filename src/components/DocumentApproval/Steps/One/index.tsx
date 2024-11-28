@@ -15,13 +15,13 @@ import { downloadFileByUrl } from '../../../../utils/files';
 interface DocumentApprovalStepOneProps {
   documents: IDocumentApprovalProps[];
   setDocuments: Dispatch<SetStateAction<IDocumentApprovalProps[]>>;
-  handleNextStep: () => void;
+  handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
 }
 
 const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   documents,
   setDocuments,
-  handleNextStep,
+  handleChangeStep,
 }) => {
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [revisionDocuments, setRevisionDocuments] = useState<IDocumentRevisionProps[]>([]);
@@ -288,7 +288,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                   textTransform: 'none',
                 }}
                 color="secondary"
-                onClick={handleNextStep}
+                onClick={() => handleChangeStep('next')}
               >
                 {'Ir para assinaturas'}
               </Button>

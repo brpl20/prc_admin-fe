@@ -11,8 +11,6 @@ import GenericModal from '../../../components/Modals/GenericModal';
 import { IDocumentApprovalProps } from '../../../interfaces/IDocument';
 import WorkInfoCard from '../../../components/DocumentApproval/WorkInfoCard';
 import { useModal } from '../../../utils/useModal';
-import DocumentApprovalStepOne from '../../../components/DocumentApproval/Steps/One';
-import DocumentApprovalStepTwo from '../../../components/DocumentApproval/Steps/Two';
 import DocumentApprovalStepHandler from '../../../components/DocumentApproval/StepHandler';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
@@ -21,6 +19,15 @@ const DocumentApproval = () => {
   const router = useRouter();
 
   const { id, client, responsible } = router.query;
+
+  if (!id || !client || !responsible) {
+    return (
+      <p>
+        Ocorreu um erro ao buscar o ID, Cliente e Advogado Responsável pelo trabalho. Tente
+        novamente.
+      </p>
+    );
+  }
 
   const [loading, setLoading] = useState(true);
   const [workData, setWorkData] = useState<IWorksListProps>({} as IWorksListProps);
@@ -74,8 +81,23 @@ const DocumentApproval = () => {
     backModal.open();
   };
 
-  const handleNextStep = () => {
-    setCurrentStep(prevStep => prevStep + 1);
+  const handleChangeStep = (action: 'next' | 'previous' | 'set', step?: number) => {
+    setCurrentStep(prevStep => {
+      switch (action) {
+        case 'next':
+          return prevStep + 1;
+        case 'previous':
+          return prevStep - 1;
+        case 'set':
+          return step || 0;
+        default:
+          return prevStep;
+      }
+    });
+
+    if (currentStep === 0) {
+      fetchWorkData(id);
+    }
   };
 
   return (
@@ -139,7 +161,7 @@ const DocumentApproval = () => {
 
               <DocumentApprovalStepHandler
                 step={currentStep}
-                handleNextStep={handleNextStep}
+                handleChangeStep={handleChangeStep}
                 documents={documents}
                 setDocuments={setDocuments}
               />

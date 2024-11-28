@@ -10,11 +10,15 @@ import TraditionalSignature from './TraditionalSignature';
 
 interface DocumentApprovalStepTwoProps {
   documents: IDocumentApprovalProps[];
+  handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
 }
 
 type SignatureType = 'digital' | 'traditional' | null;
 
-const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({ documents }) => {
+const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({
+  documents,
+  handleChangeStep,
+}) => {
   const [signatureType, setSignatureType] = useState<SignatureType>();
 
   return (
@@ -86,7 +90,11 @@ const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({ docum
           </FormControl>
 
           {signatureType && (
-            <SignatureContentHandler documents={documents} signatureType={signatureType} />
+            <SignatureContentHandler
+              documents={documents}
+              signatureType={signatureType}
+              handleChangeStep={handleChangeStep}
+            />
           )}
         </ContentContainer>
       </DetailsWrapper>
@@ -97,16 +105,18 @@ const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({ docum
 interface SignatureContentHandlerProps {
   signatureType: SignatureType;
   documents: IDocumentApprovalProps[];
+  handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
 }
 
 const SignatureContentHandler: React.FunctionComponent<SignatureContentHandlerProps> = ({
   signatureType,
   documents,
+  handleChangeStep,
 }) => {
   return (
     <Box className="mt-5">
       {signatureType === 'digital' ? (
-        <DigitalSignature documents={documents} />
+        <DigitalSignature documents={documents} handleChangeStep={handleChangeStep} />
       ) : (
         <TraditionalSignature documents={documents} />
       )}
