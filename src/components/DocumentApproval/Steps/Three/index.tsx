@@ -6,10 +6,11 @@ import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
 import { DataGrid } from '@mui/x-data-grid';
 import { documentTypeToReadable } from '../../../../utils/constants';
-import { openFileInNewTab } from '../../../../utils/files';
+import { downloadFileByUrl, openFileInNewTab } from '../../../../utils/files';
 import { useModal } from '../../../../utils/useModal';
 import GenericModal from '../../../Modals/GenericModal';
 import { useRouter } from 'next/router';
+import { TbDownload } from 'react-icons/tb';
 
 interface DocumentApprovalStepThreeProps {
   documents: IDocumentApprovalProps[];
@@ -106,6 +107,25 @@ const DocumentApprovalStepThree: React.FC<DocumentApprovalStepThreeProps> = ({ d
                 {
                   flex: 1,
                   field: 'download',
+                  headerAlign: 'center',
+                  headerName: 'Baixar Documento',
+                  align: 'center',
+                  renderCell: (params: any) => (
+                    <Box>
+                      <IconButton
+                        aria-label="open"
+                        onClick={_ => {
+                          downloadFileByUrl(params.row.url);
+                        }}
+                      >
+                        <TbDownload size={22} color={colors.icons} cursor={'pointer'} />
+                      </IconButton>
+                    </Box>
+                  ),
+                },
+                {
+                  flex: 1,
+                  field: 'open',
                   headerAlign: 'center',
                   headerName: 'Ver Documento',
                   align: 'center',
