@@ -1,4 +1,4 @@
-import { Box, IconButton } from '@mui/material';
+import { Box, Button, IconButton } from '@mui/material';
 import { IDocumentApprovalProps } from '../../../../interfaces/IDocument';
 import { colors, ContentContainer } from '../../../../styles/globals';
 import { ContainerDetails, DetailsWrapper } from '../../../Details/styles';
@@ -7,14 +7,38 @@ import DocumentApprovalStepper from '../../DocumentApprovalStepper';
 import { DataGrid } from '@mui/x-data-grid';
 import { documentTypeToReadable } from '../../../../utils/constants';
 import { openFileInNewTab } from '../../../../utils/files';
+import { useModal } from '../../../../utils/useModal';
+import GenericModal from '../../../Modals/GenericModal';
+import { useRouter } from 'next/router';
 
 interface DocumentApprovalStepThreeProps {
   documents: IDocumentApprovalProps[];
 }
 
 const DocumentApprovalStepThree: React.FC<DocumentApprovalStepThreeProps> = ({ documents }) => {
+  const router = useRouter();
+  const backModal = useModal();
+
   return (
     <>
+      {/* Back Modal */}
+      <GenericModal
+        isOpen={backModal.isOpen}
+        onClose={backModal.close}
+        onConfirm={() => {
+          router.push('/documentos');
+        }}
+        title="Atenção!"
+        showConfirmButton
+        cancelButtonText="Cancelar"
+        confirmButtonText="Sim, voltar!"
+        content={
+          <>
+            Tem certeza que deseja voltar para o dashboard de <strong>Revisão e Aprovação</strong>?
+          </>
+        }
+      />
+
       <DetailsWrapper
         style={{
           marginTop: 32,
@@ -100,6 +124,20 @@ const DocumentApprovalStepThree: React.FC<DocumentApprovalStepThreeProps> = ({ d
                 },
               ]}
             />
+          </Box>
+
+          <Box width={'100%'} display={'flex'} justifyContent={'center'} gap={'12px'} mt={'32px'}>
+            <Button
+              color="primary"
+              variant="outlined"
+              sx={{
+                height: '36px',
+                textTransform: 'none',
+              }}
+              onClick={backModal.open}
+            >
+              {'Finalizar'}
+            </Button>
           </Box>
         </ContentContainer>
       </DetailsWrapper>
