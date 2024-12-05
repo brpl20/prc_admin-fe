@@ -20,7 +20,7 @@ const DocumentApproval = () => {
 
   const { id, client, responsible } = router.query;
 
-  if (!id || !client || !responsible) {
+  if (!id || !client) {
     return (
       <p>
         Ocorreu um erro ao buscar o ID, Cliente e Advogado Responsável pelo trabalho. Tente
