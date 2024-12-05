@@ -16,6 +16,12 @@ const PFCustomerSteps = [
   'Arquivos',
 ];
 
+const documentApprovalSteps = [
+  'Pendentes de Revisão',
+  'Pendentes de Assinatura',
+  'Documentos Assinados',
+];
+
 const userTypeOptions = [
   { label: 'Pessoa Física', value: 'physical' },
   { label: 'Pessoa Jurídica', value: 'legal' },
@@ -52,6 +58,13 @@ const capacityOptions = [
   { label: 'Relativamente Incapaz', value: 'relatively' },
   { label: 'Absolutamente Incapaz', value: 'unable' },
 ];
+
+const documentTypeToReadable = {
+  procuration: 'Procuração',
+  waiver: 'Termo de Renúncia',
+  deficiency_statement: 'Declaração de Carência',
+  honorary: 'Contrato de Honorário',
+};
 
 const userFormData = {
   customerId: '',
@@ -102,6 +115,7 @@ export {
   workSteps,
   PFCustomerSteps,
   PJCustomerSteps,
+  documentApprovalSteps,
   userTypeOptions,
   gendersOptions,
   civilStatusOptions,
@@ -112,4 +126,5 @@ export {
   societyType,
   UserRegisterTypesOptions,
   accountingType,
+  documentTypeToReadable,
 };
