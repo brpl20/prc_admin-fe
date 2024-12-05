@@ -155,7 +155,7 @@ const DocumentApproval = () => {
             <>
               <WorkInfoCard
                 client={client}
-                responsible={responsible}
+                responsible={responsible || "-"}
                 number={workData.attributes.number}
               />
 
