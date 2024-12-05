@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction } from 'react';
 import { IDocumentApprovalProps } from '../../../interfaces/IDocument';
 import DocumentApprovalStepTwo from '../Steps/Two';
 import DocumentApprovalStepOne from '../Steps/One';
+import DocumentApprovalStepThree from '../Steps/Three';
 
 interface DocumentApprovalStepHandlerProps {
   step: number;
@@ -23,6 +24,7 @@ const DocumentApprovalStepHandler: React.FunctionComponent<DocumentApprovalStepH
       handleChangeStep={handleChangeStep}
     />,
     <DocumentApprovalStepTwo documents={documents} handleChangeStep={handleChangeStep} />,
+    <DocumentApprovalStepThree documents={documents} />,
   ];
   return steps[step] || null;
 };
