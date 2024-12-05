@@ -21,6 +21,8 @@ import { MdOutlineAddCircle, MdSearch } from 'react-icons/md';
 import { GrDocumentText } from 'react-icons/gr';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { useModal } from '@/utils/useModal';
+import GenericModal from '@/components/Modals/GenericModal';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
@@ -34,10 +36,10 @@ const Documents = () => {
   const [filteredWorks, setFilteredWorks] = useState<IWorksListProps[]>([]);
 
   const [responsibleLawyers, setResponsibleLawyers] = useState<any>([]);
-
   const [isLoading, setIsLoading] = useState(false);
-
   const [searchFor, setSearchFor] = useState<DocumentSearchFilter>('pending_review');
+
+  const invalidRequestModal = useModal();
 
   useEffect(() => {
     setIsLoading(true);
@@ -126,8 +128,34 @@ const Documents = () => {
     setFilteredWorks(filteredWorks);
   };
 
+  const handleOpenWorkDocuments = (params: any) => {
+    const { id, client, responsible } = params.row;
+
+    if (!client || !id) {
+      invalidRequestModal.open();
+      return
+    }
+
+    // Redirect to signing and approval page
+    router.push({
+      pathname: '/documentos/aprovacao',
+      query: {
+        id: id,
+        client: client,
+        responsible: responsible,
+      },
+    });
+  }
+
   return (
     <>
+      <GenericModal
+        isOpen={invalidRequestModal.isOpen}
+        onClose={invalidRequestModal.close}
+        title='Erro!'
+        content="O trabalho selecionado não possui um cliente ou ID válido."
+        cancelButtonText='Fechar'
+      />
       <Layout>
         <Container>
           <div className="flex flex-row justify-between">
@@ -292,17 +320,7 @@ const Documents = () => {
                       <div>
                         <IconButton
                           aria-label="open"
-                          onClick={e => {
-                            // Redirect to signing and approval page
-                            router.push({
-                              pathname: '/documentos/aprovacao',
-                              query: {
-                                id: params.row.id,
-                                client: params.row.client,
-                                responsible: params.row.responsible,
-                              },
-                            });
-                          }}
+                          onClick={() => handleOpenWorkDocuments(params)}
                         >
                           <GrDocumentText size={22} color={colors.icons} cursor={'pointer'} />
                         </IconButton>
