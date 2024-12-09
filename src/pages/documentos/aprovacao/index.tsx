@@ -20,15 +20,6 @@ const DocumentApproval = () => {
 
   const { id, client, responsible } = router.query;
 
-  if (!id || !client || !responsible) {
-    return (
-      <p>
-        Ocorreu um erro ao buscar o ID, Cliente e Advogado Responsável pelo trabalho. Tente
-        novamente.
-      </p>
-    );
-  }
-
   const [loading, setLoading] = useState(true);
   const [workData, setWorkData] = useState<IWorksListProps>({} as IWorksListProps);
   const [documents, setDocuments] = useState<IDocumentApprovalProps[]>([]);
@@ -155,7 +146,7 @@ const DocumentApproval = () => {
             <>
               <WorkInfoCard
                 client={client}
-                responsible={responsible}
+                responsible={responsible || "Não informado"}
                 number={workData.attributes.number}
               />
 
