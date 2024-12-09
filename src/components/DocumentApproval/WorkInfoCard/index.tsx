@@ -87,7 +87,7 @@ const WorkInfoCard = ({ client, responsible, number }: WorkInfoCardProps) => {
                     fontWeight: '400',
                   }}
                 >
-                  {client}
+                  {client || "Não informado"}
                 </span>
               </div>
 
@@ -108,7 +108,7 @@ const WorkInfoCard = ({ client, responsible, number }: WorkInfoCardProps) => {
                     fontWeight: '400',
                   }}
                 >
-                  {responsible}
+                  {responsible || "Não informado"}
                 </span>
               </div>
 
@@ -120,7 +120,7 @@ const WorkInfoCard = ({ client, responsible, number }: WorkInfoCardProps) => {
                     fontWeight: '500',
                   }}
                 >
-                  CNPJ
+                  N° do trabalho:
                 </span>
                 <span
                   style={{
@@ -129,7 +129,7 @@ const WorkInfoCard = ({ client, responsible, number }: WorkInfoCardProps) => {
                     fontWeight: '400',
                   }}
                 >
-                  {number}
+                  {number || "Não informado"}
                 </span>
               </div>
 
