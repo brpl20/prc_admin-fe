@@ -19,12 +19,15 @@ const DocumentApprovalStepHandler: React.FunctionComponent<DocumentApprovalStepH
 }) => {
   const steps = [
     <DocumentApprovalStepOne
+      key={1}
       documents={documents}
       setDocuments={setDocuments}
       handleChangeStep={handleChangeStep}
     />,
-    <DocumentApprovalStepTwo documents={documents} handleChangeStep={handleChangeStep} />,
-    <DocumentApprovalStepThree documents={documents} />,
+    <DocumentApprovalStepTwo
+      key={2} documents={documents} handleChangeStep={handleChangeStep} />,
+    <DocumentApprovalStepThree
+      key={3} documents={documents} />,
   ];
   return steps[step] || null;
 };
