@@ -42,6 +42,8 @@ import CustomTooltip from '@/components/Tooltip';
 import { MdOutlineAddCircle, MdOutlineInfo } from 'react-icons/md';
 import RepresentativeModal from '../../representative/representativeModal';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
+import { isValidCPF, isValidRG } from '@/utils/validator';
+import { requiredField } from '@/utils/zod';
 
 export interface IRefPFCustomerStepOneProps {
   handleSubmitForm: () => void;
@@ -65,17 +67,22 @@ interface FormData {
   representor: any;
 }
 
-const stepOneSchema = z.object({
-  name: z.string().min(1),
-  last_name: z.string().min(1),
-  cpf: z.string().min(6, { message: 'CPF obrigatório' }),
-  rg: z.string().min(6, { message: 'RG obrigatório' }),
+export const stepOneSchema = z.object({
+  name: requiredField(),
+  last_name: requiredField(),
+  cpf: requiredField()
+    .min(11, { message: 'O CPF precisa ter no mínimo 11 dígitos.' })
+    .refine(isValidCPF, { message: 'O CPF informado é inválido.' }),
+  rg: requiredField()
+    .min(6, { message: 'O RG precisa ter no mínimo 6 dígitos.' })
+    .refine(isValidRG, { message: 'O RG informado é inválido.' }),
   birth: z.string().optional(),
-  nationality: z.string().min(2, { message: 'Naturalidade obrigatória' }),
-  gender: z.string().min(2, { message: 'Sexo obrigatório' }),
-  civil_status: z.string().min(2, { message: 'Estado civil obrigatório' }),
-  capacity: z.string().min(2, { message: 'Capacidade obrigatória' }),
+  nationality: requiredField(),
+  gender: requiredField(),
+  civil_status: requiredField(),
+  capacity: requiredField(),
 });
+
 
 const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IStepOneProps> = (
   { nextStep, editMode },
@@ -309,11 +316,20 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   }));
 
   const handleFormError = (error: any) => {
-    const newErrors = error?.formErrors?.fieldErrors ?? {};
+    const newErrors: Record<string, string[]> = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
-    setMessage('Preencha todos os campos obrigatórios.');
+
+    console.log(newErrors)
+
+    // Extract the first available error message
+    const firstError = (Object.values(newErrors).flat()[0] as string) ?? 'Preencha todos os campos obrigatórios.';
+
+    // Set the Snackbar message to the first error
+    setMessage(firstError);
     setType('error');
     setOpenSnackbar(true);
+
+    // Populate the error object for field-level error handling
     for (const field in newErrors) {
       if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
         errorObject[field] = newErrors[field][0] as string;
