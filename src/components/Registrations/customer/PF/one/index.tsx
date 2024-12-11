@@ -248,17 +248,15 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           (customer: any) => customer.id == formData.representor?.id,
         )?.attributes.name;
 
-        const customerTitle = `${editMode ? 'Alterar' : 'Cadastro'} Pessoa Física ${
-          customerForm.data.attributes.capacity === 'relatively'
-            ? ' - Relativamente Incapaz'
-            : customerForm.data.attributes.capacity === 'unable'
+        const customerTitle = `${editMode ? 'Alterar' : 'Cadastro'} Pessoa Física ${customerForm.data.attributes.capacity === 'relatively'
+          ? ' - Relativamente Incapaz'
+          : customerForm.data.attributes.capacity === 'unable'
             ? ' - Absolutamente Incapaz'
             : ''
-        } ${
-          customerForm.data.attributes.represent_attributes?.representor_id
+          } ${customerForm.data.attributes.represent_attributes?.representor_id
             ? ` - ${representName}`
             : ''
-        }`;
+          }`;
 
         setPageTitle(customerTitle);
 
@@ -287,13 +285,12 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         (customer: any) => customer.id == formData.representor?.id,
       )?.attributes.name;
 
-      const customerTitle = `${editMode ? 'Alterar' : 'Cadastro'} Pessoa Física ${
-        customerForm.capacity === 'relatively'
-          ? ' - Relativamente Incapaz'
-          : customerForm.capacity === 'unable'
+      const customerTitle = `${editMode ? 'Alterar' : 'Cadastro'} Pessoa Física ${customerForm.capacity === 'relatively'
+        ? ' - Relativamente Incapaz'
+        : customerForm.capacity === 'unable'
           ? ' - Absolutamente Incapaz'
           : ''
-      } ${customerForm.represent_attributes?.representor_id ? ` - ${representName}` : ''}`;
+        } ${customerForm.represent_attributes?.representor_id ? ` - ${representName}` : ''}`;
 
       setPageTitle(customerTitle);
 
@@ -317,7 +314,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
-
     for (const field in newErrors) {
       if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
         errorObject[field] = newErrors[field][0] as string;
