@@ -20,7 +20,7 @@ import {
   FormHelperText,
 } from '@mui/material';
 
-import { Container, BirthdayContainer } from '../styles';
+import { Container } from '../styles';
 import {
   gendersOptions,
   civilStatusOptions,
@@ -44,7 +44,6 @@ import { MdOutlineAddCircle, MdOutlineInfo } from 'react-icons/md';
 import RepresentativeModal from '../../representative/representativeModal';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { isValidCPF, isValidRG } from '@/utils/validator';
-import { red } from '@mui/material/colors';
 import { DatePicker } from '@mui/x-date-pickers';
 
 export interface IRefPFCustomerStepOneProps {
@@ -170,9 +169,10 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 
   const handleSelectChange = (event: any) => {
     const { name, value } = event.target;
+
     setFormData(prevData => ({
       ...prevData,
-      [name as string]: value,
+      [name]: value,
     }));
   };
 
@@ -377,7 +377,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     </div>
   );
 
-
   const renderSelectField = (
     label: string,
     name: keyof FormData,
@@ -389,7 +388,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         {label}
       </Typography>
       <FormControl size="small" error={!!errorMessage} fullWidth>
-        <InputLabel>{`Selecione ${label}`}</InputLabel>
+        <InputLabel shrink={false}>{formData[name] ? '' : `Selecione ${label}`}</InputLabel>
         <Select
           name={name}
           value={formData[name] || ''}
@@ -409,35 +408,51 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   const renderDateField = (
     label: string,
     name: keyof FormData,
-    maxDate: string,
     errorMessage?: string,
   ) => (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
         {label}
       </Typography>
-      <input
-        type="date"
-        name={name}
-        max={maxDate}
-        value={formData[name] || ''}
-        onChange={handleInputChange}
-        style={{
-          height: '40px',
-          width: '100%',
-          padding: '8px',
-          borderRadius: '4px',
-          color: errorMessage ? 'red' : 'inherit',
-          border: errorMessage ? '1px solid red' : '1px solid #c4c4c4',
-          fontSize: '16px',
-          fontFamily: 'Roboto',
-          fontWeight: 400,
-        }}
-      />
-      {errorMessage && <FormHelperText color="error" className='ml-2'>{errorMessage}</FormHelperText>}
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <DatePicker
+          value={formData[name]}
+          onChange={(dateObject) => {
+            if (dateObject === null) {
+              return;
+            }
+
+            // Extract year, month, and day from the Day.js object
+            const year = dateObject.$y;
+            const month = dateObject.$M + 1; // Adjust month to be 1-based
+            const day = dateObject.$D;
+
+            // Ensure month and day are two digits (e.g., '01' instead of '1')
+            const formattedMonth = month < 10 ? `0${month}` : `${month}`;
+            const formattedDay = day < 10 ? `0${day}` : `${day}`;
+
+
+            const formattedDate = `${year}-${formattedMonth}-${formattedDay}`;
+
+            setFormData(prevData => ({
+              ...prevData,
+              [name]: formattedDate,
+            }));
+          }}
+          slotProps={{
+            textField: {
+              error: !!errorMessage,
+              fullWidth: true,
+              helperText: errorMessage,
+              FormHelperTextProps: { className: 'ml-2' },
+              size: 'small',
+              variant: 'outlined',
+            }
+          }}
+        />
+      </LocalizationProvider>
     </div>
   );
-
 
   useEffect(() => {
     const handleDataForm = () => {
@@ -519,7 +534,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
               {renderInputField('RG', 'rg', 25, errors.rg)}
             </div>
             <div style={{ display: 'flex', gap: '24px' }}>
-              {renderDateField('Data de Nascimento', 'birth', today, errors.birth)}
+              {renderDateField('Data de Nascimento', 'birth', errors.birth)}
               {renderSelectField(
                 'Naturalidade',
                 'nationality',
