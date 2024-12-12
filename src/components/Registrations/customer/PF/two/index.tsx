@@ -219,18 +219,25 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
   }));
 
   const handleFormError = (error: any) => {
-    const newErrors = error?.formErrors?.fieldErrors ?? {};
+    const newErrors: Record<string, string[]> = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
-    setMessage('Preencha todos os campos obrigatórios.');
+
+    console.log(newErrors)
+
+    // Extract the first available error message
+    const firstError = (Object.values(newErrors).flat()[0] as string) ?? 'Preencha todos os campos obrigatórios.';
+
+    // Set the Snackbar message to the first error
+    setMessage(firstError);
     setType('error');
     setOpenSnackbar(true);
 
+    // Populate the error object for field-level error handling
     for (const field in newErrors) {
       if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
         errorObject[field] = newErrors[field][0] as string;
       }
     }
-
     setErrors(errorObject);
   };
 
@@ -268,16 +275,16 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
         const addresses = attributes.addresses[0]
           ? attributes.addresses[0]
           : [
-              {
-                description: '',
-                zip_code: '',
-                street: '',
-                number: '',
-                neighborhood: '',
-                city: '',
-                state: '',
-              },
-            ];
+            {
+              description: '',
+              zip_code: '',
+              street: '',
+              number: '',
+              neighborhood: '',
+              city: '',
+              state: '',
+            },
+          ];
         setFormData(prevData => ({
           ...prevData,
           cep: addresses.zip_code,
