@@ -15,7 +15,9 @@ import { CustomerContext } from '@/contexts/CustomerContext';
 import { getCEPDetails } from '@/services/brasilAPI';
 import { TextField, Typography } from '@mui/material';
 import { cepMask } from '@/utils/masks';
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
+import { isValidCEP } from '@/utils/validator';
+import CustomTextField from '@/components/FormInputFields/CustomTextField';
 
 export interface IRefPFCustomerStepTwoProps {
   handleSubmitForm: () => void;
@@ -37,12 +39,15 @@ interface FormData {
 }
 
 const stepTwoSchema = z.object({
-  cep: z.string().min(3, { message: 'CEP é obrigatório' }),
-  street: z.string().min(1, { message: 'Endereço é obrigatório' }),
-  state: z.string().min(1, { message: 'Estado é obrigatório' }),
-  city: z.string().min(1, { message: 'Cidade é obrigatório' }),
-  number: z.string().min(1, { message: 'Número é obrigatório' }),
-  neighborhood: z.string().min(1, { message: 'Bairro é obrigatório' }),
+  cep: z
+    .string()
+    .min(8, { message: 'O CEP precisa ter no mínimo 8 dígitos.' })
+    .refine(isValidCEP, { message: 'O CEP informado é inválido.' }),
+  street: z.string().min(1, { message: 'Endereço é um campo obrigatório.' }),
+  state: z.string().min(1, { message: 'Estado é um campo obrigatório.' }),
+  city: z.string().min(1, { message: 'Cidade é um campo obrigatório.' }),
+  number: z.string().min(1, { message: 'Número é um campo obrigatório.' }),
+  neighborhood: z.string().min(1, { message: 'Bairro é um campo obrigatório.' }),
 });
 
 const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IStepTwoProps> = (
@@ -124,13 +129,6 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
 
   const handleSubmitForm = () => {
     try {
-      if (errors.cep && errors.cep !== '') {
-        setMessage('CEP inválido.');
-        setType('error');
-        setOpenSnackbar(true);
-        return;
-      }
-
       saveDataLocalStorage({
         ...customerForm,
         addresses_attributes: [
@@ -154,6 +152,8 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
         number: formData.number?.toString(),
         neighborhood: formData.neighborhood,
       });
+
+      console.log(formData);
 
       if (editMode) {
         customerForm.data.attributes.addresses_attributes = [
@@ -219,26 +219,21 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
   }));
 
   const handleFormError = (error: any) => {
-    const newErrors: Record<string, string[]> = error?.formErrors?.fieldErrors ?? {};
-    const errorObject: { [key: string]: string } = {};
-
-    console.log(newErrors)
-
-    // Extract the first available error message
-    const firstError = (Object.values(newErrors).flat()[0] as string) ?? 'Preencha todos os campos obrigatórios.';
-
-    // Set the Snackbar message to the first error
-    setMessage(firstError);
+    setMessage('Corrija os erros no formulário.');
     setType('error');
     setOpenSnackbar(true);
 
-    // Populate the error object for field-level error handling
-    for (const field in newErrors) {
-      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
-        errorObject[field] = newErrors[field][0] as string;
+    if (error instanceof ZodError) {
+      const fieldErrors = error.flatten().fieldErrors;
+      const newErrors: { [key in keyof FormData]?: string } = {};
+
+      for (const field in fieldErrors) {
+        if (fieldErrors[field]) {
+          newErrors[field as keyof FormData] = fieldErrors[field]?.[0]; // Getting only the first error messsage
+        }
       }
+      setErrors(newErrors);
     }
-    setErrors(errorObject);
   };
 
   const renderInputField = (
@@ -275,16 +270,16 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
         const addresses = attributes.addresses[0]
           ? attributes.addresses[0]
           : [
-            {
-              description: '',
-              zip_code: '',
-              street: '',
-              number: '',
-              neighborhood: '',
-              city: '',
-              state: '',
-            },
-          ];
+              {
+                description: '',
+                zip_code: '',
+                street: '',
+                number: '',
+                neighborhood: '',
+                city: '',
+                state: '',
+              },
+            ];
         setFormData(prevData => ({
           ...prevData,
           cep: addresses.zip_code,

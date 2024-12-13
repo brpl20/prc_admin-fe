@@ -59,7 +59,7 @@ interface IStepOneProps {
   editMode: boolean;
 }
 
-interface FormDataType {
+interface FormData {
   name: string;
   last_name: string;
   cpf: string;
@@ -75,13 +75,15 @@ interface FormDataType {
 const stepOneSchema = z.object({
   name: z.string().min(1, { message: 'Nome é um campo obrigatório.' }),
   last_name: z.string().min(1, { message: 'Sobrenome é um campo obrigatório.' }),
-  cpf: z.string()
+  cpf: z
+    .string()
     .min(11, { message: 'O CPF precisa ter no mínimo 11 dígitos.' })
     .refine(isValidCPF, { message: 'O CPF informado é inválido.' }),
-  rg: z.string()
+  rg: z
+    .string()
     .min(6, { message: 'O RG precisa ter no mínimo 6 dígitos.' })
     .refine(isValidRG, { message: 'O RG informado é inválido.' }),
-  birth: z.string().min(1, { message: "Data de Nascimento é um campo obrigatório." }),
+  birth: z.string().min(1, { message: 'Data de Nascimento é um campo obrigatório.' }),
   nationality: z.string().min(2, { message: 'Naturalidade é um campo obrigatório.' }),
   gender: z.string().min(2, { message: 'Sexo é um campo obrigatório.' }),
   civil_status: z.string().min(2, { message: 'Estado civil é um campo obrigatório.' }),
@@ -94,7 +96,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 ) => {
   const [isModalRegisterRepresentativeOpen, setIsModalRegisterRepresentativeOpen] = useState(false);
 
-  const [errors, setErrors] = useState<{ [key in keyof FormDataType]?: string }>({});
+  const [errors, setErrors] = useState<{ [key in keyof FormData]?: string }>({});
   const { setPageTitle } = useContext(PageTitleContext);
   const { customerForm, setCustomerForm, setNewCustomerForm } = useContext(CustomerContext);
   const [message, setMessage] = useState('');
@@ -102,16 +104,16 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   const [type, setType] = useState<'success' | 'error'>('success');
   const today = new Date().toISOString().split('T')[0];
   const [representorsList, setRepresentorsList] = useState([] as any);
-  const [formData, setFormData] = useState<FormDataType>({
-    name: customerForm.name || "",
-    last_name: customerForm.last_name || "",
-    cpf: customerForm.cpf || "",
-    rg: customerForm.rg || "",
-    birth: customerForm.birth || "",
-    nationality: customerForm.nationality || "",
-    gender: customerForm.gender || "",
-    civil_status: customerForm.civil_status || "",
-    capacity: customerForm.capacity || "",
+  const [formData, setFormData] = useState<FormData>({
+    name: customerForm.name || '',
+    last_name: customerForm.last_name || '',
+    cpf: customerForm.cpf || '',
+    rg: customerForm.rg || '',
+    birth: customerForm.birth || '',
+    nationality: customerForm.nationality || '',
+    gender: customerForm.gender || '',
+    civil_status: customerForm.civil_status || '',
+    capacity: customerForm.capacity || '',
     representor: {},
   });
 
@@ -191,8 +193,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     try {
       stepOneSchema.parse(formData);
 
-      console.log(formData)
-
       if (
         (!formData.representor?.id && formData.capacity === 'relatively') ||
         (!formData.representor?.id && formData.capacity === 'unable')
@@ -262,15 +262,17 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           (customer: any) => customer.id == formData.representor?.id,
         )?.attributes.name;
 
-        const customerTitle = `${editMode ? 'Alterar' : 'Cadastro'} Pessoa Física ${customerForm.data.attributes.capacity === 'relatively'
-          ? ' - Relativamente Incapaz'
-          : customerForm.data.attributes.capacity === 'unable'
+        const customerTitle = `${editMode ? 'Alterar' : 'Cadastro'} Pessoa Física ${
+          customerForm.data.attributes.capacity === 'relatively'
+            ? ' - Relativamente Incapaz'
+            : customerForm.data.attributes.capacity === 'unable'
             ? ' - Absolutamente Incapaz'
             : ''
-          } ${customerForm.data.attributes.represent_attributes?.representor_id
+        } ${
+          customerForm.data.attributes.represent_attributes?.representor_id
             ? ` - ${representName}`
             : ''
-          }`;
+        }`;
 
         setPageTitle(customerTitle);
 
@@ -299,12 +301,13 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         (customer: any) => customer.id == formData.representor?.id,
       )?.attributes.name;
 
-      const customerTitle = `${editMode ? 'Alterar' : 'Cadastro'} Pessoa Física ${customerForm.capacity === 'relatively'
-        ? ' - Relativamente Incapaz'
-        : customerForm.capacity === 'unable'
+      const customerTitle = `${editMode ? 'Alterar' : 'Cadastro'} Pessoa Física ${
+        customerForm.capacity === 'relatively'
+          ? ' - Relativamente Incapaz'
+          : customerForm.capacity === 'unable'
           ? ' - Absolutamente Incapaz'
           : ''
-        } ${customerForm.represent_attributes?.representor_id ? ` - ${representName}` : ''}`;
+      } ${customerForm.represent_attributes?.representor_id ? ` - ${representName}` : ''}`;
 
       setPageTitle(customerTitle);
 
@@ -329,11 +332,11 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 
     if (error instanceof ZodError) {
       const fieldErrors = error.flatten().fieldErrors;
-      const newErrors: { [key in keyof FormDataType]?: string } = {};
+      const newErrors: { [key in keyof FormData]?: string } = {};
 
       for (const field in fieldErrors) {
         if (fieldErrors[field]) {
-          newErrors[field as keyof FormDataType] = fieldErrors[field]?.[0]; // Getting only the first error messsage
+          newErrors[field as keyof FormData] = fieldErrors[field]?.[0]; // Getting only the first error messsage
         }
       }
       setErrors(newErrors);
@@ -352,7 +355,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       </CustomTooltip>
     </div>
   );
-
 
   useEffect(() => {
     const handleDataForm = () => {
@@ -428,7 +430,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
             <div style={{ display: 'flex', gap: '24px' }}>
               <CustomTextField
                 formData={formData}
-                label='Nome'
+                label="Nome"
                 name={'name'}
                 length={99}
                 errorMessage={errors.name}
@@ -437,7 +439,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 
               <CustomTextField
                 formData={formData}
-                label='Sobrenome'
+                label="Sobrenome"
                 name={'last_name'}
                 length={99}
                 errorMessage={errors.last_name}
@@ -447,7 +449,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
             <div style={{ display: 'flex', gap: '24px' }}>
               <CustomTextField
                 formData={formData}
-                label='CPF'
+                label="CPF"
                 name={'cpf'}
                 length={16}
                 errorMessage={errors.cpf}
@@ -456,7 +458,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 
               <CustomTextField
                 formData={formData}
-                label='RG'
+                label="RG"
                 name={'rg'}
                 length={25}
                 errorMessage={errors.rg}
@@ -466,16 +468,16 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
             <div style={{ display: 'flex', gap: '24px' }}>
               <CustomDateField
                 formData={formData}
-                label='Data de Nascimento'
-                name='birth'
+                label="Data de Nascimento"
+                name="birth"
                 errorMessage={errors.birth}
                 handleInputChange={handleInputChange}
               />
 
               <CustomSelectField
                 formData={formData}
-                label='Naturalidade'
-                name='nationality'
+                label="Naturalidade"
+                name="nationality"
                 options={nationalityOptions}
                 errorMessage={errors.nationality}
                 handleSelectChange={handleSelectChange}
@@ -486,7 +488,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           <Box display={'flex'} gap={4} mt={'24px'} maxWidth={'812px'}>
             <CustomSelectField
               formData={formData}
-              label='Gênero'
+              label="Gênero"
               name={'gender'}
               options={gendersOptions}
               errorMessage={errors.gender}
@@ -495,8 +497,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 
             <CustomSelectField
               formData={formData}
-              label='Estado Civil'
-              name='civil_status'
+              label="Estado Civil"
+              name="civil_status"
               options={civilStatusOptions}
               errorMessage={errors.civil_status}
               handleSelectChange={handleSelectChange}
@@ -504,8 +506,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 
             <CustomSelectField
               formData={formData}
-              label='Capacidade'
-              name='capacity'
+              label="Capacidade"
+              name="capacity"
               options={capacityOptions}
               errorMessage={errors.capacity}
               handleSelectChange={handleSelectChange}
