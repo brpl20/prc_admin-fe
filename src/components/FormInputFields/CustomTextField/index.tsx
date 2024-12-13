@@ -1,4 +1,5 @@
 import { TextField, Typography } from '@mui/material';
+import { CSSProperties } from 'react';
 
 interface CustomTextFieldProps {
   formData: any;
@@ -8,6 +9,7 @@ interface CustomTextFieldProps {
   placeholder?: string;
   errorMessage?: string;
   handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  sx?: CSSProperties;
 }
 
 const CustomTextField: React.FC<CustomTextFieldProps> = ({
@@ -18,8 +20,9 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
   placeholder,
   errorMessage,
   handleInputChange,
+  sx,
 }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+  <div style={{ display: 'flex', flexDirection: 'column', flex: 1, ...sx }}>
     <Typography variant="h6" sx={{ marginBottom: '8px' }}>
       {label}
     </Typography>

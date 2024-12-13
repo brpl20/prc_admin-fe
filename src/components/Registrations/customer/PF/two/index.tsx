@@ -48,6 +48,7 @@ const stepTwoSchema = z.object({
   city: z.string().min(1, { message: 'Cidade é um campo obrigatório.' }),
   number: z.string().min(1, { message: 'Número é um campo obrigatório.' }),
   neighborhood: z.string().min(1, { message: 'Bairro é um campo obrigatório.' }),
+  description: z.string().optional(),
 });
 
 const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IStepTwoProps> = (
@@ -62,13 +63,13 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
   const { customerForm, setCustomerForm, newCustomerForm, setNewCustomerForm } =
     useContext(CustomerContext);
   const [formData, setFormData] = useState<FormData>({
-    cep: customerForm.cep,
-    street: customerForm.street,
-    state: customerForm.state,
-    city: customerForm.city,
-    number: customerForm.number,
-    description: customerForm.description,
-    neighborhood: customerForm.neighborhood,
+    cep: customerForm.cep || '',
+    street: customerForm.street || '',
+    state: customerForm.state || '',
+    city: customerForm.city || '',
+    number: customerForm.number || '',
+    description: customerForm.description || '',
+    neighborhood: customerForm.neighborhood || '',
   });
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -232,6 +233,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
           newErrors[field as keyof FormData] = fieldErrors[field]?.[0]; // Getting only the first error messsage
         }
       }
+      console.log(newErrors);
       setErrors(newErrors);
     }
   };
@@ -318,6 +320,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
           }));
         } catch (error: any) {
           setErrors({
+            ...errors,
             cep: 'CEP inválido.',
           });
           setMessage('CEP inválido.');
@@ -348,21 +351,65 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
       )}
       <Container>
         <ColumnContainer>
-          {renderInputField('CEP', 'cep', 'Informe o CEP', '100%', !!errors.cep)}
+          <CustomTextField
+            formData={formData}
+            label="CEP"
+            name="cep"
+            errorMessage={errors.cep}
+            handleInputChange={handleInputChange}
+          />
+
           <div style={{ display: 'flex', gap: '16px' }}>
-            {renderInputField('Endereço', 'street', 'Informe o Endereço', '100%', !!errors.street)}
-            {renderInputField('Número', 'number', 'N.º', '140px', !!errors.street)}
+            <CustomTextField
+              formData={formData}
+              label="Endereço"
+              name="street"
+              errorMessage={errors.street}
+              handleInputChange={handleInputChange}
+              sx={{ flex: 3 }}
+            />
+
+            <CustomTextField
+              formData={formData}
+              label="Número"
+              name="number"
+              placeholder="N.º"
+              errorMessage={errors.number ? 'Obrigatório' : undefined}
+              handleInputChange={handleInputChange}
+            />
           </div>
-          {renderInputField('Complemento', 'description', 'Informe o Complemento', '100%')}
-          {renderInputField(
-            'Bairro',
-            'neighborhood',
-            'Informe o Bairro',
-            '100%',
-            !!errors.neighborhood,
-          )}
-          {renderInputField('Cidade', 'city', 'Informe a Cidade', '100%', !!errors.city)}
-          {renderInputField('Estado', 'state', 'Informe o Estado', '100%', !!errors.state)}
+
+          <CustomTextField
+            formData={formData}
+            label="Complemento"
+            name="description"
+            errorMessage={errors.description}
+            handleInputChange={handleInputChange}
+          />
+
+          <CustomTextField
+            formData={formData}
+            label="Bairro"
+            name="neighborhood"
+            errorMessage={errors.neighborhood}
+            handleInputChange={handleInputChange}
+          />
+
+          <CustomTextField
+            formData={formData}
+            label="Cidade"
+            name="city"
+            errorMessage={errors.city}
+            handleInputChange={handleInputChange}
+          />
+
+          <CustomTextField
+            formData={formData}
+            label="Estado"
+            name="state"
+            errorMessage={errors.state}
+            handleInputChange={handleInputChange}
+          />
         </ColumnContainer>
       </Container>
     </>
