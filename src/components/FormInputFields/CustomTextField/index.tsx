@@ -1,15 +1,15 @@
 import { TextField, Typography } from '@mui/material';
 
-interface TextFieldProps {
+interface CustomTextFieldProps {
   formData: any;
   label: string;
   name: string;
   length: number;
   errorMessage?: string;
-  handleInputChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const CustomTextField: React.FC<TextFieldProps> = ({
+const CustomTextField: React.FC<CustomTextFieldProps> = ({
   formData,
   label,
   name,
@@ -21,7 +21,7 @@ const CustomTextField: React.FC<TextFieldProps> = ({
     <Typography variant="h6" sx={{ marginBottom: '8px' }}>
       {label}
     </Typography>
-    < TextField
+    <TextField
       id={`outlined-${name}`}
       variant="outlined"
       error={!!errorMessage}
@@ -30,7 +30,7 @@ const CustomTextField: React.FC<TextFieldProps> = ({
       name={name}
       size="small"
       inputProps={{ maxLength: length }}
-      value={formData[name] as string || ''}
+      value={(formData[name] as string) || ''}
       autoComplete="off"
       placeholder={`Informe o ${label}`}
       onChange={handleInputChange}
