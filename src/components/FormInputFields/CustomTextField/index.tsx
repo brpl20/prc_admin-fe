@@ -4,7 +4,8 @@ interface CustomTextFieldProps {
   formData: any;
   label: string;
   name: string;
-  length: number;
+  length?: number;
+  placeholder?: string;
   errorMessage?: string;
   handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -14,6 +15,7 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
   label,
   name,
   length,
+  placeholder,
   errorMessage,
   handleInputChange,
 }) => (
@@ -32,7 +34,7 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
       inputProps={{ maxLength: length }}
       value={(formData[name] as string) || ''}
       autoComplete="off"
-      placeholder={`Informe o ${label}`}
+      placeholder={placeholder ? placeholder : `Informe o ${label}`}
       onChange={handleInputChange}
       helperText={errorMessage}
       FormHelperTextProps={{ className: 'ml-2' }}
