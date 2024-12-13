@@ -35,33 +35,13 @@ export const isValidCPF = (cpf: string): boolean => {
 export const isValidRG = (rg: string): boolean => {
     if (!rg) return false;
 
-    // Remove all non-digit characters
     const cleanedRG = rg.replace(/\D/g, '');
 
     // RG must be at least 9 digits long
-    if (cleanedRG.length !== 9) return false;
+    if (cleanedRG.length < 9) return false;
 
     // Check for a sequence of identical digits (e.g., 111111111)
     if (/^(\d)\1{8}$/.test(cleanedRG)) return false;
-
-    // Convert RG into an array of digits
-    const rgDigits = cleanedRG.split('').map(Number);
-
-    // Calculate the check digit (last digit) using a weighted sum
-    const calculateCheckDigit = (digits: number[]) => {
-        const weights = [2, 3, 4, 5, 6, 7, 8, 9]; // Weights used in the calculation
-        const sum = digits.slice(0, 8).reduce((acc, digit, index) => acc + digit * weights[index], 0);
-        const remainder = sum % 11;
-        if (remainder === 0) return 0; // Special rule for RG
-        if (remainder === 1) return 'X'; // RG can use 'X' as the check digit
-        return 11 - remainder;
-    };
-
-    const calculatedCheckDigit = calculateCheckDigit(rgDigits);
-    const actualCheckDigit = isNaN(Number(rgDigits[8])) ? 'X' : rgDigits[8];
-
-    // Validate if the calculated check digit matches the actual check digit
-    if (calculatedCheckDigit != actualCheckDigit) return false;
 
     return true;
 };

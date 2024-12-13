@@ -18,6 +18,7 @@ import {
   Autocomplete,
   Button,
   FormHelperText,
+  SelectChangeEvent,
 } from '@mui/material';
 
 import { Container } from '../styles';
@@ -45,6 +46,9 @@ import RepresentativeModal from '../../representative/representativeModal';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { isValidCPF, isValidRG } from '@/utils/validator';
 import { DatePicker } from '@mui/x-date-pickers';
+import CustomTextField from '@/components/FormInputFields/CustomTextField';
+import CustomDateField from '@/components/FormInputFields/CustomDateField';
+import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
 
 export interface IRefPFCustomerStepOneProps {
   handleSubmitForm: () => void;
@@ -55,7 +59,7 @@ interface IStepOneProps {
   editMode: boolean;
 }
 
-interface FormData {
+interface FormDataType {
   name: string;
   last_name: string;
   cpf: string;
@@ -90,7 +94,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 ) => {
   const [isModalRegisterRepresentativeOpen, setIsModalRegisterRepresentativeOpen] = useState(false);
 
-  const [errors, setErrors] = useState<{ [key in keyof FormData]?: string }>({});
+  const [errors, setErrors] = useState<{ [key in keyof FormDataType]?: string }>({});
   const { setPageTitle } = useContext(PageTitleContext);
   const { customerForm, setCustomerForm, setNewCustomerForm } = useContext(CustomerContext);
   const [message, setMessage] = useState('');
@@ -98,7 +102,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   const [type, setType] = useState<'success' | 'error'>('success');
   const today = new Date().toISOString().split('T')[0];
   const [representorsList, setRepresentorsList] = useState([] as any);
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<FormDataType>({
     name: customerForm.name || "",
     last_name: customerForm.last_name || "",
     cpf: customerForm.cpf || "",
@@ -167,7 +171,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     localStorage.setItem('PF/One', JSON.stringify(data));
   };
 
-  const handleSelectChange = (event: any) => {
+  const handleSelectChange = (event: SelectChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
     setFormData(prevData => ({
@@ -186,6 +190,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   const handleSubmitForm = () => {
     try {
       stepOneSchema.parse(formData);
+
+      console.log(formData)
 
       if (
         (!formData.representor?.id && formData.capacity === 'relatively') ||
@@ -323,11 +329,11 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 
     if (error instanceof ZodError) {
       const fieldErrors = error.flatten().fieldErrors;
-      const newErrors: { [key in keyof FormData]?: string } = {};
+      const newErrors: { [key in keyof FormDataType]?: string } = {};
 
       for (const field in fieldErrors) {
         if (fieldErrors[field]) {
-          newErrors[field as keyof FormData] = fieldErrors[field]?.[0]; // Getting only the first error messsage
+          newErrors[field as keyof FormDataType] = fieldErrors[field]?.[0]; // Getting only the first error messsage
         }
       }
       setErrors(newErrors);
@@ -347,112 +353,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     </div>
   );
 
-
-  const renderInputField = (
-    label: string,
-    name: keyof FormData,
-    length: number,
-    errorMessage?: string,
-  ) => (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {label}
-      </Typography>
-      <TextField
-        id={`outlined-${name}`}
-        variant="outlined"
-        error={!!errorMessage}
-        fullWidth
-        type="text"
-        name={name}
-        size="small"
-        inputProps={{ maxLength: length }}
-        value={formData[name] || ''}
-        autoComplete="off"
-        placeholder={`Informe o ${label}`}
-        onChange={handleInputChange}
-        helperText={errorMessage}
-        FormHelperTextProps={{ className: 'ml-2' }}
-      />
-    </div>
-  );
-
-  const renderSelectField = (
-    label: string,
-    name: keyof FormData,
-    options: { label: string; value: string }[],
-    errorMessage?: string,
-  ) => (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {label}
-      </Typography>
-      <FormControl size="small" error={!!errorMessage} fullWidth>
-        <InputLabel shrink={false}>{formData[name] ? '' : `Selecione ${label}`}</InputLabel>
-        <Select
-          name={name}
-          value={formData[name] || ''}
-          onChange={handleSelectChange}
-        >
-          {options.map(option => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
-        {errorMessage && <FormHelperText color="error" className='ml-2'>{errorMessage}</FormHelperText>}
-      </FormControl>
-    </div>
-  );
-
-  const renderDateField = (
-    label: string,
-    name: keyof FormData,
-    errorMessage?: string,
-  ) => (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {label}
-      </Typography>
-      <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <DatePicker
-          value={formData[name]}
-          onChange={(dateObject) => {
-            if (dateObject === null) {
-              return;
-            }
-
-            // Extract year, month, and day from the Day.js object
-            const year = dateObject.$y;
-            const month = dateObject.$M + 1; // Adjust month to be 1-based
-            const day = dateObject.$D;
-
-            // Ensure month and day are two digits (e.g., '01' instead of '1')
-            const formattedMonth = month < 10 ? `0${month}` : `${month}`;
-            const formattedDay = day < 10 ? `0${day}` : `${day}`;
-
-
-            const formattedDate = `${year}-${formattedMonth}-${formattedDay}`;
-
-            setFormData(prevData => ({
-              ...prevData,
-              [name]: formattedDate,
-            }));
-          }}
-          slotProps={{
-            textField: {
-              error: !!errorMessage,
-              fullWidth: true,
-              helperText: errorMessage,
-              FormHelperTextProps: { className: 'ml-2' },
-              size: 'small',
-              variant: 'outlined',
-            }
-          }}
-        />
-      </LocalizationProvider>
-    </div>
-  );
 
   useEffect(() => {
     const handleDataForm = () => {
@@ -526,34 +426,90 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         <form>
           <Box maxWidth={'812px'} display={'flex'} flexDirection={'column'} gap={'16px'}>
             <div style={{ display: 'flex', gap: '24px' }}>
-              {renderInputField('Nome', 'name', 99, errors.name)}
-              {renderInputField('Sobrenome', 'last_name', 99, errors.last_name)}
+              <CustomTextField
+                formData={formData}
+                label='Nome'
+                name={'name'}
+                length={99}
+                errorMessage={errors.name}
+                handleInputChange={handleInputChange}
+              />
+
+              <CustomTextField
+                formData={formData}
+                label='Sobrenome'
+                name={'last_name'}
+                length={99}
+                errorMessage={errors.last_name}
+                handleInputChange={handleInputChange}
+              />
             </div>
             <div style={{ display: 'flex', gap: '24px' }}>
-              {renderInputField('CPF', 'cpf', 16, errors.cpf)}
-              {renderInputField('RG', 'rg', 25, errors.rg)}
+              <CustomTextField
+                formData={formData}
+                label='CPF'
+                name={'cpf'}
+                length={16}
+                errorMessage={errors.cpf}
+                handleInputChange={handleInputChange}
+              />
+
+              <CustomTextField
+                formData={formData}
+                label='RG'
+                name={'rg'}
+                length={25}
+                errorMessage={errors.rg}
+                handleInputChange={handleInputChange}
+              />
             </div>
             <div style={{ display: 'flex', gap: '24px' }}>
-              {renderDateField('Data de Nascimento', 'birth', errors.birth)}
-              {renderSelectField(
-                'Naturalidade',
-                'nationality',
-                nationalityOptions,
-                errors.nationality,
-              )}
+              <CustomDateField
+                formData={formData}
+                label='Data de Nascimento'
+                name='birth'
+                errorMessage={errors.birth}
+                handleInputChange={handleInputChange}
+              />
+
+              <CustomSelectField
+                formData={formData}
+                label='Naturalidade'
+                name='nationality'
+                options={nationalityOptions}
+                errorMessage={errors.nationality}
+                handleSelectChange={handleSelectChange}
+              />
             </div>
           </Box>
 
           <Box display={'flex'} gap={4} mt={'24px'} maxWidth={'812px'}>
-            {renderSelectField('Gênero', 'gender', gendersOptions, errors.gender)}
-            {renderSelectField(
-              'Estado Civil',
-              'civil_status',
-              civilStatusOptions,
-              errors.civil_status,
-            )}
+            <CustomSelectField
+              formData={formData}
+              label='Gênero'
+              name={'gender'}
+              options={gendersOptions}
+              errorMessage={errors.gender}
+              handleSelectChange={handleSelectChange}
+            />
 
-            {renderSelectField('Capacidade', 'capacity', capacityOptions, errors.capacity)}
+            <CustomSelectField
+              formData={formData}
+              label='Estado Civil'
+              name='civil_status'
+              options={civilStatusOptions}
+              errorMessage={errors.civil_status}
+              handleSelectChange={handleSelectChange}
+            />
+
+            <CustomSelectField
+              formData={formData}
+              label='Capacidade'
+              name='capacity'
+              options={capacityOptions}
+              errorMessage={errors.capacity}
+              handleSelectChange={handleSelectChange}
+            />
           </Box>
 
           {(formData.capacity === 'relatively' || formData.capacity === 'unable') && (
