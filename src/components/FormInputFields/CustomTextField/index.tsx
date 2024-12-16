@@ -3,12 +3,13 @@ import { CSSProperties } from 'react';
 
 interface CustomTextFieldProps {
   formData: any;
-  label: string;
+  label?: string;
   name: string;
   length?: number;
   placeholder?: string;
   errorMessage?: string;
   handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  customValue?: unknown;
   sx?: CSSProperties;
 }
 
@@ -20,12 +21,15 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
   placeholder,
   errorMessage,
   handleInputChange,
+  customValue,
   sx,
 }) => (
   <div style={{ display: 'flex', flexDirection: 'column', flex: 1, ...sx }}>
-    <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-      {label}
-    </Typography>
+    {label && (
+      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+        {label}
+      </Typography>
+    )}
     <TextField
       id={`outlined-${name}`}
       variant="outlined"
@@ -35,9 +39,9 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
       name={name}
       size="small"
       inputProps={{ maxLength: length }}
-      value={(formData[name] as string) || ''}
+      value={(formData[name] as string) || customValue || ''}
       autoComplete="off"
-      placeholder={placeholder ? placeholder : `Informe o ${label}`}
+      placeholder={placeholder || (label ? `Informe o ${label}` : '')}
       onChange={handleInputChange}
       helperText={errorMessage}
       FormHelperTextProps={{ className: 'ml-2' }}

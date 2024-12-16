@@ -53,3 +53,23 @@ export const isValidCEP = (cep: string): boolean => {
   // CEP must be 8 digits long
   return /^\d{8}$/.test(cleanedCEP);
 };
+
+export const isValidPhoneNumber = (phoneNumber: string): boolean => {
+  if (!phoneNumber) return false;
+
+  // Regular expression for Brazilian phone numbers (with or without +55 country code)
+  const brazilianPhoneRegex = /^(?:\+55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\d{4}|\d{4})-?\d{4}$/;
+
+  // Regular expression for international phone numbers (must start with "+" followed by country code)
+  const internationalPhoneRegex = /^\+(\d{1,4})\s?\d{1,15}(?:\s|-)?\d{1,15}$/;
+
+  // Check if the phone number matches either Brazilian or international pattern
+  return brazilianPhoneRegex.test(phoneNumber) || internationalPhoneRegex.test(phoneNumber);
+};
+
+export function isValidEmail(email: string): boolean {
+  if (!email) return false;
+
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
+}
