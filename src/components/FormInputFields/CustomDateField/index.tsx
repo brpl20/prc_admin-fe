@@ -1,64 +1,67 @@
-import { Typography } from "@mui/material";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import React from "react";
+import { Typography } from '@mui/material';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import React from 'react';
+import dayjs, { Dayjs } from 'dayjs';
 
 interface CustomDateFieldProps {
-    formData: any;
-    label: string;
-    name: string;
-    errorMessage?: string;
-    handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  formData: any;
+  label: string;
+  name: string;
+  errorMessage?: string;
+  handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const CustomDateField: React.FC<CustomDateFieldProps> = ({
-    formData,
-    label,
-    name,
-    errorMessage,
-    handleInputChange,
+  formData,
+  label,
+  name,
+  errorMessage,
+  handleInputChange,
 }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-            {label}
-        </Typography>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DatePicker
-                value={formData[name]}
-                onChange={(dateObject) => {
-                    if (!dateObject) return;
+  <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+    <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+      {label}
+    </Typography>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <DatePicker
+        value={dayjs(formData[name] || null)} // Garante que o valor seja um Dayjs ou null
+        onChange={dateObject => {
+          if (!dateObject || !dayjs(dateObject).isValid()) return;
 
-                    // Extract year, month, and day from the dayjs object
-                    const year = dateObject.$y;
-                    const month = (dateObject.$M + 1).toString().padStart(2, '0'); // 1-based and two digits
-                    const day = dateObject.$D.toString().padStart(2, '0');
+          // Garante que o dateObject é um Dayjs
+          const validDate = dayjs(dateObject);
 
-                    const formattedDate = `${year}-${month}-${day}`;
+          // Extract year, month, and day from the dayjs object
+          const year = validDate.year();
+          const month = (validDate.month() + 1).toString().padStart(2, '0'); // 1-based and two digits
+          const day = validDate.date().toString().padStart(2, '0');
 
-                    // Create a synthetic event to be compatible with handleInputChange
-                    const syntheticEvent = {
-                        target: {
-                            name: name,
-                            value: formattedDate
-                        }
-                    } as React.ChangeEvent<HTMLInputElement>;
+          const formattedDate = `${year}-${month}-${day}`;
 
-                    handleInputChange(syntheticEvent);
-                }}
-                slotProps={{
-                    textField: {
-                        error: !!errorMessage,
-                        fullWidth: true,
-                        helperText: errorMessage,
-                        FormHelperTextProps: { className: 'ml-2' },
-                        size: 'small',
-                        variant: 'outlined',
-                    }
-                }}
-            />
+          // Create a synthetic event to be compatible with handleInputChange
+          const syntheticEvent = {
+            target: {
+              name: name,
+              value: formattedDate,
+            },
+          } as React.ChangeEvent<HTMLInputElement>;
 
-        </LocalizationProvider>
-    </div>
+          handleInputChange(syntheticEvent);
+        }}
+        slotProps={{
+          textField: {
+            error: !!errorMessage,
+            fullWidth: true,
+            helperText: errorMessage,
+            FormHelperTextProps: { className: 'ml-2' },
+            size: 'small',
+            variant: 'outlined',
+          },
+        }}
+      />
+    </LocalizationProvider>
+  </div>
 );
 
 export default CustomDateField;

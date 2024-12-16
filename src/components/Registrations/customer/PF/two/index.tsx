@@ -233,7 +233,6 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
           newErrors[field as keyof FormData] = fieldErrors[field]?.[0]; // Getting only the first error messsage
         }
       }
-      console.log(newErrors);
       setErrors(newErrors);
     }
   };
