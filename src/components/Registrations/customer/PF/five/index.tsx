@@ -12,8 +12,9 @@ import { CustomerContext } from '@/contexts/CustomerContext';
 
 import { Box, TextField, Typography } from '@mui/material';
 import { Notification } from '@/components';
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
 import { set } from 'date-fns';
+import CustomTextField from '@/components/FormInputFields/CustomTextField';
 
 export interface IRefPFCustomerStepFiveProps {
   handleSubmitForm: () => void;
@@ -33,10 +34,10 @@ interface FormData {
 }
 
 const stepFiveSchema = z.object({
-  profession: z.string().min(3, 'Profissão é obrigatório'),
-  company: z.string(),
-  number_benefit: z.string(),
-  mother_name: z.string().min(3, 'Nome da Mãe é obrigatório'),
+  profession: z.string().min(3, 'Profissão é um campo obrigatório'),
+  company: z.string().optional(),
+  number_benefit: z.string().optional(),
+  mother_name: z.string().min(3, 'Nome da Mãe é um campo obrigatório'),
 });
 
 const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, IStepFiveProps> = (
@@ -96,20 +97,22 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
   }));
 
   const handleFormError = (error: any) => {
-    const newErrors = error?.formErrors?.fieldErrors ?? {};
-    const errorObject: { [key: string]: string } = {};
-    setMessage('Preencha todos os campos obrigatórios.');
+    setMessage('Corrija os erros no formulário.');
     setType('error');
     setOpenSnackbar(true);
 
-    for (const field in newErrors) {
-      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
-        errorObject[field] = newErrors[field][0] as string;
-      }
-    }
-    setErrors(errorObject);
-  };
+    if (error instanceof ZodError) {
+      const fieldErrors = error.flatten().fieldErrors;
+      const newErrors: { [key in keyof FormData]?: string } = {};
 
+      for (const field in fieldErrors) {
+        if (fieldErrors[field]) {
+          newErrors[field as keyof FormData] = fieldErrors[field]?.[0]; // Getting only the first error messsage
+        }
+      }
+      setErrors(newErrors);
+    }
+  };
   const handleSubmitForm = () => {
     saveDataLocalStorage({
       ...customerForm,
@@ -169,34 +172,6 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
     }
   };
 
-  const renderInputField = (
-    label: string,
-    name: keyof FormData,
-    length: number,
-    placeholderValue: string,
-    error?: boolean,
-  ) => (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {label}
-      </Typography>
-      <TextField
-        id="outlined-basic"
-        variant="outlined"
-        inputProps={{ maxLength: length }}
-        fullWidth
-        name={name}
-        size="small"
-        sx={{ flex: 1 }}
-        value={formData[name]}
-        autoComplete="off"
-        placeholder={`${placeholderValue}`}
-        onChange={handleInputChange}
-        error={error && !formData[name]}
-      />
-    </div>
-  );
-
   useEffect(() => {
     const handleDataForm = () => {
       const attributes = customerForm.data.attributes;
@@ -234,42 +209,57 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
       <Container>
         <Box maxWidth={'812px'} display={'flex'} flexDirection={'column'} gap={'16px'}>
           <div style={{ display: 'flex', gap: '24px' }}>
-            {renderInputField(
-              'Profissão',
-              'profession',
-              99,
-              'Informe a Profissão',
-              !!errors.profession,
-            )}
-            {renderInputField(
-              'Empresa Atual',
-              'company',
-              99,
-              'Informe a Empersa Atual',
-              !!errors.company,
-            )}
+            <CustomTextField
+              formData={formData}
+              name="profession"
+              label="Profissão"
+              errorMessage={errors.profession}
+              handleInputChange={handleInputChange}
+            />
+            <CustomTextField
+              formData={formData}
+              name="company"
+              label="Empresa Atual"
+              errorMessage={errors.company}
+              handleInputChange={handleInputChange}
+            />
           </div>
 
           <div style={{ display: 'flex', gap: '24px' }}>
-            {renderInputField(
-              'Número de Benefício',
-              'number_benefit',
-              99,
-              'Informe o Número de Benefício',
-              !!errors.number_benefit,
-            )}
-            {renderInputField('NIT', 'nit', 30, 'Informe o Número do NIT')}
+            <CustomTextField
+              formData={formData}
+              name="number_benefit"
+              label="Número de Benefício"
+              errorMessage={errors.number_benefit}
+              handleInputChange={handleInputChange}
+            />
+
+            <CustomTextField
+              formData={formData}
+              name="nit"
+              label="NIT"
+              length={30}
+              errorMessage={errors.nit}
+              handleInputChange={handleInputChange}
+            />
           </div>
 
           <div style={{ display: 'flex', gap: '24px' }}>
-            {renderInputField(
-              'Nome da Mãe',
-              'mother_name',
-              99,
-              'Informe o Nome',
-              !!errors.mother_name,
-            )}
-            {renderInputField('Senha do meu INSS', 'inss_password', 99, 'Informe a Senha')}
+            <CustomTextField
+              formData={formData}
+              name="mother_name"
+              label="Nome da Mãe"
+              errorMessage={errors.mother_name}
+              handleInputChange={handleInputChange}
+            />
+
+            <CustomTextField
+              formData={formData}
+              name="inss_password"
+              label="Senha do meu INSS"
+              errorMessage={errors.inss_password}
+              handleInputChange={handleInputChange}
+            />
           </div>
         </Box>
       </Container>

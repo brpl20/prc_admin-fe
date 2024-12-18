@@ -16,7 +16,9 @@ import { CustomerContext } from '@/contexts/CustomerContext';
 import { Notification } from '@/components';
 import { IoMdTrash } from 'react-icons/io';
 import { phoneMask } from '@/utils/masks';
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
+import { isValidEmail, isValidPhoneNumber } from '@/utils/validator';
+import CustomTextField from '@/components/FormInputFields/CustomTextField';
 
 export interface IRefPFCustomerStepThreeProps {
   handleSubmitForm: () => void;
@@ -27,9 +29,33 @@ interface IStepThreeProps {
   editMode: boolean;
 }
 
+interface FormError {
+  code: string;
+  message: string;
+  path: (string | number)[]; // Path is an array of field name and index
+}
+
+interface FormErrors {
+  [key: string]: string[]; // The structure of result (field -> array of error messages)
+}
+
 const stepThreeSchema = z.object({
-  phone_number: z.string().min(6, 'Telefone Obrigatório'),
-  email: z.string().min(6, 'Email Obrigatório'),
+  phone_numbers: z
+    .array(
+      z
+        .string({ required_error: 'Telefone é um campo obrigatório.' })
+        .min(1, 'Telefone é um campo obrigatório.')
+        .refine(isValidPhoneNumber, { message: 'Número de telefone inválido.' }),
+    )
+    .nonempty('Pelo menos um número de telefone é necessário.'),
+  emails: z
+    .array(
+      z
+        .string({ required_error: 'E-mail é um campo obrigatório.' })
+        .min(1, 'E-mail é um campo obrigatório.')
+        .refine(isValidEmail, { message: 'E-mail inválido.' }),
+    )
+    .nonempty('Pelo menos um e-mail é necessário.'),
 });
 
 const PFCustomerStepThree: ForwardRefRenderFunction<
@@ -122,19 +148,37 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
     });
   };
 
-  const handleFormError = (error: any) => {
-    const newErrors = error?.formErrors?.fieldErrors ?? {};
-    const errorObject: { [key: string]: string } = {};
-    setMessage('Preencha todos os campos obrigatórios.');
+  const handleFormError = (error: { issues: FormError[] }) => {
+    console.log(error.issues);
+
+    const newErrors = error.issues ?? [];
+    setMessage('Corrija os erros no formulário.');
     setType('error');
     setOpenSnackbar(true);
+    const result: FormErrors = {};
 
-    for (const field in newErrors) {
-      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
-        errorObject[field] = newErrors[field][0] as string;
+    // Loop through the errors and process them
+    newErrors.forEach(err => {
+      const [field, index] = err.path;
+
+      if (!result[field]) {
+        result[field] = []; // Initialize array for the field if not present
       }
+
+      // If there's no error for this index, add it
+      if (!result[field][index as number]) {
+        result[field][index as number] = err.message; // Store only the first error for this index
+      }
+    });
+
+    setErrors(result);
+  };
+
+  const getErrorMessage = (index: number, field: string) => {
+    if (errors[field] && errors[field][index]) {
+      return errors[field][index];
     }
-    setErrors(errorObject);
+    return null;
   };
 
   const handleSubmitForm = () => {
@@ -156,8 +200,8 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
 
     try {
       stepThreeSchema.parse({
-        phone_number: formData.phoneInputFields[0].phone_number,
-        email: formData.emailInputFields[0].email,
+        phone_numbers: formData.phoneInputFields.map(field => field.phone_number),
+        emails: formData.emailInputFields.map(field => field.email),
       });
 
       if (editMode) {
@@ -194,7 +238,7 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
       }
 
       nextStep();
-    } catch (err) {
+    } catch (err: any) {
       handleFormError(err);
     }
   };
@@ -278,19 +322,15 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
                     }}
                   >
                     <div className="flex flex-row gap-1">
-                      <TextField
-                        id="outlined-basic"
-                        variant="outlined"
-                        fullWidth
-                        name="phone"
-                        size="small"
-                        placeholder="Informe o Telefone"
-                        value={inputValue.phone_number}
-                        onChange={(e: any) =>
+                      <CustomTextField
+                        formData={formData}
+                        customValue={inputValue.phone_number}
+                        handleInputChange={(e: any) =>
                           handleInputChange(index, e.target.value, 'phoneInputFields')
                         }
-                        autoComplete="off"
-                        error={!!errors.phone_number}
+                        name="phone_number"
+                        placeholder="Insira um número de telefone"
+                        errorMessage={getErrorMessage(index, 'phone_numbers')}
                       />
 
                       <button
@@ -340,19 +380,15 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
                     }}
                   >
                     <div className="flex flex-row gap-1">
-                      <TextField
-                        id="outlined-basic"
-                        variant="outlined"
-                        fullWidth
+                      <CustomTextField
+                        formData={formData}
                         name="email"
-                        size="small"
-                        placeholder="Informe o Email"
-                        value={inputValue.email}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        customValue={inputValue.email}
+                        placeholder="Insira um e-mail"
+                        errorMessage={getErrorMessage(index, 'emails')}
+                        handleInputChange={(e: ChangeEvent<HTMLInputElement>) =>
                           handleInputChange(index, e.target.value, 'emailInputFields')
                         }
-                        autoComplete="off"
-                        error={!!errors.email}
                       />
 
                       <button
