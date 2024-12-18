@@ -7,7 +7,7 @@ import React, {
   useImperativeHandle,
 } from 'react';
 
-import { TextField, Box, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { getCEPDetails } from '@/services/brasilAPI';
 
 import { Container } from '../styles';
@@ -212,9 +212,15 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
       const parsedData = JSON.parse(data);
       const address = parsedData.addresses_attributes[0];
 
+      let localStorageData: any = {
+        cnpj: parsedData.cnpj || '',
+        name: parsedData.name || '',
+        gender: parsedData.gender,
+      };
+
       if (address) {
-        setFormData(prevData => ({
-          ...prevData,
+        localStorageData = {
+          ...localStorageData,
           zip_code: address.zip_code,
           street: address.street,
           state: address.state,
@@ -222,25 +228,23 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
           number: address.number,
           description: address.description,
           neighborhood: address.neighborhood,
-        }));
-      } else {
-        const cnpj = parsedData.cnpj ? parsedData.cnpj : '';
-        const name = parsedData.name ? parsedData.name : '';
-        const gender = parsedData.gender;
-
-        setFormData(prevData => ({
-          ...prevData,
-          cnpj,
-          name,
-          gender,
-        }));
+        };
       }
+
+      setFormData(prevData => ({
+        ...prevData,
+        ...localStorageData,
+      }));
     }
   };
 
   useEffect(() => {
     verifyDataLocalStorage();
   }, []);
+
+  useEffect(() => {
+    console.log('update:', formData);
+  }, [formData]);
 
   const saveDataLocalStorage = (data: any) => {
     localStorage.setItem('PJ/One', JSON.stringify(data));

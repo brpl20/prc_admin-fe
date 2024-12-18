@@ -24,6 +24,8 @@ import { IAdminProps } from '@/interfaces/IAdmin';
 import { getAllProfileCustomer } from '@/services/customers';
 import RepresentativeModal from '../../representative/representativeModal';
 import { MdOutlineAddCircle } from 'react-icons/md';
+import { isValidEmail, isValidPhoneNumber } from '@/utils/validator';
+import { ZodFormError, ZodFormErrors } from '@/types/zod';
 
 export interface IRefPJCustomerStepTwoProps {
   handleSubmitForm: () => void;
@@ -35,9 +37,23 @@ interface IStepTwoProps {
 }
 
 const stepTwoSchema = z.object({
-  profile_admin: z.string().min(1, { message: 'Representante Obrigatório' }),
-  phone_number: z.string().min(1, { message: 'Telefone Obrigatório' }),
-  email: z.string().min(1, { message: 'Email Obrigatório' }),
+  profile_admin: z.string().min(1, { message: 'Representante é um campo obrigatório' }),
+  phone_numbers: z
+    .array(
+      z
+        .string({ required_error: 'Telefone é um campo obrigatório.' })
+        .min(1, 'Telefone é um campo obrigatório.')
+        .refine(isValidPhoneNumber, { message: 'Número de telefone inválido.' }),
+    )
+    .nonempty('Pelo menos um número de telefone é necessário.'),
+  emails: z
+    .array(
+      z
+        .string({ required_error: 'E-mail é um campo obrigatório.' })
+        .min(1, 'E-mail é um campo obrigatório.')
+        .refine(isValidEmail, { message: 'E-mail inválido.' }),
+    )
+    .nonempty('Pelo menos um e-mail é necessário.'),
 });
 
 const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IStepTwoProps> = (
@@ -146,9 +162,9 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
   const handleSubmitForm = () => {
     try {
       stepTwoSchema.parse({
-        profile_admin: profileAdmin?.id,
-        phone_number: formData.phones_attributes[0].phone_number,
-        email: formData.emails_attributes[0].email,
+        profile_admin: profileAdmin?.id || '',
+        phone_numbers: formData.phones_attributes.map(field => field.phone_number),
+        emails: formData.emails_attributes.map(field => field.email),
       });
 
       if (editMode) {
@@ -202,19 +218,39 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     }
   };
 
-  const handleFormError = (error: any) => {
-    const newErrors = error?.formErrors?.fieldErrors ?? {};
-    const errorObject: { [key: string]: string } = {};
-    setMessage('Preencha todos os campos obrigatórios.');
+  const handleFormError = (error: { issues: ZodFormError[] }) => {
+    const newErrors = error.issues ?? [];
+    setMessage('Corrija os erros no formulário.');
     setType('error');
     setOpenSnackbar(true);
+    const result: ZodFormErrors = {};
 
-    for (const field in newErrors) {
-      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
-        errorObject[field] = newErrors[field][0] as string;
+    // Loop through the errors and process them
+    newErrors.forEach(err => {
+      let [field, index] = err.path;
+
+      index = index || 0;
+
+      if (!result[field]) {
+        result[field] = []; // Initialize array for the field if not present
       }
+
+      // If there's no error for this index, add it
+      if (!result[field][index as number]) {
+        result[field][index as number] = err.message; // Store only the first error for this index
+      }
+    });
+
+    console.log(result);
+    setErrors(result);
+  };
+
+  const getErrorMessage = (index: number, field: string) => {
+    if (errors[field] && errors[field][index]) {
+      const error = errors[field][index];
+      return error;
     }
-    setErrors(errorObject);
+    return null;
   };
 
   const handleSelectedCustomer = (admin: IAdminProps) => {
@@ -326,7 +362,6 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
           handleRegistrationFinished={getCustomers}
         />
       )}
-
       <Container>
         <Box maxWidth={'600px'}>
           <div
@@ -347,11 +382,14 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                 getOptionLabel={option => option?.attributes?.name ?? ''}
                 renderInput={params => (
                   <TextField
-                    error={!!errors.profile_admin}
                     variant="outlined"
-                    placeholder="Selecione um Representante"
+                    error={!!getErrorMessage(0, 'profile_admin')}
+                    type="text"
                     {...params}
                     size="small"
+                    placeholder={`Selecione um Representante`}
+                    helperText={getErrorMessage(0, 'profile_admin')}
+                    FormHelperTextProps={{ className: 'ml-2' }}
                   />
                 )}
                 noOptionsText="Não Encontrado"
@@ -359,7 +397,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                 value={profileAdmin || null}
               />
             </div>
-            <div style={{ display: 'flex' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
               <Button
                 variant="contained"
                 color="primary"
@@ -368,7 +406,6 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                   backgroundColor: colors.quartiary,
                   color: colors.white,
                   width: '292px',
-                  marginTop: 'auto',
                   '&:hover': {
                     backgroundColor: colors.quartiaryHover,
                   },
