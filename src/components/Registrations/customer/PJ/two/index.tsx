@@ -26,6 +26,7 @@ import RepresentativeModal from '../../representative/representativeModal';
 import { MdOutlineAddCircle } from 'react-icons/md';
 import { isValidEmail, isValidPhoneNumber } from '@/utils/validator';
 import { ZodFormError, ZodFormErrors } from '@/types/zod';
+import CustomTextField from '@/components/FormInputFields/CustomTextField';
 
 export interface IRefPJCustomerStepTwoProps {
   handleSubmitForm: () => void;
@@ -397,7 +398,14 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                 value={profileAdmin || null}
               />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingTop: '38px',
+              }}
+            >
               <Button
                 variant="contained"
                 color="primary"
@@ -436,19 +444,15 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                     }}
                   >
                     <div className="flex flex-row gap-1">
-                      <TextField
-                        id="outlined-basic"
-                        variant="outlined"
-                        fullWidth
-                        name="phone"
-                        size="small"
+                      <CustomTextField
+                        formData={formData}
+                        customValue={inputValue.phone_number}
+                        name="phone_number"
                         placeholder="Informe o Telefone"
-                        value={inputValue.phone_number || ''}
-                        onChange={(e: any) =>
-                          handleInputChange(index, e.target.value, 'phones_attributes')
-                        }
-                        autoComplete="off"
-                        error={!!errors.phone_number}
+                        handleInputChange={(e: any) => {
+                          handleInputChange(index, e.target.value, 'phones_attributes');
+                        }}
+                        errorMessage={getErrorMessage(index, 'phone_numbers')}
                       />
 
                       <button

@@ -221,15 +221,17 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
       if (address) {
         localStorageData = {
           ...localStorageData,
-          zip_code: address.zip_code,
           street: address.street,
           state: address.state,
           city: address.city,
           number: address.number,
           description: address.description,
           neighborhood: address.neighborhood,
+          zip_code: address.zip_code,
         };
       }
+
+      console.log(localStorageData);
 
       setFormData(prevData => ({
         ...prevData,
@@ -281,10 +283,10 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
           const response = await getCEPDetails(numericCEP);
           setFormData(prevData => ({
             ...prevData,
-            state: response.state,
-            city: response.city,
-            street: response.street,
-            neighborhood: response.neighborhood,
+            state: response.state || prevData.state,
+            city: response.city || prevData.city,
+            street: response.street || prevData.street,
+            neighborhood: response.neighborhood || prevData.neighborhood,
           }));
         } catch (error: any) {
           setMessage('CEP inválido.');
