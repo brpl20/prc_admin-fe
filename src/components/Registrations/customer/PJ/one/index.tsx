@@ -56,6 +56,7 @@ const stepOneSchema = z.object({
     .min(8, { message: 'O CEP precisa ter no mínimo 8 dígitos.' })
     .refine(isValidCEP, { message: 'O CEP informado é inválido.' }),
   street: z.string().min(2, { message: 'Endereço é um campo obrigatório.' }),
+  number: z.coerce.string().min(2, { message: 'Número é um campo obrigatório' }),
   neighborhood: z.string().min(2, { message: 'Bairro é um campo obrigatório.' }),
 });
 
@@ -224,14 +225,12 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
           street: address.street,
           state: address.state,
           city: address.city,
-          number: address.number,
+          number: address.number as number,
           description: address.description,
           neighborhood: address.neighborhood,
           zip_code: address.zip_code,
         };
       }
-
-      console.log(localStorageData);
 
       setFormData(prevData => ({
         ...prevData,
@@ -243,10 +242,6 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
   useEffect(() => {
     verifyDataLocalStorage();
   }, []);
-
-  useEffect(() => {
-    console.log('update:', formData);
-  }, [formData]);
 
   const saveDataLocalStorage = (data: any) => {
     localStorage.setItem('PJ/One', JSON.stringify(data));

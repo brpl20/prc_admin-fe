@@ -140,17 +140,17 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
         setProfileAdmin(customer);
       }
 
-      if (parsedData.phones) {
+      if (parsedData.phones_attributes) {
         setFormData(prevData => ({
           ...prevData,
-          phones_attributes: parsedData.phones,
+          phones_attributes: parsedData.phones_attributes,
         }));
       }
 
-      if (parsedData.emails) {
+      if (parsedData.emails_attributes) {
         setFormData(prevData => ({
           ...prevData,
-          emails_attributes: parsedData.emails,
+          emails_attributes: parsedData.emails_attributes,
         }));
       }
     }
@@ -242,7 +242,6 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
       }
     });
 
-    console.log(result);
     setErrors(result);
   };
 
@@ -291,9 +290,9 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
       const attributes = customerForm.data.attributes;
 
       if (attributes) {
-        const customer = customersList.find(
-          customer => customer.id == attributes.represent?.profile_admin_id,
-        );
+        const customer = customersList.find(customer => customer.id == attributes.represent);
+
+        console.log(attributes);
 
         if (customer) {
           setProfileAdmin(customer);
@@ -501,19 +500,15 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                     }}
                   >
                     <div className="flex flex-row gap-1">
-                      <TextField
-                        id="outlined-basic"
-                        variant="outlined"
-                        fullWidth
+                      <CustomTextField
+                        formData={formData}
+                        customValue={inputValue.email}
                         name="email"
-                        size="small"
                         placeholder="Informe o Email"
-                        value={inputValue.email || ''}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          handleInputChange(index, e.target.value, 'emails_attributes')
-                        }
-                        autoComplete="off"
-                        error={!!errors.email}
+                        handleInputChange={(e: any) => {
+                          handleInputChange(index, e.target.value, 'emails_attributes');
+                        }}
+                        errorMessage={getErrorMessage(index, 'emails')}
                       />
 
                       <button
