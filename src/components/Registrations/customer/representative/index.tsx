@@ -34,6 +34,13 @@ import { animateScroll as scroll } from 'react-scroll';
 import Router, { useRouter } from 'next/router';
 import { z } from 'zod';
 import { ICustomerProps } from '@/interfaces/ICustomer';
+import {
+  isValidCEP,
+  isValidCPF,
+  isValidEmail,
+  isValidPhoneNumber,
+  isValidRG,
+} from '@/utils/validator';
 
 interface FormData {
   represent_id: string;
@@ -63,14 +70,29 @@ export const representativeSchema = z.object({
   represent_id: z.string().min(1, { message: 'Selecione o Representado.' }),
   name: z.string().min(3, { message: 'Preencha o campo Nome.' }),
   last_name: z.string().min(3, { message: 'Preencha o campo Sobrenome.' }),
-  CPF: z.string().min(5, { message: 'Preencha o campo CPF.' }),
-  RG: z.string().min(5, { message: 'Preencha o campo RG.' }),
+  CPF: z
+    .string()
+    .min(11, { message: 'O CPF precisa ter no mínimo 11 dígitos.' })
+    .refine(isValidCPF, { message: 'O CPF informado é inválido.' }),
+  RG: z
+    .string()
+    .min(6, { message: 'O RG precisa ter no mínimo 6 dígitos.' })
+    .refine(isValidRG, { message: 'O RG informado é inválido.' }),
   gender: z.string().min(3, 'Gênero é obrigatório'),
   civil_status: z.string().min(1, 'Estado Civil é obrigatório'),
   nationality: z.string().min(1, 'Naturalidade é obrigatório'),
-  phone_number: z.string().min(6, 'Telefone Obrigatório'),
-  email: z.string().min(1, 'Email Obrigatório'),
-  cep: z.string().min(4, { message: 'Preencha o campo CEP.' }),
+  phone_number: z
+    .string({ required_error: 'Telefone é um campo obrigatório.' })
+    .min(1, 'Telefone é um campo obrigatório.')
+    .refine(isValidPhoneNumber, { message: 'Número de telefone inválido.' }),
+  email: z
+    .string({ required_error: 'E-mail é um campo obrigatório.' })
+    .min(1, 'E-mail é um campo obrigatório.')
+    .refine(isValidEmail, { message: 'E-mail inválido.' }),
+  cep: z
+    .string()
+    .min(8, { message: 'O CEP precisa ter no mínimo 8 dígitos.' })
+    .refine(isValidCEP, { message: 'O CEP informado é inválido.' }),
   street: z.string().min(4, { message: 'Preencha o campo Endereço.' }),
   number: z.string().min(1, { message: 'Preencha o campo Número.' }),
   description: z.string(),
@@ -289,59 +311,6 @@ const Representative = ({ pageTitle }: Props) => {
     }
     setErrors(errorObject);
   };
-
-  const renderInputField = (
-    name: keyof FormData,
-    title: string,
-    placeholderText: string,
-    error?: boolean,
-  ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {title}
-      </Typography>
-      <TextField
-        variant="outlined"
-        fullWidth
-        name={name}
-        size="small"
-        value={formData[name]}
-        autoComplete="off"
-        placeholder={placeholderText}
-        onChange={handleInputChange}
-        error={error}
-      />
-    </Flex>
-  );
-
-  const renderSelectField = (
-    label: string,
-    name: keyof FormData,
-    options: { label: string; value: string }[],
-    error?: boolean,
-  ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {label}
-      </Typography>
-      <FormControl size="small">
-        <InputLabel>{`Selecione ${label}`}</InputLabel>
-        <Select
-          name={name}
-          label={`Selecione ${label}`}
-          value={formData[name]}
-          onChange={handleSelectChange}
-          error={error}
-        >
-          {options.map(option => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </Flex>
-  );
 
   const handleCustomerChange = (name: string, value: string) => {
     setFormData(prevData => ({ ...prevData, [name]: value }));
