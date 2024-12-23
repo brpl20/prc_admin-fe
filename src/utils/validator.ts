@@ -31,6 +31,44 @@ export const isValidCPF = (cpf: string): boolean => {
   return true;
 };
 
+export const isValidCNPJ = (cnpj: string): boolean => {
+  if (!cnpj) return false;
+
+  // Remove non-digit characters
+  const cleanedCNPJ = cnpj.replace(/\D/g, '');
+
+  // CNPJ must be exactly 11 digits long
+  if (cleanedCNPJ.length !== 14) return false;
+
+  // Reject CNPJs with all identical digits (e.g., 11111111111111)
+  if (/^(\d)\1{13}$/.test(cleanedCNPJ)) return false;
+
+  // Calculate the verification digit
+  const calculateVerificationDigit = (cnpjSlice: number[], factors: number[]): number => {
+    const sum = cnpjSlice
+      .map((digit, index) => digit * factors[index])
+      .reduce((acc, curr) => acc + curr, 0);
+    const result = sum % 11;
+    return result < 2 ? 0 : 11 - result;
+  };
+
+  // Convert the CNPJ into an array of digits
+  const cnpjDigits = cleanedCNPJ.split('').map(Number);
+
+  const firstFactors = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const firstVerificationDigit = calculateVerificationDigit(cnpjDigits.slice(0, 12), firstFactors);
+  if (firstVerificationDigit !== cnpjDigits[12]) return false;
+
+  const secondFactors = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const secondVerificationDigit = calculateVerificationDigit(
+    cnpjDigits.slice(0, 13),
+    secondFactors,
+  );
+  if (secondVerificationDigit !== cnpjDigits[13]) return false;
+
+  return true;
+};
+
 export const isValidRG = (rg: string): boolean => {
   if (!rg) return false;
 

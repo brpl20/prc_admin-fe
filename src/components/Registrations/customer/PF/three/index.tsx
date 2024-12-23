@@ -19,6 +19,7 @@ import { phoneMask } from '@/utils/masks';
 import { z, ZodError } from 'zod';
 import { isValidEmail, isValidPhoneNumber } from '@/utils/validator';
 import CustomTextField from '@/components/FormInputFields/CustomTextField';
+import { ZodFormError, ZodFormErrors } from '@/types/zod';
 
 export interface IRefPFCustomerStepThreeProps {
   handleSubmitForm: () => void;
@@ -27,16 +28,6 @@ export interface IRefPFCustomerStepThreeProps {
 interface IStepThreeProps {
   nextStep: () => void;
   editMode: boolean;
-}
-
-interface FormError {
-  code: string;
-  message: string;
-  path: (string | number)[]; // Path is an array of field name and index
-}
-
-interface FormErrors {
-  [key: string]: string[]; // The structure of result (field -> array of error messages)
 }
 
 const stepThreeSchema = z.object({
@@ -148,14 +139,12 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
     });
   };
 
-  const handleFormError = (error: { issues: FormError[] }) => {
-    console.log(error.issues);
-
+  const handleFormError = (error: { issues: ZodFormError[] }) => {
     const newErrors = error.issues ?? [];
     setMessage('Corrija os erros no formulário.');
     setType('error');
     setOpenSnackbar(true);
-    const result: FormErrors = {};
+    const result: ZodFormErrors = {};
 
     // Loop through the errors and process them
     newErrors.forEach(err => {

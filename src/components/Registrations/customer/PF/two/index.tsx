@@ -154,8 +154,6 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
         neighborhood: formData.neighborhood,
       });
 
-      console.log(formData);
-
       if (editMode) {
         customerForm.data.attributes.addresses_attributes = [
           {

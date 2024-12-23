@@ -7,19 +7,21 @@ import React, {
   useImperativeHandle,
 } from 'react';
 
-import { TextField, Box, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { getCEPDetails } from '@/services/brasilAPI';
 
 import { Container } from '../styles';
 
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
 import { Divider } from '@/styles/globals';
 import { Notification } from '@/components';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
-import { cepMask } from '@/utils/masks';
+import { cepMask, cnpjMask } from '@/utils/masks';
 import { useRouter } from 'next/router';
+import { isValidCEP, isValidCNPJ } from '@/utils/validator';
+import CustomTextField from '@/components/FormInputFields/CustomTextField';
 
 export interface IRefPJCustomerStepOneProps {
   handleSubmitForm: () => void;
@@ -44,11 +46,18 @@ interface FormData {
 }
 
 const stepOneSchema = z.object({
-  name: z.string().min(2, { message: 'Nome é obrigatório.' }),
-  cnpj: z.string().min(2, { message: 'CNPJ é obrigatório.' }),
-  zip_code: z.string().min(8, { message: 'CEP é obrigatório.' }),
-  street: z.string().min(2, { message: 'Endereço é obrigatório.' }),
-  neighborhood: z.string().min(2, { message: 'Bairro é obrigatório.' }),
+  name: z.string().min(1, { message: 'Nome é um campo obrigatório.' }),
+  cnpj: z
+    .string()
+    .min(2, { message: 'CNPJ é um campo obrigatório.' })
+    .refine(isValidCNPJ, { message: 'O CNPJ informado é inválido.' }),
+  zip_code: z
+    .string()
+    .min(8, { message: 'O CEP precisa ter no mínimo 8 dígitos.' })
+    .refine(isValidCEP, { message: 'O CEP informado é inválido.' }),
+  street: z.string().min(2, { message: 'Endereço é um campo obrigatório.' }),
+  number: z.coerce.string().min(2, { message: 'Número é um campo obrigatório' }),
+  neighborhood: z.string().min(2, { message: 'Bairro é um campo obrigatório.' }),
 });
 
 const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IStepOneProps> = (
@@ -68,7 +77,12 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
-    if (name === 'cnpj' && !/^\d*$/.test(value)) {
+    if (name === 'cnpj') {
+      // Apply cnpjMask to format the CNPJ value
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: cnpjMask(value),
+      }));
       return;
     }
 
@@ -94,12 +108,12 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
   const handleSubmitForm = () => {
     try {
       stepOneSchema.parse({
-        name: formData.name,
-        cnpj: formData.cnpj,
-        street: formData.street,
-        zip_code: formData.zip_code,
-        neighborhood: formData.neighborhood,
-        number: formData.number,
+        name: formData.name || '',
+        cnpj: formData.cnpj || '',
+        street: formData.street || '',
+        zip_code: formData.zip_code || '',
+        neighborhood: formData.neighborhood || '',
+        number: formData.number || '',
       });
 
       const data = {
@@ -199,29 +213,29 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
       const parsedData = JSON.parse(data);
       const address = parsedData.addresses_attributes[0];
 
+      let localStorageData: any = {
+        cnpj: parsedData.cnpj || '',
+        name: parsedData.name || '',
+        gender: parsedData.gender,
+      };
+
       if (address) {
-        setFormData(prevData => ({
-          ...prevData,
-          zip_code: address.zip_code,
+        localStorageData = {
+          ...localStorageData,
           street: address.street,
           state: address.state,
           city: address.city,
-          number: address.number,
+          number: address.number as number,
           description: address.description,
           neighborhood: address.neighborhood,
-        }));
-      } else {
-        const cnpj = parsedData.cnpj ? parsedData.cnpj : '';
-        const name = parsedData.name ? parsedData.name : '';
-        const gender = parsedData.gender;
-
-        setFormData(prevData => ({
-          ...prevData,
-          cnpj,
-          name,
-          gender,
-        }));
+          zip_code: address.zip_code,
+        };
       }
+
+      setFormData(prevData => ({
+        ...prevData,
+        ...localStorageData,
+      }));
     }
   };
 
@@ -238,44 +252,22 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
   }));
 
   const handleFormError = (error: any) => {
-    const newErrors = error?.formErrors?.fieldErrors ?? {};
-    const errorObject: { [key: string]: string } = {};
-    setMessage('Preencha todos os campos obrigatórios.');
+    setMessage('Corrija os erros no formulário.');
     setType('error');
     setOpenSnackbar(true);
 
-    for (const field in newErrors) {
-      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
-        errorObject[field] = newErrors[field][0] as string;
-      }
-    }
-    setErrors(errorObject);
-  };
+    if (error instanceof ZodError) {
+      const fieldErrors = error.flatten().fieldErrors;
+      const newErrors: { [key in keyof FormData]?: string } = {};
 
-  const renderInputField = (
-    name: keyof FormData,
-    title: string,
-    placeholderText: string,
-    error: boolean,
-  ) => (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {title}
-      </Typography>
-      <TextField
-        id="outlined-basic"
-        variant="outlined"
-        error={error && !formData[name]}
-        fullWidth
-        name={name}
-        size="small"
-        value={formData[name] || ''}
-        autoComplete="off"
-        placeholder={`${placeholderText}`}
-        onChange={handleInputChange}
-      />
-    </div>
-  );
+      for (const field in fieldErrors) {
+        if (fieldErrors[field]) {
+          newErrors[field as keyof FormData] = fieldErrors[field]?.[0]; // Getting only the first error messsage
+        }
+      }
+      setErrors(newErrors);
+    }
+  };
 
   useEffect(() => {
     const fetchCEPDetails = async () => {
@@ -286,10 +278,10 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
           const response = await getCEPDetails(numericCEP);
           setFormData(prevData => ({
             ...prevData,
-            state: response.state,
-            city: response.city,
-            street: response.street,
-            neighborhood: response.neighborhood,
+            state: response.state || prevData.state,
+            city: response.city || prevData.city,
+            street: response.street || prevData.street,
+            neighborhood: response.neighborhood || prevData.neighborhood,
           }));
         } catch (error: any) {
           setMessage('CEP inválido.');
@@ -365,8 +357,22 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
                   {'Descrição da Empresa'}
                 </Typography>
               </Box>
-              {renderInputField('name', 'Nome', 'Nome', !!errors.name)}
-              {renderInputField('cnpj', 'Número do CNPJ', '00.000.000/000-00', !!errors.cnpj)}
+              <CustomTextField
+                formData={formData}
+                name="name"
+                label="Nome"
+                errorMessage={errors.name}
+                handleInputChange={handleInputChange}
+              />
+
+              <CustomTextField
+                formData={formData}
+                name="cnpj"
+                label="Número do CNPJ"
+                placeholder="00.000.000/000-00"
+                errorMessage={errors.cnpj}
+                handleInputChange={handleInputChange}
+              />
             </div>
 
             <Divider />
@@ -379,35 +385,64 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
               </Box>
 
               <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                {renderInputField('zip_code', 'CEP', 'Informe o CEP', errors.zip_code)}
+                <CustomTextField
+                  formData={formData}
+                  name="zip_code"
+                  label="CEP"
+                  errorMessage={errors.zip_code}
+                  handleInputChange={handleInputChange}
+                />
                 <div style={{ display: 'flex', gap: '16px' }}>
-                  {renderInputField(
-                    'street',
-                    'Endereço',
-                    'Informe o Endereço',
-
-                    !!errors.street,
-                  )}
+                  <CustomTextField
+                    formData={formData}
+                    name="street"
+                    label="Endereço"
+                    errorMessage={errors.street}
+                    handleInputChange={handleInputChange}
+                  />
                   <Box maxWidth={'30%'}>
-                    {renderInputField('number', 'Número', 'N.º', !!errors.number)}
+                    <CustomTextField
+                      formData={formData}
+                      name="number"
+                      label="Número"
+                      placeholder="N.º"
+                      errorMessage={errors.number}
+                      handleInputChange={handleInputChange}
+                    />
                   </Box>
                 </div>
-                {renderInputField(
-                  'description',
-                  'Complemento',
-                  'Informe o Complemento',
-                  !!errors.description,
-                )}
+                <CustomTextField
+                  formData={formData}
+                  name="description"
+                  label="Complemento"
+                  errorMessage={errors.description}
+                  handleInputChange={handleInputChange}
+                />
               </Box>
               <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                {renderInputField(
-                  'neighborhood',
-                  'Bairro',
-                  'Informe o Bairro',
-                  !!errors.neighborhood,
-                )}
-                {renderInputField('city', 'Cidade', 'Informe a Cidade', !!errors.city)}
-                {renderInputField('state', 'Estado', 'Informe o Estado', !!errors.state)}
+                <CustomTextField
+                  formData={formData}
+                  name="neighborhood"
+                  label="Bairro"
+                  errorMessage={errors.neighborhood}
+                  handleInputChange={handleInputChange}
+                />
+
+                <CustomTextField
+                  formData={formData}
+                  name="city"
+                  label="Cidade"
+                  errorMessage={errors.city}
+                  handleInputChange={handleInputChange}
+                />
+
+                <CustomTextField
+                  formData={formData}
+                  name="state"
+                  label="Estado"
+                  errorMessage={errors.state}
+                  handleInputChange={handleInputChange}
+                />
               </Box>
             </div>
           </Box>
