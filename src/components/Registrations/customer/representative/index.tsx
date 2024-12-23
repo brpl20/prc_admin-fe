@@ -102,7 +102,7 @@ export const representativeSchema = z.object({
     .min(8, { message: 'O CEP precisa ter no mínimo 8 dígitos.' })
     .refine(isValidCEP, { message: 'O CEP informado é inválido.' }),
   street: z.string().min(4, { message: 'Preencha o campo Endereço.' }),
-  number: z.string().min(1, { message: 'Preencha o campo Número.' }),
+  number: z.coerce.string().min(2, { message: 'Número é um campo obrigatório' }),
   description: z.string(),
   profession: z.string().min(1, { message: 'Preencha o campo Profissão.' }),
   neighborhood: z.string().min(4, { message: 'Preencha o campo Bairro.' }),
@@ -554,12 +554,13 @@ const Representative = ({ pageTitle }: Props) => {
                       name={'birth'}
                       handleInputChange={handleInputChange}
                     />
-                    <CustomTextField
+                    <CustomSelectField
                       formData={formData}
                       name="nationality"
                       label="Naturalidade"
                       errorMessage={getErrorMessage(0, 'nationality')}
-                      handleInputChange={handleInputChange}
+                      options={nationalityOptions}
+                      handleSelectChange={handleSelectChange}
                     />
                   </Flex>
 
