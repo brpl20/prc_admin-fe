@@ -38,7 +38,7 @@ interface IStepTwoProps {
 }
 
 const stepTwoSchema = z.object({
-  profile_admin: z.string().min(1, { message: 'Representante é um campo obrigatório' }),
+  profile_admin: z.string().min(1, { message: 'Representante é um campo obrigatório.' }),
   phone_numbers: z
     .array(
       z
