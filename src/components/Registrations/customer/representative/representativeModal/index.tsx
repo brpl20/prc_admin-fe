@@ -4,7 +4,7 @@ import { IoAddCircleOutline } from 'react-icons/io5';
 import { TextField, Box, Typography, Button, CircularProgress, Modal } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
 import { getCEPDetails } from '@/services/brasilAPI';
-import { phoneMask } from '@/utils/masks';
+import { cepMask, cpfMask, phoneMask } from '@/utils/masks';
 
 import { gendersOptions, civilStatusOptions, nationalityOptions } from '@/utils/constants';
 
@@ -156,10 +156,12 @@ const RepresentativeModal = ({
       delete errors[name];
       setErrors(errors);
     }
+    const formattedValue =
+      name === 'CPF' ? cpfMask(value) : name === 'cep' ? cepMask(value) : value;
 
     setFormData(prevData => ({
       ...prevData,
-      [name]: value,
+      [name]: formattedValue,
     }));
   };
 
@@ -205,35 +207,25 @@ const RepresentativeModal = ({
 
   const completeRegistration = async (data: any) => {
     try {
-      const data_customer = {
-        customer: {
-          email: data.emails_attributes[0].email,
-        },
-      };
-      const customer_data = await createCustomer(data_customer);
+      const data_customer = { customer: { email: data.emails_attributes[0].email } };
+      const customer_data = await createCustomerApi(data_customer);
 
-      if (!customer_data.data.attributes.email) {
-        throw new Error('E-mail já está em uso !');
-      } else {
-        const customer_id = customer_data.data.id;
+      if (!customer_data.data.attributes.email) throw new Error('E-mail já está em uso !');
 
-        const newData = {
-          ...data,
-          customer_id: Number(customer_id),
-        };
+      const customer_id = customer_data.data.id;
+      const newData = { ...data, customer_id: Number(customer_id) };
+      await createProfileCustomer(newData);
 
-        await createProfileCustomer(newData);
-
-        handleClose();
-        resetValues();
-      }
+      handleClose();
+      resetValues();
     } catch (error: any) {
-      handleFormError(error);
-
-      scroll.scrollToTop({
-        duration: 500,
-        smooth: 'easeInOutQuart',
-      });
+      setErrors({});
+      const message =
+        error?.response?.data?.errors?.[0]?.code?.[0] || 'Ocorreu um erro inesperado.';
+      setMessage(message);
+      setType('error');
+      setOpenSnackbar(true);
+      scroll.scrollToTop({ duration: 500, smooth: 'easeInOutQuart' });
     }
   };
 
