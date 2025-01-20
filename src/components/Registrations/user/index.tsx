@@ -42,6 +42,7 @@ import Router, { useRouter } from 'next/router';
 import { cepMask, cpfMask } from '@/utils/masks';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
+import { isValidCPF, isValidEmail, isValidRG } from '@/utils/validator';
 
 interface FormData {
   officeId: string;
@@ -84,16 +85,28 @@ interface props {
 const userSchema = z.object({
   name: z.string().min(2, { message: 'O campo Nome é obrigatório.' }),
   last_name: z.string().min(2, { message: 'O campo Sobrenome é obrigatório.' }),
-  cpf: z.string().min(2, { message: 'O campo CPF é obrigatório.' }),
-  rg: z.string().min(2, { message: 'O campo RG é obrigatório.' }),
+  cpf: z
+    .string()
+    .min(11, { message: 'O CPF precisa ter no mínimo 11 dígitos.' })
+    .refine(isValidCPF, { message: 'O CPF informado é inválido.' }),
+  rg: z
+    .string()
+    .min(6, { message: 'O RG precisa ter no mínimo 6 dígitos.' })
+    .refine(isValidRG, { message: 'O RG informado é inválido.' }),
   mother_name: z.string().min(2, { message: 'O campo Nome da Mãe é obrigatório.' }),
   gender: z.string().min(2, { message: 'O campo Gênero é obrigatório.' }),
   civil_status: z.string().min(2, { message: 'O campo Estado Civil é obrigatório.' }),
   nationality: z.string().min(2, { message: 'O campo Naturalidade é obrigatório.' }),
-  phone: z.string().min(2, { message: 'O campo Telefone é obrigatório.' }),
+  phone: z
+    .string({ required_error: 'Telefone é um campo obrigatório.' })
+    .min(1, 'Telefone é um campo obrigatório.')
+    .refine(isValidPhoneNumber, { message: 'Número de telefone inválido.' }),
   email: z.string().min(2, { message: 'O campo E-mail é obrigatório.' }),
   userType: z.string().min(2, { message: 'O campo Tipo do Usuário é obrigatório.' }),
-  userEmail: z.string().min(2, { message: 'O campo E-mail é obrigatório.' }),
+  userEmail: z
+    .string({ required_error: 'E-mail é um campo obrigatório.' })
+    .min(1, 'E-mail é um campo obrigatório.')
+    .refine(isValidEmail, { message: 'E-mail inválido.' }),
   city: z.string().min(2, { message: 'O campo Cidade é obrigatório.' }),
   state: z.string().min(2, { message: 'O campo Estado é obrigatório.' }),
   address: z.string().min(2, { message: 'O campo Endereço é obrigatório.' }),
