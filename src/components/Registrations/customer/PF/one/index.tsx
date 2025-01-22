@@ -538,6 +538,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                   )}
 
                   <Autocomplete
+                    fullWidth
                     limitTags={1}
                     id="multiple-limit-tags"
                     value={
@@ -546,7 +547,16 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                       ) || null
                     }
                     options={representorsList}
-                    getOptionLabel={(option: any) => option?.attributes?.name ?? ''}
+                    getOptionLabel={(option: any) => {
+                      const name = option?.attributes?.name ?? '';
+                      const lastName = option?.attributes?.last_name ?? '';
+                      const fullName = `${name} ${lastName}`.trim();
+
+                      const maxLength = 35;
+                      return fullName.length > maxLength
+                        ? fullName.slice(0, maxLength) + '...'
+                        : fullName;
+                    }}
                     onChange={(event, value) => handleRepresentorChange('representor', value)}
                     renderInput={params => (
                       <TextField
