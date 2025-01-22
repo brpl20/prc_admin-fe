@@ -1,30 +1,17 @@
 import { useState, ChangeEvent, useEffect } from 'react';
 import { IoAddCircleOutline } from 'react-icons/io5';
 
-import {
-  TextField,
-  Box,
-  Typography,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  CircularProgress,
-  Modal,
-} from '@mui/material';
+import { TextField, Box, Typography, Button, CircularProgress, Modal } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
 import { getCEPDetails } from '@/services/brasilAPI';
-import { phoneMask } from '@/utils/masks';
+import { cepMask, cpfMask, phoneMask } from '@/utils/masks';
 
 import { gendersOptions, civilStatusOptions, nationalityOptions } from '@/utils/constants';
 
 import { Container } from '../styles';
 import { colors, ContentContainer } from '@/styles/globals';
 
-import { Dayjs } from 'dayjs';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import dayjs, { Dayjs } from 'dayjs';
 
 import { Flex, Divider } from '@/styles/globals';
 import { createProfileCustomer, createCustomer as createCustomerApi } from '@/services/customers';
@@ -32,6 +19,17 @@ import { animateScroll as scroll } from 'react-scroll';
 
 import { IoMdTrash } from 'react-icons/io';
 import { z } from 'zod';
+import {
+  isValidCEP,
+  isValidCPF,
+  isValidEmail,
+  isValidPhoneNumber,
+  isValidRG,
+} from '@/utils/validator';
+import { ZodFormError, ZodFormErrors } from '@/types/zod';
+import CustomTextField from '@/components/FormInputFields/CustomTextField';
+import CustomDateField from '@/components/FormInputFields/CustomDateField';
+import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
 
 interface FormData {
   name: string;
@@ -61,22 +59,67 @@ interface props {
 const representativeSchema = z.object({
   name: z.string().min(3, { message: 'Preencha o campo Nome.' }),
   last_name: z.string().min(3, { message: 'Preencha o campo Sobrenome.' }),
-  CPF: z.string().min(5, { message: 'Preencha o campo CPF.' }),
-  RG: z.string().min(5, { message: 'Preencha o campo RG.' }),
+  CPF: z
+    .string()
+    .min(11, { message: 'O CPF precisa ter no mínimo 11 dígitos.' })
+    .refine(isValidCPF, { message: 'O CPF informado é inválido.' }),
+  RG: z
+    .string()
+    .min(6, { message: 'O RG precisa ter no mínimo 6 dígitos.' })
+    .refine(isValidRG, { message: 'O RG informado é inválido.' }),
   gender: z.string().min(3, 'Gênero é obrigatório'),
   civil_status: z.string().min(1, 'Estado Civil é obrigatório'),
   nationality: z.string().min(1, 'Naturalidade é obrigatório'),
-  phone_number: z.string().min(6, 'Telefone Obrigatório'),
-  email: z.string().min(1, 'Email Obrigatório'),
-  cep: z.string().min(4, { message: 'Preencha o campo CEP.' }),
+  phone_numbers: z.array(
+    z
+      .string({ required_error: 'Telefone é um campo obrigatório.' })
+      .min(1, 'Telefone é um campo obrigatório.')
+      .refine(isValidPhoneNumber, { message: 'Número de telefone inválido.' }),
+  ),
+  emails: z.array(
+    z
+      .string({ required_error: 'E-mail é um campo obrigatório.' })
+      .min(1, 'E-mail é um campo obrigatório.')
+      .refine(isValidEmail, { message: 'E-mail inválido.' }),
+  ),
+  cep: z
+    .string()
+    .min(8, { message: 'O CEP precisa ter no mínimo 8 dígitos.' })
+    .refine(isValidCEP, { message: 'O CEP informado é inválido.' }),
   street: z.string().min(4, { message: 'Preencha o campo Endereço.' }),
-  number: z.string().min(4, { message: 'Preencha o campo Número.' }),
+  number: z.coerce.string().min(2, { message: 'Número é um campo obrigatório' }),
   description: z.string(),
-  profession: z.string().min(4, { message: 'Preencha o campo Profissão.' }),
-  neighborhood: z.string().min(2, { message: 'Preencha o campo Bairro.' }),
+  profession: z.string().min(1, { message: 'Preencha o campo Profissão.' }),
+  neighborhood: z.string().min(4, { message: 'Preencha o campo Bairro.' }),
   city: z.string().min(4, { message: 'Preencha o campo Cidade.' }),
-  state: z.string().min(2, { message: 'Preencha o campo Estado.' }),
+  state: z.string().min(1, { message: 'Preencha o campo Estado.' }),
 });
+
+const currentDate = dayjs();
+
+const initialFormData: FormData = {
+  name: '',
+  last_name: '',
+  profession: '',
+  CPF: '',
+  RG: '',
+  gender: '',
+  civil_status: '',
+  nationality: '',
+  birth: currentDate,
+  cep: '',
+  street: '',
+  number: '',
+  description: '',
+  neighborhood: '',
+  city: '',
+  state: '',
+};
+
+const initialContactData = {
+  phoneInputFields: [{ phone_number: '' }],
+  emailInputFields: [{ email: '' }],
+};
 
 const RepresentativeModal = ({
   pageTitle,
@@ -89,26 +132,17 @@ const RepresentativeModal = ({
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  const today = new Date().toISOString().split('T')[0];
-
   const [message, setMessage] = useState('');
   const [type, setType] = useState<'success' | 'error'>('success');
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const [formData, setFormData] = useState<FormData>({} as FormData);
+  const [formData, setFormData] = useState<FormData>(initialFormData);
 
-  const [contactData, setContactData] = useState({
-    phoneInputFields: [{ phone_number: '' }],
-    emailInputFields: [{ email: '' }],
-  });
+  const [contactData, setContactData] = useState(initialContactData);
 
   const resetValues = () => {
-    setFormData({} as FormData);
-
-    setContactData({
-      phoneInputFields: [{ phone_number: '' }],
-      emailInputFields: [{ email: '' }],
-    });
+    setFormData(initialFormData);
+    setContactData(initialContactData);
   };
 
   const handleCloseModal = () => {
@@ -122,10 +156,12 @@ const RepresentativeModal = ({
       delete errors[name];
       setErrors(errors);
     }
+    const formattedValue =
+      name === 'CPF' ? cpfMask(value) : name === 'cep' ? cepMask(value) : value;
 
     setFormData(prevData => ({
       ...prevData,
-      [name]: value,
+      [name]: formattedValue,
     }));
   };
 
@@ -171,35 +207,25 @@ const RepresentativeModal = ({
 
   const completeRegistration = async (data: any) => {
     try {
-      const data_customer = {
-        customer: {
-          email: data.emails_attributes[0].email,
-        },
-      };
-      const customer_data = await createCustomer(data_customer);
+      const data_customer = { customer: { email: data.emails_attributes[0].email } };
+      const customer_data = await createCustomerApi(data_customer);
 
-      if (!customer_data.data.attributes.email) {
-        throw new Error('E-mail já está em uso !');
-      } else {
-        const customer_id = customer_data.data.id;
+      if (!customer_data.data.attributes.email) throw new Error('E-mail já está em uso !');
 
-        const newData = {
-          ...data,
-          customer_id: Number(customer_id),
-        };
+      const customer_id = customer_data.data.id;
+      const newData = { ...data, customer_id: Number(customer_id) };
+      await createProfileCustomer(newData);
 
-        await createProfileCustomer(newData);
-
-        handleClose();
-        resetValues();
-      }
+      handleClose();
+      resetValues();
     } catch (error: any) {
-      handleFormError(error);
-
-      scroll.scrollToTop({
-        duration: 500,
-        smooth: 'easeInOutQuart',
-      });
+      setErrors({});
+      const message =
+        error?.response?.data?.errors?.[0]?.code?.[0] || 'Ocorreu um erro inesperado.';
+      setMessage(message);
+      setType('error');
+      setOpenSnackbar(true);
+      scroll.scrollToTop({ duration: 500, smooth: 'easeInOutQuart' });
     }
   };
 
@@ -212,19 +238,19 @@ const RepresentativeModal = ({
         last_name: formData.last_name,
         CPF: formData.CPF,
         RG: formData.RG,
+        profession: formData.profession,
         gender: formData.gender,
         nationality: formData.nationality,
         civil_status: formData.civil_status,
-        phone_number: contactData.phoneInputFields[0].phone_number,
-        email: contactData.emailInputFields[0].email,
+        phone_numbers: contactData.phoneInputFields.map(field => field.phone_number),
+        emails: contactData.emailInputFields.map(field => field.email),
         cep: formData.cep,
         street: formData.street,
         number: formData.number,
-        profession: formData.profession,
-        description: formData.description,
         neighborhood: formData.neighborhood,
         city: formData.city,
         state: formData.state,
+        description: formData.description,
       });
 
       const data = {
@@ -276,84 +302,40 @@ const RepresentativeModal = ({
     }
   };
 
-  const handleFormError = (error: any) => {
-    const errorCode = error?.response?.data?.errors[0]?.code;
-    if (errorCode) {
-      setMessage(errorCode);
-      setType('error');
-      setOpenSnackbar(true);
-      return;
-    }
-
-    const newErrors = error?.formErrors?.fieldErrors ?? {};
-    const errorObject: { [key: string]: string } = {};
-    setMessage('Preencha todos os campos obrigatórios.');
+  const handleFormError = (error: { issues: ZodFormError[] }) => {
+    const newErrors = error.issues ?? [];
+    setMessage('Corrija os erros no formulário.');
     setType('error');
     setOpenSnackbar(true);
+    const result: ZodFormErrors = {};
 
-    for (const field in newErrors) {
-      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
-        errorObject[field] = newErrors[field][0] as string;
+    // Loop through the errors
+    newErrors.forEach(err => {
+      let [field, index] = err.path;
+
+      index = index || 0;
+
+      if (!result[field]) {
+        result[field] = []; // Initialize array for the field if not present
       }
-    }
-    setErrors(errorObject);
+
+      // If there's no error for this index, add it
+      if (!result[field][index as number]) {
+        result[field][index as number] = err.message; // Store only the first error for this index
+      }
+    });
+
+    console.error(newErrors);
+    setErrors(result);
   };
 
-  const renderInputField = (
-    name: keyof FormData,
-    title: string,
-    length: number,
-    placeholderText: string,
-    error?: boolean,
-  ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {title}
-      </Typography>
-      <TextField
-        id="outlined-basic"
-        variant="outlined"
-        fullWidth
-        name={name}
-        size="small"
-        inputProps={{ maxLength: length }}
-        value={formData[name]}
-        autoComplete="off"
-        placeholder={`${placeholderText}`}
-        onChange={handleInputChange}
-        error={error}
-      />
-    </Flex>
-  );
-
-  const renderSelectField = (
-    label: string,
-    name: keyof FormData,
-    options: { label: string; value: string }[],
-    error?: boolean,
-  ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {label}
-      </Typography>
-      <FormControl size="small">
-        <InputLabel>{`Selecione ${label}`}</InputLabel>
-        <Select
-          name={name}
-          label={`Selecione ${label}`}
-          value={formData[name]}
-          onChange={handleSelectChange}
-          error={error}
-        >
-          {options.map(option => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </Flex>
-  );
+  const getErrorMessage = (index: number, field: string) => {
+    if (errors[field] && errors[field][index]) {
+      const error = errors[field][index];
+      return error;
+    }
+    return null;
+  };
 
   const handleSelectChange = (event: any) => {
     const { name, value } = event.target;
@@ -481,83 +463,83 @@ const RepresentativeModal = ({
                         gap: '32px',
                       }}
                     >
-                      {renderInputField('name', 'Nome', 99, 'Nome do Representante', !!errors.name)}
-                      {renderInputField(
-                        'last_name',
-                        'Sobrenome',
-                        99,
-                        'Sobrenome do Representante',
-                        !!errors.last_name,
-                      )}
+                      <CustomTextField
+                        formData={formData}
+                        name="name"
+                        label="Nome do Representante"
+                        errorMessage={getErrorMessage(0, 'name')}
+                        handleInputChange={handleInputChange}
+                      />
+                      <CustomTextField
+                        formData={formData}
+                        name="last_name"
+                        label="Sobrenome do Representante"
+                        errorMessage={getErrorMessage(0, 'last_name')}
+                        handleInputChange={handleInputChange}
+                      />
                     </Flex>
 
                     <Flex style={{ gap: '32px' }}>
-                      {renderInputField('CPF', 'CPF', 16, 'Informe o CPF', !!errors.CPF)}
-                      {renderInputField('RG', 'RG', 25, 'Informe o RG', !!errors.RG)}
+                      <CustomTextField
+                        formData={formData}
+                        name="CPF"
+                        label="CPF"
+                        errorMessage={getErrorMessage(0, 'CPF')}
+                        handleInputChange={handleInputChange}
+                      />
+                      <CustomTextField
+                        formData={formData}
+                        name="RG"
+                        label="RG"
+                        errorMessage={getErrorMessage(0, 'RG')}
+                        handleInputChange={handleInputChange}
+                      />
                     </Flex>
 
                     <Flex style={{ gap: '24px' }}>
-                      <Flex style={{ flexDirection: 'column', flex: 1 }}>
-                        <LocalizationProvider dateAdapter={AdapterDayjs}>
-                          <Flex>
-                            <Typography mb={'8px'} variant="h6">
-                              {'Data de Nascimento'}
-                            </Typography>
-                          </Flex>
-                          <input
-                            type="date"
-                            name="birth"
-                            max={today}
-                            value={formData.birth as string}
-                            onChange={handleInputChange}
-                            style={{
-                              height: '40px',
-                              width: '100%',
-                              padding: '8px',
-                              borderRadius: '4px',
-                              border: '1px solid #c4c4c4',
-                              fontSize: '16px',
-                              fontFamily: 'Roboto',
-                              fontWeight: 400,
-                            }}
-                          />
-                        </LocalizationProvider>
-                      </Flex>
-                      {renderSelectField(
-                        'Naturalidade',
-                        'nationality',
-                        nationalityOptions,
-                        !!errors.nationality,
-                      )}
+                      <CustomDateField
+                        formData={formData}
+                        label={'Data de Nascimento'}
+                        name={'birth'}
+                        handleInputChange={handleInputChange}
+                      />
+                      <CustomSelectField
+                        formData={formData}
+                        name="nationality"
+                        label="Naturalidade"
+                        errorMessage={getErrorMessage(0, 'nationality')}
+                        options={nationalityOptions}
+                        handleSelectChange={handleSelectChange}
+                      />
                     </Flex>
 
-                    <Flex
-                      style={{
-                        flex: 1,
-                        gap: '32px',
-                      }}
-                    >
-                      {renderSelectField('Gênero', 'gender', gendersOptions, !!errors.gender)}
-                      {renderSelectField(
-                        'Estado Civil',
-                        'civil_status',
-                        civilStatusOptions,
-                        !!errors.civil_status,
-                      )}
+                    <Flex style={{ flex: 1, gap: '32px' }}>
+                      <CustomSelectField
+                        formData={formData}
+                        name="gender"
+                        label="Gênero"
+                        errorMessage={getErrorMessage(0, 'gender')}
+                        options={gendersOptions}
+                        handleSelectChange={handleSelectChange}
+                      />
+                      <CustomSelectField
+                        formData={formData}
+                        name="civil_status"
+                        label="Estado Civil"
+                        errorMessage={getErrorMessage(0, 'civil_status')}
+                        options={civilStatusOptions}
+                        handleSelectChange={handleSelectChange}
+                      />
                     </Flex>
 
-                    <Flex
-                      style={{
-                        gap: '32px',
-                      }}
-                    >
-                      {renderInputField(
-                        'profession',
-                        'Profissão',
-                        99,
-                        'Informe a Profissão',
-                        !!errors.profession,
-                      )}
+                    <Flex style={{ gap: '32px' }}>
+                      <CustomTextField
+                        formData={formData}
+                        name="profession"
+                        label="Profissão"
+                        errorMessage={getErrorMessage(0, 'profession')}
+                        handleInputChange={handleInputChange}
+                      />
                     </Flex>
                   </Flex>
                 </Flex>
@@ -573,32 +555,64 @@ const RepresentativeModal = ({
 
                   <Flex style={{ gap: '32px', flex: 1 }}>
                     <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                      {renderInputField('cep', 'CEP', 20, 'Informe o CEP', !!errors.cep)}
+                      <CustomTextField
+                        formData={formData}
+                        name="cep"
+                        label="CEP"
+                        errorMessage={getErrorMessage(0, 'cep')}
+                        handleInputChange={handleInputChange}
+                      />
                       <Flex style={{ gap: '16px' }}>
-                        {renderInputField(
-                          'street',
-                          'Endereço',
-                          99,
-                          'Informe o Endereço',
-
-                          !!errors.street,
-                        )}
+                        <CustomTextField
+                          formData={formData}
+                          name="street"
+                          label="Endereço"
+                          errorMessage={getErrorMessage(0, 'street')}
+                          handleInputChange={handleInputChange}
+                        />
                         <Box maxWidth={'30%'}>
-                          {renderInputField('number', 'Número', 16, 'N.º', !!errors.number)}
+                          <CustomTextField
+                            formData={formData}
+                            name="number"
+                            label="Número"
+                            placeholder="N.º"
+                            errorMessage={getErrorMessage(0, 'number')}
+                            handleInputChange={handleInputChange}
+                          />
                         </Box>
                       </Flex>
-                      {renderInputField('description', 'Complemento', 99, 'Informe o Estado')}
+                      <CustomTextField
+                        formData={formData}
+                        name="description"
+                        label="Complemento"
+                        errorMessage={getErrorMessage(0, 'description')}
+                        handleInputChange={handleInputChange}
+                      />
                     </Box>
                     <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                      {renderInputField(
-                        'neighborhood',
-                        'Bairro',
-                        99,
-                        'Informe o Estado',
-                        !!errors.neighborhood,
-                      )}
-                      {renderInputField('city', 'Cidade', 99, 'Informe a Cidade', !!errors.city)}
-                      {renderInputField('state', 'Estado', 99, 'Informe o Estado', !!errors.state)}
+                      <CustomTextField
+                        formData={formData}
+                        name="neighborhood"
+                        label="Bairro"
+                        errorMessage={getErrorMessage(0, 'neighborhood')}
+                        handleInputChange={handleInputChange}
+                      />
+
+                      <CustomTextField
+                        formData={formData}
+                        name="city"
+                        label="Cidade"
+                        errorMessage={getErrorMessage(0, 'city')}
+                        handleInputChange={handleInputChange}
+                      />
+
+                      <CustomTextField
+                        formData={formData}
+                        name="state"
+                        label="Estado"
+                        errorMessage={getErrorMessage(0, 'state')}
+                        handleInputChange={handleInputChange}
+                      />
                     </Box>
                   </Flex>
                 </Flex>
@@ -611,48 +625,34 @@ const RepresentativeModal = ({
                   </Box>
 
                   <Flex style={{ gap: '32px', flex: 1 }}>
-                    <Box
-                      style={{
-                        flex: 1,
-                      }}
-                    >
+                    <Box flex={1}>
                       <Typography style={{ marginBottom: '8px' }} variant="h6">
-                        {'Telefone'}
+                        Telefone
                       </Typography>
 
                       {contactData.phoneInputFields.map((inputValue, index) => (
                         <Flex
                           key={index}
-                          style={{
-                            flexDirection: 'column',
-                            marginBottom: '8px',
-                            gap: '6px',
-                          }}
+                          style={{ flexDirection: 'column', marginBottom: '8px', gap: '6px' }}
                         >
                           <div className="flex flex-row gap-1">
-                            <TextField
-                              id="outlined-basic"
-                              variant="outlined"
-                              fullWidth
+                            <CustomTextField
+                              customValue={inputValue.phone_number || ''}
+                              formData={formData}
                               name="phone"
-                              size="small"
                               placeholder="Informe o Telefone"
-                              value={inputValue.phone_number || ''}
-                              onChange={(e: any) =>
+                              handleInputChange={(e: any) =>
                                 handleContactChange(index, e.target.value, 'phoneInputFields')
                               }
-                              autoComplete="off"
-                              error={!!errors.phone_number}
+                              errorMessage={getErrorMessage(index, 'phone_numbers')}
                             />
 
                             <button
                               type="button"
-                              onClick={() => {
-                                handleRemoveContact(index, 'phoneInputFields');
-                              }}
+                              onClick={() => handleRemoveContact(index, 'phoneInputFields')}
                             >
                               <div
-                                className={`flex  ${
+                                className={`flex ${
                                   contactData.phoneInputFields.length > 1 ? '' : 'hidden'
                                 }`}
                               >
@@ -675,49 +675,34 @@ const RepresentativeModal = ({
                       ))}
                     </Box>
 
-                    <Box
-                      style={{
-                        flex: 1,
-                      }}
-                    >
+                    <Box flex={1}>
                       <Typography style={{ marginBottom: '8px' }} variant="h6">
-                        {'E-mail'}
+                        E-mail
                       </Typography>
 
                       {contactData.emailInputFields.map((inputValue, index) => (
                         <Flex
                           key={index}
-                          style={{
-                            flexDirection: 'column',
-                            marginBottom: '8px',
-                            gap: '6px',
-                          }}
+                          style={{ flexDirection: 'column', marginBottom: '8px', gap: '6px' }}
                         >
                           <div className="flex flex-row gap-1">
-                            <TextField
-                              id="outlined-basic"
-                              variant="outlined"
-                              fullWidth
+                            <CustomTextField
+                              customValue={inputValue.email || ''}
+                              formData={formData}
                               name="email"
-                              size="small"
-                              style={{ flex: 1 }}
-                              placeholder="Informe o Email"
-                              value={inputValue.email}
-                              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                              placeholder="Informe o E-mail"
+                              handleInputChange={(e: any) =>
                                 handleContactChange(index, e.target.value, 'emailInputFields')
                               }
-                              error={!!errors.email}
-                              autoComplete="off"
+                              errorMessage={getErrorMessage(index, 'emails')}
                             />
 
                             <button
                               type="button"
-                              onClick={() => {
-                                handleRemoveContact(index, 'emailInputFields');
-                              }}
+                              onClick={() => handleRemoveContact(index, 'emailInputFields')}
                             >
                               <div
-                                className={`flex  ${
+                                className={`flex ${
                                   contactData.emailInputFields.length > 1 ? '' : 'hidden'
                                 }`}
                               >
