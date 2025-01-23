@@ -26,8 +26,8 @@ import {
   isValidPhoneNumber,
   isValidRG,
 } from '@/utils/validator';
-import { ZodFormError, ZodFormErrors } from '@/types/zod';
 import CustomTextField from '@/components/FormInputFields/CustomTextField';
+import { ZodFormError, ZodFormErrors } from '@/types/zod';
 import CustomDateField from '@/components/FormInputFields/CustomDateField';
 import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
 
@@ -132,17 +132,58 @@ const RepresentativeModal = ({
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
+  const today = new Date().toISOString().split('T')[0];
+  const currentDate = dayjs();
+
   const [message, setMessage] = useState('');
   const [type, setType] = useState<'success' | 'error'>('success');
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    last_name: '',
+    profession: '',
+    CPF: '',
+    RG: '',
+    gender: '',
+    civil_status: '',
+    nationality: '',
+    birth: currentDate,
+    cep: '',
+    street: '',
+    number: '',
+    description: '',
+    neighborhood: '',
+    city: '',
+    state: '',
+  });
 
   const [contactData, setContactData] = useState(initialContactData);
 
   const resetValues = () => {
-    setFormData(initialFormData);
-    setContactData(initialContactData);
+    setFormData({
+      name: '',
+      last_name: '',
+      profession: '',
+      CPF: '',
+      RG: '',
+      gender: '',
+      civil_status: '',
+      nationality: '',
+      birth: currentDate,
+      cep: '',
+      street: '',
+      number: '',
+      description: '',
+      neighborhood: '',
+      city: '',
+      state: '',
+    });
+
+    setContactData({
+      phoneInputFields: [{ phone_number: '' }],
+      emailInputFields: [{ email: '' }],
+    });
   };
 
   const handleCloseModal = () => {
@@ -152,10 +193,6 @@ const RepresentativeModal = ({
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
-    if (errors[name]) {
-      delete errors[name];
-      setErrors(errors);
-    }
     const formattedValue =
       name === 'CPF' ? cpfMask(value) : name === 'cep' ? cepMask(value) : value;
 
@@ -198,11 +235,6 @@ const RepresentativeModal = ({
         [inputArrayName]: newInputFields,
       };
     });
-  };
-
-  const createCustomer = async (data: any) => {
-    const response = await createCustomerApi(data);
-    return response;
   };
 
   const completeRegistration = async (data: any) => {
@@ -309,7 +341,7 @@ const RepresentativeModal = ({
     setOpenSnackbar(true);
     const result: ZodFormErrors = {};
 
-    // Loop through the errors
+    // Loop through the errors and process them
     newErrors.forEach(err => {
       let [field, index] = err.path;
 
@@ -336,7 +368,6 @@ const RepresentativeModal = ({
     }
     return null;
   };
-
   const handleSelectChange = (event: any) => {
     const { name, value } = event.target;
     setFormData(prevData => ({
@@ -554,7 +585,7 @@ const RepresentativeModal = ({
                   </Box>
 
                   <Flex style={{ gap: '32px', flex: 1 }}>
-                    <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
+                    <Box display="flex" flexDirection="column" gap="16px" flex={1}>
                       <CustomTextField
                         formData={formData}
                         name="cep"
@@ -570,7 +601,8 @@ const RepresentativeModal = ({
                           errorMessage={getErrorMessage(0, 'street')}
                           handleInputChange={handleInputChange}
                         />
-                        <Box maxWidth={'30%'}>
+
+                        <Box maxWidth="30%">
                           <CustomTextField
                             formData={formData}
                             name="number"
@@ -589,7 +621,7 @@ const RepresentativeModal = ({
                         handleInputChange={handleInputChange}
                       />
                     </Box>
-                    <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
+                    <Box display="flex" flexDirection="column" gap="16px" flex={1}>
                       <CustomTextField
                         formData={formData}
                         name="neighborhood"
