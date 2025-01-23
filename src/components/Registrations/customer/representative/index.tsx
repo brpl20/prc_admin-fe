@@ -550,8 +550,9 @@ const Representative = ({ pageTitle }: Props) => {
                   <Flex style={{ gap: '24px' }}>
                     <CustomDateField
                       formData={formData}
-                      label={'Data de Nascimento'}
                       name={'birth'}
+                      label={'Data de Nascimento'}
+                      errorMessage={getErrorMessage(0, 'birth')}
                       handleInputChange={handleInputChange}
                     />
                     <CustomSelectField

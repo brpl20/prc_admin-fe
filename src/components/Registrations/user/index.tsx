@@ -1,18 +1,7 @@
 import { useState, ChangeEvent, useEffect, useContext } from 'react';
 import { IoAddCircleOutline, IoCheckmark, IoClose } from 'react-icons/io5';
 
-import {
-  TextField,
-  Box,
-  Typography,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Autocomplete,
-  CircularProgress,
-} from '@mui/material';
+import { TextField, Box, Typography, Button, Autocomplete, CircularProgress } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
 import { getCEPDetails } from '@/services/brasilAPI';
 
@@ -24,25 +13,27 @@ import {
   UserRegisterTypesOptions,
 } from '@/utils/constants';
 
-import { Container, Title, BirthdayContainer } from './styles';
+import { Container, Title } from './styles';
 import { colors, ContentContainer } from '@/styles/globals';
 
 import dayjs from 'dayjs';
 import { IoMdTrash } from 'react-icons/io';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { Flex, Divider } from '@/styles/globals';
 import { getAllOffices } from '@/services/offices';
 import { getAllBanks } from '@/services/brasilAPI';
-import { createAdmin, updateAdmin } from '@/services/admins';
+import { createAdmin, updateAdmin, updateProfileAdmin } from '@/services/admins';
 import { IOfficeProps } from '@/interfaces/IOffice';
 
 import Router, { useRouter } from 'next/router';
-import { cepMask, cpfMask } from '@/utils/masks';
+import { cepMask, cpfMask, phoneMask } from '@/utils/masks';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
-import { isValidCPF, isValidEmail, isValidRG } from '@/utils/validator';
+import { isValidCPF, isValidEmail, isValidPhoneNumber, isValidRG } from '@/utils/validator';
+import { ZodFormError, ZodFormErrors } from '@/types/zod';
+import CustomTextField from '@/components/FormInputFields/CustomTextField';
+import CustomDateField from '@/components/FormInputFields/CustomDateField';
+import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
 
 interface FormData {
   officeId: string;
@@ -73,7 +64,7 @@ interface FormData {
   account: string;
   pix: string;
 
-  email: string;
+  userEmail: string;
   password: string;
   confirmPassword: string;
 }
@@ -97,21 +88,31 @@ const userSchema = z.object({
   gender: z.string().min(2, { message: 'O campo Gênero é obrigatório.' }),
   civil_status: z.string().min(2, { message: 'O campo Estado Civil é obrigatório.' }),
   nationality: z.string().min(2, { message: 'O campo Naturalidade é obrigatório.' }),
-  phone: z
-    .string({ required_error: 'Telefone é um campo obrigatório.' })
-    .min(1, 'Telefone é um campo obrigatório.')
-    .refine(isValidPhoneNumber, { message: 'Número de telefone inválido.' }),
-  email: z.string().min(2, { message: 'O campo E-mail é obrigatório.' }),
-  userType: z.string().min(2, { message: 'O campo Tipo do Usuário é obrigatório.' }),
+  phone_numbers: z.array(
+    z
+      .string({ required_error: 'Telefone é um campo obrigatório.' })
+      .min(1, 'Telefone é um campo obrigatório.')
+      .refine(isValidPhoneNumber, { message: 'Número de telefone inválido.' }),
+  ),
+  emails: z.array(
+    z
+      .string({ required_error: 'E-mail é um campo obrigatório.' })
+      .min(1, 'E-mail é um campo obrigatório.')
+      .refine(isValidEmail, { message: 'E-mail inválido.' }),
+  ),
   userEmail: z
-    .string({ required_error: 'E-mail é um campo obrigatório.' })
-    .min(1, 'E-mail é um campo obrigatório.')
+    .string({ required_error: 'E-mail de Acesso é um campo obrigatório.' })
+    .min(1, 'E-mail de Acesso é um campo obrigatório.')
     .refine(isValidEmail, { message: 'E-mail inválido.' }),
+  birth: z.string().min(2, { message: 'O campo Data de Nascimento é obrigatório.' }),
+  userType: z.string().min(2, { message: 'O campo Tipo do Usuário é obrigatório.' }),
   city: z.string().min(2, { message: 'O campo Cidade é obrigatório.' }),
   state: z.string().min(2, { message: 'O campo Estado é obrigatório.' }),
+  neighborhood: z.string().min(2, { message: 'O campo Bairro é obrigatório.' }),
   address: z.string().min(2, { message: 'O campo Endereço é obrigatório.' }),
   number: z.number().min(1, { message: 'O campo Número é obrigatório.' }),
   cep: z.string().min(2, { message: 'O campo CEP é obrigatório.' }),
+  oab: z.string().min(2, { message: 'O campo OAB é obrigatório.' }),
 });
 
 const User = ({ dataToEdit }: props) => {
@@ -143,10 +144,31 @@ const User = ({ dataToEdit }: props) => {
     officeId: '',
     name: '',
     last_name: '',
+    birth: '',
     cpf: '',
     rg: '',
+    gender: '',
+    mother_name: '',
+    nationality: '',
+    professional_record: '',
+    role: '',
+    civil_status: '',
+    oab: '',
+    cep: '',
+    address: '',
+    state: '',
+    city: '',
+    number: '',
+    description: '',
+    neighborhood: '',
+
+    bank_name: '',
     agency: '',
-    email: '',
+    op: '',
+    account: '',
+    pix: '',
+
+    userEmail: '',
     password: '',
     confirmPassword: '',
   } as FormData);
@@ -156,7 +178,38 @@ const User = ({ dataToEdit }: props) => {
   });
 
   const resetValues = () => {
-    setFormData({} as FormData);
+    setFormData({
+      officeId: '',
+      name: '',
+      last_name: '',
+      cpf: '',
+      rg: '',
+      birth: '',
+      gender: '',
+      mother_name: '',
+      nationality: '',
+      professional_record: '',
+      role: '',
+      civil_status: '',
+      oab: '',
+      cep: '',
+      address: '',
+      state: '',
+      city: '',
+      number: '',
+      description: '',
+      neighborhood: '',
+
+      bank_name: '',
+      agency: '',
+      op: '',
+      account: '',
+      pix: '',
+
+      userEmail: '',
+      password: '',
+      confirmPassword: '',
+    } as FormData);
     setContactData({
       phoneInputFields: [{ phone_number: '' }],
       emailInputFields: [{ email: '' }],
@@ -173,7 +226,7 @@ const User = ({ dataToEdit }: props) => {
     if (name === 'cep') {
       setFormData(prevData => ({
         ...prevData,
-        ['street']: '',
+        ['address']: '',
         ['number']: '',
         ['description']: '',
         ['state']: '',
@@ -231,31 +284,12 @@ const User = ({ dataToEdit }: props) => {
   ) => {
     setContactData(prevData => {
       const newInputFields = [...prevData[inputArrayName]];
+      newInputFields[index] =
+        inputArrayName === 'phoneInputFields'
+          ? { phone_number: phoneMask(value) }
+          : { email: value };
 
-      if (inputArrayName === 'phoneInputFields') {
-        if (newInputFields[index]) {
-          newInputFields[index] = {
-            ...newInputFields[index],
-            phone_number: value,
-          };
-        } else {
-          newInputFields.push({ phone_number: value });
-        }
-      } else if (inputArrayName === 'emailInputFields') {
-        if (newInputFields[index]) {
-          newInputFields[index] = {
-            ...newInputFields[index],
-            email: value,
-          };
-        } else {
-          newInputFields.push({ email: value });
-        }
-      }
-
-      return {
-        ...prevData,
-        [inputArrayName]: newInputFields,
-      };
+      return { ...prevData, [inputArrayName]: newInputFields };
     });
   };
 
@@ -272,22 +306,24 @@ const User = ({ dataToEdit }: props) => {
         gender: formData.gender,
         civil_status: formData.civil_status,
         nationality: formData.nationality,
-        phone: contactData.phoneInputFields[0].phone_number,
-        email: contactData.emailInputFields[0].email,
+        phone_numbers: contactData.phoneInputFields.map(field => field.phone_number),
+        emails: contactData.emailInputFields.map(field => field.email),
         userType: formData.role,
         bank_name: formData.bank_name,
         agency: formData.agency,
         op: formData.op,
+        oab: formData.oab,
         account: formData.account,
         pix: formData.pix,
-        userEmail: formData.email,
         password: formData.password,
+        birth: formData.birth,
         city: formData.city,
         state: formData.state,
         address: formData.address,
-        number: formData.number ? Number(formData.number) : '',
+        neighborhood: formData.neighborhood,
+        number: Number(formData.number),
         cep: formData.cep,
-        systemEmail: formData.email,
+        userEmail: formData.userEmail,
       });
 
       if (!isEditing && formData.password === '') {
@@ -348,8 +384,17 @@ const User = ({ dataToEdit }: props) => {
         }
 
         const id = dataToEdit.data.id;
+        await updateProfileAdmin(id, editData);
 
-        await updateAdmin(id, editData);
+        const adminEmailData = {
+          admin: {
+            email: formData.userEmail,
+          },
+        };
+
+        console.log('profile admin:', editData);
+        console.log('admin:', adminEmailData);
+        await updateAdmin(id, adminEmailData);
 
         Router.push('/usuarios');
       }
@@ -390,7 +435,7 @@ const User = ({ dataToEdit }: props) => {
             },
           ],
           admin_attributes: {
-            email: formData.email,
+            email: formData.userEmail,
             password: formData.password,
             password_confirmation: formData.confirmPassword,
           },
@@ -411,91 +456,47 @@ const User = ({ dataToEdit }: props) => {
 
         Router.push('/usuarios');
       }
-    } catch (err) {
+    } catch (err: any) {
       handleFormError(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFormError = (error: any) => {
-    const newErrors = error?.formErrors?.fieldErrors ?? {};
-    const errorObject: { [key: string]: string } = {};
-
-    if (error.response && error.response.status === 400 && error.response.data.errors[0].code) {
-      setMessage(error.response.data.errors[0].code[0]);
-      setType('error');
-      setOpenSnackbar(true);
-      return;
-    }
-
-    setMessage('Preencha todos os campos obrigatórios.');
+  const handleFormError = (error: { issues: ZodFormError[] }) => {
+    const newErrors = error.issues ?? [];
+    setMessage('Corrija os erros no formulário.');
     setType('error');
     setOpenSnackbar(true);
+    const result: ZodFormErrors = {};
 
-    for (const field in newErrors) {
-      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
-        errorObject[field] = newErrors[field][0] as string;
+    // Loop through the errors and process them
+    newErrors.forEach(err => {
+      let [field, index] = err.path;
+
+      index = index || 0;
+
+      if (!result[field]) {
+        result[field] = []; // Initialize array for the field if not present
       }
-    }
-    setErrors(errorObject);
+
+      // If there's no error for this index, add it
+      if (!result[field][index as number]) {
+        result[field][index as number] = err.message; // Store only the first error for this index
+      }
+    });
+
+    console.error(newErrors);
+    setErrors(result);
   };
 
-  const renderInputField = (
-    name: keyof FormData,
-    title: string,
-    length: number,
-    placeholderText: string,
-    error?: boolean,
-  ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {title}
-      </Typography>
-      <TextField
-        variant="outlined"
-        error={error && !formData[name]}
-        fullWidth
-        name={name}
-        size="small"
-        inputProps={{ maxLength: length }}
-        value={formData[name] || ''}
-        autoComplete="off"
-        placeholder={`${placeholderText}`}
-        onChange={handleInputChange}
-        type={name === 'number' ? 'number' : 'text'}
-      />
-    </Flex>
-  );
-
-  const renderSelectField = (
-    label: string,
-    name: keyof FormData,
-    options: { label: string; value: string }[],
-    error?: boolean,
-  ) => (
-    <Flex style={{ flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {label}
-      </Typography>
-      <FormControl size="small">
-        <InputLabel>{`Selecione ${label}`}</InputLabel>
-        <Select
-          name={name}
-          label={`Selecione ${label}`}
-          value={formData[name] || ''}
-          onChange={handleSelectChange}
-          error={error && !formData[name]}
-        >
-          {options.map(option => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </Flex>
-  );
+  const getErrorMessage = (index: number, field: string) => {
+    if (errors[field] && errors[field][index]) {
+      const error = errors[field][index];
+      return error;
+    }
+    return null;
+  };
 
   const handleSelectChange = (event: any) => {
     const { name, value } = event.target;
@@ -688,7 +689,7 @@ const User = ({ dataToEdit }: props) => {
           op: bankAccounts.type_account ? bankAccounts.type_account : '',
           account: bankAccounts.account ? bankAccounts.account : '',
           pix: bankAccounts.pix ? bankAccounts.pix : '',
-          email: attributes.email ? attributes.email : '',
+          userEmail: attributes.email ? attributes.email : '',
           password: '',
           street: addresses.street ? addresses.street : '',
           confirmPassword: '',
@@ -839,56 +840,55 @@ const User = ({ dataToEdit }: props) => {
                   }}
                 >
                   <Flex style={{ gap: '24px' }}>
-                    {renderInputField('name', 'Nome', 99, 'Nome do Usuário', !!errors.name)}
-                    {renderInputField(
-                      'last_name',
-                      'Sobrenome',
-                      99,
-                      'Sobrenome do Usuário',
-                      !!errors.last_name,
-                    )}
+                    <CustomTextField
+                      formData={formData}
+                      name="name"
+                      label="Nome do Usuário"
+                      errorMessage={getErrorMessage(0, 'name')}
+                      handleInputChange={handleInputChange}
+                    />
+
+                    <CustomTextField
+                      formData={formData}
+                      name="last_name"
+                      label="Sobrenome do Usuário"
+                      errorMessage={getErrorMessage(0, 'last_name')}
+                      handleInputChange={handleInputChange}
+                    />
                   </Flex>
 
                   <Flex style={{ gap: '24px' }}>
-                    {renderInputField('cpf', 'CPF', 14, 'Informe o CPF', !!errors.cpf)}
-                    {renderInputField('rg', 'RG', 16, 'Informe o RG', !!errors.rg)}
+                    <CustomTextField
+                      formData={formData}
+                      name="cpf"
+                      label="CPF"
+                      errorMessage={getErrorMessage(0, 'cpf')}
+                      handleInputChange={handleInputChange}
+                    />
+                    <CustomTextField
+                      formData={formData}
+                      name="rg"
+                      label="RG"
+                      errorMessage={getErrorMessage(0, 'rg')}
+                      handleInputChange={handleInputChange}
+                    />
                   </Flex>
 
                   <Flex style={{ gap: '24px' }}>
-                    <BirthdayContainer>
-                      <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <Flex>
-                          <Typography mb={'8px'} variant="h6">
-                            {'Data de Nascimento'}
-                          </Typography>
-                        </Flex>
-
-                        <input
-                          type="date"
-                          name="birth"
-                          max={today}
-                          value={formData.birth}
-                          onChange={handleInputChange}
-                          style={{
-                            height: '40px',
-                            width: '100%',
-                            padding: '8px',
-                            borderRadius: '4px',
-                            border: '1px solid #c4c4c4',
-                            fontSize: '16px',
-                            fontFamily: 'Roboto',
-                            fontWeight: 400,
-                          }}
-                        />
-                      </LocalizationProvider>
-                    </BirthdayContainer>
-                    {renderInputField(
-                      'mother_name',
-                      'Nome da Mãe',
-                      60,
-                      'Informe o Nome',
-                      !!errors.rg,
-                    )}
+                    <CustomDateField
+                      formData={formData}
+                      name={'birth'}
+                      label={'Data de Nascimento'}
+                      errorMessage={getErrorMessage(0, 'birth')}
+                      handleInputChange={handleInputChange}
+                    />
+                    <CustomTextField
+                      formData={formData}
+                      name="mother_name"
+                      label="Nome da Mãe"
+                      errorMessage={getErrorMessage(0, 'mother_name')}
+                      handleInputChange={handleInputChange}
+                    />
                   </Flex>
                 </Box>
 
@@ -899,19 +899,32 @@ const User = ({ dataToEdit }: props) => {
                     gap: '24px',
                   }}
                 >
-                  {renderSelectField('Gênero', 'gender', gendersOptions, !!errors.gender)}
-                  {renderSelectField(
-                    'Estado Civil',
-                    'civil_status',
-                    civilStatusOptions,
-                    !!errors.civil_status,
-                  )}
-                  {renderSelectField(
-                    'Naturalidade',
-                    'nationality',
-                    nationalityOptions,
-                    !!errors.nationality,
-                  )}
+                  <CustomSelectField
+                    formData={formData}
+                    name="gender"
+                    label="Gênero"
+                    errorMessage={getErrorMessage(0, 'gender')}
+                    options={gendersOptions}
+                    handleSelectChange={handleSelectChange}
+                  />
+
+                  <CustomSelectField
+                    formData={formData}
+                    name="civil_status"
+                    label="Estado Civil"
+                    errorMessage={getErrorMessage(0, 'civil_status')}
+                    options={civilStatusOptions}
+                    handleSelectChange={handleSelectChange}
+                  />
+
+                  <CustomSelectField
+                    formData={formData}
+                    name="nationality"
+                    label="Naturalidade"
+                    errorMessage={getErrorMessage(0, 'nationality')}
+                    options={nationalityOptions}
+                    handleSelectChange={handleSelectChange}
+                  />
                 </Flex>
               </Box>
             </Flex>
@@ -926,34 +939,67 @@ const User = ({ dataToEdit }: props) => {
               </Box>
 
               <Box display={'flex'} gap={'24px'} flex={1}>
-                <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                  {renderInputField('cep', 'CEP', 60, 'Informe o CEP', !!errors.cep)}
+                <Box display="flex" flexDirection="column" gap="16px" flex={1}>
+                  <CustomTextField
+                    formData={formData}
+                    name="cep"
+                    label="CEP"
+                    errorMessage={getErrorMessage(0, 'cep')}
+                    handleInputChange={handleInputChange}
+                  />
                   <Flex style={{ gap: '16px' }}>
-                    {renderInputField(
-                      'address',
-                      'Endereço',
-                      99,
-                      'Informe o Endereço',
+                    <CustomTextField
+                      formData={formData}
+                      name="address"
+                      label="Endereço"
+                      errorMessage={getErrorMessage(0, 'address')}
+                      handleInputChange={handleInputChange}
+                    />
 
-                      !!errors.address,
-                    )}
-                    <Box maxWidth={'30%'}>
-                      {renderInputField('number', 'Número', 16, 'N.º', !!errors.address)}
+                    <Box maxWidth="30%">
+                      <CustomTextField
+                        formData={formData}
+                        name="number"
+                        label="Número"
+                        placeholder="N.º"
+                        errorMessage={getErrorMessage(0, 'number')}
+                        handleInputChange={handleInputChange}
+                      />
                     </Box>
                   </Flex>
-                  {renderInputField('description', 'Complemento', 99, 'Informe o Complemento')}
+                  <CustomTextField
+                    formData={formData}
+                    name="description"
+                    label="Complemento"
+                    errorMessage={getErrorMessage(0, 'description')}
+                    handleInputChange={handleInputChange}
+                  />
                 </Box>
 
-                <Box display={'flex'} flexDirection={'column'} gap={'16px'} flex={1}>
-                  {renderInputField(
-                    'neighborhood',
-                    'Bairro',
-                    99,
-                    'Informe o Bairro',
-                    !!errors.state,
-                  )}
-                  {renderInputField('city', 'Cidade', 99, 'Informe a Cidade', !!errors.city)}
-                  {renderInputField('state', 'Estado', 99, 'Informe o Estado', !!errors.state)}
+                <Box display="flex" flexDirection="column" gap="16px" flex={1}>
+                  <CustomTextField
+                    formData={formData}
+                    name="neighborhood"
+                    label="Bairro"
+                    errorMessage={getErrorMessage(0, 'neighborhood')}
+                    handleInputChange={handleInputChange}
+                  />
+
+                  <CustomTextField
+                    formData={formData}
+                    name="city"
+                    label="Cidade"
+                    errorMessage={getErrorMessage(0, 'city')}
+                    handleInputChange={handleInputChange}
+                  />
+
+                  <CustomTextField
+                    formData={formData}
+                    name="state"
+                    label="Estado"
+                    errorMessage={getErrorMessage(0, 'state')}
+                    handleInputChange={handleInputChange}
+                  />
                 </Box>
               </Box>
             </Flex>
@@ -968,48 +1014,34 @@ const User = ({ dataToEdit }: props) => {
               </Box>
 
               <Flex style={{ gap: '32px', flex: 1 }}>
-                <Box
-                  style={{
-                    flex: 1,
-                  }}
-                >
+                <Box flex={1}>
                   <Typography style={{ marginBottom: '8px' }} variant="h6">
-                    {'Telefone'}
+                    Telefone
                   </Typography>
 
                   {contactData.phoneInputFields.map((inputValue, index) => (
                     <Flex
                       key={index}
-                      style={{
-                        flexDirection: 'column',
-                        marginBottom: '8px',
-                        gap: '6px',
-                      }}
+                      style={{ flexDirection: 'column', marginBottom: '8px', gap: '6px' }}
                     >
                       <div className="flex flex-row gap-1">
-                        <TextField
-                          id="outlined-basic"
-                          variant="outlined"
-                          fullWidth
+                        <CustomTextField
+                          customValue={inputValue.phone_number || ''}
+                          formData={formData}
                           name="phone"
-                          size="small"
                           placeholder="Informe o Telefone"
-                          value={inputValue.phone_number || ''}
-                          onChange={(e: any) =>
+                          handleInputChange={(e: any) =>
                             handleContactChange(index, e.target.value, 'phoneInputFields')
                           }
-                          autoComplete="off"
-                          error={!!errors.phone}
+                          errorMessage={getErrorMessage(index, 'phone_numbers')}
                         />
 
                         <button
                           type="button"
-                          onClick={() => {
-                            handleRemoveContact(index, 'phoneInputFields');
-                          }}
+                          onClick={() => handleRemoveContact(index, 'phoneInputFields')}
                         >
                           <div
-                            className={`flex  ${
+                            className={`flex ${
                               contactData.phoneInputFields.length > 1 ? '' : 'hidden'
                             }`}
                           >
@@ -1032,49 +1064,34 @@ const User = ({ dataToEdit }: props) => {
                   ))}
                 </Box>
 
-                <Box
-                  style={{
-                    flex: 1,
-                  }}
-                >
+                <Box flex={1}>
                   <Typography style={{ marginBottom: '8px' }} variant="h6">
-                    {'E-mail'}
+                    E-mail
                   </Typography>
 
                   {contactData.emailInputFields.map((inputValue, index) => (
                     <Flex
                       key={index}
-                      style={{
-                        flexDirection: 'column',
-                        marginBottom: '8px',
-                        gap: '6px',
-                      }}
+                      style={{ flexDirection: 'column', marginBottom: '8px', gap: '6px' }}
                     >
                       <div className="flex flex-row gap-1">
-                        <TextField
-                          id="outlined-basic"
-                          variant="outlined"
-                          fullWidth
+                        <CustomTextField
+                          customValue={inputValue.email || ''}
+                          formData={formData}
                           name="email"
-                          size="small"
-                          style={{ flex: 1 }}
-                          placeholder="Informe o Email"
-                          value={inputValue.email}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                          placeholder="Informe o E-mail"
+                          handleInputChange={(e: any) =>
                             handleContactChange(index, e.target.value, 'emailInputFields')
                           }
-                          error={!!errors.email}
-                          autoComplete="off"
+                          errorMessage={getErrorMessage(index, 'emails')}
                         />
 
                         <button
                           type="button"
-                          onClick={() => {
-                            handleRemoveContact(index, 'emailInputFields');
-                          }}
+                          onClick={() => handleRemoveContact(index, 'emailInputFields')}
                         >
                           <div
-                            className={`flex  ${
+                            className={`flex ${
                               contactData.emailInputFields.length > 1 ? '' : 'hidden'
                             }`}
                           >
@@ -1119,17 +1136,28 @@ const User = ({ dataToEdit }: props) => {
                 }}
               >
                 <Flex style={{ gap: '24px' }}>
-                  {renderInputField('oab', 'OAB', 60, 'Informe a OAB')}
+                  <CustomTextField
+                    formData={formData}
+                    name="oab"
+                    label="OAB"
+                    errorMessage={getErrorMessage(0, 'oab')}
+                    handleInputChange={handleInputChange}
+                  />
                 </Flex>
                 <Flex style={{ gap: '24px' }}>
-                  {renderSelectField(
-                    'Tipo do Usuário',
-                    'role',
-                    session?.role === 'counter'
-                      ? UserRegisterTypesOptions.filter(option => option.value === 'counter')
-                      : UserRegisterTypesOptions,
-                    !!errors.userType,
-                  )}
+                  <CustomSelectField
+                    formData={formData}
+                    name="role"
+                    label="Tipo do Usuário"
+                    options={
+                      session?.role === 'counter'
+                        ? UserRegisterTypesOptions.filter(option => option.value === 'counter')
+                        : UserRegisterTypesOptions
+                    }
+                    errorMessage={getErrorMessage(0, 'role')}
+                    handleSelectChange={handleSelectChange}
+                  />
+
                   {session?.role != 'counter' && (
                     <Flex style={{ flexDirection: 'column', flex: 1 }}>
                       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
@@ -1148,6 +1176,9 @@ const User = ({ dataToEdit }: props) => {
                             placeholder="Selecione um Escritório"
                             {...params}
                             size="small"
+                            error={getErrorMessage(0, 'office_id')}
+                            helperText={getErrorMessage(0, 'office_id')}
+                            FormHelperTextProps={{ className: 'ml-2' }}
                           />
                         )}
                         noOptionsText="Nenhum Escritório Encontrado"
@@ -1198,7 +1229,9 @@ const User = ({ dataToEdit }: props) => {
                     placeholder="Selecione um Banco"
                     {...params}
                     size="small"
-                    error={!!errors.bank_name}
+                    error={getErrorMessage(0, 'bank_name')}
+                    helperText={getErrorMessage(0, 'bank_name')}
+                    FormHelperTextProps={{ className: 'ml-2' }}
                   />
                 )}
                 sx={{ backgroundColor: 'white', zIndex: 1 }}
@@ -1206,21 +1239,41 @@ const User = ({ dataToEdit }: props) => {
               />
 
               <Flex style={{ gap: '16px' }}>
-                {renderInputField('agency', 'Agência', 99, 'Número da agencia', !!errors.agency)}
+                <CustomTextField
+                  formData={formData}
+                  name="agency"
+                  label="Agência"
+                  errorMessage={getErrorMessage(0, 'agency')}
+                  handleInputChange={handleInputChange}
+                />
+
                 <Box width={'100px'}>
-                  {renderInputField('op', 'Operação', 20, 'Op.', !!errors.op)}
+                  <CustomTextField
+                    formData={formData}
+                    name="op"
+                    label="Operação"
+                    errorMessage={getErrorMessage(0, 'op')}
+                    handleInputChange={handleInputChange}
+                  />
                 </Box>
-                {renderInputField('account', 'Conta', 99, 'Número da conta', !!errors.account)}
+
+                <CustomTextField
+                  formData={formData}
+                  name="account"
+                  label="Conta"
+                  errorMessage={getErrorMessage(0, 'account')}
+                  handleInputChange={handleInputChange}
+                />
               </Flex>
 
               <Box>
-                {renderInputField(
-                  'pix',
-                  'Cadastrar Chave Pix',
-                  99,
-                  'Informe a chave',
-                  !!errors.pix,
-                )}
+                <CustomTextField
+                  formData={formData}
+                  name="pix"
+                  label="Chave Pix"
+                  errorMessage={getErrorMessage(0, 'pix')}
+                  handleInputChange={handleInputChange}
+                />
               </Box>
             </Box>
           </Flex>
@@ -1236,7 +1289,13 @@ const User = ({ dataToEdit }: props) => {
 
             <Box style={{ flex: 1 }}>
               <Flex style={{ gap: '24px' }}>
-                {renderInputField('email', 'E-mail', 99, 'Informe seu e-mail', !!errors.userEmail)}
+                <CustomTextField
+                  formData={formData}
+                  name="userEmail"
+                  label="E-mail"
+                  errorMessage={getErrorMessage(0, 'userEmail')}
+                  handleInputChange={handleInputChange}
+                />
               </Flex>
 
               {!isEditing && (
