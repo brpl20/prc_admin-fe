@@ -95,6 +95,32 @@ const representativeSchema = z.object({
   state: z.string().min(1, { message: 'Preencha o campo Estado.' }),
 });
 
+const currentDate = dayjs();
+
+const initialFormData: FormData = {
+  name: '',
+  last_name: '',
+  profession: '',
+  CPF: '',
+  RG: '',
+  gender: '',
+  civil_status: '',
+  nationality: '',
+  birth: currentDate,
+  cep: '',
+  street: '',
+  number: '',
+  description: '',
+  neighborhood: '',
+  city: '',
+  state: '',
+};
+
+const initialContactData = {
+  phoneInputFields: [{ phone_number: '' }],
+  emailInputFields: [{ email: '' }],
+};
+
 const RepresentativeModal = ({
   pageTitle,
   isOpen,
@@ -132,10 +158,7 @@ const RepresentativeModal = ({
     state: '',
   });
 
-  const [contactData, setContactData] = useState({
-    phoneInputFields: [{ phone_number: '' }],
-    emailInputFields: [{ email: '' }],
-  });
+  const [contactData, setContactData] = useState(initialContactData);
 
   const resetValues = () => {
     setFormData({
@@ -247,6 +270,7 @@ const RepresentativeModal = ({
         last_name: formData.last_name,
         CPF: formData.CPF,
         RG: formData.RG,
+        profession: formData.profession,
         gender: formData.gender,
         nationality: formData.nationality,
         civil_status: formData.civil_status,
@@ -255,11 +279,10 @@ const RepresentativeModal = ({
         cep: formData.cep,
         street: formData.street,
         number: formData.number,
-        profession: formData.profession,
-        description: formData.description,
         neighborhood: formData.neighborhood,
         city: formData.city,
         state: formData.state,
+        description: formData.description,
       });
 
       const data = {
