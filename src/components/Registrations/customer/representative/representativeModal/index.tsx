@@ -1,7 +1,7 @@
 import { useState, ChangeEvent, useEffect } from 'react';
 import { IoAddCircleOutline } from 'react-icons/io5';
 
-import { TextField, Box, Typography, Button, CircularProgress, Modal } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, Modal } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
 import { getCEPDetails } from '@/services/brasilAPI';
 import { cepMask, cpfMask, phoneMask } from '@/utils/masks';
@@ -17,7 +17,6 @@ import { Flex, Divider } from '@/styles/globals';
 import { createProfileCustomer, createCustomer as createCustomerApi } from '@/services/customers';
 import { animateScroll as scroll } from 'react-scroll';
 
-import { IoMdTrash } from 'react-icons/io';
 import { z } from 'zod';
 import {
   isValidCEP,
@@ -30,6 +29,7 @@ import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import { ZodFormError, ZodFormErrors } from '@/types/zod';
 import CustomDateField from '@/components/FormInputFields/CustomDateField';
 import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
+import { IoMdTrash } from 'react-icons/io';
 
 interface FormData {
   name: string;
@@ -96,25 +96,6 @@ const representativeSchema = z.object({
 });
 
 const currentDate = dayjs();
-
-const initialFormData: FormData = {
-  name: '',
-  last_name: '',
-  profession: '',
-  CPF: '',
-  RG: '',
-  gender: '',
-  civil_status: '',
-  nationality: '',
-  birth: currentDate,
-  cep: '',
-  street: '',
-  number: '',
-  description: '',
-  neighborhood: '',
-  city: '',
-  state: '',
-};
 
 const initialContactData = {
   phoneInputFields: [{ phone_number: '' }],
@@ -672,6 +653,7 @@ const RepresentativeModal = ({
                               customValue={inputValue.phone_number || ''}
                               formData={formData}
                               name="phone"
+                              size="small"
                               placeholder="Informe o Telefone"
                               handleInputChange={(e: any) =>
                                 handleContactChange(index, e.target.value, 'phoneInputFields')
