@@ -1,7 +1,7 @@
 import { useState, ChangeEvent, useEffect } from 'react';
 import { IoAddCircleOutline } from 'react-icons/io5';
 
-import { TextField, Box, Typography, Button, CircularProgress, Modal } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, Modal } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
 import { getCEPDetails } from '@/services/brasilAPI';
 import { cepMask, cpfMask, phoneMask } from '@/utils/masks';
@@ -17,7 +17,6 @@ import { Flex, Divider } from '@/styles/globals';
 import { createProfileCustomer, createCustomer as createCustomerApi } from '@/services/customers';
 import { animateScroll as scroll } from 'react-scroll';
 
-import { IoMdTrash } from 'react-icons/io';
 import { z } from 'zod';
 import {
   isValidCEP,
@@ -30,6 +29,7 @@ import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import { ZodFormError, ZodFormErrors } from '@/types/zod';
 import CustomDateField from '@/components/FormInputFields/CustomDateField';
 import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
+import { IoMdTrash } from 'react-icons/io';
 
 interface FormData {
   name: string;
@@ -95,6 +95,13 @@ const representativeSchema = z.object({
   state: z.string().min(1, { message: 'Preencha o campo Estado.' }),
 });
 
+const currentDate = dayjs();
+
+const initialContactData = {
+  phoneInputFields: [{ phone_number: '' }],
+  emailInputFields: [{ email: '' }],
+};
+
 const RepresentativeModal = ({
   pageTitle,
   isOpen,
@@ -132,10 +139,7 @@ const RepresentativeModal = ({
     state: '',
   });
 
-  const [contactData, setContactData] = useState({
-    phoneInputFields: [{ phone_number: '' }],
-    emailInputFields: [{ email: '' }],
-  });
+  const [contactData, setContactData] = useState(initialContactData);
 
   const resetValues = () => {
     setFormData({
@@ -247,6 +251,7 @@ const RepresentativeModal = ({
         last_name: formData.last_name,
         CPF: formData.CPF,
         RG: formData.RG,
+        profession: formData.profession,
         gender: formData.gender,
         nationality: formData.nationality,
         civil_status: formData.civil_status,
@@ -255,11 +260,10 @@ const RepresentativeModal = ({
         cep: formData.cep,
         street: formData.street,
         number: formData.number,
-        profession: formData.profession,
-        description: formData.description,
         neighborhood: formData.neighborhood,
         city: formData.city,
         state: formData.state,
+        description: formData.description,
       });
 
       const data = {
@@ -649,6 +653,7 @@ const RepresentativeModal = ({
                               customValue={inputValue.phone_number || ''}
                               formData={formData}
                               name="phone"
+                              size="small"
                               placeholder="Informe o Telefone"
                               handleInputChange={(e: any) =>
                                 handleContactChange(index, e.target.value, 'phoneInputFields')

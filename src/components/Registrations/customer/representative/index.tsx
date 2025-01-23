@@ -2,18 +2,7 @@ import { useState, ChangeEvent, useEffect, useContext } from 'react';
 import { IoAddCircleOutline } from 'react-icons/io5';
 import { IoMdTrash } from 'react-icons/io';
 
-import {
-  TextField,
-  Box,
-  Typography,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Autocomplete,
-  CircularProgress,
-} from '@mui/material';
+import { TextField, Box, Typography, Button, Autocomplete, CircularProgress } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { CustomerContext } from '@/contexts/CustomerContext';
@@ -22,8 +11,6 @@ import { Container, Title } from './styles';
 import { colors, ContentContainer, Flex, Divider } from '@/styles/globals';
 import { phoneMask, cepMask, cpfMask } from '@/utils/masks';
 import dayjs, { Dayjs } from 'dayjs';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import {
   createProfileCustomer,
   getAllProfileCustomer,
