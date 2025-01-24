@@ -73,51 +73,55 @@ interface props {
   dataToEdit?: any;
 }
 
-const userSchema = z.object({
-  name: z.string().min(2, { message: 'O campo Nome é obrigatório.' }),
-  last_name: z.string().min(2, { message: 'O campo Sobrenome é obrigatório.' }),
-  cpf: z
-    .string()
-    .min(11, { message: 'O CPF precisa ter no mínimo 11 dígitos.' })
-    .refine(isValidCPF, { message: 'O CPF informado é inválido.' }),
-  rg: z
-    .string()
-    .min(6, { message: 'O RG precisa ter no mínimo 6 dígitos.' })
-    .refine(isValidRG, { message: 'O RG informado é inválido.' }),
-  mother_name: z.string().min(2, { message: 'O campo Nome da Mãe é obrigatório.' }),
-  gender: z.string().min(2, { message: 'O campo Gênero é obrigatório.' }),
-  civil_status: z.string().min(2, { message: 'O campo Estado Civil é obrigatório.' }),
-  nationality: z.string().min(2, { message: 'O campo Naturalidade é obrigatório.' }),
-  phone_numbers: z.array(
-    z
-      .string({ required_error: 'Telefone é um campo obrigatório.' })
-      .min(1, 'Telefone é um campo obrigatório.')
-      .refine(isValidPhoneNumber, { message: 'Número de telefone inválido.' }),
-  ),
-  emails: z.array(
-    z
-      .string({ required_error: 'E-mail é um campo obrigatório.' })
-      .min(1, 'E-mail é um campo obrigatório.')
+const userSchema = z
+  .object({
+    name: z.string().min(2, { message: 'O campo Nome é obrigatório.' }),
+    last_name: z.string().min(2, { message: 'O campo Sobrenome é obrigatório.' }),
+    cpf: z
+      .string()
+      .min(11, { message: 'O CPF precisa ter no mínimo 11 dígitos.' })
+      .refine(isValidCPF, { message: 'O CPF informado é inválido.' }),
+    rg: z
+      .string()
+      .min(6, { message: 'O RG precisa ter no mínimo 6 dígitos.' })
+      .refine(isValidRG, { message: 'O RG informado é inválido.' }),
+    mother_name: z.string().min(2, { message: 'O campo Nome da Mãe é obrigatório.' }),
+    gender: z.string().min(2, { message: 'O campo Gênero é obrigatório.' }),
+    civil_status: z.string().min(2, { message: 'O campo Estado Civil é obrigatório.' }),
+    nationality: z.string().min(2, { message: 'O campo Naturalidade é obrigatório.' }),
+    phone_numbers: z.array(
+      z
+        .string({ required_error: 'Telefone é um campo obrigatório.' })
+        .min(1, 'Telefone é um campo obrigatório.')
+        .refine(isValidPhoneNumber, { message: 'Número de telefone inválido.' }),
+    ),
+    emails: z.array(
+      z
+        .string({ required_error: 'E-mail é um campo obrigatório.' })
+        .min(1, 'E-mail é um campo obrigatório.')
+        .refine(isValidEmail, { message: 'E-mail inválido.' }),
+    ),
+    userEmail: z
+      .string({ required_error: 'E-mail de Acesso é um campo obrigatório.' })
+      .min(1, 'E-mail de Acesso é um campo obrigatório.')
       .refine(isValidEmail, { message: 'E-mail inválido.' }),
-  ),
-  userEmail: z
-    .string({ required_error: 'E-mail de Acesso é um campo obrigatório.' })
-    .min(1, 'E-mail de Acesso é um campo obrigatório.')
-    .refine(isValidEmail, { message: 'E-mail inválido.' }),
-  birth: z.string().min(2, { message: 'O campo Data de Nascimento é obrigatório.' }),
-  userType: z.string().min(2, { message: 'O campo Tipo do Usuário é obrigatório.' }),
-  city: z.string().min(2, { message: 'O campo Cidade é obrigatório.' }),
-  state: z.string().min(2, { message: 'O campo Estado é obrigatório.' }),
-  neighborhood: z.string().min(2, { message: 'O campo Bairro é obrigatório.' }),
-  address: z.string().min(2, { message: 'O campo Endereço é obrigatório.' }),
-  number: z.number().min(1, { message: 'O campo Número é obrigatório.' }),
-  cep: z.string().min(2, { message: 'O campo CEP é obrigatório.' }),
-  oab: z.string().min(2, { message: 'O campo OAB é obrigatório.' }),
-});
+    birth: z.string().min(2, { message: 'O campo Data de Nascimento é obrigatório.' }),
+    userType: z.string().min(2, { message: 'O campo Tipo do Usuário é obrigatório.' }),
+    city: z.string().min(2, { message: 'O campo Cidade é obrigatório.' }),
+    state: z.string().min(2, { message: 'O campo Estado é obrigatório.' }),
+    neighborhood: z.string().min(2, { message: 'O campo Bairro é obrigatório.' }),
+    address: z.string().min(2, { message: 'O campo Endereço é obrigatório.' }),
+    number: z.number().min(1, { message: 'O campo Número é obrigatório.' }),
+    cep: z.string().min(2, { message: 'O campo CEP é obrigatório.' }),
+    oab: z.string().optional(),
+  })
+  .refine(data => data.userType !== 'lawyer' || (data.oab && data.oab.trim().length > 0), {
+    message: 'O campo OAB é obrigatório para advogados.',
+    path: ['oab'],
+  });
 
 const User = ({ dataToEdit }: props) => {
   const { data: session } = useSession();
-  const today = new Date().toISOString().split('T')[0];
 
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
@@ -360,8 +364,8 @@ const User = ({ dataToEdit }: props) => {
           },
           phones_attributes: contactData.phoneInputFields,
           emails_attributes: contactData.emailInputFields,
-          name: formData.name,
-          last_name: formData.last_name,
+          name: formData.name.trim(),
+          last_name: formData.last_name.trim(),
           cpf: formData.cpf,
           rg: formData.rg,
           gender: formData.gender,
@@ -402,8 +406,8 @@ const User = ({ dataToEdit }: props) => {
       if (!isEditing) {
         data = {
           oab: formData.oab,
-          name: formData.name,
-          last_name: formData.last_name,
+          name: formData.name.trim(),
+          last_name: formData.last_name.trim(),
           cpf: formData.cpf,
           rg: formData.rg,
           gender: formData.gender,

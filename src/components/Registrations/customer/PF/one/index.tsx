@@ -281,8 +281,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       }
 
       if (formData) {
-        customerForm.name = formData.name;
-        customerForm.last_name = formData.last_name;
+        customerForm.name = formData.name.trim();
+        customerForm.last_name = formData.last_name.trim();
         customerForm.cpf = formData.cpf.replace(/\D/g, '');
         customerForm.rg = formData.rg;
         customerForm.birth = birthDate;

@@ -117,7 +117,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
       });
 
       const data = {
-        name: formData.name,
+        name: formData.name.trim(),
         cnpj: formData.cnpj ? formData.cnpj.replace(/\D/g, '') : '',
         gender: 'male',
         capacity: 'able',
@@ -168,7 +168,7 @@ const PJCustomerStepOne: ForwardRefRenderFunction<IRefPJCustomerStepOneProps, IS
         setCustomerForm(customerForm);
 
         setNewCustomerForm({
-          name: formData.name,
+          name: formData.name.trim(),
           cnpj: formData.cnpj ? formData.cnpj : '',
           gender: formData.gender,
           capacity: 'able',
