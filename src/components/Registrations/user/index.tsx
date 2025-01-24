@@ -122,7 +122,6 @@ const userSchema = z
 
 const User = ({ dataToEdit }: props) => {
   const { data: session } = useSession();
-  const today = new Date().toISOString().split('T')[0];
 
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
