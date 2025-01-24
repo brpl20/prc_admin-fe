@@ -364,8 +364,8 @@ const User = ({ dataToEdit }: props) => {
           },
           phones_attributes: contactData.phoneInputFields,
           emails_attributes: contactData.emailInputFields,
-          name: formData.name,
-          last_name: formData.last_name,
+          name: formData.name.trim(),
+          last_name: formData.last_name.trim(),
           cpf: formData.cpf,
           rg: formData.rg,
           gender: formData.gender,
@@ -406,8 +406,8 @@ const User = ({ dataToEdit }: props) => {
       if (!isEditing) {
         data = {
           oab: formData.oab,
-          name: formData.name,
-          last_name: formData.last_name,
+          name: formData.name.trim(),
+          last_name: formData.last_name.trim(),
           cpf: formData.cpf,
           rg: formData.rg,
           gender: formData.gender,

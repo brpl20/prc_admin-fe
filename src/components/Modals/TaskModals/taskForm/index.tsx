@@ -137,7 +137,7 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
       const date = formData.deadline ? formData.deadline.format('DD/MM/YYYY') : null;
 
       const data = {
-        description: formData.description,
+        description: formData.description.trim(),
         deadline: date,
         status: formData.status,
         priority: formData.priority,

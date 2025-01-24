@@ -243,7 +243,7 @@ const Office = ({ dataToEdit }: props) => {
       });
 
       const office = {
-        name: formData.name,
+        name: formData.name.trim(),
         cnpj: formData.cnpj_cpf.replace(/\D/g, ''),
         oab: formData.oab,
         society: selectedSocialType,
