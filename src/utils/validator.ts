@@ -1,3 +1,5 @@
+import dayjs, { Dayjs } from 'dayjs';
+
 export const isValidCPF = (cpf: string): boolean => {
   if (!cpf) return false;
 
@@ -119,34 +121,39 @@ export function isValidDate(date: string): boolean {
   return dateRegex.test(date);
 }
 
-export function isDateBeforeToday(date: string): boolean {
-  console.log('rawinput:', date);
+export function isDateBeforeToday(date: string | Dayjs): boolean {
+  let inputDate: Dayjs;
 
-  if (!isValidDate(date)) return false;
+  if (typeof date === 'string') {
+    if (!isValidDate(date)) return false;
+    inputDate = dayjs(date);
+  } else {
+    inputDate = date;
+  }
 
-  const inputDate = new Date(
-    Date.UTC(
-      parseInt(date.substring(0, 4)),
-      parseInt(date.substring(5, 7)) - 1,
-      parseInt(date.substring(8, 10)),
-    ),
-  );
+  if (!inputDate.isValid()) return false;
 
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+  const today = dayjs().startOf('day');
 
-  console.log('inputDate:', inputDate);
-  console.log('today:', today);
+  console.log('inputDate:', inputDate.format());
+  console.log('today:', today.format());
 
-  return inputDate.getTime() < today.getTime();
+  return inputDate.isBefore(today);
 }
 
-export function isDateTodayOrAfter(date: string): boolean {
-  if (!isValidDate(date)) return false;
+export function isDateTodayOrAfter(date: string | Dayjs): boolean {
+  let inputDate: Dayjs;
 
-  const inputDate = new Date(date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  if (typeof date === 'string') {
+    if (!isValidDate(date)) return false;
+    inputDate = dayjs(date);
+  } else {
+    inputDate = date;
+  }
 
-  return inputDate >= today;
+  if (!inputDate.isValid()) return false;
+
+  const today = dayjs().startOf('day');
+
+  return inputDate.isSame(today) || inputDate.isAfter(today);
 }

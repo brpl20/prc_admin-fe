@@ -223,6 +223,8 @@ const Representative = ({ pageTitle }: Props) => {
   const handleSubmitForm = async () => {
     setLoading(true);
     try {
+      console.log('formData', typeof formData.birth);
+
       representativeSchema.parse({
         represent_id: formData.represent_id,
         name: formData.name,
