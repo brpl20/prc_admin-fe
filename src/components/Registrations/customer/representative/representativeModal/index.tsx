@@ -653,7 +653,6 @@ const RepresentativeModal = ({
                               customValue={inputValue.phone_number || ''}
                               formData={formData}
                               name="phone"
-                              size="small"
                               placeholder="Informe o Telefone"
                               handleInputChange={(e: any) =>
                                 handleContactChange(index, e.target.value, 'phoneInputFields')
