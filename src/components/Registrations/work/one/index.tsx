@@ -67,7 +67,7 @@ interface IStepOneProps {
 }
 
 const stepOneSchema = z.object({
-  profile_customer_ids: z.array(z.string()).min(1),
+  profile_customer_ids: z.array(z.string()).min(1, { message: 'Selecione um cliente.' }),
   procedures: z.array(z.string()).min(1),
   subject: z.string().min(2),
 });
@@ -592,6 +592,10 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
     verifyDataLocalStorage();
   }, [customersList]);
 
+  useEffect(() => {
+    console.log(errors);
+  }, [errors]);
+
   return (
     <>
       {openSnackbar && (
@@ -625,6 +629,8 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                     {...params}
                     size="small"
                     error={!!errors.profile_customer_ids}
+                    helperText={errors.profile_customer_ids}
+                    FormHelperTextProps={{ className: 'ml-2' }}
                   />
                 )}
                 sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
@@ -782,6 +788,9 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
               }}
             />
           </Flex>
+          {errors.procedures && (
+            <span className="text-[#cd0d15] ml-2 text-xs">Selecione ao menos um procedimento.</span>
+          )}
 
           {/* Subject */}
           {session?.role != 'counter' ? (
