@@ -44,7 +44,7 @@ import CustomTooltip from '@/components/Tooltip';
 import { MdOutlineAddCircle, MdOutlineInfo } from 'react-icons/md';
 import RepresentativeModal from '../../representative/representativeModal';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
-import { isValidCPF, isValidRG } from '@/utils/validator';
+import { isDateBeforeToday, isValidCPF, isValidRG } from '@/utils/validator';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import CustomDateField from '@/components/FormInputFields/CustomDateField';
@@ -83,7 +83,12 @@ const stepOneSchema = z.object({
     .string()
     .min(6, { message: 'O RG precisa ter no mínimo 6 dígitos.' })
     .refine(isValidRG, { message: 'O RG informado é inválido.' }),
-  birth: z.string().min(1, { message: 'Data de Nascimento é um campo obrigatório.' }),
+  birth: z
+    .string()
+    .min(1, { message: 'Data de Nascimento é um campo obrigatório.' })
+    .refine(isDateBeforeToday, {
+      message: 'Data de nascimento inválida.',
+    }),
   nationality: z.string().min(2, { message: 'Naturalidade é um campo obrigatório.' }),
   gender: z.string().min(2, { message: 'Sexo é um campo obrigatório.' }),
   civil_status: z.string().min(2, { message: 'Estado civil é um campo obrigatório.' }),

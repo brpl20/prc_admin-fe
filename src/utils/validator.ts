@@ -111,3 +111,42 @@ export function isValidEmail(email: string): boolean {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email);
 }
+
+export function isValidDate(date: string): boolean {
+  if (!date) return false;
+
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  return dateRegex.test(date);
+}
+
+export function isDateBeforeToday(date: string): boolean {
+  console.log('rawinput:', date);
+
+  if (!isValidDate(date)) return false;
+
+  const inputDate = new Date(
+    Date.UTC(
+      parseInt(date.substring(0, 4)),
+      parseInt(date.substring(5, 7)) - 1,
+      parseInt(date.substring(8, 10)),
+    ),
+  );
+
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  console.log('inputDate:', inputDate);
+  console.log('today:', today);
+
+  return inputDate.getTime() < today.getTime();
+}
+
+export function isDateTodayOrAfter(date: string): boolean {
+  if (!isValidDate(date)) return false;
+
+  const inputDate = new Date(date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return inputDate >= today;
+}
