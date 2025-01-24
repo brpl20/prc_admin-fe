@@ -10,7 +10,7 @@ import { gendersOptions, civilStatusOptions, nationalityOptions } from '@/utils/
 import { Container, Title } from './styles';
 import { colors, ContentContainer, Flex, Divider } from '@/styles/globals';
 import { phoneMask, cepMask, cpfMask } from '@/utils/masks';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import {
   createProfileCustomer,
   getAllProfileCustomer,
@@ -22,6 +22,7 @@ import Router, { useRouter } from 'next/router';
 import { z } from 'zod';
 import { ICustomerProps } from '@/interfaces/ICustomer';
 import {
+  isDateBeforeToday,
   isValidCEP,
   isValidCPF,
   isValidEmail,
@@ -43,7 +44,7 @@ interface FormData {
   gender: string;
   civil_status: string;
   nationality: string;
-  birth: Dayjs | string;
+  birth: string;
   cep: string;
   street: string;
   number: string;
@@ -95,6 +96,10 @@ export const representativeSchema = z.object({
   neighborhood: z.string().min(4, { message: 'Preencha o campo Bairro.' }),
   city: z.string().min(4, { message: 'Preencha o campo Cidade.' }),
   state: z.string().min(1, { message: 'Preencha o campo Estado.' }),
+  birth: z
+    .string()
+    .min(10, { message: 'Data de Nascimento inválida.' })
+    .refine(isDateBeforeToday, { message: 'Data de Nascimento inválida.' }),
 });
 
 const Representative = ({ pageTitle }: Props) => {
@@ -125,7 +130,7 @@ const Representative = ({ pageTitle }: Props) => {
     gender: '',
     civil_status: '',
     nationality: '',
-    birth: currentDate,
+    birth: today,
     cep: '',
     street: '',
     number: '',
@@ -151,7 +156,7 @@ const Representative = ({ pageTitle }: Props) => {
       gender: '',
       civil_status: '',
       nationality: '',
-      birth: currentDate,
+      birth: today,
       cep: '',
       street: '',
       number: '',
@@ -223,12 +228,13 @@ const Representative = ({ pageTitle }: Props) => {
   const handleSubmitForm = async () => {
     setLoading(true);
     try {
-      console.log('formData', typeof formData.birth);
+      console.log('formData', formData);
 
       representativeSchema.parse({
         represent_id: formData.represent_id,
         name: formData.name,
         last_name: formData.last_name,
+        birth: formData.birth,
         CPF: formData.CPF,
         RG: formData.RG,
         profession: formData.profession,
@@ -324,7 +330,6 @@ const Representative = ({ pageTitle }: Props) => {
       }
     });
 
-    console.error(newErrors);
     setErrors(result);
   };
 

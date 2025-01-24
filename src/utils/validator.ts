@@ -157,3 +157,20 @@ export function isDateTodayOrAfter(date: string | Dayjs): boolean {
 
   return inputDate.isSame(today) || inputDate.isAfter(today);
 }
+
+export function isDateTodayOrBefore(date: string | Dayjs): boolean {
+  let inputDate: Dayjs;
+
+  if (typeof date === 'string') {
+    if (!isValidDate(date)) return false;
+    inputDate = dayjs(date);
+  } else {
+    inputDate = date;
+  }
+
+  if (!inputDate.isValid()) return false;
+
+  const today = dayjs().startOf('day');
+
+  return inputDate.isSame(today) || inputDate.isBefore(today);
+}

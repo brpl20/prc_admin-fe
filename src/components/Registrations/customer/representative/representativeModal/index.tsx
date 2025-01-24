@@ -338,7 +338,6 @@ const RepresentativeModal = ({
       }
     });
 
-    console.error(newErrors);
     setErrors(result);
   };
 

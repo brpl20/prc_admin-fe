@@ -225,7 +225,6 @@ const Counter = ({ pageTitle }: Props) => {
       }
     });
 
-    console.error(newErrors);
     setErrors(result);
   };
 
