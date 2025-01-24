@@ -45,10 +45,10 @@ interface FormData {
 }
 
 const taskSchema = z.object({
-  description: z.string().min(2, { message: 'Descrição é obrigatória' }),
-  status: z.string().min(2, { message: 'Status é obrigatório' }),
-  priority: z.string().min(1, { message: 'Prioridade é obrigatória' }),
-  profile_admin_id: z.string().min(1, { message: 'Responsável é obrigatório' }),
+  description: z.string().min(2, { message: 'Descrição é um campo obrigatório.' }),
+  status: z.string().min(2, { message: 'Status é um campo obrigatório.' }),
+  priority: z.string().min(1, { message: 'Prioridade é um campo obrigatório.' }),
+  profile_admin_id: z.string().min(1, { message: 'Responsável é um campo obrigatório.' }),
 });
 
 const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
@@ -343,6 +343,8 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
                         onChange={e => handleSelectChange('description', e.target.value)}
                         placeholder="Informe a Descrição da Tarefa"
                         error={!!errors.description}
+                        helperText={errors.description}
+                        FormHelperTextProps={{ className: 'ml-2' }}
                       />
                     </Input>
                   </Flex>
@@ -437,6 +439,8 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
                           placeholder={'Informe o Responsável'}
                           size="small"
                           error={!!errors.profile_admin_id}
+                          helperText={errors.profile_admin_id}
+                          FormHelperTextProps={{ className: 'ml-2' }}
                         />
                       )}
                       noOptionsText={`Nenhum Responsável Encontrado`}
