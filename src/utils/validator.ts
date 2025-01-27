@@ -74,15 +74,15 @@ export const isValidCNPJ = (cnpj: string): boolean => {
 export const isValidRG = (rg: string): boolean => {
   if (!rg) return false;
 
-  const cleanedRG = rg.replace(/\D/g, '');
-
-  // RG must be at least 9 digits long
-  if (cleanedRG.length < 9) return false;
-
-  // Check for a sequence of identical digits (e.g., 111111111)
-  if (/^(\d)\1{8}$/.test(cleanedRG)) return false;
+  // if (rg.length < 4) return false;
 
   return true;
+
+  // Currently this function only checks if the rg is not empty.
+  // This is not ideal, however, because RGs can have different formats
+  // depending on the issuing state. A more robust implementation would
+  // require a list of valid RG formats for each state, which is not
+  // feasible at this moment.
 };
 
 export const isValidCEP = (cep: string): boolean => {
