@@ -40,6 +40,7 @@ import { IAdminProps, IAdminPropsAttributes } from '@/interfaces/IAdmin';
 
 import dynamic from 'next/dynamic';
 import { getSession, useSession } from 'next-auth/react';
+import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Admins = () => {
@@ -477,22 +478,26 @@ const Admins = () => {
                     cellClassName: 'font-medium text-black',
                     align: 'center',
                     headerAlign: 'center',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 300,
                     field: 'name',
                     headerName: 'Nome',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 180,
                     field: 'role',
                     headerName: 'Atribuição',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     flex: 1,
                     field: 'email',
                     headerName: 'E-mail',
                     sortable: false,
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 100,
@@ -502,6 +507,7 @@ const Admins = () => {
                     headerAlign: 'center',
                     sortable: false,
                     editable: false,
+                    valueFormatter: defaultTableValueFormatter,
                     renderCell: (params: any) => (
                       <div>
                         <IconButton

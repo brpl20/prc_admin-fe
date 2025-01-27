@@ -57,6 +57,7 @@ import { phoneMask } from '@/utils/masks';
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { AuthContext } from '@/contexts/AuthContext';
 import { getSession, useSession } from 'next-auth/react';
+import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 
 export type CustomersProps = {
   id: string;
@@ -742,6 +743,7 @@ const Customers = () => {
                         height: '36px',
                         width: '100px',
                         textTransform: 'none',
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       {'CPF/CNPJ'}
@@ -872,6 +874,7 @@ const Customers = () => {
                     cellClassName: 'font-medium text-black',
                     align: 'center',
                     headerAlign: 'center',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 210,
@@ -880,6 +883,7 @@ const Customers = () => {
                     cellClassName: 'font-medium text-black',
                     align: 'left',
                     headerAlign: 'left',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     flex: 1,
@@ -890,6 +894,7 @@ const Customers = () => {
                     align: 'left',
                     cellClassName: 'font-medium text-black',
                     sortable: false,
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 180,
@@ -898,6 +903,7 @@ const Customers = () => {
                     cellClassName: 'font-medium text-black',
                     align: 'left',
                     sortable: false,
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 150,
@@ -906,6 +912,7 @@ const Customers = () => {
                     cellClassName: 'font-medium text-black',
                     align: 'left',
                     sortable: false,
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 100,
@@ -933,6 +940,7 @@ const Customers = () => {
                         </IconButton>
                       </div>
                     ),
+                    valueFormatter: defaultTableValueFormatter,
                   },
                 ]}
                 processRowUpdate={handleProcessRowUpdate}

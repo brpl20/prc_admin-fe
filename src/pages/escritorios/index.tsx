@@ -43,6 +43,7 @@ const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 
 const Offices = () => {
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
@@ -526,28 +527,33 @@ const Offices = () => {
                     cellClassName: 'font-medium text-black',
                     align: 'center',
                     headerAlign: 'center',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     flex: 1,
                     field: 'name',
                     headerName: 'Nome',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 180,
                     field: 'cnpj',
                     headerName: 'CNPJ',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 140,
                     field: 'office_type_description',
                     headerName: 'Tipo',
                     sortable: false,
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 160,
                     field: 'city',
                     headerName: 'Cidade',
                     sortable: false,
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 100,
@@ -558,6 +564,7 @@ const Offices = () => {
                     headerAlign: 'center',
                     sortable: false,
                     editable: false,
+                    valueFormatter: defaultTableValueFormatter,
                     renderCell: (params: any) => (
                       <div>
                         <IconButton

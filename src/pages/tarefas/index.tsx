@@ -38,6 +38,7 @@ import { Footer, TaskModal, ViewDetailsModal, ModalOfRemove, Notification } from
 import dynamic from 'next/dynamic';
 import { getSession } from 'next-auth/react';
 import { ptBR } from 'date-fns/locale';
+import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Tasks = () => {
@@ -494,23 +495,27 @@ const Tasks = () => {
                     cellClassName: 'font-medium text-black',
                     align: 'center',
                     headerAlign: 'center',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 180,
                     field: 'description',
                     headerName: 'Descrição',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     flex: 1,
                     field: 'customer',
                     headerName: 'Cliente',
                     sortable: false,
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 150,
                     field: 'deadline',
                     headerName: 'Data Limite',
                     sortable: false,
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 150,
@@ -519,6 +524,7 @@ const Tasks = () => {
                     align: 'center',
                     headerAlign: 'center',
                     sortable: false,
+                    valueFormatter: defaultTableValueFormatter,
                     renderCell: (params: any) => (
                       <div
                         className={`status-cell ${

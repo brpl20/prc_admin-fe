@@ -17,9 +17,11 @@ import {
   Typography,
   Autocomplete,
   Button,
+  FormHelperText,
+  SelectChangeEvent,
 } from '@mui/material';
 
-import { Container, BirthdayContainer } from '../styles';
+import { Container } from '../styles';
 import {
   gendersOptions,
   civilStatusOptions,
@@ -27,7 +29,7 @@ import {
   capacityOptions,
 } from '@/utils/constants';
 
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
 import { DescriptionText, colors } from '@/styles/globals';
 import { Notification } from '@/components';
 import { animateScroll as scroll } from 'react-scroll';
@@ -42,6 +44,11 @@ import CustomTooltip from '@/components/Tooltip';
 import { MdOutlineAddCircle, MdOutlineInfo } from 'react-icons/md';
 import RepresentativeModal from '../../representative/representativeModal';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
+import { isDateBeforeToday, isValidCPF, isValidRG } from '@/utils/validator';
+import { DatePicker } from '@mui/x-date-pickers';
+import CustomTextField from '@/components/FormInputFields/CustomTextField';
+import CustomDateField from '@/components/FormInputFields/CustomDateField';
+import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
 
 export interface IRefPFCustomerStepOneProps {
   handleSubmitForm: () => void;
@@ -66,15 +73,26 @@ interface FormData {
 }
 
 const stepOneSchema = z.object({
-  name: z.string().min(1),
-  last_name: z.string().min(1),
-  cpf: z.string().min(6, { message: 'CPF obrigatório' }),
-  rg: z.string().min(6, { message: 'RG obrigatório' }),
-  birth: z.string().optional(),
-  nationality: z.string().min(2, { message: 'Naturalidade obrigatória' }),
-  gender: z.string().min(2, { message: 'Sexo obrigatório' }),
-  civil_status: z.string().min(2, { message: 'Estado civil obrigatório' }),
-  capacity: z.string().min(2, { message: 'Capacidade obrigatória' }),
+  name: z.string().min(1, { message: 'Nome é um campo obrigatório.' }),
+  last_name: z.string().min(1, { message: 'Sobrenome é um campo obrigatório.' }),
+  cpf: z
+    .string()
+    .min(11, { message: 'O CPF precisa ter no mínimo 11 dígitos.' })
+    .refine(isValidCPF, { message: 'O CPF informado é inválido.' }),
+  rg: z
+    .string()
+    .min(6, { message: 'O RG precisa ter no mínimo 6 dígitos.' })
+    .refine(isValidRG, { message: 'O RG informado é inválido.' }),
+  birth: z
+    .string()
+    .min(1, { message: 'Data de Nascimento é um campo obrigatório.' })
+    .refine(isDateBeforeToday, {
+      message: 'Data de nascimento inválida.',
+    }),
+  nationality: z.string().min(2, { message: 'Naturalidade é um campo obrigatório.' }),
+  gender: z.string().min(2, { message: 'Sexo é um campo obrigatório.' }),
+  civil_status: z.string().min(2, { message: 'Estado civil é um campo obrigatório.' }),
+  capacity: z.string().min(2, { message: 'Capacidade é um campo obrigatório.' }),
 });
 
 const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IStepOneProps> = (
@@ -83,7 +101,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 ) => {
   const [isModalRegisterRepresentativeOpen, setIsModalRegisterRepresentativeOpen] = useState(false);
 
-  const [errors, setErrors] = useState({} as any);
+  const [errors, setErrors] = useState<{ [key in keyof FormData]?: string }>({});
   const { setPageTitle } = useContext(PageTitleContext);
   const { customerForm, setCustomerForm, setNewCustomerForm } = useContext(CustomerContext);
   const [message, setMessage] = useState('');
@@ -92,15 +110,15 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   const today = new Date().toISOString().split('T')[0];
   const [representorsList, setRepresentorsList] = useState([] as any);
   const [formData, setFormData] = useState<FormData>({
-    name: customerForm.name,
-    last_name: customerForm.last_name,
-    cpf: customerForm.cpf,
-    rg: customerForm.rg,
-    birth: customerForm.birth,
-    nationality: customerForm.nationality,
-    gender: customerForm.gender,
-    civil_status: customerForm.civil_status,
-    capacity: customerForm.capacity,
+    name: customerForm.name || '',
+    last_name: customerForm.last_name || '',
+    cpf: customerForm.cpf || '',
+    rg: customerForm.rg || '',
+    birth: customerForm.birth || '',
+    nationality: customerForm.nationality || '',
+    gender: customerForm.gender || '',
+    civil_status: customerForm.civil_status || '',
+    capacity: customerForm.capacity || '',
     representor: {},
   });
 
@@ -160,11 +178,12 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     localStorage.setItem('PF/One', JSON.stringify(data));
   };
 
-  const handleSelectChange = (event: any) => {
+  const handleSelectChange = (event: SelectChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
+
     setFormData(prevData => ({
       ...prevData,
-      [name as string]: value,
+      [name]: value,
     }));
   };
 
@@ -267,8 +286,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       }
 
       if (formData) {
-        customerForm.name = formData.name;
-        customerForm.last_name = formData.last_name;
+        customerForm.name = formData.name.trim();
+        customerForm.last_name = formData.last_name.trim();
         customerForm.cpf = formData.cpf.replace(/\D/g, '');
         customerForm.rg = formData.rg;
         customerForm.birth = birthDate;
@@ -312,18 +331,21 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   }));
 
   const handleFormError = (error: any) => {
-    const newErrors = error?.formErrors?.fieldErrors ?? {};
-    const errorObject: { [key: string]: string } = {};
-    setMessage('Preencha todos os campos obrigatórios.');
+    setMessage('Corrija os erros no formulário.');
     setType('error');
     setOpenSnackbar(true);
 
-    for (const field in newErrors) {
-      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
-        errorObject[field] = newErrors[field][0] as string;
+    if (error instanceof ZodError) {
+      const fieldErrors = error.flatten().fieldErrors;
+      const newErrors: { [key in keyof FormData]?: string } = {};
+
+      for (const field in fieldErrors) {
+        if (fieldErrors[field]) {
+          newErrors[field as keyof FormData] = fieldErrors[field]?.[0]; // Getting only the first error messsage
+        }
       }
+      setErrors(newErrors);
     }
-    setErrors(errorObject);
   };
 
   const customTitleWithInfo = (title: string, tooltipText: string) => (
@@ -336,61 +358,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
         </span>
       </CustomTooltip>
-    </div>
-  );
-
-  const renderInputField = (
-    label: string,
-    name: keyof FormData,
-    length: number,
-    error: boolean,
-  ) => (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {label}
-      </Typography>
-      <TextField
-        id="outlined-basic"
-        variant="outlined"
-        error={error && !formData[name]}
-        fullWidth
-        type="text"
-        name={name}
-        size="small"
-        inputProps={{ maxLength: length }}
-        value={formData[name] || ''}
-        autoComplete="off"
-        placeholder={`Informe o ${label}`}
-        onChange={handleInputChange}
-      />
-    </div>
-  );
-
-  const renderSelectField = (
-    label: string,
-    name: keyof FormData,
-    options: { label: string; value: string }[],
-    error?: boolean,
-  ) => (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {label}
-      </Typography>
-      <FormControl size="small">
-        <InputLabel error={error && !formData[name]}>{`Selecione ${label}`}</InputLabel>
-        <Select
-          name={name}
-          label={`Selecione ${label}`}
-          value={formData[name] || ''}
-          onChange={handleSelectChange}
-        >
-          {options.map(option => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
     </div>
   );
 
@@ -466,59 +433,90 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         <form>
           <Box maxWidth={'812px'} display={'flex'} flexDirection={'column'} gap={'16px'}>
             <div style={{ display: 'flex', gap: '24px' }}>
-              {renderInputField('Nome', 'name', 99, !!errors.name)}
-              {renderInputField('Sobrenome', 'last_name', 99, !!errors.last_name)}
+              <CustomTextField
+                formData={formData}
+                label="Nome"
+                name={'name'}
+                length={99}
+                errorMessage={errors.name}
+                handleInputChange={handleInputChange}
+              />
+
+              <CustomTextField
+                formData={formData}
+                label="Sobrenome"
+                name={'last_name'}
+                length={99}
+                errorMessage={errors.last_name}
+                handleInputChange={handleInputChange}
+              />
             </div>
             <div style={{ display: 'flex', gap: '24px' }}>
-              {renderInputField('CPF', 'cpf', 16, !!errors.cpf)}
-              {renderInputField('RG', 'rg', 25, !!errors.rg)}
+              <CustomTextField
+                formData={formData}
+                label="CPF"
+                name={'cpf'}
+                length={16}
+                errorMessage={errors.cpf}
+                handleInputChange={handleInputChange}
+              />
+
+              <CustomTextField
+                formData={formData}
+                label="RG"
+                name={'rg'}
+                length={25}
+                errorMessage={errors.rg}
+                handleInputChange={handleInputChange}
+              />
             </div>
             <div style={{ display: 'flex', gap: '24px' }}>
-              <BirthdayContainer>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <div style={{ display: 'flex' }}>
-                    <Typography mb={'8px'} variant="h6">
-                      {'Data de Nascimento'}
-                    </Typography>
-                  </div>
-                  <input
-                    type="date"
-                    name="birth"
-                    max={today}
-                    value={formData.birth}
-                    onChange={handleInputChange}
-                    style={{
-                      height: '40px',
-                      width: '100%',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      border: '1px solid #c4c4c4',
-                      fontSize: '16px',
-                      fontFamily: 'Roboto',
-                      fontWeight: 400,
-                    }}
-                  />
-                </LocalizationProvider>
-              </BirthdayContainer>
-              {renderSelectField(
-                'Naturalidade',
-                'nationality',
-                nationalityOptions,
-                !!errors.nationality,
-              )}
+              <CustomDateField
+                formData={formData}
+                label="Data de Nascimento"
+                name="birth"
+                errorMessage={errors.birth}
+                handleInputChange={handleInputChange}
+              />
+
+              <CustomSelectField
+                formData={formData}
+                label="Naturalidade"
+                name="nationality"
+                options={nationalityOptions}
+                errorMessage={errors.nationality}
+                handleSelectChange={handleSelectChange}
+              />
             </div>
           </Box>
 
           <Box display={'flex'} gap={4} mt={'24px'} maxWidth={'812px'}>
-            {renderSelectField('Gênero', 'gender', gendersOptions, !!errors.gender)}
-            {renderSelectField(
-              'Estado Civil',
-              'civil_status',
-              civilStatusOptions,
-              !!errors.civil_status,
-            )}
+            <CustomSelectField
+              formData={formData}
+              label="Gênero"
+              name={'gender'}
+              options={gendersOptions}
+              errorMessage={errors.gender}
+              handleSelectChange={handleSelectChange}
+            />
 
-            {renderSelectField('Capacidade', 'capacity', capacityOptions, !!errors.capacity)}
+            <CustomSelectField
+              formData={formData}
+              label="Estado Civil"
+              name="civil_status"
+              options={civilStatusOptions}
+              errorMessage={errors.civil_status}
+              handleSelectChange={handleSelectChange}
+            />
+
+            <CustomSelectField
+              formData={formData}
+              label="Capacidade"
+              name="capacity"
+              options={capacityOptions}
+              errorMessage={errors.capacity}
+              handleSelectChange={handleSelectChange}
+            />
           </Box>
 
           {(formData.capacity === 'relatively' || formData.capacity === 'unable') && (
@@ -545,6 +543,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                   )}
 
                   <Autocomplete
+                    fullWidth
                     limitTags={1}
                     id="multiple-limit-tags"
                     value={
@@ -553,7 +552,16 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                       ) || null
                     }
                     options={representorsList}
-                    getOptionLabel={(option: any) => option?.attributes?.name ?? ''}
+                    getOptionLabel={(option: any) => {
+                      const name = option?.attributes?.name ?? '';
+                      const lastName = option?.attributes?.last_name ?? '';
+                      const fullName = `${name} ${lastName}`.trim();
+
+                      const maxLength = 35;
+                      return fullName.length > maxLength
+                        ? fullName.slice(0, maxLength) + '...'
+                        : fullName;
+                    }}
                     onChange={(event, value) => handleRepresentorChange('representor', value)}
                     renderInput={params => (
                       <TextField

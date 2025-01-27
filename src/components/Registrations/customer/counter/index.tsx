@@ -2,17 +2,7 @@ import { useState, useEffect, useContext, ChangeEvent } from 'react';
 import { IoAddCircleOutline } from 'react-icons/io5';
 import { IoMdTrash } from 'react-icons/io';
 
-import {
-  TextField,
-  Box,
-  Typography,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  CircularProgress,
-} from '@mui/material';
+import { TextField, Box, Typography, Button, CircularProgress } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { CustomerContext } from '@/contexts/CustomerContext';
@@ -22,7 +12,10 @@ import { createProfileCustomer, createCustomer, updateProfileCustomer } from '@/
 import { animateScroll as scroll } from 'react-scroll';
 import Router, { useRouter } from 'next/router';
 import { phoneMask } from '@/utils/masks';
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
+import CustomTextField from '@/components/FormInputFields/CustomTextField';
+import { ZodFormError, ZodFormErrors } from '@/types/zod';
+import { isValidEmail, isValidPhoneNumber } from '@/utils/validator';
 
 interface FormData {
   name: string;
@@ -40,16 +33,28 @@ interface Props {
 }
 
 const counterSchema = z.object({
-  name: z.string().min(4, 'Nome é obrigatório'),
-  last_name: z.string().min(4, 'Sobrenome é obrigatório'),
-  accountant_id: z.string().min(1, 'Registro Profissional é obrigatório'),
-  phone_number: z.string().min(4, 'Telefone Obrigatório'),
-  email: z.string().min(4, 'Email Obrigatório'),
+  accountant_id: z.string().min(1, 'Registro Profissional é um campo obrigatório.'),
+  name: z.string().min(2, 'Nome é um campo obrigatório.'),
+  last_name: z.string().min(2, 'Sobrenome é um campo obrigatório.'),
+  phone_numbers: z
+    .array(
+      z
+        .string({ required_error: 'Telefone é um campo obrigatório.' })
+        .min(1, 'Telefone é um campo obrigatório.')
+        .refine(isValidPhoneNumber, { message: 'Número de telefone inválido.' }),
+    )
+    .nonempty('Pelo menos um número de telefone é necessário.'),
+  emails: z.array(
+    z
+      .string({ required_error: 'E-mail é um campo obrigatório.' })
+      .min(1, 'E-mail é um campo obrigatório.')
+      .refine(isValidEmail, { message: 'E-mail inválido.' }),
+  ),
 });
 
 const Counter = ({ pageTitle }: Props) => {
   const route = useRouter();
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState({} as any);
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -122,7 +127,12 @@ const Counter = ({ pageTitle }: Props) => {
       const data_customer = { customer: { email: data.emails_attributes[0].email } };
       const customer_data = await createCustomer(data_customer);
 
-      if (!customer_data.data.attributes.email) throw new Error('E-mail já está em uso !');
+      if (!customer_data.data.attributes.email) {
+        setMessage('E-mail já está em uso!');
+        setType('error');
+        setOpenSnackbar(true);
+        return;
+      }
 
       const customer_id = customer_data.data.id;
       const newData = { ...data, customer_id: Number(customer_id) };
@@ -131,7 +141,12 @@ const Counter = ({ pageTitle }: Props) => {
       Router.push('/clientes');
       resetValues();
     } catch (error: any) {
-      handleFormError(error);
+      // Extract the error message from the response
+      const message =
+        error?.response?.data?.errors?.[0]?.code?.[0] || 'Ocorreu um erro inesperado.';
+      setMessage(message);
+      setType('error');
+      setOpenSnackbar(true);
       scroll.scrollToTop({ duration: 500, smooth: 'easeInOutQuart' });
     }
   };
@@ -139,17 +154,21 @@ const Counter = ({ pageTitle }: Props) => {
   const handleSubmitForm = async () => {
     setLoading(true);
     try {
-      counterSchema.parse({
+      const validationData = {
         name: formData.name,
         last_name: formData.last_name,
         gender: formData.gender,
         accountant_id: formData.accountant_id.toString(),
-        phone_number: contactData.phoneInputFields[0].phone_number,
-        email: contactData.emailInputFields[0].email,
-      });
+        phone_numbers: contactData.phoneInputFields.map(field => field.phone_number),
+        emails: contactData.emailInputFields.map(field => field.email),
+      };
+
+      counterSchema.parse(validationData);
 
       const data = {
         ...formData,
+        name: formData.name.trim(),
+        last_name: formData.last_name.trim(),
         gender: 'male',
         accountant_id: Number(formData.accountant_id),
         customer_type: 'counter',
@@ -178,93 +197,44 @@ const Counter = ({ pageTitle }: Props) => {
         resetValues();
       }
     } catch (err) {
-      handleFormError(err);
+      handleFormError(err as any);
     } finally {
       setLoading(false);
     }
   };
-
-  const handleFormError = (error: any) => {
-    const newErrors = error?.formErrors?.fieldErrors ?? {};
-    const errorObject: Record<string, string> = {};
-    const codeErrors = error?.response?.data?.errors;
-
-    setMessage('Preencha todos os campos obrigatórios.');
+  const handleFormError = (error: { issues: ZodFormError[] }) => {
+    const newErrors = error.issues ?? [];
+    setMessage('Corrija os erros no formulário.');
     setType('error');
     setOpenSnackbar(true);
+    const result: ZodFormErrors = {};
 
-    if (codeErrors?.length) {
-      codeErrors.forEach((error: any) => {
-        setMessage(error.code);
-        setType('error');
-        setOpenSnackbar(true);
-      });
-    }
+    // Loop through the errors and process them
+    newErrors.forEach(err => {
+      let [field, index] = err.path;
 
-    for (const field in newErrors) {
-      if (newErrors.hasOwnProperty(field)) {
-        errorObject[field] = newErrors[field][0] as string;
+      index = index || 0;
+
+      if (!result[field]) {
+        result[field] = []; // Initialize array for the field if not present
       }
+
+      // If there's no error for this index, add it
+      if (!result[field][index as number]) {
+        result[field][index as number] = err.message; // Store only the first error for this index
+      }
+    });
+
+    setErrors(result);
+  };
+
+  const getErrorMessage = (index: number, field: string) => {
+    if (errors[field] && errors[field][index]) {
+      const error = errors[field][index];
+      return error;
     }
-    setErrors(errorObject);
+    return null;
   };
-
-  const handleSelectChange = (event: any) => {
-    const { name, value } = event.target;
-    setFormData(prevData => ({ ...prevData, [name]: value }));
-  };
-
-  const renderInputField = (
-    name: keyof FormData,
-    title: string,
-    placeholderText: string,
-    error?: boolean,
-  ) => (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {title}
-      </Typography>
-      <TextField
-        variant="outlined"
-        fullWidth
-        name={name}
-        size="small"
-        value={formData[name] || ''}
-        autoComplete="off"
-        placeholder={placeholderText}
-        onChange={handleInputChange}
-        error={error && !formData[name]}
-      />
-    </div>
-  );
-
-  const renderSelectField = (
-    label: string,
-    name: keyof FormData,
-    options: { label: string; value: string }[],
-    error?: boolean,
-  ) => (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {label}
-      </Typography>
-      <FormControl size="small">
-        <InputLabel error={error && !formData[name]}>{`Selecione ${label}`}</InputLabel>
-        <Select
-          name={name}
-          label={`Selecione ${label}`}
-          value={formData[name] || ''}
-          onChange={handleSelectChange}
-        >
-          {options.map(option => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </div>
-  );
 
   const handleAddInput = (inputArrayName: keyof typeof contactData) => {
     setContactData(prevData => {
@@ -368,12 +338,13 @@ const Counter = ({ pageTitle }: Props) => {
                 </Box>
                 <Box flex={1}>
                   <Box width="50%" pr="15.5px">
-                    {renderInputField(
-                      'accountant_id',
-                      'Número do Registro',
-                      'Informe o Número',
-                      !!errors.accountant_id,
-                    )}
+                    <CustomTextField
+                      formData={formData}
+                      name="accountant_id"
+                      label="Número do Registro"
+                      errorMessage={getErrorMessage(0, 'accountant_id')}
+                      handleInputChange={handleInputChange}
+                    />
                   </Box>
                 </Box>
               </div>
@@ -388,16 +359,23 @@ const Counter = ({ pageTitle }: Props) => {
                 <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                   <div style={{ display: 'flex', gap: '32px', flex: 1, marginTop: '24px' }}>
                     <Box display="flex" flexDirection="column" gap="16px" flex={1}>
-                      {renderInputField('name', 'Nome', 'Nome do Contador', !!errors.name)}
+                      <CustomTextField
+                        formData={formData}
+                        name="name"
+                        label="Nome"
+                        errorMessage={getErrorMessage(0, 'name')}
+                        handleInputChange={handleInputChange}
+                      />
                     </Box>
 
                     <Box display="flex" flexDirection="column" gap="16px" flex={1}>
-                      {renderInputField(
-                        'last_name',
-                        'Sobrenome',
-                        'Sobrenome do Contador',
-                        !!errors.last_name,
-                      )}
+                      <CustomTextField
+                        formData={formData}
+                        name="last_name"
+                        label="Sobrenome"
+                        errorMessage={getErrorMessage(0, 'last_name')}
+                        handleInputChange={handleInputChange}
+                      />
                     </Box>
                   </div>
                 </div>
@@ -427,18 +405,15 @@ const Counter = ({ pageTitle }: Props) => {
                         }}
                       >
                         <div className="flex flex-row gap-1">
-                          <TextField
-                            variant="outlined"
-                            fullWidth
-                            name="phone"
-                            size="small"
+                          <CustomTextField
+                            formData={formData}
+                            name="phone_number"
                             placeholder="Informe o Telefone"
-                            value={inputValue.phone_number || ''}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                              handleContactChange(index, e.target.value, 'phoneInputFields')
-                            }
-                            autoComplete="off"
-                            error={!!errors.phone_number}
+                            customValue={inputValue.phone_number || ''}
+                            handleInputChange={(e: any) => {
+                              handleContactChange(index, e.target.value, 'phoneInputFields');
+                            }}
+                            errorMessage={getErrorMessage(index, 'phone_numbers')}
                           />
                           <button
                             type="button"
@@ -483,18 +458,15 @@ const Counter = ({ pageTitle }: Props) => {
                         }}
                       >
                         <div className="flex flex-row gap-1">
-                          <TextField
-                            variant="outlined"
-                            fullWidth
+                          <CustomTextField
+                            formData={formData}
                             name="email"
-                            size="small"
-                            placeholder="Informe o Email"
-                            value={inputValue.email || ''}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                              handleContactChange(index, e.target.value, 'emailInputFields')
-                            }
-                            autoComplete="off"
-                            error={!!errors.email}
+                            placeholder="Informe o E-mail"
+                            customValue={inputValue.email || ''}
+                            handleInputChange={(e: any) => {
+                              handleContactChange(index, e.target.value, 'emailInputFields');
+                            }}
+                            errorMessage={getErrorMessage(index, 'emails')}
                           />
                           <button
                             type="button"

@@ -41,6 +41,7 @@ import dynamic from 'next/dynamic';
 import Router from 'next/router';
 import { IAdminProps } from '@/interfaces/IAdmin';
 import { WorkStatusModal } from '@/components';
+import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Works = () => {
@@ -584,28 +585,33 @@ const Works = () => {
                     cellClassName: 'font-medium text-black',
                     align: 'center',
                     headerAlign: 'center',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     flex: 1,
                     minWidth: 210,
                     field: 'client',
                     headerName: 'Cliente',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     flex: 1,
                     minWidth: 200,
                     field: 'procedure',
                     headerName: 'Procedimento',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 120,
                     field: 'subject',
                     headerName: 'Assunto',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     flex: 1,
                     field: 'responsible',
                     headerName: 'Responsável',
+                    valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     width: 100,
@@ -615,6 +621,7 @@ const Works = () => {
                     align: 'center',
                     headerAlign: 'center',
                     editable: false,
+                    valueFormatter: defaultTableValueFormatter,
                     renderCell: (params: any) => (
                       // <Box width={'100%'} display={'flex'} justifyContent={'space-around'}>
                       //   <MdVisibility

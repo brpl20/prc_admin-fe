@@ -11,7 +11,7 @@ const createAdmin = async (data: any) => {
 
 const updateAdmin = async (id: string, data: any) => {
   try {
-    const response = await api.put(`/profile_admins/${id}`, data);
+    const response = await api.put(`/admins/${id}`, data);
     return response.data;
   } catch (error) {
     throw error;
@@ -47,6 +47,15 @@ const getAdmins = async () => {
   }
 };
 
+const updateProfileAdmin = async (id: string, data: any) => {
+  try {
+    const response = await api.put(`/profile_admins/${id}`, data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const inactiveProfileAdmin = async (id: string) => {
   try {
     await api.delete(`/profile_admins/${id}`);
@@ -77,6 +86,7 @@ export {
   getAdminByID,
   getAdmins,
   updateAdmin,
+  updateProfileAdmin,
   inactiveProfileAdmin,
   deleteProfileAdmin,
   restoreProfileAdmin,
