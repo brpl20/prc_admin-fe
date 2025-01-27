@@ -74,6 +74,8 @@ export const isValidCNPJ = (cnpj: string): boolean => {
 export const isValidRG = (rg: string): boolean => {
   if (!rg) return false;
 
+  // if (rg.length < 4) return false;
+
   return true;
 
   // Currently this function only checks if the rg is not empty.
