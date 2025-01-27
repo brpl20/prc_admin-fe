@@ -10,6 +10,8 @@ interface CustomDateFieldProps {
   name: string;
   errorMessage?: string;
   handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  minDate?: Dayjs | string;
+  maxDate?: Dayjs | string;
 }
 
 const CustomDateField: React.FC<CustomDateFieldProps> = ({
@@ -18,6 +20,8 @@ const CustomDateField: React.FC<CustomDateFieldProps> = ({
   name,
   errorMessage,
   handleInputChange,
+  minDate,
+  maxDate,
 }) => (
   <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
     <Typography variant="h6" sx={{ marginBottom: '8px' }}>
@@ -26,6 +30,9 @@ const CustomDateField: React.FC<CustomDateFieldProps> = ({
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <DatePicker
         value={dayjs(formData[name] || null)} // Garante que o valor seja um Dayjs ou null
+        format="DD/MM/YYYY"
+        minDate={minDate}
+        maxDate={maxDate}
         onChange={dateObject => {
           if (!dateObject || !dayjs(dateObject).isValid()) return;
 

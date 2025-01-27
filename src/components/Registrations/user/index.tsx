@@ -29,7 +29,13 @@ import Router, { useRouter } from 'next/router';
 import { cepMask, cpfMask, phoneMask } from '@/utils/masks';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
-import { isValidCPF, isValidEmail, isValidPhoneNumber, isValidRG } from '@/utils/validator';
+import {
+  isDateBeforeToday,
+  isValidCPF,
+  isValidEmail,
+  isValidPhoneNumber,
+  isValidRG,
+} from '@/utils/validator';
 import { ZodFormError, ZodFormErrors } from '@/types/zod';
 import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import CustomDateField from '@/components/FormInputFields/CustomDateField';
@@ -105,7 +111,10 @@ const userSchema = z
       .string({ required_error: 'E-mail de Acesso é um campo obrigatório.' })
       .min(1, 'E-mail de Acesso é um campo obrigatório.')
       .refine(isValidEmail, { message: 'E-mail inválido.' }),
-    birth: z.string().min(2, { message: 'O campo Data de Nascimento é obrigatório.' }),
+    birth: z
+      .string()
+      .min(2, { message: 'O campo Data de Nascimento é obrigatório.' })
+      .refine(isDateBeforeToday, { message: 'Data de Nascimento inválida.' }),
     userType: z.string().min(2, { message: 'O campo Tipo do Usuário é obrigatório.' }),
     city: z.string().min(2, { message: 'O campo Cidade é obrigatório.' }),
     state: z.string().min(2, { message: 'O campo Estado é obrigatório.' }),
@@ -490,7 +499,6 @@ const User = ({ dataToEdit }: props) => {
       }
     });
 
-    console.error(newErrors);
     setErrors(result);
   };
 
@@ -884,6 +892,7 @@ const User = ({ dataToEdit }: props) => {
                       name={'birth'}
                       label={'Data de Nascimento'}
                       errorMessage={getErrorMessage(0, 'birth')}
+                      maxDate={currentDate}
                       handleInputChange={handleInputChange}
                     />
                     <CustomTextField

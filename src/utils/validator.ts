@@ -1,3 +1,5 @@
+import dayjs, { Dayjs } from 'dayjs';
+
 export const isValidCPF = (cpf: string): boolean => {
   if (!cpf) return false;
 
@@ -110,4 +112,65 @@ export function isValidEmail(email: string): boolean {
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email);
+}
+
+export function isValidDate(date: string): boolean {
+  if (!date) return false;
+
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  return dateRegex.test(date);
+}
+
+export function isDateBeforeToday(date: string | Dayjs): boolean {
+  let inputDate: Dayjs;
+
+  if (typeof date === 'string') {
+    if (!isValidDate(date)) return false;
+    inputDate = dayjs(date);
+  } else {
+    inputDate = date;
+  }
+
+  if (!inputDate.isValid()) return false;
+
+  const today = dayjs().startOf('day');
+
+  console.log('inputDate:', inputDate.format());
+  console.log('today:', today.format());
+
+  return inputDate.isBefore(today);
+}
+
+export function isDateTodayOrAfter(date: string | Dayjs): boolean {
+  let inputDate: Dayjs;
+
+  if (typeof date === 'string') {
+    if (!isValidDate(date)) return false;
+    inputDate = dayjs(date);
+  } else {
+    inputDate = date;
+  }
+
+  if (!inputDate.isValid()) return false;
+
+  const today = dayjs().startOf('day');
+
+  return inputDate.isSame(today) || inputDate.isAfter(today);
+}
+
+export function isDateTodayOrBefore(date: string | Dayjs): boolean {
+  let inputDate: Dayjs;
+
+  if (typeof date === 'string') {
+    if (!isValidDate(date)) return false;
+    inputDate = dayjs(date);
+  } else {
+    inputDate = date;
+  }
+
+  if (!inputDate.isValid()) return false;
+
+  const today = dayjs().startOf('day');
+
+  return inputDate.isSame(today) || inputDate.isBefore(today);
 }

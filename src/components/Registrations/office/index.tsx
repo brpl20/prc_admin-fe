@@ -40,10 +40,16 @@ import { IAdminPropsAttributes } from '@/interfaces/IAdmin';
 import { getAllAdmins } from '@/services/admins';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
-import { isValidEmail, isValidPhoneNumber } from '@/utils/validator';
+import {
+  isDateBeforeToday,
+  isDateTodayOrBefore,
+  isValidEmail,
+  isValidPhoneNumber,
+} from '@/utils/validator';
 import { ZodFormError, ZodFormErrors } from '@/types/zod';
 import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
+import CustomDateField from '@/components/FormInputFields/CustomDateField';
 
 interface FormData {
   name: string;
@@ -98,6 +104,10 @@ const officeSchema = z.object({
       .min(1, 'E-mail é um campo obrigatório.')
       .refine(isValidEmail, { message: 'E-mail inválido.' }),
   ),
+  foundation_date: z
+    .string()
+    .min(2, { message: 'Data de Função Exp. OAB é um campo obrigatório.' })
+    .refine(isDateTodayOrBefore, { message: 'Data de Função Exp. OAB inválida.' }),
 });
 
 const Office = ({ dataToEdit }: props) => {
@@ -237,6 +247,7 @@ const Office = ({ dataToEdit }: props) => {
         city: formData.city,
         number: formData.number.toString(),
         neighborhood: formData.neighborhood,
+        foundation_date: formData.foundation_date,
         accounting_type: formData.accounting_type,
         phone_numbers: contactData.phoneInputFields.map(field => field.phone_number),
         emails: contactData.emailInputFields.map(field => field.email),
@@ -333,16 +344,6 @@ const Office = ({ dataToEdit }: props) => {
     });
   };
 
-  const handleDate = (date: any) => {
-    const birthDate = new Date(date).toLocaleDateString('pt-BR');
-    setSelectedDate(date);
-
-    setFormData(prevData => ({
-      ...prevData,
-      foundation_date: birthDate,
-    }));
-  };
-
   const getAdmins = async () => {
     const response = await getAllAdmins('');
     setAdminsList(response.data);
@@ -369,6 +370,7 @@ const Office = ({ dataToEdit }: props) => {
 
   const handleFormError = (error: { issues: ZodFormError[] }) => {
     const newErrors = error.issues ?? [];
+    console.log(newErrors);
     setMessage('Corrija os erros no formulário.');
     setType('error');
     setOpenSnackbar(true);
@@ -390,7 +392,6 @@ const Office = ({ dataToEdit }: props) => {
       }
     });
 
-    console.error(newErrors);
     setErrors(result);
   };
 
@@ -717,26 +718,15 @@ const Office = ({ dataToEdit }: props) => {
                   </Flex>
 
                   <Flex style={{ gap: '24px' }}>
-                    <DateContainer>
-                      <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <Flex>
-                          <Typography mb={'8px'} variant="h6">
-                            {'Data de Função Exp. OAB'}
-                          </Typography>
-                        </Flex>
+                    <CustomDateField
+                      formData={formData}
+                      label="Data de Função Exp. OAB"
+                      name="foundation_date"
+                      errorMessage={getErrorMessage(0, 'foundation_date')}
+                      handleInputChange={handleInputChange}
+                      maxDate={currentDate}
+                    />
 
-                        <DatePicker
-                          sx={{
-                            '& .MuiInputBase-root': {
-                              height: '40px',
-                            },
-                          }}
-                          format="DD/MM/YYYY"
-                          value={selectedDate}
-                          onChange={handleDate}
-                        />
-                      </LocalizationProvider>
-                    </DateContainer>
                     <CustomSelectField
                       formData={formData}
                       label="Enquadramento Contábil"

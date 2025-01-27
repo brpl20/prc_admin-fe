@@ -167,6 +167,8 @@ const Counter = ({ pageTitle }: Props) => {
 
       const data = {
         ...formData,
+        name: formData.name.trim(),
+        last_name: formData.last_name.trim(),
         gender: 'male',
         accountant_id: Number(formData.accountant_id),
         customer_type: 'counter',
@@ -223,7 +225,6 @@ const Counter = ({ pageTitle }: Props) => {
       }
     });
 
-    console.error(newErrors);
     setErrors(result);
   };
 

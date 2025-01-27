@@ -12,6 +12,7 @@ import Document, {
 } from 'next/document';
 import createEmotionServer from '@emotion/server/create-instance';
 import createEmotionCache from '@/utils/createEmotionCache';
+import Script from 'next/script';
 
 interface MyDocumentProps extends DocumentProps {
   emotionStyleTags: JSX.Element[];
@@ -20,15 +21,27 @@ interface MyDocumentProps extends DocumentProps {
 const MyDocument = ({ emotionStyleTags }: MyDocumentProps) => {
   return (
     <Html lang="en">
-      <title>{'ProcStudio'}</title>
-      <link rel="shortcut icon" href="/favicon.ico" />
       <Head>
+        <title>{'ProcStudio'}</title>
+        <link rel="shortcut icon" href="/favicon.ico" />
         <link
           href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
           rel="stylesheet"
         />
         <meta name="emotion-insertion-point" content="" />
         {emotionStyleTags}
+        {/* Google Tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-E72FQJR8D3"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-E72FQJR8D3');
+            `,
+          }}
+        />
       </Head>
       <body
         style={{
