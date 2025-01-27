@@ -81,7 +81,7 @@ const stepOneSchema = z.object({
     .refine(isValidCPF, { message: 'O CPF informado é inválido.' }),
   rg: z
     .string()
-    .min(6, { message: 'O RG precisa ter no mínimo 6 dígitos.' })
+    .min(1, { message: 'RG é um campo obrigatório.' })
     .refine(isValidRG, { message: 'O RG informado é inválido.' }),
   birth: z
     .string()

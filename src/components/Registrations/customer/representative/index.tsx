@@ -68,7 +68,7 @@ export const representativeSchema = z.object({
     .refine(isValidCPF, { message: 'O CPF informado é inválido.' }),
   RG: z
     .string()
-    .min(6, { message: 'O RG precisa ter no mínimo 6 dígitos.' })
+    .min(1, { message: 'RG é um campo obrigatório.' })
     .refine(isValidRG, { message: 'O RG informado é inválido.' }),
   gender: z.string().min(3, 'Gênero é obrigatório'),
   civil_status: z.string().min(1, 'Estado Civil é obrigatório'),
