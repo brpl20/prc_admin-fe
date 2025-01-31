@@ -35,7 +35,7 @@ import CustomDateField from '@/components/FormInputFields/CustomDateField';
 import { ZodFormError, ZodFormErrors } from '@/types/zod';
 
 interface FormData {
-  represent_id: string;
+  represent_id?: string;
   profession: string;
   name: string;
   last_name: string;
@@ -59,7 +59,6 @@ interface Props {
 }
 
 export const representativeSchema = z.object({
-  represent_id: z.string().min(1, { message: 'Selecione o Representado.' }),
   name: z.string().min(3, { message: 'Preencha o campo Nome.' }),
   last_name: z.string().min(3, { message: 'Preencha o campo Sobrenome.' }),
   CPF: z
