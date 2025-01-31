@@ -284,7 +284,8 @@ const Representative = ({ pageTitle }: Props) => {
       };
 
       if (isEditing) {
-        data.represent_attributes.representor_id = customerForm?.data?.attributes?.represent?.id;
+        data.represent_attributes.representor_id =
+          customerForm?.data?.attributes?.represent?.representor_id;
         data.addresses_attributes[0].id = customerForm?.data?.attributes?.addresses[0]?.id ?? '';
         await updateProfileCustomer(customerForm.data.id, data);
         Router.push('/clientes');
