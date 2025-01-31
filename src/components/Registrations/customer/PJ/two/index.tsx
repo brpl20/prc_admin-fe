@@ -132,7 +132,6 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     if (data) {
       const parsedData = JSON.parse(data);
 
-      console.log(parsedData);
       const customer = customersList.find(
         customer => customer.id == parsedData.represent_attributes.representor_id,
       );
