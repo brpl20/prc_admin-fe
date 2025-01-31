@@ -74,24 +74,21 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
         throw new Error('Selecione pelo menos um documento a ser produzido');
       }
 
-      let documentsProducedArray = [] as any;
+      let documentsProducedArray: any[] = [];
 
-      workForm.profile_customer_ids.map((profile: any) => {
+      workForm.profile_customer_ids.forEach((profile: any) => {
         documentsProducedArray = documentsProducedArray.concat(
-          documentsProduced.map((document: any) => {
-            return {
-              document_type: document,
-              profile_customer_id: Number(profile),
-            };
-          }),
+          documentsProduced.map((document: any) => ({
+            document_type: document.document_type ? document.document_type : document,
+            profile_customer_id: Number(profile),
+          })),
         );
       });
 
       let workData = {};
 
       if (router.pathname.includes('alterar')) {
-        let newProducedDocumentsArray = [] as any;
-
+        let newProducedDocumentsArray: any[] = [];
         let documentTypesSet = new Set();
 
         documentsProduced.forEach((document: any) => {
@@ -106,11 +103,11 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
           );
         });
 
-        documentsProduced.map((document: any) => {
+        documentsProduced.forEach((document: any) => {
           if (!document.id) {
-            workForm.profile_customer_ids.map((profile: any) => {
+            workForm.profile_customer_ids.forEach((profile: any) => {
               newProducedDocumentsArray.push({
-                document_type: document,
+                document_type: document.document_type ? document.document_type : document,
                 profile_customer_id: Number(profile),
               });
             });
@@ -119,17 +116,17 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
           if (document.id) {
             newProducedDocumentsArray.push({
               id: document.id,
-              document_type: document.document_type,
+              document_type: document.document_type ? document.document_type : document,
               profile_customer_id: Number(document.profile_customer_id),
               url: document.url,
             });
           }
         });
 
-        customersWithoutDocument.map((profile: any) => {
+        customersWithoutDocument.forEach((profile: any) => {
           documentTypesSet.forEach((document: any) => {
             newProducedDocumentsArray.push({
-              document_type: document,
+              document_type: document.document_type ? document.document_type : document,
               profile_customer_id: Number(profile),
             });
           });
@@ -152,7 +149,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
         };
       }
 
-      if (router.pathname == '/alterar') {
+      if (router.pathname === '/alterar') {
         let dataAux = {
           ...updateWorkForm,
           ...workData,

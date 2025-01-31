@@ -133,7 +133,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
       const parsedData = JSON.parse(data);
 
       const customer = customersList.find(
-        customer => customer.id == parsedData.represent_attributes.profile_admin_id,
+        customer => customer.id == parsedData.represent_attributes.representor_id,
       );
 
       if (customer) {
@@ -171,7 +171,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
       if (editMode) {
         const data = {
           represent_attributes: {
-            profile_admin_id: Number(profileAdmin?.id),
+            representor_id: Number(profileAdmin?.id),
           },
           phones_attributes: formData.phones_attributes,
           emails_attributes: formData.emails_attributes,
@@ -179,7 +179,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
 
         customerForm.data.attributes.represent_attributes = {
           ...customerForm.data.attributes.represent,
-          profile_admin_id: Number(profileAdmin?.id),
+          representor_id: Number(profileAdmin?.id),
         };
 
         customerForm.data.attributes.default_phone = formData.phones_attributes[0].phone_number;
@@ -201,7 +201,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
       const data = {
         ...customerForm,
         represent_attributes: {
-          profile_admin_id: Number(profileAdmin?.id),
+          representor_id: Number(profileAdmin?.id),
         },
         phones_attributes: formData.phones_attributes,
         emails_attributes: formData.emails_attributes,
@@ -290,9 +290,9 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
       const attributes = customerForm.data.attributes;
 
       if (attributes) {
-        const customer = customersList.find(customer => customer.id == attributes.represent);
-
-        console.log(attributes);
+        const customer = customersList.find(
+          customer => customer.id == attributes.represent.representor_id,
+        );
 
         if (customer) {
           setProfileAdmin(customer);

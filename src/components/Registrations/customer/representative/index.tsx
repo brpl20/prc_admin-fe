@@ -35,7 +35,7 @@ import CustomDateField from '@/components/FormInputFields/CustomDateField';
 import { ZodFormError, ZodFormErrors } from '@/types/zod';
 
 interface FormData {
-  represent_id: string;
+  represent_id?: string;
   profession: string;
   name: string;
   last_name: string;
@@ -59,7 +59,6 @@ interface Props {
 }
 
 export const representativeSchema = z.object({
-  represent_id: z.string().min(1, { message: 'Selecione o Representado.' }),
   name: z.string().min(3, { message: 'Preencha o campo Nome.' }),
   last_name: z.string().min(3, { message: 'Preencha o campo Sobrenome.' }),
   CPF: z
@@ -228,8 +227,6 @@ const Representative = ({ pageTitle }: Props) => {
   const handleSubmitForm = async () => {
     setLoading(true);
     try {
-      console.log('formData', formData);
-
       representativeSchema.parse({
         represent_id: formData.represent_id,
         name: formData.name,
@@ -284,7 +281,8 @@ const Representative = ({ pageTitle }: Props) => {
       };
 
       if (isEditing) {
-        data.represent_attributes.representor_id = customerForm?.data?.attributes?.represent?.id;
+        data.represent_attributes.representor_id =
+          customerForm?.data?.attributes?.represent?.representor_id;
         data.addresses_attributes[0].id = customerForm?.data?.attributes?.addresses[0]?.id ?? '';
         await updateProfileCustomer(customerForm.data.id, data);
         Router.push('/clientes');

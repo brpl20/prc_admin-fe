@@ -561,7 +561,7 @@ const Works = () => {
                       : work.attributes.subject;
 
                     return {
-                      id: work.id,
+                      id: Number(work.id),
                       client:
                         clients_names.length > 1
                           ? clients_names.map(getFirstName).join(', ')
