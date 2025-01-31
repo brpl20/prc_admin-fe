@@ -508,7 +508,7 @@ const Offices = () => {
                 rows={
                   officesListFiltered &&
                   officesListFiltered.map((office: IOfficeProps) => ({
-                    id: office.id,
+                    id: Number(office.id),
                     name: office.attributes.name,
                     deleted: office.attributes.deleted,
                     profile_admins: office.attributes.profile_admins,
