@@ -845,7 +845,7 @@ const Customers = () => {
                 rows={
                   profileCustomersListFiltered &&
                   profileCustomersListFiltered.map((profileCustomer: ICustomerProps) => ({
-                    id: profileCustomer.id,
+                    id: Number(profileCustomer.id),
                     name: profileCustomer.attributes.name,
                     deleted: profileCustomer.attributes.deleted,
                     type: profileCustomer.attributes.customer_type,

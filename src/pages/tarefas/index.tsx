@@ -463,7 +463,7 @@ const Tasks = () => {
                 rows={
                   filteredTasksList.length > 0
                     ? filteredTasksList.map(task => ({
-                        id: task.id,
+                        id: Number(task.id),
                         description: task.attributes.description,
                         deleted: task.attributes.deleted,
                         work: task.attributes.work_number ? task.attributes.work_number : '-',
