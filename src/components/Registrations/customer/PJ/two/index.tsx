@@ -381,7 +381,16 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                 limitTags={1}
                 className="bg-white z-1"
                 options={customersList}
-                getOptionLabel={option => option?.attributes?.name ?? ''}
+                getOptionLabel={(option: any) => {
+                  const name = option?.attributes?.name ?? '';
+                  const lastName = option?.attributes?.last_name ?? '';
+                  const fullName = `${name} ${lastName}`.trim();
+
+                  const maxLength = 35;
+                  return fullName.length > maxLength
+                    ? fullName.slice(0, maxLength) + '...'
+                    : fullName;
+                }}
                 renderInput={params => (
                   <TextField
                     variant="outlined"
