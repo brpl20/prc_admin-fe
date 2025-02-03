@@ -290,12 +290,14 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
       const attributes = customerForm.data.attributes;
 
       if (attributes) {
-        const customer = customersList.find(
-          customer => customer.id == attributes.represent.representor_id,
-        );
+        if (attributes.represent) {
+          const customer = customersList.find(
+            customer => customer.id == attributes.represent.representor_id,
+          );
 
-        if (customer) {
-          setProfileAdmin(customer);
+          if (customer) {
+            setProfileAdmin(customer);
+          }
         }
 
         setFormData(prevData => ({
