@@ -1,13 +1,17 @@
 import { PiSuitcase } from 'react-icons/pi';
 import { ContainerDetails, DetailsWrapper } from '../../Details/styles';
+import dayjs from 'dayjs';
 
 interface WorkInfoCardProps {
   client: React.ReactNode;
   responsible: React.ReactNode;
   number: React.ReactNode;
+  date: string;
 }
 
-const WorkInfoCard = ({ client, responsible, number }: WorkInfoCardProps) => {
+const WorkInfoCard = ({ client, responsible, number, date }: WorkInfoCardProps) => {
+  const formatted_date = dayjs(date).format('DD/MM/YYYY') || 'Não informado';
+
   return (
     <DetailsWrapper
       style={{
@@ -87,7 +91,7 @@ const WorkInfoCard = ({ client, responsible, number }: WorkInfoCardProps) => {
                     fontWeight: '400',
                   }}
                 >
-                  {client || "Não informado"}
+                  {client || 'Não informado'}
                 </span>
               </div>
 
@@ -108,7 +112,7 @@ const WorkInfoCard = ({ client, responsible, number }: WorkInfoCardProps) => {
                     fontWeight: '400',
                   }}
                 >
-                  {responsible || "Não informado"}
+                  {responsible || 'Não informado'}
                 </span>
               </div>
 
@@ -129,7 +133,7 @@ const WorkInfoCard = ({ client, responsible, number }: WorkInfoCardProps) => {
                     fontWeight: '400',
                   }}
                 >
-                  {number || "Não informado"}
+                  {number || 'Não informado'}
                 </span>
               </div>
 
@@ -150,7 +154,7 @@ const WorkInfoCard = ({ client, responsible, number }: WorkInfoCardProps) => {
                     fontWeight: '400',
                   }}
                 >
-                  {'XX/XX/XXXX'}
+                  {formatted_date}
                 </span>
               </div>
             </div>
