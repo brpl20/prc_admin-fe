@@ -135,9 +135,6 @@ export function isDateBeforeToday(date: string | Dayjs): boolean {
 
   const today = dayjs().startOf('day');
 
-  console.log('inputDate:', inputDate.format());
-  console.log('today:', today.format());
-
   return inputDate.isBefore(today);
 }
 

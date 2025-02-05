@@ -250,31 +250,14 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
   useEffect(() => {
     const getBanks = async () => {
       try {
-        const response = await getAllBanks();
-        const uniqueBanks = removeDuplicateBanks(response);
-        const filteredBanks = uniqueBanks.filter(
-          bank => bank.name !== 'Selic' && bank.name !== 'Bacen',
-        );
-        setBankList(filteredBanks);
-      } catch (error: any) {}
-    };
-
-    const removeDuplicateBanks = (banks: any) => {
-      const uniqueBanks = [];
-      const keysSet = new Set();
-
-      for (const bank of banks) {
-        const { code, fullName, ispb, name } = bank;
-        const key = `${code}-${fullName}-${ispb}-${name}`;
-
-        if (!keysSet.has(key)) {
-          keysSet.add(key);
-          uniqueBanks.push(bank);
-        }
+        const response = await getAllBanks(true);
+        console.log(response);
+        setBankList(response);
+      } catch (error: any) {
+        console.error(error);
       }
-
-      return uniqueBanks;
     };
+
     getBanks();
   }, []);
 
