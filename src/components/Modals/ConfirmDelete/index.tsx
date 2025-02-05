@@ -3,7 +3,7 @@ import { Modal, Button } from '@mui/material';
 import { MdClose } from 'react-icons/md';
 import { Notification } from '@/components';
 
-import { deleteProfileCustomer } from '@/services/customers';
+import { deleteCustomer, deleteProfileCustomer, getCustomerById } from '@/services/customers';
 import { deleteWork } from '@/services/works';
 import { deleteJob } from '@/services/tasks';
 import { deleteProfileAdmin } from '@/services/admins';
@@ -40,6 +40,19 @@ const ModalOfRemove = ({
     onClose();
   };
 
+  const deleteCustomerFull = async (id: string) => {
+    try {
+      const customerId = (await getCustomerById(id)).data.attributes.customer_id;
+
+      await deleteProfileCustomer(id);
+      await deleteCustomer(customerId);
+    } catch (error: any) {
+      setMessage('Erro ao remover cliente');
+      setTypeMessage('error');
+      setOpenSnackbar(true);
+    }
+  };
+
   const handleNext = async () => {
     switch (steps) {
       case 0:
@@ -54,7 +67,7 @@ const ModalOfRemove = ({
         setLoading(true);
 
         try {
-          if (model === 'cliente') await deleteProfileCustomer(id);
+          if (model === 'cliente') await deleteCustomerFull(id);
           if (model === 'trabalho') await deleteWork(id);
           if (model === 'tarefa') await deleteJob(id);
           if (model === 'admin') await deleteProfileAdmin(id);
