@@ -148,6 +148,7 @@ const DocumentApproval = () => {
                 client={client}
                 responsible={responsible}
                 number={workData.attributes.number}
+                date={workData.attributes.created_at_date}
               />
 
               <DocumentApprovalStepHandler

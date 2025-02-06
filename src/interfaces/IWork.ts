@@ -2,6 +2,7 @@ import IDocumentProps from './IDocument';
 
 interface IAttributesProps {
   id?: string;
+  created_at_date: string;
   profile_customer_ids: string[];
   procedure: string;
   procedures: string[];
