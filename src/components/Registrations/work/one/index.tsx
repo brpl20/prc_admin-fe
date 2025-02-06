@@ -46,6 +46,7 @@ import {
 import { useRouter } from 'next/router';
 import { getAllDraftWorks } from '@/services/works';
 import { useSession } from 'next-auth/react';
+import roleSubjectAccess from './roleSubjectAccess';
 
 interface Option {
   value: string;
@@ -460,6 +461,12 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
       setSelectedArea('');
     }
   }, [selectedSubject, workForm.subject]);
+
+  // DEBUG
+  useEffect(() => {
+    console.log('isVisibileOptionsArea:', isVisibleOptionsArea);
+    console.log('selectedSubject:', selectedSubject);
+  }, [isVisibleOptionsArea, selectedSubject]);
 
   useEffect(() => {
     const handleDataForm = async () => {
@@ -942,7 +949,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                 </Box>
               </Box>
 
-              {isVisibleOptionsArea && (
+              {isVisibleOptionsArea && roleSubjectAccess['default'].includes(selectedSubject) && (
                 <SubjectOptionsArea>
                   {selectedSubject === 'civel' && (
                     <FormControl>
@@ -1082,209 +1089,210 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                 </Box>
               </Box>
 
-              {isVisibleOptionsArea && (
-                <SubjectOptionsArea>
-                  {selectedSubject === 'tributary' && (
-                    <FormControl>
-                      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                        {'Tributário-Áreas'}
-                      </Typography>
-                      <RadioOptions
-                        options={[
-                          {
-                            value: 'asphalt',
-                            label: 'Asfalto',
-                          },
-                        ]}
-                        selectedValue={selectedArea}
-                        onChange={value => handleSelectArea(value)}
-                      />
-                    </FormControl>
-                  )}
-
-                  {selectedSubject === 'tributary_pis' && (
-                    <Box style={{ width: '100%' }}>
-                      <Flex style={{ alignItems: 'center', width: '100%' }}>
-                        <Typography variant="h6" sx={{ marginRight: '16px' }}>
-                          {'Compensações realizadas nos últimos 5 anos:'}
+              {isVisibleOptionsArea &&
+                roleSubjectAccess['accountant'].includes(selectedSubject) && (
+                  <SubjectOptionsArea>
+                    {selectedSubject === 'tributary' && (
+                      <FormControl>
+                        <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+                          {'Tributário-Áreas'}
                         </Typography>
-                        <Box>
-                          <RadioOptions
-                            options={[
-                              {
-                                value: 'yes',
-                                label: 'Sim',
-                              },
-                            ]}
-                            selectedValue={compensationsLastYears}
-                            onChange={setCompensationsLastYears}
-                          />
-                        </Box>
-                        <Box>
-                          <RadioOptions
-                            options={[
-                              {
-                                value: 'no',
-                                label: 'Não',
-                              },
-                            ]}
-                            selectedValue={compensationsLastYears}
-                            onChange={setCompensationsLastYears}
-                          />
-                        </Box>
-                      </Flex>
+                        <RadioOptions
+                          options={[
+                            {
+                              value: 'asphalt',
+                              label: 'Asfalto',
+                            },
+                          ]}
+                          selectedValue={selectedArea}
+                          onChange={value => handleSelectArea(value)}
+                        />
+                      </FormControl>
+                    )}
 
-                      <Flex style={{ alignItems: 'center' }}>
-                        <Typography variant="h6" sx={{ marginRight: '16px' }}>
-                          {'Compensações de ofício:'}
-                        </Typography>
-                        <Box>
-                          <RadioOptions
-                            options={[
-                              {
-                                value: 'yes',
-                                label: 'Sim',
-                              },
-                            ]}
-                            selectedValue={officialCompensation}
-                            onChange={setOfficialCompensation}
-                          />
-                        </Box>
-                        <Box>
-                          <RadioOptions
-                            options={[
-                              {
-                                value: 'no',
-                                label: 'Não',
-                              },
-                            ]}
-                            selectedValue={officialCompensation}
-                            onChange={setOfficialCompensation}
-                          />
-                        </Box>
-                      </Flex>
-
-                      <Flex style={{ alignItems: 'center' }}>
-                        <Typography variant="h6" sx={{ marginRight: '16px' }}>
-                          {'Possui ação judicial:'}
-                        </Typography>
-                        <Box>
-                          <RadioOptions
-                            options={[
-                              {
-                                value: 'yes',
-                                label: 'Sim',
-                              },
-                            ]}
-                            selectedValue={hasALawsuit}
-                            onChange={setHasALawsuit}
-                          />
-                        </Box>
-                        <Box>
-                          <RadioOptions
-                            options={[
-                              {
-                                value: 'no',
-                                label: 'Não',
-                              },
-                            ]}
-                            selectedValue={hasALawsuit}
-                            onChange={setHasALawsuit}
-                          />
-                        </Box>
-                      </Flex>
-
-                      <Flex style={{ flexDirection: 'column', width: '100%' }}>
-                        <Typography variant="h6">{'Projeção de ganho'}</Typography>
-
-                        <Box sx={{ width: '174px' }}>
-                          <Input
-                            placeholder="00"
-                            min="0"
-                            id="gainProjection"
-                            onInput={(e: any) => {
-                              e.target.value = e.target.value.replace(/[^0-9.,]/g, '');
-                            }}
-                            onBlur={(e: any) => {
-                              const inputValue = e.target.value;
-                              const numericValue = parseFloat(inputValue.replace(',', '.'));
-
-                              if (!isNaN(numericValue)) {
-                                handleGainProjection(numericValue);
-                              } else {
-                                setGainProjection(undefined);
-                              }
-                            }}
-                          />
-                        </Box>
-
-                        <Flex style={{ flexDirection: 'column', marginTop: '16px' }}>
-                          <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                            {'Upload de arquivos'}
+                    {selectedSubject === 'tributary_pis' && (
+                      <Box style={{ width: '100%' }}>
+                        <Flex style={{ alignItems: 'center', width: '100%' }}>
+                          <Typography variant="h6" sx={{ marginRight: '16px' }}>
+                            {'Compensações realizadas nos últimos 5 anos:'}
                           </Typography>
-
-                          <Box sx={{ width: '100%', height: '100%' }}>
-                            <Flex style={{ flexDirection: 'row' }}>
-                              <Dropzone>
-                                {({ getRootProps, getInputProps, isDragActive }) => (
-                                  <DropContainer>
-                                    <Flex
-                                      {...getRootProps()}
-                                      onDrop={handleDrop}
-                                      onDragOver={handleDragOver}
-                                    >
-                                      <input
-                                        {...getInputProps({
-                                          accept: '.jpeg, .jpg, .png, .pdf',
-                                          multiple: true,
-                                        })}
-                                      />
-                                      {renderDragMessage(isDragActive)}
-                                    </Flex>
-                                  </DropContainer>
-                                )}
-                              </Dropzone>
-                              <FileList>
-                                {selectedFile && selectedFile.length > 0 ? (
-                                  selectedFile.map((file, index) => (
-                                    <div className="fileName" key={index}>
-                                      <span className="name">{file.name}</span>
-                                      <MdDelete
-                                        size={20}
-                                        color={colors.icons}
-                                        style={{
-                                          cursor: 'pointer',
-                                          marginLeft: '5px',
-                                        }}
-                                        onClick={() => handleDeleteFile(file)}
-                                      />
-                                    </div>
-                                  ))
-                                ) : (
-                                  <Typography variant="caption" sx={{ margin: 'auto' }}>
-                                    {'Nenhum arquivo selecionado'}
-                                  </Typography>
-                                )}
-                              </FileList>
-                            </Flex>
-                            <Typography variant="caption" sx={{ marginTop: '8px' }}>
-                              {'Formatos aceitos: JPEG, PNG, e PDF.'}
-                            </Typography>
-                            {openFileSnackbar && (
-                              <Notification
-                                open={openFileSnackbar}
-                                message="Formato de arquivo inválido. Por favor, escolha um arquivo .jpeg, .jpg, .png ou .pdf."
-                                severity="error"
-                                onClose={() => setOpenFileSnackbar(false)}
-                              />
-                            )}
+                          <Box>
+                            <RadioOptions
+                              options={[
+                                {
+                                  value: 'yes',
+                                  label: 'Sim',
+                                },
+                              ]}
+                              selectedValue={compensationsLastYears}
+                              onChange={setCompensationsLastYears}
+                            />
+                          </Box>
+                          <Box>
+                            <RadioOptions
+                              options={[
+                                {
+                                  value: 'no',
+                                  label: 'Não',
+                                },
+                              ]}
+                              selectedValue={compensationsLastYears}
+                              onChange={setCompensationsLastYears}
+                            />
                           </Box>
                         </Flex>
-                      </Flex>
-                    </Box>
-                  )}
-                </SubjectOptionsArea>
-              )}
+
+                        <Flex style={{ alignItems: 'center' }}>
+                          <Typography variant="h6" sx={{ marginRight: '16px' }}>
+                            {'Compensações de ofício:'}
+                          </Typography>
+                          <Box>
+                            <RadioOptions
+                              options={[
+                                {
+                                  value: 'yes',
+                                  label: 'Sim',
+                                },
+                              ]}
+                              selectedValue={officialCompensation}
+                              onChange={setOfficialCompensation}
+                            />
+                          </Box>
+                          <Box>
+                            <RadioOptions
+                              options={[
+                                {
+                                  value: 'no',
+                                  label: 'Não',
+                                },
+                              ]}
+                              selectedValue={officialCompensation}
+                              onChange={setOfficialCompensation}
+                            />
+                          </Box>
+                        </Flex>
+
+                        <Flex style={{ alignItems: 'center' }}>
+                          <Typography variant="h6" sx={{ marginRight: '16px' }}>
+                            {'Possui ação judicial:'}
+                          </Typography>
+                          <Box>
+                            <RadioOptions
+                              options={[
+                                {
+                                  value: 'yes',
+                                  label: 'Sim',
+                                },
+                              ]}
+                              selectedValue={hasALawsuit}
+                              onChange={setHasALawsuit}
+                            />
+                          </Box>
+                          <Box>
+                            <RadioOptions
+                              options={[
+                                {
+                                  value: 'no',
+                                  label: 'Não',
+                                },
+                              ]}
+                              selectedValue={hasALawsuit}
+                              onChange={setHasALawsuit}
+                            />
+                          </Box>
+                        </Flex>
+
+                        <Flex style={{ flexDirection: 'column', width: '100%' }}>
+                          <Typography variant="h6">{'Projeção de ganho'}</Typography>
+
+                          <Box sx={{ width: '174px' }}>
+                            <Input
+                              placeholder="00"
+                              min="0"
+                              id="gainProjection"
+                              onInput={(e: any) => {
+                                e.target.value = e.target.value.replace(/[^0-9.,]/g, '');
+                              }}
+                              onBlur={(e: any) => {
+                                const inputValue = e.target.value;
+                                const numericValue = parseFloat(inputValue.replace(',', '.'));
+
+                                if (!isNaN(numericValue)) {
+                                  handleGainProjection(numericValue);
+                                } else {
+                                  setGainProjection(undefined);
+                                }
+                              }}
+                            />
+                          </Box>
+
+                          <Flex style={{ flexDirection: 'column', marginTop: '16px' }}>
+                            <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+                              {'Upload de arquivos'}
+                            </Typography>
+
+                            <Box sx={{ width: '100%', height: '100%' }}>
+                              <Flex style={{ flexDirection: 'row' }}>
+                                <Dropzone>
+                                  {({ getRootProps, getInputProps, isDragActive }) => (
+                                    <DropContainer>
+                                      <Flex
+                                        {...getRootProps()}
+                                        onDrop={handleDrop}
+                                        onDragOver={handleDragOver}
+                                      >
+                                        <input
+                                          {...getInputProps({
+                                            accept: '.jpeg, .jpg, .png, .pdf',
+                                            multiple: true,
+                                          })}
+                                        />
+                                        {renderDragMessage(isDragActive)}
+                                      </Flex>
+                                    </DropContainer>
+                                  )}
+                                </Dropzone>
+                                <FileList>
+                                  {selectedFile && selectedFile.length > 0 ? (
+                                    selectedFile.map((file, index) => (
+                                      <div className="fileName" key={index}>
+                                        <span className="name">{file.name}</span>
+                                        <MdDelete
+                                          size={20}
+                                          color={colors.icons}
+                                          style={{
+                                            cursor: 'pointer',
+                                            marginLeft: '5px',
+                                          }}
+                                          onClick={() => handleDeleteFile(file)}
+                                        />
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <Typography variant="caption" sx={{ margin: 'auto' }}>
+                                      {'Nenhum arquivo selecionado'}
+                                    </Typography>
+                                  )}
+                                </FileList>
+                              </Flex>
+                              <Typography variant="caption" sx={{ marginTop: '8px' }}>
+                                {'Formatos aceitos: JPEG, PNG, e PDF.'}
+                              </Typography>
+                              {openFileSnackbar && (
+                                <Notification
+                                  open={openFileSnackbar}
+                                  message="Formato de arquivo inválido. Por favor, escolha um arquivo .jpeg, .jpg, .png ou .pdf."
+                                  severity="error"
+                                  onClose={() => setOpenFileSnackbar(false)}
+                                />
+                              )}
+                            </Box>
+                          </Flex>
+                        </Flex>
+                      </Box>
+                    )}
+                  </SubjectOptionsArea>
+                )}
             </Flex>
           )}
         </Box>
