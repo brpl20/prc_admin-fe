@@ -462,12 +462,6 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
     }
   }, [selectedSubject, workForm.subject]);
 
-  // DEBUG
-  useEffect(() => {
-    console.log('isVisibileOptionsArea:', isVisibleOptionsArea);
-    console.log('selectedSubject:', selectedSubject);
-  }, [isVisibleOptionsArea, selectedSubject]);
-
   useEffect(() => {
     const handleDataForm = async () => {
       const attributes = workForm.data.attributes;
