@@ -80,6 +80,14 @@ const inactiveCustomer = async (id: string) => {
   }
 };
 
+const deleteCustomer = async (id: string) => {
+  try {
+    await api.delete(`/customers/${id}`);
+  } catch (error) {
+    throw error;
+  }
+};
+
 const deleteProfileCustomer = async (id: string) => {
   try {
     await api.delete(`/profile_customers/${id}?destroy_fully=true`);
@@ -105,6 +113,7 @@ export {
   getAllProfileCustomer,
   getCustomerById,
   inactiveCustomer,
+  deleteCustomer,
   deleteProfileCustomer,
   restoreProfileCustomer,
 };
