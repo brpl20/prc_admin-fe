@@ -10,7 +10,6 @@ import { isDragActive } from 'framer-motion';
 interface IUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm?: () => void;
   onSuccess?: () => void;
   title?: string;
   content?: React.ReactNode;
@@ -22,7 +21,6 @@ interface IUploadModalProps {
 const UploadModal = ({
   isOpen,
   onClose,
-  onConfirm,
   onSuccess,
   title = 'Upload de Arquivos',
   content,
@@ -76,12 +74,14 @@ const UploadModal = ({
       // TODO file upload
 
       onSuccess && onSuccess();
-      onClose();
+      handleClose();
     } else {
       setShowError(true);
       setErrorMessage('Por favor, selecione um arquivo antes de enviar.');
     }
   };
+
+  const handleClose = () => [setSelectedFile(null), onClose()];
 
   return (
     <>
@@ -172,7 +172,7 @@ const UploadModal = ({
                 height: '36px',
                 textTransform: 'none',
               }}
-              onClick={onClose}
+              onClick={handleClose}
             >
               {cancelButtonText}
             </Button>

@@ -28,6 +28,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   const [revisionDocuments, setRevisionDocuments] = useState<IDocumentRevisionProps[]>([]);
 
   const [isRevisionActive, setIsRevisionActive] = useState(false);
+  const [currentDocumentId, setCurrentDocumentId] = useState<number>();
 
   const quickApproveModal = useModal();
   const revisionApproveModal = useModal();
@@ -104,7 +105,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
 
   const handleFileUploaded = () => {
     setRevisionDocuments(prev =>
-      prev.map(doc => (doc.id === params.row.id ? { ...doc, pending_upload: false } : doc)),
+      prev.map(doc => (doc.id === currentDocumentId ? { ...doc, pending_upload: false } : doc)),
     );
   };
   return (
@@ -112,7 +113,10 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
       {/* File Upload Modal */}
       <UploadModal
         isOpen={uploadModal.isOpen}
-        onClose={uploadModal.close}
+        onClose={() => {
+          uploadModal.close();
+          setCurrentDocumentId(undefined);
+        }}
         onSuccess={handleFileUploaded}
       />
 
@@ -406,6 +410,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                         <IconButton
                           onClick={_ => {
                             uploadModal.open();
+                            setCurrentDocumentId(params.row.id);
                           }}
                         >
                           <TbUpload size={22} color={colors.icons} cursor={'pointer'} />
