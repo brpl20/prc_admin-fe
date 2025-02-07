@@ -95,7 +95,7 @@ const restoreWork = async (id: string) => {
 
 const uploadDocumentForRevision = async (workId: number, documentId: number, data: any) => {
   try {
-    const response = await api.put(`/works/${workId}/documents/${documentId}`, data, {
+    const response = await api.patch(`/works/${workId}/documents/${documentId}`, data, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
