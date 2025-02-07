@@ -11,6 +11,7 @@ import { ContainerDetails, DetailsWrapper } from '../../../Details/styles';
 import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
 import { downloadFileByUrl } from '../../../../utils/files';
+import UploadModal from '@/components/Modals/UploadModal';
 
 interface DocumentApprovalStepOneProps {
   documents: IDocumentApprovalProps[];
@@ -31,6 +32,8 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   const quickApproveModal = useModal();
   const revisionApproveModal = useModal();
   const uploadPendingModal = useModal();
+
+  const uploadModal = useModal();
 
   const handleQuickApproveModalApprove = () => {
     approveSelectedDocuments();
@@ -71,7 +74,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   const handleCancelRevision = () => {
     const docsToRestore = revisionDocuments.map(doc => ({
       ...doc,
-      pending_revision: true, // Replace revision-required prop with approval-required prop
+      pending_revision: true,
     }));
 
     setDocuments(prev => [...prev, ...docsToRestore]);
@@ -101,6 +104,9 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
 
   return (
     <>
+      {/* File Upload Modal */}
+      <UploadModal isOpen={uploadModal.isOpen} onClose={uploadModal.close} onConfirm={() => {}} />
+
       {/* Quick Approve Modal */}
       <GenericModal
         isOpen={quickApproveModal.isOpen}
@@ -338,6 +344,13 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                 </div>
               </div>
             </>
+
+            <p className="w-4/5 text-left px-8">
+              <strong className="font-bold">Instruções para revisão:</strong> Para realizar a
+              revisão manualmente, faça o download do documento que está no formato DOCX, realize os
+              ajustes necessários, faça o upload do documento novamente e para finalizar clique em
+              Aprovar documentos.
+            </p>
           </ContainerDetails>
 
           <ContentContainer>
@@ -383,6 +396,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                       <div>
                         <IconButton
                           onClick={_ => {
+                            uploadModal.open();
                             // TODO: handle file upload once the endpoint is ready
 
                             setRevisionDocuments(prev =>
