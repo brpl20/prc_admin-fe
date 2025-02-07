@@ -33,7 +33,7 @@ const GenericModal = ({
             <MdClose size={26} onClick={onClose} />
           </Box>
         </Box>
-        <Box width={'100%'} height={'1px'} bgcolor={colors.quartiary} />
+        <Box mt={'8px'} width={'100%'} height={'1px'} bgcolor={colors.quartiary} />
 
         <Box mt={'10px'}>
           <>
