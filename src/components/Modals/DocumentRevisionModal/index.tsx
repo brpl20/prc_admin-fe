@@ -5,9 +5,11 @@ import { Content, DropContainer, FileList } from './styles';
 import Dropzone from 'react-dropzone';
 import { ChangeEvent, DragEvent, useState } from 'react';
 import { Notification } from '@/components';
-import { isDragActive } from 'framer-motion';
+import { uploadDocumentForRevision } from '@/services/works';
 
-interface IUploadModalProps {
+interface IDocumentRevisionModalProps {
+  workId: number;
+  documentId?: number;
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
@@ -18,7 +20,9 @@ interface IUploadModalProps {
   confirmButtonText?: string;
 }
 
-const UploadModal = ({
+const DocumentRevisionModal = ({
+  workId,
+  documentId,
   isOpen,
   onClose,
   onSuccess,
@@ -27,10 +31,11 @@ const UploadModal = ({
   showConfirmButton = true,
   cancelButtonText = 'Cancelar',
   confirmButtonText = 'Enviar',
-}: IUploadModalProps) => {
+}: IDocumentRevisionModalProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const allowedFileExtensions = ['docx', 'pdf'];
 
@@ -69,12 +74,23 @@ const UploadModal = ({
     setSelectedFile(null);
   };
 
-  const handleFileUpload = () => {
-    if (selectedFile) {
-      // TODO file upload
+  const handleFileUpload = async () => {
+    if (selectedFile && documentId) {
+      setLoading(true);
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
 
-      onSuccess && onSuccess();
-      handleClose();
+        await uploadDocumentForRevision(workId, documentId, formData);
+
+        onSuccess && onSuccess();
+        handleClose();
+      } catch (error) {
+        setShowError(true);
+        setErrorMessage('Ocorreu um erro ao enviar o arquivo. Por favor, tente novamente.');
+      } finally {
+        setLoading(false);
+      }
     } else {
       setShowError(true);
       setErrorMessage('Por favor, selecione um arquivo antes de enviar.');
@@ -190,7 +206,7 @@ const UploadModal = ({
                 color="secondary"
                 onClick={handleFileUpload}
               >
-                {confirmButtonText}
+                {loading ? 'Enviando...' : confirmButtonText}
               </Button>
             )}
           </Box>
@@ -208,4 +224,4 @@ const UploadModal = ({
   );
 };
 
-export default UploadModal;
+export default DocumentRevisionModal;

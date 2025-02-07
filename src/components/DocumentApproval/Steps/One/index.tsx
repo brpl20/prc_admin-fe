@@ -11,7 +11,8 @@ import { ContainerDetails, DetailsWrapper } from '../../../Details/styles';
 import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
 import { downloadFileByUrl } from '../../../../utils/files';
-import UploadModal from '@/components/Modals/UploadModal';
+import DocumentRevisionModal from '@/components/Modals/DocumentRevisionModal';
+import { useRouter } from 'next/router';
 
 interface DocumentApprovalStepOneProps {
   documents: IDocumentApprovalProps[];
@@ -35,6 +36,9 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   const uploadPendingModal = useModal();
 
   const uploadModal = useModal();
+  const router = useRouter();
+
+  const { id: workId } = router.query;
 
   const handleQuickApproveModalApprove = () => {
     approveSelectedDocuments();
@@ -110,14 +114,16 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   };
   return (
     <>
-      {/* File Upload Modal */}
-      <UploadModal
+      {/* Document Revision Modal */}
+      <DocumentRevisionModal
         isOpen={uploadModal.isOpen}
         onClose={() => {
           uploadModal.close();
           setCurrentDocumentId(undefined);
         }}
         onSuccess={handleFileUploaded}
+        documentId={currentDocumentId}
+        workId={Number(workId)}
       />
 
       {/* Quick Approve Modal */}
