@@ -11,6 +11,7 @@ interface IUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm?: () => void;
+  onSuccess?: () => void;
   title?: string;
   content?: React.ReactNode;
   showConfirmButton?: boolean;
@@ -21,7 +22,8 @@ interface IUploadModalProps {
 const UploadModal = ({
   isOpen,
   onClose,
-  onConfirm = onClose,
+  onConfirm,
+  onSuccess,
   title = 'Upload de Arquivos',
   content,
   showConfirmButton = true,
@@ -30,6 +32,7 @@ const UploadModal = ({
 }: IUploadModalProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const allowedFileExtensions = ['docx', 'pdf'];
 
@@ -57,12 +60,27 @@ const UploadModal = ({
         setSelectedFile(droppedFile);
       } else {
         setShowError(true);
+        setErrorMessage(
+          'Formato de arquivo inválido. Por favor, escolha um arquivo .docx ou .pdf.',
+        );
       }
     }
   };
 
   const handleDeleteFile = () => {
     setSelectedFile(null);
+  };
+
+  const handleFileUpload = () => {
+    if (selectedFile) {
+      // TODO file upload
+
+      onSuccess && onSuccess();
+      onClose();
+    } else {
+      setShowError(true);
+      setErrorMessage('Por favor, selecione um arquivo antes de enviar.');
+    }
   };
 
   return (
@@ -160,6 +178,7 @@ const UploadModal = ({
             </Button>
             {showConfirmButton && (
               <Button
+                disabled={!selectedFile}
                 variant="contained"
                 sx={{
                   minWidth: '124px',
@@ -169,9 +188,7 @@ const UploadModal = ({
                   marginLeft: '16px',
                 }}
                 color="secondary"
-                onClick={() => {
-                  onConfirm && onConfirm();
-                }}
+                onClick={handleFileUpload}
               >
                 {confirmButtonText}
               </Button>
@@ -182,7 +199,7 @@ const UploadModal = ({
       {showError && (
         <Notification
           open={showError}
-          message="Formato de arquivo inválido. Por favor, escolha um arquivo .docx ou .pdf."
+          message={errorMessage}
           severity="error"
           onClose={() => setShowError(false)}
         />

@@ -102,10 +102,19 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
     setSelectedDocuments([]);
   };
 
+  const handleFileUploaded = () => {
+    setRevisionDocuments(prev =>
+      prev.map(doc => (doc.id === params.row.id ? { ...doc, pending_upload: false } : doc)),
+    );
+  };
   return (
     <>
       {/* File Upload Modal */}
-      <UploadModal isOpen={uploadModal.isOpen} onClose={uploadModal.close} onConfirm={() => {}} />
+      <UploadModal
+        isOpen={uploadModal.isOpen}
+        onClose={uploadModal.close}
+        onSuccess={handleFileUploaded}
+      />
 
       {/* Quick Approve Modal */}
       <GenericModal
@@ -397,13 +406,6 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                         <IconButton
                           onClick={_ => {
                             uploadModal.open();
-                            // TODO: handle file upload once the endpoint is ready
-
-                            setRevisionDocuments(prev =>
-                              prev.map(doc =>
-                                doc.id === params.row.id ? { ...doc, pending_upload: false } : doc,
-                              ),
-                            );
                           }}
                         >
                           <TbUpload size={22} color={colors.icons} cursor={'pointer'} />
