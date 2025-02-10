@@ -93,6 +93,19 @@ const restoreWork = async (id: string) => {
   }
 };
 
+const uploadDocumentForRevision = async (workId: number, documentId: number, data: any) => {
+  try {
+    const response = await api.patch(`/works/${workId}/documents/${documentId}`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export {
   createWork,
   getAllWorks,
@@ -104,4 +117,5 @@ export {
   inactiveWork,
   deleteWork,
   restoreWork,
+  uploadDocumentForRevision,
 };

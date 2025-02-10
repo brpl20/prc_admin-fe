@@ -15,7 +15,7 @@ interface IDocumentApprovalProps extends IDocumentProps {
 }
 
 interface IDocumentRevisionProps extends IDocumentProps {
-  pending_upload: boolean;
+  file: File | null;
 }
 
 export default IDocumentProps;
