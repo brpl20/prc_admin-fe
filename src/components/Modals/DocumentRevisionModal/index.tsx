@@ -12,7 +12,7 @@ interface IDocumentRevisionModalProps {
   documentId?: number;
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (file: File) => void;
   title?: string;
   content?: React.ReactNode;
   showConfirmButton?: boolean;
@@ -35,7 +35,6 @@ const DocumentRevisionModal = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const allowedFileExtensions = ['docx', 'pdf'];
 
@@ -76,21 +75,8 @@ const DocumentRevisionModal = ({
 
   const handleFileUpload = async () => {
     if (selectedFile && documentId) {
-      setLoading(true);
-      try {
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-
-        await uploadDocumentForRevision(workId, documentId, formData);
-
-        onSuccess && onSuccess();
-        handleClose();
-      } catch (error) {
-        setShowError(true);
-        setErrorMessage('Ocorreu um erro ao enviar o arquivo. Por favor, tente novamente.');
-      } finally {
-        setLoading(false);
-      }
+      onSuccess && onSuccess(selectedFile);
+      handleClose();
     } else {
       setShowError(true);
       setErrorMessage('Por favor, selecione um arquivo antes de enviar.');
@@ -206,7 +192,7 @@ const DocumentRevisionModal = ({
                 color="secondary"
                 onClick={handleFileUpload}
               >
-                {loading ? 'Enviando...' : confirmButtonText}
+                {confirmButtonText}
               </Button>
             )}
           </Box>
