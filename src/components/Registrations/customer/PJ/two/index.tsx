@@ -270,7 +270,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     handleSubmitForm,
   }));
 
-  const getCustomers = async () => {
+  const getCustomers = async (newId?: number) => {
     const allProfileCustomers = await getAllProfileCustomer('');
     const response = allProfileCustomers.data;
 
@@ -279,6 +279,11 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     );
 
     setCustomersList(representors);
+
+    if (newId) {
+      const newRepresentative = representors.find((customer: any) => customer.id == newId);
+      handleSelectedCustomer(newRepresentative);
+    }
   };
 
   useEffect(() => {

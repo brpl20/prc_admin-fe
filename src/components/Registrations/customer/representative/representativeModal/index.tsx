@@ -112,15 +112,11 @@ const RepresentativeModal = ({
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-
-  const today = new Date().toISOString().split('T')[0];
   const currentDate = dayjs();
 
   const [message, setMessage] = useState('');
   const [type, setType] = useState<'success' | 'error'>('success');
   const [openSnackbar, setOpenSnackbar] = useState(false);
-
-  const [newId, setNewId] = useState<number>();
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
