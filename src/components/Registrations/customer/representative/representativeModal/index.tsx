@@ -53,7 +53,7 @@ interface props {
   pageTitle: string;
   isOpen: boolean;
   handleClose: () => void;
-  handleRegistrationFinished: () => void;
+  handleRegistrationFinished: (newId?: number) => void;
 }
 
 const representativeSchema = z.object({
@@ -119,6 +119,8 @@ const RepresentativeModal = ({
   const [message, setMessage] = useState('');
   const [type, setType] = useState<'success' | 'error'>('success');
   const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  const [newId, setNewId] = useState<number>();
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -227,10 +229,11 @@ const RepresentativeModal = ({
 
       const customer_id = customer_data.data.id;
       const newData = { ...data, customer_id: Number(customer_id) };
-      await createProfileCustomer(newData);
+      const createProfileCustomerResponse = await createProfileCustomer(newData);
 
       handleClose();
       resetValues();
+      handleRegistrationFinished(createProfileCustomerResponse.data.id);
     } catch (error: any) {
       setErrors({});
       const message =

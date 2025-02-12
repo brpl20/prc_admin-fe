@@ -122,7 +122,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     representor: {},
   });
 
-  const getRepresentors = async () => {
+  const getRepresentors = async (newId?: number) => {
     const allCustomers = await getAllProfileCustomer('');
     const response = allCustomers.data;
 
@@ -131,6 +131,11 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     );
 
     setRepresentorsList(representors);
+
+    if (newId) {
+      const newRepresentative = representors.find((customer: any) => customer.id == newId);
+      handleRepresentorChange('representor', newRepresentative);
+    }
   };
 
   useEffect(() => {
