@@ -87,7 +87,7 @@ const representativeSchema = z.object({
     .min(8, { message: 'O CEP precisa ter no mínimo 8 dígitos.' })
     .refine(isValidCEP, { message: 'O CEP informado é inválido.' }),
   street: z.string().min(4, { message: 'Preencha o campo Endereço.' }),
-  number: z.coerce.string().min(2, { message: 'Número é um campo obrigatório' }),
+  number: z.coerce.string().min(1, { message: 'Número é um campo obrigatório' }),
   description: z.string(),
   profession: z.string().min(1, { message: 'Preencha o campo Profissão.' }),
   neighborhood: z.string().min(4, { message: 'Preencha o campo Bairro.' }),
