@@ -1,9 +1,9 @@
 import { IAttributesProps } from './ITask';
 
-interface IModalProps {
+interface ITaskModalProps {
   isOpen: boolean;
   dataToEdit?: IAttributesProps;
   onClose: () => void;
 }
 
-export type { IModalProps };
+export type { ITaskModalProps };

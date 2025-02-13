@@ -21,7 +21,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { z } from 'zod';
 import { getAllWorks, getWorkByCustomerId, getWorkById } from '@/services/works';
-import { IModalProps } from '@/interfaces/IModal';
+import { ITaskModalProps } from '@/interfaces/ITaskModal';
 import { getAllProfileCustomer } from '@/services/customers';
 import { createTask, getTaskById, updateTask } from '@/services/tasks';
 
@@ -188,7 +188,7 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
         setResponsibleList(responsibleIncluded);
       }
     } catch (error: any) {
-      console.log('error', error);
+      console.error('error', error);
       setMessage(error.message);
       setType('error');
       setOpenSnackbar(true);
@@ -276,6 +276,7 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
           }`,
         );
       } catch (error: any) {
+        console.error('Error:', error.message);
         setMessage(error.message);
         setType('error');
         setOpenSnackbar(true);
