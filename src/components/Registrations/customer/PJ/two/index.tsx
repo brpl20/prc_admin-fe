@@ -386,6 +386,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                 limitTags={1}
                 className="bg-white z-1"
                 options={customersList}
+                id="multiple-limit-tags"
                 getOptionLabel={(option: any) => {
                   const name = option?.attributes?.name ?? '';
                   const lastName = option?.attributes?.last_name ?? '';
