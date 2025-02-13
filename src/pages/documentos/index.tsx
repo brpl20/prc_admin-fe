@@ -23,6 +23,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useModal } from '@/utils/useModal';
 import GenericModal from '@/components/Modals/GenericModal';
+import dayjs from 'dayjs';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
@@ -133,7 +134,7 @@ const Documents = () => {
 
     if (!client || !id) {
       invalidRequestModal.open();
-      return
+      return;
     }
 
     // Redirect to signing and approval page
@@ -145,16 +146,16 @@ const Documents = () => {
         responsible: responsible,
       },
     });
-  }
+  };
 
   return (
     <>
       <GenericModal
         isOpen={invalidRequestModal.isOpen}
         onClose={invalidRequestModal.close}
-        title='Erro!'
+        title="Erro!"
         content="O trabalho selecionado não possui um cliente ou ID válido."
-        cancelButtonText='Fechar'
+        cancelButtonText="Fechar"
       />
       <Layout>
         <Container>
@@ -267,7 +268,7 @@ const Documents = () => {
                       documents: work.attributes.documents,
                       number: work.attributes.number,
                       created_by_id: work.attributes.created_by_id,
-                      date: 'XX/XX/XXXX',
+                      date: work.attributes.created_at_date,
                     };
                   })
                 }
@@ -306,7 +307,12 @@ const Documents = () => {
                     ),
                     headerAlign: 'center',
                     align: 'center',
-                    valueFormatter: defaultTableValueFormatter,
+                    valueFormatter: params => dayjs(params.value).format('DD/MM/YYYY'),
+                    sortComparator: (v1, v2) => {
+                      if (!v1) return 1;
+                      if (!v2) return -1;
+                      return dayjs(v1).unix() - dayjs(v2).unix();
+                    },
                   },
                   {
                     flex: 1,

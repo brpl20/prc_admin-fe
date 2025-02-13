@@ -11,6 +11,10 @@ import { ContainerDetails, DetailsWrapper } from '../../../Details/styles';
 import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
 import { downloadFileByUrl } from '../../../../utils/files';
+import DocumentRevisionModal from '@/components/Modals/DocumentRevisionModal';
+import { useRouter } from 'next/router';
+import { uploadDocumentForRevision } from '@/services/works';
+import { Notification } from '@/components';
 
 interface DocumentApprovalStepOneProps {
   documents: IDocumentApprovalProps[];
@@ -27,29 +31,61 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   const [revisionDocuments, setRevisionDocuments] = useState<IDocumentRevisionProps[]>([]);
 
   const [isRevisionActive, setIsRevisionActive] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [currentDocumentId, setCurrentDocumentId] = useState<number>();
 
   const quickApproveModal = useModal();
   const revisionApproveModal = useModal();
   const uploadPendingModal = useModal();
+
+  const uploadModal = useModal();
+  const router = useRouter();
+
+  const { id: workId } = router.query;
 
   const handleQuickApproveModalApprove = () => {
     approveSelectedDocuments();
     quickApproveModal.close();
   };
 
-  const handleRevisionModalApprove = () => {
-    setDocuments(prevDocuments => [
-      ...prevDocuments,
-      ...revisionDocuments.map(doc => ({
-        ...doc,
-        pending_revision: false, // Mark as approved
-        pending_upload: undefined, // Remove revision-required property
-      })),
-    ]);
+  const handleRevisionModalApprove = async () => {
+    const pendingDocuments = revisionDocuments.filter(doc => doc.file === null);
 
-    setRevisionDocuments([]);
-    setIsRevisionActive(false);
-    revisionApproveModal.close();
+    if (pendingDocuments.length > 0) {
+      return uploadPendingModal.open();
+    }
+
+    setLoading(true);
+    try {
+      const uploadPromises = revisionDocuments.map(doc => {
+        const formData = new FormData();
+        formData.append('file', doc.file!);
+
+        return uploadDocumentForRevision(Number(workId), doc.id, formData);
+      });
+
+      await Promise.all(uploadPromises);
+
+      setDocuments(prevDocuments => [
+        ...prevDocuments,
+        ...revisionDocuments.map(doc => ({
+          ...doc,
+          pending_revision: false, // Mark as approved
+          file: undefined, // Remove revision-required property
+        })),
+      ]);
+
+      setRevisionDocuments([]);
+      setIsRevisionActive(false);
+      revisionApproveModal.close();
+    } catch (error) {
+      setShowError(true);
+      setErrorMessage('Ocorreu um erro ao enviar os arquivos. Por favor, tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBeginRevision = () => {
@@ -57,7 +93,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
       .filter(doc => selectedDocuments.includes(doc.id))
       .map(doc => ({
         ...doc,
-        pending_upload: true, // Add revision-required prop
+        file: null, // Add revision-required prop
       }));
 
     const remainingDocuments = documents.filter(doc => !selectedDocuments.includes(doc.id));
@@ -71,7 +107,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   const handleCancelRevision = () => {
     const docsToRestore = revisionDocuments.map(doc => ({
       ...doc,
-      pending_revision: true, // Replace revision-required prop with approval-required prop
+      pending_revision: true,
     }));
 
     setDocuments(prev => [...prev, ...docsToRestore]);
@@ -82,7 +118,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
 
   const handleRevisionApproveButton = () => {
     // If any revision documents are pending upload, show a warning
-    if (revisionDocuments.some(doc => doc.pending_upload)) {
+    if (revisionDocuments.some(doc => doc.file === null)) {
       return uploadPendingModal.open();
     }
 
@@ -99,8 +135,25 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
     setSelectedDocuments([]);
   };
 
+  const handleFileUploaded = (file: File) => {
+    setRevisionDocuments(prev =>
+      prev.map(doc => (doc.id === currentDocumentId ? { ...doc, file: file } : doc)),
+    );
+  };
   return (
     <>
+      {/* Document Revision Modal */}
+      <DocumentRevisionModal
+        isOpen={uploadModal.isOpen}
+        onClose={() => {
+          uploadModal.close();
+          setCurrentDocumentId(undefined);
+        }}
+        onSuccess={handleFileUploaded}
+        documentId={currentDocumentId}
+        workId={Number(workId)}
+      />
+
       {/* Quick Approve Modal */}
       <GenericModal
         isOpen={quickApproveModal.isOpen}
@@ -108,7 +161,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
         onConfirm={handleQuickApproveModalApprove}
         title="Atenção!"
         showConfirmButton
-        confirmButtonText="Sim, aprovar!"
+        confirmButtonText={loading ? 'Aprovando...' : 'Sim, aprovar!'}
         cancelButtonText="Cancelar"
         content="Tem certeza de que deseja aprovar os documentos?"
       />
@@ -275,7 +328,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                   color="secondary"
                   onClick={quickApproveModal.open}
                 >
-                  {'Aprovar documentos'}
+                  Aprovar documentos
                 </Button>
               </>
             )}
@@ -338,6 +391,13 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                 </div>
               </div>
             </>
+
+            <p className="w-4/5 text-left px-8">
+              <strong className="font-bold">Instruções para revisão:</strong> Para realizar a
+              revisão manualmente, faça o download do documento que está no formato DOCX, realize os
+              ajustes necessários, faça o upload do documento novamente e para finalizar clique em
+              Aprovar documentos.
+            </p>
           </ContainerDetails>
 
           <ContentContainer>
@@ -354,7 +414,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                   return {
                     id: item.id,
                     type: documentTypeToReadable[item.document_type],
-                    status: item.pending_upload ? 'Pendente de upload' : 'Upload realizado',
+                    status: item.file === null ? 'Pendente de upload' : 'Upload realizado',
                     url: item.url,
                   };
                 })}
@@ -383,13 +443,8 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                       <div>
                         <IconButton
                           onClick={_ => {
-                            // TODO: handle file upload once the endpoint is ready
-
-                            setRevisionDocuments(prev =>
-                              prev.map(doc =>
-                                doc.id === params.row.id ? { ...doc, pending_upload: false } : doc,
-                              ),
-                            );
+                            uploadModal.open();
+                            setCurrentDocumentId(params.row.id);
                           }}
                         >
                           <TbUpload size={22} color={colors.icons} cursor={'pointer'} />
@@ -441,6 +496,14 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
             </Box>
           </ContentContainer>
         </DetailsWrapper>
+      )}
+      {showError && (
+        <Notification
+          open={showError}
+          message={errorMessage}
+          severity="error"
+          onClose={() => setShowError(false)}
+        />
       )}
     </>
   );

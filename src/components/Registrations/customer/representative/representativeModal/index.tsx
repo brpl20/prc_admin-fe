@@ -53,7 +53,7 @@ interface props {
   pageTitle: string;
   isOpen: boolean;
   handleClose: () => void;
-  handleRegistrationFinished: () => void;
+  handleRegistrationFinished: (newId?: number) => void;
 }
 
 const representativeSchema = z.object({
@@ -87,7 +87,7 @@ const representativeSchema = z.object({
     .min(8, { message: 'O CEP precisa ter no mínimo 8 dígitos.' })
     .refine(isValidCEP, { message: 'O CEP informado é inválido.' }),
   street: z.string().min(4, { message: 'Preencha o campo Endereço.' }),
-  number: z.coerce.string().min(2, { message: 'Número é um campo obrigatório' }),
+  number: z.coerce.string().min(1, { message: 'Número é um campo obrigatório' }),
   description: z.string(),
   profession: z.string().min(1, { message: 'Preencha o campo Profissão.' }),
   neighborhood: z.string().min(4, { message: 'Preencha o campo Bairro.' }),
@@ -112,8 +112,6 @@ const RepresentativeModal = ({
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-
-  const today = new Date().toISOString().split('T')[0];
   const currentDate = dayjs();
 
   const [message, setMessage] = useState('');
@@ -227,10 +225,11 @@ const RepresentativeModal = ({
 
       const customer_id = customer_data.data.id;
       const newData = { ...data, customer_id: Number(customer_id) };
-      await createProfileCustomer(newData);
+      const createProfileCustomerResponse = await createProfileCustomer(newData);
 
       handleClose();
       resetValues();
+      handleRegistrationFinished(createProfileCustomerResponse.data.id);
     } catch (error: any) {
       setErrors({});
       const message =
