@@ -64,6 +64,12 @@ const Tasks = () => {
   const open = Boolean(anchorEl);
   const [openRemoveModal, setOpenRemoveModal] = useState<boolean>(false);
 
+  const showMessage = (message: string, type: 'success' | 'error' = 'success') => {
+    setMessage(message);
+    setTypeMessage(type);
+    setOpenSnackbar(true);
+  };
+
   const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -196,9 +202,14 @@ const Tasks = () => {
   return (
     <>
       <Layout>
-        {isOpenTaskModal ? (
-          <TaskModal isOpen={isOpenTaskModal} onClose={handleCloseModal} dataToEdit={paramsRow} />
-        ) : null}
+        {isOpenTaskModal && (
+          <TaskModal
+            isOpen={isOpenTaskModal}
+            onClose={handleCloseModal}
+            dataToEdit={paramsRow}
+            showMessage={showMessage}
+          />
+        )}
 
         {openSnackbar && (
           <Notification

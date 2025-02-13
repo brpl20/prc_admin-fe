@@ -51,7 +51,7 @@ const taskSchema = z.object({
   profile_admin_id: z.string().min(1, { message: 'Responsável é um campo obrigatório.' }),
 });
 
-const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
+const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps) => {
   const currentDate = dayjs();
   const router = useRouter();
 
@@ -66,14 +66,14 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
     work_id: '',
   });
 
-  const [loading, setLoading] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitLoading, setSubmitLoading] = useState(false);
+
   const [errors, setErrors] = useState({} as any);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
 
-  const [workList, setWorkList] = useState<any[]>([]);
   const [worksByCustomer, setworksByCustomer] = useState<any[]>([]);
   const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
   const [responsibleList, setResponsibleList] = useState<any[]>([]);
@@ -123,7 +123,7 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
   };
 
   const handleSubmit = async () => {
-    setLoading(true);
+    setSubmitLoading(true);
 
     try {
       taskSchema.parse({
@@ -153,25 +153,20 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
         await createTask(data);
       }
 
-      setMessage('Tarefa criada com sucesso!');
-      setType('success');
-      setOpenSnackbar(true);
       resetForm();
+      showMessage('Tarefa criada com sucesso!', 'success');
       onClose();
     } catch (error) {
       handleFormError(error);
     } finally {
-      setLoading(false);
+      setSubmitLoading(false);
     }
   };
 
   const getData = async () => {
-    setDataLoaded(true);
     try {
       const works = await getAllWorks('');
       const data = works.data;
-      const idsArray = data.map((item: any) => item.id);
-      setWorkList(idsArray);
 
       const customers = await getAllProfileCustomer('');
       const dataCustomers = customers.data;
@@ -187,19 +182,23 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
       if (responsibleIncluded) {
         setResponsibleList(responsibleIncluded);
       }
+
+      setLoading(false);
     } catch (error: any) {
       console.error('error', error);
       setMessage(error.message);
       setType('error');
       setOpenSnackbar(true);
-    } finally {
-      setDataLoaded(false);
     }
   };
 
   useEffect(() => {
     getData();
   }, []);
+
+  useEffect(() => {
+    console.log('loading:', loading);
+  }, [loading]);
 
   useEffect(() => {
     const getworksByCustomer = async () => {
@@ -276,10 +275,12 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
           }`,
         );
       } catch (error: any) {
-        console.error('Error:', error.message);
-        setMessage(error.message);
-        setType('error');
-        setOpenSnackbar(true);
+        console.error('Error on handleEdit:', error.message);
+        showMessage(
+          'Ocorreu um erro ao carregar os dados da tarefa. Tente novamente mais tarde.',
+          'error',
+        );
+        onClose();
       } finally {
         setLoading(false);
       }
@@ -310,7 +311,7 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
       )}
 
       <Modal open={isOpen} style={{ overflowY: 'auto' }}>
-        {dataLoaded ? (
+        {loading ? (
           <Content
             style={{
               backgroundColor: 'transparent',
@@ -568,12 +569,12 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
                 }}
                 color="secondary"
                 onClick={() => {
-                  if (!loading) {
+                  if (!submitLoading) {
                     handleSubmit();
                   }
                 }}
               >
-                {loading ? (
+                {submitLoading ? (
                   <CircularProgress
                     size={20}
                     style={{
