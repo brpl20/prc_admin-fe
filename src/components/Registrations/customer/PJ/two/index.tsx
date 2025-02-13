@@ -487,14 +487,20 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                     </div>
 
                     {index === formData.phones_attributes.length - 1 && (
-                      <IoAddCircleOutline
-                        className={`cursor-pointer ml-auto ${
-                          formData.phones_attributes.length > 1 ? 'mr-6' : ''
-                        }`}
+                      <button
+                        id="add-phone"
+                        type="button"
+                        className="flex items-center w-fit self-end"
                         onClick={() => handleAddInput('phones_attributes')}
-                        color={colors.quartiary}
-                        size={20}
-                      />
+                      >
+                        <IoAddCircleOutline
+                          className={`cursor-pointer ml-auto ${
+                            formData.phones_attributes.length > 1 ? 'mr-6' : ''
+                          }`}
+                          color={colors.quartiary}
+                          size={20}
+                        />
+                      </button>
                     )}
                   </div>
                 ))}
@@ -544,14 +550,20 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                     </div>
 
                     {index === formData.emails_attributes.length - 1 && (
-                      <IoAddCircleOutline
-                        className={`cursor-pointer ml-auto ${
-                          formData.emails_attributes.length > 1 ? 'mr-6' : ''
-                        }`}
+                      <button
+                        id="add-email"
+                        type="button"
+                        className="flex items-center w-fit self-end"
                         onClick={() => handleAddInput('emails_attributes')}
-                        color={colors.quartiary}
-                        size={20}
-                      />
+                      >
+                        <IoAddCircleOutline
+                          className={`cursor-pointer ml-auto ${
+                            formData.emails_attributes.length > 1 ? 'mr-6' : ''
+                          }`}
+                          color={colors.quartiary}
+                          size={20}
+                        />
+                      </button>
                     )}
                   </div>
                 ))}
