@@ -166,7 +166,6 @@ const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps
   const getData = async () => {
     try {
       const works = await getAllWorks('');
-      const data = works.data;
 
       const customers = await getAllProfileCustomer('');
       const dataCustomers = customers.data;
@@ -239,9 +238,6 @@ const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps
         const task = await getTaskById(id);
         const taskAttributes = task.data.attributes;
 
-        const work = await getWorkById(taskAttributes.work.id);
-        const workAttributes = work.data.attributes;
-
         handleSelectChange('description', taskAttributes.description);
         handleSelectChange(
           'deadline',
@@ -250,30 +246,44 @@ const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps
         handleSelectChange('status', taskAttributes.status);
         handleSelectChange('priority', taskAttributes.priority);
         handleSelectChange('comments', taskAttributes.comment);
-        handleSelectChange('profile_customer_id', taskAttributes.profile_customer.id.toString());
+
+        if (taskAttributes.profile_customer) {
+          handleSelectChange('profile_customer_id', taskAttributes.profile_customer.id.toString());
+        } else {
+          handleSelectChange('profile_customer_id', '');
+        }
+
         handleSelectChange('profile_admin_id', taskAttributes.profile_admin_id.toString());
-        handleSelectChange(
-          'work_id',
-          `${taskAttributes.work.id} - ${
-            workAttributes.number ? workAttributes.number : 'Sem Número'
-          } - ${
-            workAttributes.subject === 'administrative_subject'
-              ? 'Administrativo'
-              : workAttributes.subject === 'civel'
-              ? 'Cível'
-              : workAttributes.subject === 'criminal'
-              ? 'Criminal'
-              : workAttributes.subject === 'laborite'
-              ? 'Trabalhista'
-              : workAttributes.subject === 'social_security'
-              ? 'Previdenciário'
-              : workAttributes.subject === 'tributary'
-              ? 'Tributário'
-              : workAttributes.subject === 'tributary_pis'
-              ? 'Tributário Pis/Cofins insumos'
-              : 'Outros'
-          }`,
-        );
+
+        if (taskAttributes.work) {
+          const work = await getWorkById(taskAttributes.work.id);
+          const workAttributes = work.data.attributes;
+
+          handleSelectChange(
+            'work_id',
+            `${taskAttributes.work.id} - ${
+              workAttributes.number ? workAttributes.number : 'Sem Número'
+            } - ${
+              workAttributes.subject === 'administrative_subject'
+                ? 'Administrativo'
+                : workAttributes.subject === 'civel'
+                ? 'Cível'
+                : workAttributes.subject === 'criminal'
+                ? 'Criminal'
+                : workAttributes.subject === 'laborite'
+                ? 'Trabalhista'
+                : workAttributes.subject === 'social_security'
+                ? 'Previdenciário'
+                : workAttributes.subject === 'tributary'
+                ? 'Tributário'
+                : workAttributes.subject === 'tributary_pis'
+                ? 'Tributário Pis/Cofins insumos'
+                : 'Outros'
+            }`,
+          );
+        } else {
+          handleSelectChange('work_id', '');
+        }
       } catch (error: any) {
         console.error('Error on handleEdit:', error.message);
         showMessage(
@@ -364,9 +374,10 @@ const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps
                       value={
                         formData.profile_customer_id
                           ? customersList.find(
-                              (lawyer: any) => lawyer.id.toString() == formData.profile_customer_id,
-                            )
-                          : ''
+                              (customer: any) =>
+                                customer.id.toString() === formData.profile_customer_id,
+                            ) || null
+                          : null
                       }
                       options={customersList}
                       getOptionLabel={(option: any) =>
@@ -425,9 +436,9 @@ const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps
                       value={
                         formData.profile_admin_id
                           ? responsibleList.find(
-                              (lawyer: any) => lawyer.id.toString() == formData.profile_admin_id,
-                            )
-                          : ''
+                              (admin: any) => admin.id.toString() === formData.profile_admin_id,
+                            ) || null
+                          : null
                       }
                       options={responsibleList}
                       getOptionLabel={(option: any) =>
