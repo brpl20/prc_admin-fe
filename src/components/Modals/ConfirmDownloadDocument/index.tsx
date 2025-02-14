@@ -110,6 +110,7 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
                       }}
                     >
                       <Typography
+                        id="download-document"
                         variant="subtitle1"
                         style={{
                           fontWeight: '400',
