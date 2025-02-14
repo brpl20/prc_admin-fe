@@ -154,7 +154,7 @@ const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps
       }
 
       resetForm();
-      showMessage('Tarefa criada com sucesso!', 'success');
+      showMessage(`Tarefa ${dataToEdit?.id ? 'atualizada' : 'criada'} com sucesso!`, 'success');
       onClose();
     } catch (error) {
       handleFormError(error);
