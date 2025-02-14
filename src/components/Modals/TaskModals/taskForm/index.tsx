@@ -21,7 +21,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { z } from 'zod';
 import { getAllWorks, getWorkByCustomerId, getWorkById } from '@/services/works';
-import { IModalProps } from '@/interfaces/IModal';
+import { ITaskModalProps } from '@/interfaces/ITaskModal';
 import { getAllProfileCustomer } from '@/services/customers';
 import { createTask, getTaskById, updateTask } from '@/services/tasks';
 
@@ -51,7 +51,7 @@ const taskSchema = z.object({
   profile_admin_id: z.string().min(1, { message: 'Responsável é um campo obrigatório.' }),
 });
 
-const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
+const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps) => {
   const currentDate = dayjs();
   const router = useRouter();
 
@@ -66,14 +66,14 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
     work_id: '',
   });
 
-  const [loading, setLoading] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitLoading, setSubmitLoading] = useState(false);
+
   const [errors, setErrors] = useState({} as any);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
 
-  const [workList, setWorkList] = useState<any[]>([]);
   const [worksByCustomer, setworksByCustomer] = useState<any[]>([]);
   const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
   const [responsibleList, setResponsibleList] = useState<any[]>([]);
@@ -123,7 +123,7 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
   };
 
   const handleSubmit = async () => {
-    setLoading(true);
+    setSubmitLoading(true);
 
     try {
       taskSchema.parse({
@@ -153,25 +153,19 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
         await createTask(data);
       }
 
-      setMessage('Tarefa criada com sucesso!');
-      setType('success');
-      setOpenSnackbar(true);
       resetForm();
+      showMessage(`Tarefa ${dataToEdit?.id ? 'atualizada' : 'criada'} com sucesso!`, 'success');
       onClose();
     } catch (error) {
       handleFormError(error);
     } finally {
-      setLoading(false);
+      setSubmitLoading(false);
     }
   };
 
   const getData = async () => {
-    setDataLoaded(true);
     try {
       const works = await getAllWorks('');
-      const data = works.data;
-      const idsArray = data.map((item: any) => item.id);
-      setWorkList(idsArray);
 
       const customers = await getAllProfileCustomer('');
       const dataCustomers = customers.data;
@@ -187,19 +181,23 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
       if (responsibleIncluded) {
         setResponsibleList(responsibleIncluded);
       }
+
+      setLoading(false);
     } catch (error: any) {
-      console.log('error', error);
+      console.error('error', error);
       setMessage(error.message);
       setType('error');
       setOpenSnackbar(true);
-    } finally {
-      setDataLoaded(false);
     }
   };
 
   useEffect(() => {
     getData();
   }, []);
+
+  useEffect(() => {
+    console.log('loading:', loading);
+  }, [loading]);
 
   useEffect(() => {
     const getworksByCustomer = async () => {
@@ -240,9 +238,6 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
         const task = await getTaskById(id);
         const taskAttributes = task.data.attributes;
 
-        const work = await getWorkById(taskAttributes.work.id);
-        const workAttributes = work.data.attributes;
-
         handleSelectChange('description', taskAttributes.description);
         handleSelectChange(
           'deadline',
@@ -251,34 +246,51 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
         handleSelectChange('status', taskAttributes.status);
         handleSelectChange('priority', taskAttributes.priority);
         handleSelectChange('comments', taskAttributes.comment);
-        handleSelectChange('profile_customer_id', taskAttributes.profile_customer.id.toString());
+
+        if (taskAttributes.profile_customer) {
+          handleSelectChange('profile_customer_id', taskAttributes.profile_customer.id.toString());
+        } else {
+          handleSelectChange('profile_customer_id', '');
+        }
+
         handleSelectChange('profile_admin_id', taskAttributes.profile_admin_id.toString());
-        handleSelectChange(
-          'work_id',
-          `${taskAttributes.work.id} - ${
-            workAttributes.number ? workAttributes.number : 'Sem Número'
-          } - ${
-            workAttributes.subject === 'administrative_subject'
-              ? 'Administrativo'
-              : workAttributes.subject === 'civel'
-              ? 'Cível'
-              : workAttributes.subject === 'criminal'
-              ? 'Criminal'
-              : workAttributes.subject === 'laborite'
-              ? 'Trabalhista'
-              : workAttributes.subject === 'social_security'
-              ? 'Previdenciário'
-              : workAttributes.subject === 'tributary'
-              ? 'Tributário'
-              : workAttributes.subject === 'tributary_pis'
-              ? 'Tributário Pis/Cofins insumos'
-              : 'Outros'
-          }`,
-        );
+
+        if (taskAttributes.work) {
+          const work = await getWorkById(taskAttributes.work.id);
+          const workAttributes = work.data.attributes;
+
+          handleSelectChange(
+            'work_id',
+            `${taskAttributes.work.id} - ${
+              workAttributes.number ? workAttributes.number : 'Sem Número'
+            } - ${
+              workAttributes.subject === 'administrative_subject'
+                ? 'Administrativo'
+                : workAttributes.subject === 'civel'
+                ? 'Cível'
+                : workAttributes.subject === 'criminal'
+                ? 'Criminal'
+                : workAttributes.subject === 'laborite'
+                ? 'Trabalhista'
+                : workAttributes.subject === 'social_security'
+                ? 'Previdenciário'
+                : workAttributes.subject === 'tributary'
+                ? 'Tributário'
+                : workAttributes.subject === 'tributary_pis'
+                ? 'Tributário Pis/Cofins insumos'
+                : 'Outros'
+            }`,
+          );
+        } else {
+          handleSelectChange('work_id', '');
+        }
       } catch (error: any) {
-        setMessage(error.message);
-        setType('error');
-        setOpenSnackbar(true);
+        console.error('Error on handleEdit:', error.message);
+        showMessage(
+          'Ocorreu um erro ao carregar os dados da tarefa. Tente novamente mais tarde.',
+          'error',
+        );
+        onClose();
       } finally {
         setLoading(false);
       }
@@ -309,7 +321,7 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
       )}
 
       <Modal open={isOpen} style={{ overflowY: 'auto' }}>
-        {dataLoaded ? (
+        {loading ? (
           <Content
             style={{
               backgroundColor: 'transparent',
@@ -362,9 +374,10 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
                       value={
                         formData.profile_customer_id
                           ? customersList.find(
-                              (lawyer: any) => lawyer.id.toString() == formData.profile_customer_id,
-                            )
-                          : ''
+                              (customer: any) =>
+                                customer.id.toString() === formData.profile_customer_id,
+                            ) || null
+                          : null
                       }
                       options={customersList}
                       getOptionLabel={(option: any) =>
@@ -423,9 +436,9 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
                       value={
                         formData.profile_admin_id
                           ? responsibleList.find(
-                              (lawyer: any) => lawyer.id.toString() == formData.profile_admin_id,
-                            )
-                          : ''
+                              (admin: any) => admin.id.toString() === formData.profile_admin_id,
+                            ) || null
+                          : null
                       }
                       options={responsibleList}
                       getOptionLabel={(option: any) =>
@@ -567,12 +580,12 @@ const TaskModal = ({ isOpen, onClose, dataToEdit }: IModalProps) => {
                 }}
                 color="secondary"
                 onClick={() => {
-                  if (!loading) {
+                  if (!submitLoading) {
                     handleSubmit();
                   }
                 }}
               >
-                {loading ? (
+                {submitLoading ? (
                   <CircularProgress
                     size={20}
                     style={{
