@@ -944,14 +944,20 @@ const Office = ({ dataToEdit }: props) => {
                       </div>
 
                       {index === contactData.phoneInputFields.length - 1 && (
-                        <IoAddCircleOutline
-                          className={`cursor-pointer ml-auto ${
-                            contactData.phoneInputFields.length > 1 ? 'mr-6' : ''
-                          }`}
+                        <button
+                          id="add-phone"
+                          type="button"
+                          className="flex items-center w-fit self-end"
                           onClick={() => handleAddInput('phoneInputFields')}
-                          color={colors.quartiary}
-                          size={20}
-                        />
+                        >
+                          <IoAddCircleOutline
+                            className={`cursor-pointer ml-auto ${
+                              contactData.phoneInputFields.length > 1 ? 'mr-6' : ''
+                            }`}
+                            color={colors.quartiary}
+                            size={20}
+                          />
+                        </button>
                       )}
                     </Flex>
                   ))}
@@ -994,14 +1000,20 @@ const Office = ({ dataToEdit }: props) => {
                       </div>
 
                       {index === contactData.emailInputFields.length - 1 && (
-                        <IoAddCircleOutline
-                          className={`cursor-pointer ml-auto ${
-                            contactData.emailInputFields.length > 1 ? 'mr-6' : ''
-                          }`}
+                        <button
+                          id="add-email"
+                          type="button"
+                          className="flex items-center w-fit self-end"
                           onClick={() => handleAddInput('emailInputFields')}
-                          color={colors.quartiary}
-                          size={20}
-                        />
+                        >
+                          <IoAddCircleOutline
+                            className={`cursor-pointer ml-auto ${
+                              contactData.emailInputFields.length > 1 ? 'mr-6' : ''
+                            }`}
+                            color={colors.quartiary}
+                            size={20}
+                          />
+                        </button>
                       )}
                     </Flex>
                   ))}

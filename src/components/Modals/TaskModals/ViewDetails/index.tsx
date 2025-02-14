@@ -58,7 +58,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
                   flexDirection: 'column',
                   gap: '8px',
                   alignItems: 'flex-start',
-                  width: '200px',
+                  minWidth: '200px',
                 }}
               >
                 <span
@@ -85,7 +85,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
                   flexDirection: 'column',
                   gap: '8px',
                   alignItems: 'flex-start',
-                  width: '300px',
+                  minWidth: '200px',
                 }}
               >
                 <span
@@ -112,7 +112,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
                   flexDirection: 'column',
                   gap: '8px',
                   alignItems: 'flex-start',
-                  width: '200px',
+                  minWidth: '200px',
                 }}
               >
                 <span
@@ -143,7 +143,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
                   flexDirection: 'column',
                   gap: '8px',
                   alignItems: 'flex-start',
-                  width: '200px',
+                  minWidth: '200px',
                 }}
               >
                 <span
@@ -179,7 +179,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
                   flexDirection: 'column',
                   gap: '8px',
                   alignItems: 'flex-start',
-                  width: '200px',
+                  minWidth: '200px',
                 }}
               >
                 <span
@@ -206,7 +206,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
                   flexDirection: 'column',
                   gap: '8px',
                   alignItems: 'flex-start',
-                  width: '300px',
+                  minWidth: '200px',
                 }}
               >
                 <span
@@ -233,7 +233,7 @@ const ViewDetails = ({ isOpen, onClose, details }: any) => {
                   flexDirection: 'column',
                   gap: '8px',
                   alignItems: 'flex-start',
-                  width: '200px',
+                  minWidth: '200px',
                 }}
               >
                 <span
