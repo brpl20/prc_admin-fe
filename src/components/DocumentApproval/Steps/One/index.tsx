@@ -10,7 +10,7 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import { ContainerDetails, DetailsWrapper } from '../../../Details/styles';
 import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
-import { downloadFileByUrl } from '../../../../utils/files';
+import { downloadS3FileByUrl } from '../../../../utils/files';
 import DocumentRevisionModal from '@/components/Modals/DocumentRevisionModal';
 import { useRouter } from 'next/router';
 import { uploadDocumentForRevision } from '@/services/works';
@@ -277,7 +277,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                     <div>
                       <IconButton
                         aria-label="open"
-                        onClick={_ => downloadFileByUrl(params.row.url)}
+                        onClick={_ => downloadS3FileByUrl(params.row.url)}
                       >
                         <TbDownload size={22} color={colors.icons} cursor={'pointer'} />
                       </IconButton>

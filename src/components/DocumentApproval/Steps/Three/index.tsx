@@ -6,7 +6,7 @@ import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
 import { DataGrid } from '@mui/x-data-grid';
 import { documentTypeToReadable } from '../../../../utils/constants';
-import { downloadFileByUrl, openFileInNewTab } from '../../../../utils/files';
+import { downloadS3FileByUrl, openFileInNewTab } from '../../../../utils/files';
 import { useModal } from '../../../../utils/useModal';
 import GenericModal from '../../../Modals/GenericModal';
 import { useRouter } from 'next/router';
@@ -115,7 +115,7 @@ const DocumentApprovalStepThree: React.FC<DocumentApprovalStepThreeProps> = ({ d
                       <IconButton
                         aria-label="open"
                         onClick={_ => {
-                          downloadFileByUrl(params.row.url);
+                          downloadS3FileByUrl(params.row.url);
                         }}
                       >
                         <TbDownload size={22} color={colors.icons} cursor={'pointer'} />
