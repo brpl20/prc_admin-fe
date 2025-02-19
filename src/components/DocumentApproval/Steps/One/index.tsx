@@ -27,7 +27,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   setDocuments,
   handleChangeStep,
 }) => {
-  const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
+  const [selectedDocumentsIds, setSelectedDocumentsIds] = useState<number[]>([]);
   const [revisionDocuments, setRevisionDocuments] = useState<IDocumentRevisionProps[]>([]);
 
   const [isRevisionActive, setIsRevisionActive] = useState(false);
@@ -90,17 +90,17 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
 
   const handleBeginRevision = () => {
     const selectedDocsForRevision: IDocumentRevisionProps[] = documents
-      .filter(doc => selectedDocuments.includes(doc.id))
+      .filter(doc => selectedDocumentsIds.includes(doc.id))
       .map(doc => ({
         ...doc,
         file: null, // Add revision-required prop
       }));
 
-    const remainingDocuments = documents.filter(doc => !selectedDocuments.includes(doc.id));
+    const remainingDocuments = documents.filter(doc => !selectedDocumentsIds.includes(doc.id));
 
     setDocuments(remainingDocuments);
     setRevisionDocuments(prev => [...prev, ...selectedDocsForRevision]);
-    setSelectedDocuments([]);
+    setSelectedDocumentsIds([]);
     setIsRevisionActive(true);
   };
 
@@ -129,10 +129,10 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   const approveSelectedDocuments = () => {
     setDocuments(prevDocuments =>
       prevDocuments.map(doc =>
-        selectedDocuments.includes(doc.id) ? { ...doc, pending_revision: false } : doc,
+        selectedDocumentsIds.includes(doc.id) ? { ...doc, pending_revision: false } : doc,
       ),
     );
-    setSelectedDocuments([]);
+    setSelectedDocumentsIds([]);
   };
 
   const handleFileUploaded = (file: File) => {
@@ -298,14 +298,14 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                 },
               }}
               onRowSelectionModelChange={(data: any) => {
-                setSelectedDocuments(data);
+                setSelectedDocumentsIds(data);
               }}
-              rowSelectionModel={selectedDocuments}
+              rowSelectionModel={selectedDocumentsIds}
             />
           </Box>
 
           <Box width={'100%'} display={'flex'} justifyContent={'center'} gap={'12px'} mt={'20px'}>
-            {selectedDocuments.length > 0 && (
+            {selectedDocumentsIds.length > 0 && (
               <>
                 <Button
                   color="primary"
