@@ -9,6 +9,7 @@ interface DocumentApprovalStepHandlerProps {
   handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
   documents: IDocumentApprovalProps[];
   setDocuments: Dispatch<SetStateAction<IDocumentApprovalProps[]>>;
+  refetch: () => void;
 }
 
 const DocumentApprovalStepHandler: React.FunctionComponent<DocumentApprovalStepHandlerProps> = ({
@@ -16,6 +17,7 @@ const DocumentApprovalStepHandler: React.FunctionComponent<DocumentApprovalStepH
   documents,
   setDocuments,
   handleChangeStep,
+  refetch,
 }) => {
   const steps = [
     <DocumentApprovalStepOne
@@ -23,11 +25,10 @@ const DocumentApprovalStepHandler: React.FunctionComponent<DocumentApprovalStepH
       documents={documents}
       setDocuments={setDocuments}
       handleChangeStep={handleChangeStep}
+      refetch={refetch}
     />,
-    <DocumentApprovalStepTwo
-      key={2} documents={documents} handleChangeStep={handleChangeStep} />,
-    <DocumentApprovalStepThree
-      key={3} documents={documents} />,
+    <DocumentApprovalStepTwo key={2} documents={documents} handleChangeStep={handleChangeStep} />,
+    <DocumentApprovalStepThree key={3} documents={documents} />,
   ];
   return steps[step] || null;
 };

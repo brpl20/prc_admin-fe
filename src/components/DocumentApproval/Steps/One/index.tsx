@@ -13,19 +13,21 @@ import DocumentApprovalStepper from '../../DocumentApprovalStepper';
 import { downloadS3FileByUrl } from '../../../../utils/files';
 import DocumentRevisionModal from '@/components/Modals/DocumentRevisionModal';
 import { useRouter } from 'next/router';
-import { uploadDocumentForRevision } from '@/services/works';
+import { convertDocumentsToPdf, uploadDocumentForRevision } from '@/services/works';
 import { Notification } from '@/components';
 
 interface DocumentApprovalStepOneProps {
   documents: IDocumentApprovalProps[];
   setDocuments: Dispatch<SetStateAction<IDocumentApprovalProps[]>>;
   handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
+  refetch: () => void;
 }
 
 const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   documents,
   setDocuments,
   handleChangeStep,
+  refetch,
 }) => {
   const [selectedDocumentsIds, setSelectedDocumentsIds] = useState<number[]>([]);
   const [revisionDocuments, setRevisionDocuments] = useState<IDocumentRevisionProps[]>([]);
@@ -45,9 +47,19 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
 
   const { id: workId } = router.query;
 
-  const handleQuickApproveModalApprove = () => {
-    approveSelectedDocuments();
-    quickApproveModal.close();
+  const handleQuickApproveModalApprove = async () => {
+    try {
+      await convertDocumentsToPdf(Number(workId), selectedDocumentsIds);
+      refetch();
+
+      approveSelectedDocuments();
+    } catch (error) {
+      setErrorMessage('Ocorreu um erro ao aprovar os documentos. Por favor, tente novamente.');
+      setShowError(true);
+      console.error('Error on approval:', error);
+    } finally {
+      quickApproveModal.close();
+    }
   };
 
   const handleRevisionModalApprove = async () => {

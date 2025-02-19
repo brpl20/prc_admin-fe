@@ -62,7 +62,9 @@ const uploadDocumentForRevision = async (workId: number, documentId: number, dat
 };
 
 const convertDocumentsToPdf = async (workId: number, documents: number[]) => {
-  const response = await api.post(`/works/${workId}/convert_documents_to_pdf`, { documents });
+  const response = await api.post(`/works/${workId}/convert_documents_to_pdf`, {
+    approved_documents: documents,
+  });
   return response.data;
 };
 
