@@ -156,6 +156,7 @@ const DocumentApproval = () => {
                 handleChangeStep={handleChangeStep}
                 documents={documents}
                 setDocuments={setDocuments}
+                refetch={() => fetchWorkData(id as string)}
               />
             </>
           )}
