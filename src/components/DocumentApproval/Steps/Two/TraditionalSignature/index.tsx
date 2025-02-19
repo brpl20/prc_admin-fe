@@ -1,7 +1,7 @@
 import { Box, Button, IconButton } from '@mui/material';
 import { IDocumentApprovalProps } from '../../../../../interfaces/IDocument';
 import { documentTypeToReadable } from '../../../../../utils/constants';
-import { downloadFileByUrl } from '../../../../../utils/files';
+import { downloadS3FileByUrl } from '../../../../../utils/files';
 import { colors } from '../../../../../styles/globals';
 import { DataGrid } from '@mui/x-data-grid';
 import { useModal } from '../../../../../utils/useModal';
@@ -114,7 +114,7 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
                     <IconButton
                       aria-label="open"
                       onClick={_ => {
-                        downloadFileByUrl(params.row.url);
+                        downloadS3FileByUrl(params.row.url);
                       }}
                     >
                       <TbDownload size={22} color={colors.icons} cursor={'pointer'} />
