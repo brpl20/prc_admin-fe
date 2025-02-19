@@ -106,6 +106,15 @@ const uploadDocumentForRevision = async (workId: number, documentId: number, dat
   }
 };
 
+const convertDocumentsToPdf = async (workId: number, documents: number[]) => {
+  try {
+    const response = await api.post(`/works/${workId}/convert_documents_to_pdf`, { documents });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export {
   createWork,
   getAllWorks,
@@ -118,4 +127,5 @@ export {
   deleteWork,
   restoreWork,
   uploadDocumentForRevision,
+  convertDocumentsToPdf,
 };
