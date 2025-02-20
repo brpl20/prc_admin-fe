@@ -259,7 +259,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                 return {
                   id: item.id,
                   type: documentTypeToReadable[item.document_type],
-                  status: item.pending_revision ? 'Pendente de revisão' : 'Documento aprovado',
+                  status: item.status,
                   url: item.url,
                   showCheckbox: item.pending_revision,
                 };
