@@ -34,10 +34,15 @@ const DocumentApproval = () => {
       const { data }: { data: IWorksListProps } = await getWorkById(workId);
       setWorkData(data);
 
-      const updatedDocuments = data.attributes.documents.map(doc => ({
-        ...doc,
-        pending_revision: true,
-      }));
+      const updatedDocuments = data.attributes.documents.map(doc => {
+        const { status } = doc;
+        const isPending = status === 'Pendente de Revisão';
+
+        return {
+          ...doc,
+          pending_revision: isPending,
+        };
+      });
 
       setDocuments(updatedDocuments);
     } catch (error) {
