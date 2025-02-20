@@ -4,7 +4,7 @@ interface IDocumentProps {
   work_id: number;
 
   document_type: 'honorary' | 'waiver' | 'deficiency_statement' | 'procuration';
-  status: 'Pendente de Revisão' | 'Aprovado' | 'Assinado';
+  status: 'Pendente de revisão' | 'Aprovado' | 'Assinado';
   url: string;
 
   created_at: string;

@@ -36,14 +36,13 @@ const DocumentApproval = () => {
 
       const updatedDocuments = data.attributes.documents.map(doc => {
         const { status } = doc;
-        const isPending = status === 'Pendente de Revisão';
+        console.log(doc.id, ':', status);
 
         return {
           ...doc,
-          pending_revision: isPending,
+          pending_revision: status === 'Pendente de revisão',
         };
       });
-
       setDocuments(updatedDocuments);
     } catch (error) {
       console.error(`Error when fetching work of id=${workId}`, error);
