@@ -51,6 +51,8 @@ const DocumentRevisionModal = ({
   };
 
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    console.log('dropped');
+
     event.preventDefault();
     const droppedFiles = event.dataTransfer.files;
 

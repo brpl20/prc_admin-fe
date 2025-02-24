@@ -48,6 +48,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   const { id: workId } = router.query;
 
   const handleQuickApproveModalApprove = async () => {
+    setLoading(true);
     try {
       await convertDocumentsToPdf(Number(workId), selectedDocumentsIds);
       refetch();
@@ -58,6 +59,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
       setShowError(true);
       console.error('Error on approval:', error);
     } finally {
+      setLoading(false);
       quickApproveModal.close();
     }
   };
@@ -79,6 +81,10 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
       });
 
       await Promise.all(uploadPromises);
+      await convertDocumentsToPdf(
+        Number(workId),
+        revisionDocuments.map(doc => doc.id),
+      );
 
       setDocuments(prevDocuments => [
         ...prevDocuments,
@@ -185,7 +191,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
         onConfirm={handleRevisionModalApprove}
         title="Atenção!"
         showConfirmButton
-        confirmButtonText="Sim, aprovar!"
+        confirmButtonText={loading ? 'Aprovando...' : 'Sim, aprovar!'}
         cancelButtonText="Cancelar"
         content="Tem certeza de que deseja aprovar os documentos?"
       />
