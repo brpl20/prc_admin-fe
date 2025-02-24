@@ -52,8 +52,6 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
     try {
       await convertDocumentsToPdf(Number(workId), selectedDocumentsIds);
       refetch();
-
-      approveSelectedDocuments();
     } catch (error) {
       setErrorMessage('Ocorreu um erro ao aprovar os documentos. Por favor, tente novamente.');
       setShowError(true);
@@ -85,15 +83,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
         Number(workId),
         revisionDocuments.map(doc => doc.id),
       );
-
-      setDocuments(prevDocuments => [
-        ...prevDocuments,
-        ...revisionDocuments.map(doc => ({
-          ...doc,
-          pending_revision: false, // Mark as approved
-          file: undefined, // Remove revision-required property
-        })),
-      ]);
+      refetch();
 
       setRevisionDocuments([]);
       setIsRevisionActive(false);
