@@ -48,16 +48,16 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   const { id: workId } = router.query;
 
   const handleQuickApproveModalApprove = async () => {
+    setLoading(true);
     try {
       await convertDocumentsToPdf(Number(workId), selectedDocumentsIds);
       refetch();
-
-      approveSelectedDocuments();
     } catch (error) {
       setErrorMessage('Ocorreu um erro ao aprovar os documentos. Por favor, tente novamente.');
       setShowError(true);
       console.error('Error on approval:', error);
     } finally {
+      setLoading(false);
       quickApproveModal.close();
     }
   };
@@ -79,15 +79,11 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
       });
 
       await Promise.all(uploadPromises);
-
-      setDocuments(prevDocuments => [
-        ...prevDocuments,
-        ...revisionDocuments.map(doc => ({
-          ...doc,
-          pending_revision: false, // Mark as approved
-          file: undefined, // Remove revision-required property
-        })),
-      ]);
+      await convertDocumentsToPdf(
+        Number(workId),
+        revisionDocuments.map(doc => doc.id),
+      );
+      refetch();
 
       setRevisionDocuments([]);
       setIsRevisionActive(false);
@@ -185,7 +181,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
         onConfirm={handleRevisionModalApprove}
         title="Atenção!"
         showConfirmButton
-        confirmButtonText="Sim, aprovar!"
+        confirmButtonText={loading ? 'Aprovando...' : 'Sim, aprovar!'}
         cancelButtonText="Cancelar"
         content="Tem certeza de que deseja aprovar os documentos?"
       />
@@ -259,7 +255,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                 return {
                   id: item.id,
                   type: documentTypeToReadable[item.document_type],
-                  status: item.pending_revision ? 'Pendente de revisão' : 'Documento aprovado',
+                  status: item.status,
                   url: item.url,
                   showCheckbox: item.pending_revision,
                 };

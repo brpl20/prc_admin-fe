@@ -51,6 +51,8 @@ const DocumentRevisionModal = ({
   };
 
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    console.log('dropped');
+
     event.preventDefault();
     const droppedFiles = event.dataTransfer.files;
 
@@ -111,10 +113,14 @@ const DocumentRevisionModal = ({
                     gap: '12px',
                   }}
                 >
-                  <Dropzone disabled={!!selectedFile}>
+                  <Dropzone disabled={!!selectedFile} noDragEventsBubbling={true}>
                     {({ getRootProps, getInputProps, isDragActive }) => (
-                      <DropContainer {...getRootProps()} isDragActive={isDragActive}>
-                        <Flex
+                      <DropContainer
+                        {...getRootProps()}
+                        onDrop={handleDrop}
+                        isDragActive={isDragActive}
+                      >
+                        {/* <Flex
                           onDrop={handleDrop}
                           onDragOver={(e: ChangeEvent) => e.preventDefault()}
                           style={{
@@ -122,15 +128,15 @@ const DocumentRevisionModal = ({
                             alignItems: 'center',
                             justifyContent: 'center',
                           }}
-                        >
-                          <input
-                            {...getInputProps({
-                              accept: allowedFileExtensions.map(ext => '.' + ext).join(', '),
-                              multiple: false,
-                            })}
-                          />
-                          <p>{getDropZoneText(isDragActive)}</p>
-                        </Flex>
+                        > */}
+                        <input
+                          {...getInputProps({
+                            accept: allowedFileExtensions.map(ext => '.' + ext).join(', '),
+                            multiple: false,
+                          })}
+                        />
+                        <p>{getDropZoneText(isDragActive)}</p>
+                        {/* </Flex> */}
                       </DropContainer>
                     )}
                   </Dropzone>
