@@ -43,6 +43,7 @@ const DocumentApproval = () => {
           pending_revision: status === 'Pendente de revisão',
         };
       });
+
       setDocuments(updatedDocuments);
     } catch (error) {
       console.error(`Error when fetching work of id=${workId}`, error);
