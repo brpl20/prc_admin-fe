@@ -134,7 +134,7 @@ const DocumentRevisionModal = ({
                       <input
                         id="dropzone-file"
                         type="file"
-                        accept="image/png, image/jpeg, application/pdf"
+                        accept={acceptedTypes.join(', ')}
                         className="hidden"
                         onChange={(e: ChangeEvent<HTMLInputElement>) => {
                           const file = e.target.files?.[0];
