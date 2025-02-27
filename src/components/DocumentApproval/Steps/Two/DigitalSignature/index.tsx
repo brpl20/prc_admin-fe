@@ -9,6 +9,8 @@ import { useModal } from '../../../../../utils/useModal';
 import GenericModal from '../../../../Modals/GenericModal';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { SignatureType } from '../../../../../types/signature';
+import { zapSign } from '@/services/zapsign';
+import { useRouter } from 'next/router';
 
 interface DigitalSignatureProps {
   documents: IDocumentApprovalProps[];
@@ -25,27 +27,26 @@ const DigitalSignature: React.FunctionComponent<DigitalSignatureProps> = ({
 }) => {
   const [isSigning, setIsSigning] = useState(false);
 
+  const router = useRouter();
+
   const backModal = useModal();
   const beginSignatureModal = useModal();
   const cancelSignatureModal = useModal();
+
+  const { id: workId } = router.query;
 
   const handleGoBack = () => {
     handleChangeStep('previous');
   };
 
-  const handleBeginSignature = () => {
+  const handleBeginSignature = async () => {
     setIsSigning(true);
     beginSignatureModal.close();
     setShowRadioButtons(false);
 
-    // TODO: proper await for signing API
-    const exampleTimeout = setTimeout(() => {
-      handleChangeStep('next');
-    }, 5 * 10 ** 3); // 5 seconds
-
-    return () => {
-      clearTimeout(exampleTimeout);
-    };
+    try {
+      const response = await zapSign(Number(workId));
+    } catch (error) {}
   };
 
   const handleCancelSignature = () => {
