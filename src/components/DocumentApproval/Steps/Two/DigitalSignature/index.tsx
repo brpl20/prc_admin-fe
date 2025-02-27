@@ -11,6 +11,7 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import { SignatureType } from '../../../../../types/signature';
 import { zapSign } from '@/services/zapsign';
 import { useRouter } from 'next/router';
+import { Notification } from '@/components';
 
 interface DigitalSignatureProps {
   documents: IDocumentApprovalProps[];
@@ -26,6 +27,8 @@ const DigitalSignature: React.FunctionComponent<DigitalSignatureProps> = ({
   setShowRadioButtons,
 }) => {
   const [isSigning, setIsSigning] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const router = useRouter();
 
@@ -40,13 +43,18 @@ const DigitalSignature: React.FunctionComponent<DigitalSignatureProps> = ({
   };
 
   const handleBeginSignature = async () => {
-    setIsSigning(true);
-    beginSignatureModal.close();
-    setShowRadioButtons(false);
-
     try {
-      const response = await zapSign(Number(workId));
-    } catch (error) {}
+      setLoading(true);
+      await zapSign(Number(workId));
+
+      setIsSigning(true);
+      beginSignatureModal.close();
+      setShowRadioButtons(false);
+    } catch (error) {
+      setErrorMessage('Ocorreu um erro ao tentar assinar digitalmente os documentos.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancelSignature = () => {
@@ -76,7 +84,7 @@ const DigitalSignature: React.FunctionComponent<DigitalSignatureProps> = ({
         isOpen={beginSignatureModal.isOpen}
         onClose={beginSignatureModal.close}
         onConfirm={handleBeginSignature}
-        confirmButtonText="Sim, assinar!"
+        confirmButtonText={loading ? 'Enviando...' : 'Sim, assinar!'}
       />
 
       {/* Cancel Signature Modal */}
@@ -202,6 +210,13 @@ const DigitalSignature: React.FunctionComponent<DigitalSignatureProps> = ({
           )}
         </Box>
       </Box>
+
+      <Notification
+        open={!!errorMessage}
+        message={errorMessage}
+        severity="error"
+        onClose={() => setErrorMessage('')}
+      />
     </>
   );
 };
