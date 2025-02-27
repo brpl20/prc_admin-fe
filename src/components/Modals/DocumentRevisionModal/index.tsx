@@ -37,6 +37,10 @@ const DocumentRevisionModal = ({
   const [errorMessage, setErrorMessage] = useState('');
 
   const allowedFileExtensions = ['docx', 'pdf'];
+  const acceptedTypes = [
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/pdf',
+  ];
 
   const getDropZoneText = (isDragActive: boolean) => {
     if (selectedFile) {
@@ -50,24 +54,21 @@ const DocumentRevisionModal = ({
     return 'Arraste arquivos aqui...';
   };
 
-  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
-    console.log('dropped');
-
-    event.preventDefault();
-    const droppedFiles = event.dataTransfer.files;
-
-    if (droppedFiles.length > 0) {
-      const droppedFile = droppedFiles[0];
-      const fileExtension = droppedFile.name.split('.').pop()?.toLowerCase();
-
-      if (fileExtension && allowedFileExtensions.includes(fileExtension)) {
-        setSelectedFile(droppedFile);
-      } else {
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    let isValid = true;
+    Array.from(e.dataTransfer.files).forEach(file => {
+      if (!acceptedTypes.includes(file.type)) {
+        isValid = false;
         setShowError(true);
-        setErrorMessage(
-          'Formato de arquivo inválido. Por favor, escolha um arquivo .docx ou .pdf.',
-        );
+        setErrorMessage('Apenas arquivos DOCX e PDF são permitidos!');
+        return;
       }
+    });
+
+    if (isValid) {
+      const newFiles = Array.from(e.dataTransfer.files);
+      setSelectedFile(newFiles[0]);
     }
   };
 
@@ -113,33 +114,38 @@ const DocumentRevisionModal = ({
                     gap: '12px',
                   }}
                 >
-                  <Dropzone disabled={!!selectedFile} noDragEventsBubbling={true}>
-                    {({ getRootProps, getInputProps, isDragActive }) => (
-                      <DropContainer
-                        {...getRootProps()}
-                        onDrop={handleDrop}
-                        isDragActive={isDragActive}
-                      >
-                        {/* <Flex
-                          onDrop={handleDrop}
-                          onDragOver={(e: ChangeEvent) => e.preventDefault()}
-                          style={{
-                            height: '100%',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        > */}
-                        <input
-                          {...getInputProps({
-                            accept: allowedFileExtensions.map(ext => '.' + ext).join(', '),
-                            multiple: false,
-                          })}
-                        />
-                        <p>{getDropZoneText(isDragActive)}</p>
-                        {/* </Flex> */}
-                      </DropContainer>
-                    )}
-                  </Dropzone>
+                  <label
+                    htmlFor="dropzone-file"
+                    className="cursor-pointer w-1/2 flex flex-col items-center justify-center rounded-lg border border-dashed border-[#41414D] hover:bg-gray-100"
+                    onDrop={handleDrop}
+                    onDragOver={(e: DragEvent) => {
+                      e.preventDefault();
+                    }}
+                  >
+                    <>
+                      <div className="flex flex-col items-center justify-center gap-[16px]">
+                        <button
+                          className="rounded-[4px] border border-transparent bg-transparent text-[14px] font-medium text-[#A8A8B3]"
+                          onClick={() => document.getElementById('dropzone-file')?.click()}
+                        >
+                          Arraste aqui
+                        </button>
+                      </div>
+                      <input
+                        id="dropzone-file"
+                        type="file"
+                        accept="image/png, image/jpeg, application/pdf"
+                        className="hidden"
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setSelectedFile(file);
+                          }
+                        }}
+                        size={64}
+                      />
+                    </>
+                  </label>
                   <FileList>
                     {selectedFile ? (
                       <div className="fileName">
