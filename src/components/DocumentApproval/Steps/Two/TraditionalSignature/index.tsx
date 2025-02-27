@@ -89,7 +89,7 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
               return {
                 id: item.id,
                 type: documentTypeToReadable[item.document_type],
-                url: item.url,
+                url: item.original_file_url,
                 status: uploadedDocumentIds.includes(item.id)
                   ? 'Upload realizado'
                   : 'Pendente de upload',

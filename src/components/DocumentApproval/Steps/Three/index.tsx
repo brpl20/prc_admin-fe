@@ -93,7 +93,7 @@ const DocumentApprovalStepThree: React.FC<DocumentApprovalStepThreeProps> = ({ d
                 return {
                   id: item.id,
                   type: documentTypeToReadable[item.document_type],
-                  url: item.url,
+                  url: item.original_file_url,
                 };
               })}
               columns={[
