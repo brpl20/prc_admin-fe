@@ -256,7 +256,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                   id: item.id,
                   type: documentTypeToReadable[item.document_type],
                   status: item.status,
-                  url: item.url,
+                  url: item.original_file_url,
                   showCheckbox: item.pending_revision,
                 };
               })}
@@ -423,7 +423,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                     id: item.id,
                     type: documentTypeToReadable[item.document_type],
                     status: item.file === null ? 'Pendente de upload' : 'Upload realizado',
-                    url: item.url,
+                    url: item.original_file_url,
                   };
                 })}
                 columns={[
