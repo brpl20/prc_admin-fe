@@ -11,7 +11,7 @@ import { ContainerDetails, DetailsWrapper } from '../../../Details/styles';
 import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
 import { downloadS3FileByUrl } from '../../../../utils/files';
-import DocumentRevisionModal from '@/components/Modals/DocumentRevisionModal';
+import DocumentUploadModal from '@/components/Modals/DocumentUploadModal';
 import { useRouter } from 'next/router';
 import { convertDocumentsToPdf, uploadDocumentForRevision } from '@/services/works';
 import { Notification } from '@/components';
@@ -148,7 +148,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
   return (
     <>
       {/* Document Revision Modal */}
-      <DocumentRevisionModal
+      <DocumentUploadModal
         isOpen={uploadModal.isOpen}
         onClose={() => {
           uploadModal.close();

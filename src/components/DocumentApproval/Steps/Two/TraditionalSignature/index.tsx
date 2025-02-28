@@ -8,6 +8,7 @@ import { useModal } from '../../../../../utils/useModal';
 import GenericModal from '../../../../Modals/GenericModal';
 import { TbDownload, TbUpload } from 'react-icons/tb';
 import { useState } from 'react';
+import DocumentUploadModal from '@/components/Modals/DocumentUploadModal';
 
 interface TraditionalSignatureProps {
   documents: IDocumentApprovalProps[];
@@ -21,6 +22,7 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
   const backModal = useModal();
   const uploadWarningModal = useModal();
   const confirmSignatureModal = useModal();
+  const uploadModal = useModal();
 
   const [uploadedDocumentIds, setUploadedDocumentIds] = useState<number[]>([]);
 
@@ -43,6 +45,8 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
 
   return (
     <>
+      {/* Signed Document Upload Modal */}
+
       {/* Back Modal */}
       <GenericModal
         content="Tem certeza que deseja cancelar, e iniciar o processo de revisão dos documentos novamente?"

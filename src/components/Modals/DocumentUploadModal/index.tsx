@@ -5,7 +5,7 @@ import { Content, FileList } from './styles';
 import { ChangeEvent, DragEvent, useState } from 'react';
 import { Notification } from '@/components';
 
-interface IDocumentRevisionModalProps {
+interface IDocumentUploadModalProps {
   workId: number;
   documentId?: number;
   isOpen: boolean;
@@ -18,7 +18,7 @@ interface IDocumentRevisionModalProps {
   confirmButtonText?: string;
 }
 
-const DocumentRevisionModal = ({
+const DocumentUploadModal = ({
   workId,
   documentId,
   isOpen,
@@ -29,7 +29,7 @@ const DocumentRevisionModal = ({
   showConfirmButton = true,
   cancelButtonText = 'Cancelar',
   confirmButtonText = 'Enviar',
-}: IDocumentRevisionModalProps) => {
+}: IDocumentUploadModalProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -39,18 +39,6 @@ const DocumentRevisionModal = ({
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/pdf',
   ];
-
-  const getDropZoneText = (isDragActive: boolean) => {
-    if (selectedFile) {
-      return 'Arquivo selecionado.';
-    }
-
-    if (isDragActive) {
-      return 'Solte o arquivo aqui.';
-    }
-
-    return 'Arraste arquivos aqui...';
-  };
 
   const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
@@ -220,4 +208,4 @@ const DocumentRevisionModal = ({
   );
 };
 
-export default DocumentRevisionModal;
+export default DocumentUploadModal;
