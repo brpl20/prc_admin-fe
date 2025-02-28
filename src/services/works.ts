@@ -52,7 +52,10 @@ const restoreWork = async (id: string) => {
   await api.post(`/works/${id}/restore`);
 };
 
-const uploadDocumentForRevision = async (workId: number, documentId: number, data: FormData) => {
+const uploadDocumentForRevision = async (workId: number, documentId: number, file: File) => {
+  const data = new FormData();
+  data.append('file', file);
+
   const response = await api.patch(`/works/${workId}/documents/${documentId}`, data, {
     headers: {
       'Content-Type': 'multipart/form-data',

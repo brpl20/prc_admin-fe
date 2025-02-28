@@ -1,11 +1,9 @@
 import { Box, Modal, Button, Typography } from '@mui/material';
 import { colors, Flex } from '@/styles/globals';
 import { MdClose, MdDelete } from 'react-icons/md';
-import { Content, DropContainer, FileList } from './styles';
-import Dropzone from 'react-dropzone';
+import { Content, FileList } from './styles';
 import { ChangeEvent, DragEvent, useState } from 'react';
 import { Notification } from '@/components';
-import { uploadDocumentForRevision } from '@/services/works';
 
 interface IDocumentRevisionModalProps {
   workId: number;

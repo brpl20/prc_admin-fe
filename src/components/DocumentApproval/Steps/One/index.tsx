@@ -71,12 +71,9 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
 
     setLoading(true);
     try {
-      const uploadPromises = revisionDocuments.map(doc => {
-        const formData = new FormData();
-        formData.append('file', doc.file!);
-
-        return uploadDocumentForRevision(Number(workId), doc.id, formData);
-      });
+      const uploadPromises = revisionDocuments.map(doc =>
+        uploadDocumentForRevision(Number(workId), doc.id, doc.file!),
+      );
 
       await Promise.all(uploadPromises);
       await convertDocumentsToPdf(
