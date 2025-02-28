@@ -274,7 +274,14 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                     <div>
                       <IconButton
                         aria-label="open"
-                        onClick={_ => downloadS3FileByUrl(params.row.url)}
+                        onClick={_ => {
+                          try {
+                            downloadS3FileByUrl(params.row.url);
+                          } catch (error: any) {
+                            setShowError(true);
+                            setErrorMessage(error.message);
+                          }
+                        }}
                       >
                         <TbDownload size={22} color={colors.icons} cursor={'pointer'} />
                       </IconButton>

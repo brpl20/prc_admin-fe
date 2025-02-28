@@ -161,7 +161,11 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
                     <IconButton
                       aria-label="open"
                       onClick={_ => {
-                        downloadS3FileByUrl(params.row.url);
+                        try {
+                          downloadS3FileByUrl(params.row.url);
+                        } catch (error: any) {
+                          setErrorMessage(error.message);
+                        }
                       }}
                     >
                       <TbDownload size={22} color={colors.icons} cursor={'pointer'} />
