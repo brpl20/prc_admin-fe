@@ -34,6 +34,11 @@ const DocumentApproval = () => {
       const { data }: { data: IWorksListProps } = await getWorkById(workId);
       setWorkData(data);
 
+      // If all documents are already signed, skip to last step
+      if (data.attributes.documents.every(doc => doc.status === 'Assinado')) {
+        setCurrentStep(2);
+      }
+
       const updatedDocuments = data.attributes.documents.map(doc => {
         const { status } = doc;
         console.log(doc.id, ':', status);
