@@ -14,6 +14,7 @@ import { useState } from 'react';
 import DocumentUploadModal from '@/components/Modals/DocumentUploadModal';
 import { useRouter } from 'next/router';
 import { uploadSignedDocument } from '@/services/works';
+import { Notification } from '@/components';
 
 interface TraditionalSignatureProps {
   documents: IDocumentProps[];
@@ -35,6 +36,7 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
   );
   const [currentDocumentId, setCurrentDocumentId] = useState<number | undefined>();
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const { id: workId } = router.query;
 
@@ -64,6 +66,7 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
       // Success
       handleChangeStep('next');
     } catch (error) {
+      setErrorMessage('Ocorreu um erro ao enviar os arquivos. Por favor, tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -223,6 +226,12 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
           </Button>
         </Box>
       </Box>
+      <Notification
+        open={!!errorMessage}
+        message={errorMessage}
+        severity={'error'}
+        onClose={() => setErrorMessage('')}
+      />
     </>
   );
 };
