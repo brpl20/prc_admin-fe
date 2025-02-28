@@ -82,6 +82,7 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
     <>
       {/* Signed Document Upload Modal */}
       <DocumentUploadModal
+        acceptedFileTypes={['pdf']}
         isOpen={uploadModal.isOpen}
         onClose={() => {
           uploadModal.close();

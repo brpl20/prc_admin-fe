@@ -16,6 +16,7 @@ interface IDocumentUploadModalProps {
   showConfirmButton?: boolean;
   cancelButtonText?: string;
   confirmButtonText?: string;
+  acceptedFileTypes?: string[]; // New prop for accepted file types
 }
 
 const DocumentUploadModal = ({
@@ -29,25 +30,35 @@ const DocumentUploadModal = ({
   showConfirmButton = true,
   cancelButtonText = 'Cancelar',
   confirmButtonText = 'Enviar',
+  acceptedFileTypes = ['docx', 'pdf'], // Default value for accepted file types
 }: IDocumentUploadModalProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const allowedFileExtensions = ['docx', 'pdf'];
-  const acceptedTypes = [
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/pdf',
-  ];
+  const acceptedTypes = acceptedFileTypes
+    .map(type => {
+      switch (type) {
+        case 'docx':
+          return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        case 'pdf':
+          return 'application/pdf';
+        default:
+          return '';
+      }
+    })
+    .filter(type => type !== '');
 
   const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     let isValid = true;
     Array.from(e.dataTransfer.files).forEach(file => {
-      if (!acceptedTypes.includes(file.type)) {
+      if (!acceptedTypes.includes(file.type as any)) {
         isValid = false;
         setShowError(true);
-        setErrorMessage('Apenas arquivos DOCX e PDF são permitidos!');
+        setErrorMessage(
+          `Apenas arquivos ${acceptedFileTypes.join(', ').toUpperCase()} são permitidos!`,
+        );
         return;
       }
     });
@@ -154,7 +165,7 @@ const DocumentUploadModal = ({
                   </FileList>
                 </Flex>
                 <Typography variant="caption" sx={{ marginTop: '8px' }}>
-                  {`Formatos aceitos: ${allowedFileExtensions
+                  {`Formatos aceitos: ${acceptedFileTypes
                     .map(ext => ext.toUpperCase())
                     .join(', ')}.`}
                 </Typography>
