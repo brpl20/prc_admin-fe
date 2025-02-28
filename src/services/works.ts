@@ -52,12 +52,26 @@ const restoreWork = async (id: string) => {
   await api.post(`/works/${id}/restore`);
 };
 
-const uploadDocumentForRevision = async (workId: number, documentId: number, data: any) => {
+const uploadDocumentForRevision = async (workId: number, documentId: number, data: FormData) => {
   const response = await api.patch(`/works/${workId}/documents/${documentId}`, data, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
   });
+  return response.data;
+};
+
+const uploadSignedDocument = async (workId: number, documentId: number, file: File) => {
+  const data = new FormData();
+  data.append('file', file);
+  data.append('is_signed_pdf', 'true');
+
+  const response = await api.patch(`/works/${workId}/documents/${documentId}`, data, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
   return response.data;
 };
 
