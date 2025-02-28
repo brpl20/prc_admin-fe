@@ -131,20 +131,12 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
     revisionApproveModal.open();
   };
 
-  const approveSelectedDocuments = () => {
-    setDocuments(prevDocuments =>
-      prevDocuments.map(doc =>
-        selectedDocumentsIds.includes(doc.id) ? { ...doc, pending_revision: false } : doc,
-      ),
-    );
-    setSelectedDocumentsIds([]);
-  };
-
   const handleFileUploaded = (file: File) => {
     setRevisionDocuments(prev =>
       prev.map(doc => (doc.id === currentDocumentId ? { ...doc, file: file } : doc)),
     );
   };
+
   return (
     <>
       {/* Document Revision Modal */}

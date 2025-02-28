@@ -97,5 +97,6 @@ export {
   deleteWork,
   restoreWork,
   uploadDocumentForRevision,
+  uploadSignedDocument,
   convertDocumentsToPdf,
 };

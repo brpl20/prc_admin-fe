@@ -1,5 +1,8 @@
 import { Box, Button, IconButton } from '@mui/material';
-import { IDocumentApprovalProps } from '../../../../../interfaces/IDocument';
+import IDocumentProps, {
+  IDocumentApprovalProps,
+  IDocumentRevisionProps,
+} from '../../../../../interfaces/IDocument';
 import { documentTypeToReadable } from '../../../../../utils/constants';
 import { downloadS3FileByUrl } from '../../../../../utils/files';
 import { colors } from '../../../../../styles/globals';
@@ -9,9 +12,11 @@ import GenericModal from '../../../../Modals/GenericModal';
 import { TbDownload, TbUpload } from 'react-icons/tb';
 import { useState } from 'react';
 import DocumentUploadModal from '@/components/Modals/DocumentUploadModal';
+import { useRouter } from 'next/router';
+import { uploadSignedDocument } from '@/services/works';
 
 interface TraditionalSignatureProps {
-  documents: IDocumentApprovalProps[];
+  documents: IDocumentProps[];
   handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
 }
 
@@ -23,29 +28,66 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
   const uploadWarningModal = useModal();
   const confirmSignatureModal = useModal();
   const uploadModal = useModal();
+  const router = useRouter();
 
-  const [uploadedDocumentIds, setUploadedDocumentIds] = useState<number[]>([]);
+  const [signatureDocuments, setSignatureDocuments] = useState<IDocumentRevisionProps[]>(
+    documents.map(doc => ({ file: null, ...doc })),
+  );
+  const [currentDocumentId, setCurrentDocumentId] = useState<number | undefined>();
+  const [loading, setLoading] = useState(false);
+
+  const { id: workId } = router.query;
 
   const handleGoBack = () => {
     handleChangeStep('previous');
   };
 
   const handleSignButton = () => {
-    const allUploaded = documents.every(doc => uploadedDocumentIds.includes(doc.id));
-    if (!allUploaded) {
+    const pendingDocuments = signatureDocuments.filter(doc => !doc.file);
+
+    if (pendingDocuments.length > 0) {
       return uploadWarningModal.open();
     }
 
     confirmSignatureModal.open();
   };
 
-  const handleSignature = () => {
-    handleChangeStep('next');
+  const handleSignature = async () => {
+    setLoading(true);
+    try {
+      const uploadPromises = signatureDocuments.map(doc => {
+        return uploadSignedDocument(Number(workId), doc.id, doc.file!);
+      });
+
+      await Promise.all(uploadPromises);
+
+      // Success
+      handleChangeStep('next');
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFileUploaded = (file: File) => {
+    setSignatureDocuments(prev =>
+      prev.map(doc => (doc.id === currentDocumentId ? { ...doc, file: file } : doc)),
+    );
   };
 
   return (
     <>
       {/* Signed Document Upload Modal */}
+      <DocumentUploadModal
+        isOpen={uploadModal.isOpen}
+        onClose={() => {
+          uploadModal.close();
+          setCurrentDocumentId(undefined);
+        }}
+        onSuccess={handleFileUploaded}
+        documentId={currentDocumentId}
+        workId={Number(workId)}
+      />
 
       {/* Back Modal */}
       <GenericModal
@@ -74,7 +116,7 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
         onConfirm={handleSignature}
         showConfirmButton
         cancelButtonText="Cancelar"
-        confirmButtonText="Sim, confirmar!"
+        confirmButtonText={loading ? 'Enviando...' : 'Sim, confirmar!'}
       />
 
       <Box className="mt-5">
@@ -89,14 +131,12 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
             disableColumnMenu
             hideFooter
             disableRowSelectionOnClick
-            rows={documents.map((item: IDocumentApprovalProps) => {
+            rows={signatureDocuments.map((item: IDocumentRevisionProps) => {
               return {
                 id: item.id,
                 type: documentTypeToReadable[item.document_type],
                 url: item.original_file_url,
-                status: uploadedDocumentIds.includes(item.id)
-                  ? 'Upload realizado'
-                  : 'Pendente de upload',
+                status: item.file ? 'Upload realizado' : 'Pendente de upload',
               };
             })}
             columns={[
@@ -144,9 +184,8 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
                     <IconButton
                       aria-label="open"
                       onClick={_ => {
-                        // TODO: handle file upload once the endpoint is ready
-
-                        setUploadedDocumentIds(prevIds => [...prevIds, params.row.id]);
+                        uploadModal.open();
+                        setCurrentDocumentId(params.row.id);
                       }}
                     >
                       <TbUpload size={22} color={colors.icons} cursor={'pointer'} />
