@@ -6,7 +6,7 @@ interface IDocumentProps {
   document_type: 'honorary' | 'waiver' | 'deficiency_statement' | 'procuration';
   status: 'Pendente de revisão' | 'Aprovado' | 'Assinado';
   original_file_url: string;
-  signef_file_url?: string;
+  signed_file_url?: string;
 
   created_at: string;
   updated_at: string;

@@ -11,6 +11,8 @@ import { useModal } from '../../../../utils/useModal';
 import GenericModal from '../../../Modals/GenericModal';
 import { useRouter } from 'next/router';
 import { TbDownload } from 'react-icons/tb';
+import { Notification } from '@/components';
+import { useState } from 'react';
 
 interface DocumentApprovalStepThreeProps {
   documents: IDocumentApprovalProps[];
@@ -19,6 +21,8 @@ interface DocumentApprovalStepThreeProps {
 const DocumentApprovalStepThree: React.FC<DocumentApprovalStepThreeProps> = ({ documents }) => {
   const router = useRouter();
   const backModal = useModal();
+
+  const [errorMessage, setErrorMessage] = useState('');
 
   return (
     <>
@@ -93,7 +97,7 @@ const DocumentApprovalStepThree: React.FC<DocumentApprovalStepThreeProps> = ({ d
                 return {
                   id: item.id,
                   type: documentTypeToReadable[item.document_type],
-                  url: item.original_file_url,
+                  url: item.signed_file_url,
                 };
               })}
               columns={[
@@ -115,7 +119,11 @@ const DocumentApprovalStepThree: React.FC<DocumentApprovalStepThreeProps> = ({ d
                       <IconButton
                         aria-label="open"
                         onClick={_ => {
-                          downloadS3FileByUrl(params.row.url);
+                          try {
+                            downloadS3FileByUrl(params.row.url);
+                          } catch (error: any) {
+                            setErrorMessage(error.message);
+                          }
                         }}
                       >
                         <TbDownload size={22} color={colors.icons} cursor={'pointer'} />
@@ -161,6 +169,12 @@ const DocumentApprovalStepThree: React.FC<DocumentApprovalStepThreeProps> = ({ d
           </Box>
         </ContentContainer>
       </DetailsWrapper>
+      <Notification
+        open={!!errorMessage}
+        message={errorMessage}
+        severity={'error'}
+        onClose={() => setErrorMessage('')}
+      />
     </>
   );
 };

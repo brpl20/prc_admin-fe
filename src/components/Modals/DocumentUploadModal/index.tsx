@@ -1,13 +1,11 @@
 import { Box, Modal, Button, Typography } from '@mui/material';
 import { colors, Flex } from '@/styles/globals';
 import { MdClose, MdDelete } from 'react-icons/md';
-import { Content, DropContainer, FileList } from './styles';
-import Dropzone from 'react-dropzone';
+import { Content, FileList } from './styles';
 import { ChangeEvent, DragEvent, useState } from 'react';
 import { Notification } from '@/components';
-import { uploadDocumentForRevision } from '@/services/works';
 
-interface IDocumentRevisionModalProps {
+interface IDocumentUploadModalProps {
   workId: number;
   documentId?: number;
   isOpen: boolean;
@@ -18,9 +16,10 @@ interface IDocumentRevisionModalProps {
   showConfirmButton?: boolean;
   cancelButtonText?: string;
   confirmButtonText?: string;
+  acceptedFileTypes?: string[]; // New prop for accepted file types
 }
 
-const DocumentRevisionModal = ({
+const DocumentUploadModal = ({
   workId,
   documentId,
   isOpen,
@@ -31,37 +30,35 @@ const DocumentRevisionModal = ({
   showConfirmButton = true,
   cancelButtonText = 'Cancelar',
   confirmButtonText = 'Enviar',
-}: IDocumentRevisionModalProps) => {
+  acceptedFileTypes = ['docx', 'pdf'], // Default value for accepted file types
+}: IDocumentUploadModalProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const allowedFileExtensions = ['docx', 'pdf'];
-  const acceptedTypes = [
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/pdf',
-  ];
-
-  const getDropZoneText = (isDragActive: boolean) => {
-    if (selectedFile) {
-      return 'Arquivo selecionado.';
-    }
-
-    if (isDragActive) {
-      return 'Solte o arquivo aqui.';
-    }
-
-    return 'Arraste arquivos aqui...';
-  };
+  const acceptedTypes = acceptedFileTypes
+    .map(type => {
+      switch (type) {
+        case 'docx':
+          return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        case 'pdf':
+          return 'application/pdf';
+        default:
+          return '';
+      }
+    })
+    .filter(type => type !== '');
 
   const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     let isValid = true;
     Array.from(e.dataTransfer.files).forEach(file => {
-      if (!acceptedTypes.includes(file.type)) {
+      if (!acceptedTypes.includes(file.type as any)) {
         isValid = false;
         setShowError(true);
-        setErrorMessage('Apenas arquivos DOCX e PDF são permitidos!');
+        setErrorMessage(
+          `Apenas arquivos ${acceptedFileTypes.join(', ').toUpperCase()} são permitidos!`,
+        );
         return;
       }
     });
@@ -168,7 +165,7 @@ const DocumentRevisionModal = ({
                   </FileList>
                 </Flex>
                 <Typography variant="caption" sx={{ marginTop: '8px' }}>
-                  {`Formatos aceitos: ${allowedFileExtensions
+                  {`Formatos aceitos: ${acceptedFileTypes
                     .map(ext => ext.toUpperCase())
                     .join(', ')}.`}
                 </Typography>
@@ -222,4 +219,4 @@ const DocumentRevisionModal = ({
   );
 };
 
-export default DocumentRevisionModal;
+export default DocumentUploadModal;

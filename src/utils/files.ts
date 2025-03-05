@@ -2,9 +2,9 @@ export const openFileInNewTab = (url: string) => {
   window.open(url, '_blank');
 };
 
-export const downloadS3FileByUrl = async (url: string, filename?: string) => {
+export const downloadS3FileByUrl = (url: string, filename?: string) => {
   if (!url) {
-    return console.error('File URL is null.');
+    throw Error('Ocorreu um erro ao tentar baixar o arquivo. Por favor, tente novamente.');
   }
 
   const lowerCaseUrl = url.toLowerCase();
