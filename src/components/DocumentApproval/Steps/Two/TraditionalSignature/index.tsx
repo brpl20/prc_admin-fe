@@ -19,11 +19,13 @@ import { Notification } from '@/components';
 interface TraditionalSignatureProps {
   documents: IDocumentProps[];
   handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
+  refetch: () => void;
 }
 
 const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> = ({
   documents,
   handleChangeStep,
+  refetch,
 }) => {
   const backModal = useModal();
   const uploadWarningModal = useModal();
@@ -64,6 +66,7 @@ const TraditionalSignature: React.FunctionComponent<TraditionalSignatureProps> =
       await Promise.all(uploadPromises);
 
       // Success
+      refetch();
       handleChangeStep('next');
     } catch (error) {
       setErrorMessage('Ocorreu um erro ao enviar os arquivos. Por favor, tente novamente.');
