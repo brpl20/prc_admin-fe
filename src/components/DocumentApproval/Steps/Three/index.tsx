@@ -12,7 +12,7 @@ import GenericModal from '../../../Modals/GenericModal';
 import { useRouter } from 'next/router';
 import { TbDownload } from 'react-icons/tb';
 import { Notification } from '@/components';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 interface DocumentApprovalStepThreeProps {
   documents: IDocumentApprovalProps[];
