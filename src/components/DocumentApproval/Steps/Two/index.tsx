@@ -12,11 +12,13 @@ import { SignatureType } from '../../../../types/signature';
 interface DocumentApprovalStepTwoProps {
   documents: IDocumentApprovalProps[];
   handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
+  refetch: () => void;
 }
 
 const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({
   documents,
   handleChangeStep,
+  refetch,
 }) => {
   const [signatureType, setSignatureType] = useState<SignatureType>('');
   const [showRadioButtons, setShowRadioButtons] = useState(true);
@@ -99,6 +101,7 @@ const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({
               handleChangeStep={handleChangeStep}
               setSignatureType={setSignatureType}
               setShowRadioButtons={setShowRadioButtons}
+              refetch={refetch}
             />
           )}
         </ContentContainer>
@@ -113,6 +116,7 @@ interface SignatureContentHandlerProps {
   handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
   setSignatureType: Dispatch<SetStateAction<SignatureType>>;
   setShowRadioButtons: Dispatch<SetStateAction<boolean>>;
+  refetch: () => void;
 }
 
 const SignatureContentHandler: React.FunctionComponent<SignatureContentHandlerProps> = ({
@@ -121,6 +125,7 @@ const SignatureContentHandler: React.FunctionComponent<SignatureContentHandlerPr
   handleChangeStep,
   setSignatureType,
   setShowRadioButtons,
+  refetch,
 }) => {
   return (
     <Box className="mt-5">
@@ -132,7 +137,11 @@ const SignatureContentHandler: React.FunctionComponent<SignatureContentHandlerPr
           setShowRadioButtons={setShowRadioButtons}
         />
       ) : (
-        <TraditionalSignature documents={documents} handleChangeStep={handleChangeStep} />
+        <TraditionalSignature
+          documents={documents}
+          handleChangeStep={handleChangeStep}
+          refetch={refetch}
+        />
       )}
     </Box>
   );
