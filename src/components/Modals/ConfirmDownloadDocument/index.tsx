@@ -1,6 +1,5 @@
 import { Box, Modal, Typography, Button } from '@mui/material';
 import { BsDownload } from 'react-icons/bs';
-import { IoCheckmarkOutline } from 'react-icons/io5';
 import { colors } from '@/styles/globals';
 import { MdClose } from 'react-icons/md';
 import { Content } from './styles';
@@ -68,7 +67,7 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
     }
   };
 
-  const handleDownload = (url: string, index: number) => {
+  const handleDownload = (url: string) => {
     try {
       downloadS3FileByUrl(url);
     } catch (error: any) {
