@@ -129,11 +129,7 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
                           }));
                         }}
                       >
-                        {downloadedDocuments[document.url] ? (
-                          <IoCheckmarkOutline size={20} color={colors.green} />
-                        ) : (
-                          <BsDownload size={20} color={colors.primary} />
-                        )}
+                        <BsDownload size={20} color={colors.primary} />
                         {document.document_type
                           ? document.document_type === 'procuration'
                             ? 'Procuração'
