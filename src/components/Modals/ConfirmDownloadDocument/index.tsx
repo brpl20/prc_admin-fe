@@ -124,7 +124,7 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
                           cursor: 'pointer',
                           gap: '8px',
                         }}
-                        onClick={() => handleDownload(document.original_file_url, documentIndex)}
+                        onClick={() => handleDownload(document.original_file_url)}
                       >
                         <BsDownload size={20} color={colors.primary} />
                         {document.document_type
