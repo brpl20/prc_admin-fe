@@ -1,9 +1,11 @@
+import { isValidHttpUrl } from './validator';
+
 export const openFileInNewTab = (url: string) => {
   window.open(url, '_blank');
 };
 
 export const downloadS3FileByUrl = (url: string, filename?: string) => {
-  if (!url) {
+  if (!url || !isValidHttpUrl(url)) {
     throw Error('Ocorreu um erro ao tentar baixar o arquivo. Por favor, tente novamente.');
   }
 

@@ -1,14 +1,13 @@
 import { Box, Modal, Typography, Button } from '@mui/material';
 import { BsDownload } from 'react-icons/bs';
-import { IoCheckmarkOutline } from 'react-icons/io5';
-
 import { colors } from '@/styles/globals';
-
 import { MdClose } from 'react-icons/md';
 import { Content } from './styles';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { getCustomerById } from '@/services/customers';
+import { downloadS3FileByUrl } from '@/utils/files';
+import { Notification } from '@/components';
 
 interface IConfirmDownloadDocumentProps {
   isOpen: boolean;
@@ -16,15 +15,21 @@ interface IConfirmDownloadDocumentProps {
   documents: any[];
 }
 
+interface IDocumentsPerCustomer {
+  [customerId: string]: Array<{
+    profile_customer_id: string;
+    original_file_url: string;
+    document_type?: string;
+    url: string;
+  }>;
+}
+
 const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloadDocumentProps) => {
   const route = useRouter();
 
-  const [downloadedDocuments, setDownloadedDocuments] = useState<Array<boolean>>(
-    Array(documents.length).fill(false),
-  );
-
-  const [documentsPerCustomer, setDocumentsPerCustomer] = useState<any>({});
+  const [documentsPerCustomer, setDocumentsPerCustomer] = useState<IDocumentsPerCustomer>({});
   const [customerNames, setCustomerNames] = useState<Array<string>>([]);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const documentsPerCustomer = documents.reduce((acc, document) => {
@@ -42,7 +47,6 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
 
   const getCustomerName = async (customerId: string) => {
     const customer = await getCustomerById(customerId);
-
     return customer?.data?.attributes?.name;
   };
 
@@ -72,23 +76,34 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
     }
   };
 
-  return (
-    <Modal open={isOpen} onClose={onClose} style={{ overflowY: 'auto' }}>
-      <Content>
-        <Box display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
-          <label style={{ fontSize: '28px', color: '#01013D', fontWeight: '500' }}>
-            {'Arquivos para Download'}
-          </label>
-          <Box sx={{ cursor: 'pointer' }} onClick={onClose}>
-            <MdClose size={26} onClick={handleClose} />
-          </Box>
-        </Box>
-        <Box width={'100%'} height={'1px'} bgcolor={colors.quartiary} />
+  const handleDownload = (url: string) => {
+    try {
+      downloadS3FileByUrl(url);
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Erro ao baixar o arquivo. Tente novamente.');
+    }
+  };
 
-        {
+  return (
+    <>
+      <Modal open={isOpen} onClose={onClose} style={{ overflowY: 'auto' }}>
+        <Content>
+          <Box display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
+            <Typography
+              variant="h5"
+              style={{ fontSize: '28px', color: '#01013D', fontWeight: '500' }}
+            >
+              {'Arquivos para Download'}
+            </Typography>
+            <Box sx={{ cursor: 'pointer' }} onClick={onClose}>
+              <MdClose size={26} onClick={handleClose} />
+            </Box>
+          </Box>
+          <Box width={'100%'} height={'1px'} bgcolor={colors.quartiary} />
+
           <div className="scroll">
-            {customerNames.map((customerName, index) => (
-              <Box mt={'20px'} key={index}>
+            {customerNames.map((customerName, customerIndex) => (
+              <Box mt={'20px'} key={customerIndex}>
                 <Typography
                   variant="subtitle1"
                   style={{
@@ -99,8 +114,8 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
                 >
                   {customerName}
                 </Typography>
-                {documentsPerCustomer[Object.keys(documentsPerCustomer)[index]].map(
-                  (document: any, index: number) => (
+                {documentsPerCustomer[Object.keys(documentsPerCustomer)[customerIndex]].map(
+                  (document: any, documentIndex: number) => (
                     <div
                       key={document.url}
                       style={{
@@ -121,19 +136,9 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
                           cursor: 'pointer',
                           gap: '8px',
                         }}
-                        onClick={() => {
-                          window.open(document.url, '_blank');
-                          setDownloadedDocuments(prev => ({
-                            ...prev,
-                            [document.url]: true,
-                          }));
-                        }}
+                        onClick={() => handleDownload(document.original_file_url)}
                       >
-                        {downloadedDocuments[document.url] ? (
-                          <IoCheckmarkOutline size={20} color={colors.green} />
-                        ) : (
-                          <BsDownload size={20} color={colors.primary} />
-                        )}
+                        <BsDownload size={20} color={colors.primary} />
                         {document.document_type
                           ? document.document_type === 'procuration'
                             ? 'Procuração'
@@ -150,23 +155,29 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
               </Box>
             ))}
           </div>
-        }
 
-        <Box width={'100%'} display={'flex'} justifyContent={'end'} mt={'20px'}>
-          <Button
-            color="primary"
-            variant="outlined"
-            sx={{
-              width: '100px',
-              height: '36px',
-            }}
-            onClick={handleClose}
-          >
-            {'Fechar'}
-          </Button>
-        </Box>
-      </Content>
-    </Modal>
+          <Box width={'100%'} display={'flex'} justifyContent={'end'} mt={'20px'}>
+            <Button
+              color="primary"
+              variant="outlined"
+              sx={{
+                width: '100px',
+                height: '36px',
+              }}
+              onClick={handleClose}
+            >
+              {'Fechar'}
+            </Button>
+          </Box>
+        </Content>
+      </Modal>
+      <Notification
+        open={!!errorMessage}
+        message={errorMessage}
+        severity={'error'}
+        onClose={() => setErrorMessage('')}
+      />
+    </>
   );
 };
 
