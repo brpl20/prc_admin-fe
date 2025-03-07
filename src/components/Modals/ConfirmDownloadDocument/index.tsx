@@ -15,10 +15,19 @@ interface IConfirmDownloadDocumentProps {
   documents: any[];
 }
 
+interface IDocumentsPerCustomer {
+  [customerId: string]: Array<{
+    profile_customer_id: string;
+    original_file_url: string;
+    document_type?: string;
+    url: string;
+  }>;
+}
+
 const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloadDocumentProps) => {
   const route = useRouter();
 
-  const [documentsPerCustomer, setDocumentsPerCustomer] = useState<any>({});
+  const [documentsPerCustomer, setDocumentsPerCustomer] = useState<IDocumentsPerCustomer>({});
   const [customerNames, setCustomerNames] = useState<Array<string>>([]);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -71,7 +80,7 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
     try {
       downloadS3FileByUrl(url);
     } catch (error: any) {
-      setErrorMessage(error.message);
+      setErrorMessage(error.message || 'Erro ao baixar o arquivo. Tente novamente.');
     }
   };
 
