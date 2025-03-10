@@ -1,7 +1,7 @@
 import { Box, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup } from '@mui/material';
 import { IDocumentApprovalProps } from '../../../../interfaces/IDocument';
 import { colors, ContentContainer } from '../../../../styles/globals';
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { ContainerDetails, DetailsWrapper } from '../../../Details/styles';
 import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
@@ -22,6 +22,13 @@ const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({
 }) => {
   const [signatureType, setSignatureType] = useState<SignatureType>('');
   const [showRadioButtons, setShowRadioButtons] = useState(true);
+
+  useEffect(() => {
+    if (documents.every(doc => doc.status === 'Pendente de assinatura externa')) {
+      setSignatureType('digital');
+      setShowRadioButtons(false);
+    }
+  }, [documents]);
 
   return (
     <>
