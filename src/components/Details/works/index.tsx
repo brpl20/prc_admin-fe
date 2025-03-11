@@ -28,6 +28,7 @@ import api from '@/services/api';
 import { useRouter } from 'next/router';
 
 import { moneyMask } from '@/utils/masks';
+import { downloadS3FileByUrl } from '@/utils/files';
 
 interface WorkDetailsProps {
   id: string | string[];
@@ -61,13 +62,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
   const [allOffices, setAllOffices] = useState<any[]>([]);
   const [allCustomers, setAllCustomers] = useState<any[]>([]);
   const [allAdmins, setAllAdmins] = useState<any[]>([]);
-
-  const [downloadedDocuments, setDownloadedDocuments] = useState<Array<boolean>>(
-    Array(workData?.attributes?.documents?.length).fill(false),
-  );
-
   const [documentsPerCustomer, setDocumentsPerCustomer] = useState<any>({});
-
   const [customerNames, setCustomerNames] = useState<Array<string>>([]);
 
   const getCustomers = async () => {
@@ -355,6 +350,12 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
       default:
         return 'Extrajudicial';
     }
+  };
+
+  const handleDownload = (url: string) => {
+    try {
+      downloadS3FileByUrl(url);
+    } catch (error: any) {}
   };
 
   return (
@@ -1804,7 +1805,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                               {documentsPerCustomer[Object.keys(documentsPerCustomer)[index]].map(
                                 (document: any, index: number) => (
                                   <div
-                                    key={document.url}
+                                    key={document.original_file_url}
                                     style={{
                                       display: 'flex',
                                       flexDirection: 'column',
@@ -1822,19 +1823,15 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
                                         cursor: 'pointer',
                                         gap: '8px',
                                       }}
-                                      onClick={() => {
-                                        window.open(document.url, '_blank');
-                                        setDownloadedDocuments(prev => ({
-                                          ...prev,
-                                          [document.url]: true,
-                                        }));
-                                      }}
+                                      onClick={() =>
+                                        handleDownload(
+                                          document.status === 'Assinado'
+                                            ? document.signed_file_url
+                                            : document.original_file_url,
+                                        )
+                                      }
                                     >
-                                      {downloadedDocuments[document.url] ? (
-                                        <IoCheckmarkOutline size={20} color={colors.green} />
-                                      ) : (
-                                        <BsDownload size={20} color={colors.primary} />
-                                      )}
+                                      <BsDownload size={20} color={colors.primary} />
                                       {document.document_type
                                         ? document.document_type === 'procuration'
                                           ? 'Procuração'
