@@ -355,7 +355,14 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
   const handleDownload = (url: string) => {
     try {
       downloadS3FileByUrl(url);
-    } catch (error: any) {}
+    } catch (error: any) {
+      setTimeout(() => {
+        setOpenSnackbar(false);
+      }, 2000);
+      setMessage(error.message || 'Erro ao baixar o arquivo. Tente novamente.');
+      setTypeMessage('error');
+      setOpenSnackbar(true);
+    }
   };
 
   return (
