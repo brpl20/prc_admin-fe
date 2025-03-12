@@ -1,4 +1,4 @@
-import { Box, Modal, Typography, Button } from '@mui/material';
+import { Box, Modal, Typography, Button, CircularProgress } from '@mui/material';
 import { BsDownload } from 'react-icons/bs';
 import { colors } from '@/styles/globals';
 import { MdClose } from 'react-icons/md';
@@ -30,6 +30,7 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
   const [documentsPerCustomer, setDocumentsPerCustomer] = useState<IDocumentsPerCustomer>({});
   const [customerNames, setCustomerNames] = useState<Array<string>>([]);
   const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const documentsPerCustomer = documents.reduce((acc, document) => {
@@ -52,6 +53,7 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
 
   useEffect(() => {
     const fetchCustomerNames = async () => {
+      setLoading(true);
       const names = await Promise.all(
         Object.keys(documentsPerCustomer).map(async customerId => {
           const name = await getCustomerName(customerId);
@@ -59,6 +61,7 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
         }),
       );
       setCustomerNames(names);
+      setLoading(false);
     };
 
     fetchCustomerNames();
@@ -102,58 +105,64 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
           <Box width={'100%'} height={'1px'} bgcolor={colors.quartiary} />
 
           <div className="scroll">
-            {customerNames.map((customerName, customerIndex) => (
-              <Box mt={'20px'} key={customerIndex}>
-                <Typography
-                  variant="subtitle1"
-                  style={{
-                    fontWeight: '500',
-                    fontSize: '20px',
-                    color: '#26B99A',
-                  }}
-                >
-                  {customerName}
-                </Typography>
-                {documentsPerCustomer[Object.keys(documentsPerCustomer)[customerIndex]].map(
-                  (document: any, documentIndex: number) => (
-                    <div
-                      key={document.url}
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px',
-                      }}
-                    >
-                      <Typography
-                        id="download-document"
-                        variant="subtitle1"
+            {loading ? (
+              <Box display={'flex'} justifyContent={'center'} alignItems={'center'} padding={6}>
+                <CircularProgress size={35} />
+              </Box>
+            ) : (
+              customerNames.map((customerName, customerIndex) => (
+                <Box mt={'20px'} key={customerIndex}>
+                  <Typography
+                    variant="subtitle1"
+                    style={{
+                      fontWeight: '500',
+                      fontSize: '20px',
+                      color: '#26B99A',
+                    }}
+                  >
+                    {customerName}
+                  </Typography>
+                  {documentsPerCustomer[Object.keys(documentsPerCustomer)[customerIndex]].map(
+                    (document: any, documentIndex: number) => (
+                      <div
+                        key={document.url}
                         style={{
-                          fontWeight: '400',
-                          fontSize: '18px',
-                          color: colors.black,
                           display: 'flex',
-                          alignItems: 'center',
-                          cursor: 'pointer',
+                          flexDirection: 'column',
                           gap: '8px',
                         }}
-                        onClick={() => handleDownload(document.original_file_url)}
                       >
-                        <BsDownload size={20} color={colors.primary} />
-                        {document.document_type
-                          ? document.document_type === 'procuration'
-                            ? 'Procuração'
-                            : document.document_type === 'waiver'
-                            ? 'Termo de Renúncia'
-                            : document.document_type === 'deficiency_statement'
-                            ? 'Declaração de Carência'
-                            : 'Contrato'
-                          : 'Procuração Simples'}
-                      </Typography>
-                    </div>
-                  ),
-                )}
-              </Box>
-            ))}
+                        <Typography
+                          id="download-document"
+                          variant="subtitle1"
+                          style={{
+                            fontWeight: '400',
+                            fontSize: '18px',
+                            color: colors.black,
+                            display: 'flex',
+                            alignItems: 'center',
+                            cursor: 'pointer',
+                            gap: '8px',
+                          }}
+                          onClick={() => handleDownload(document.original_file_url)}
+                        >
+                          <BsDownload size={20} color={colors.primary} />
+                          {document.document_type
+                            ? document.document_type === 'procuration'
+                              ? 'Procuração'
+                              : document.document_type === 'waiver'
+                              ? 'Termo de Renúncia'
+                              : document.document_type === 'deficiency_statement'
+                              ? 'Declaração de Carência'
+                              : 'Contrato'
+                            : 'Procuração Simples'}
+                        </Typography>
+                      </div>
+                    ),
+                  )}
+                </Box>
+              ))
+            )}
           </div>
 
           <Box width={'100%'} display={'flex'} justifyContent={'end'} mt={'20px'}>
