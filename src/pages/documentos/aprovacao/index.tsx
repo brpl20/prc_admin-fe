@@ -37,6 +37,10 @@ const DocumentApproval = () => {
       // If all documents are already signed, skip to last step
       if (data.attributes.documents.every(doc => doc.status === 'Assinado')) {
         setCurrentStep(2);
+      } else if (
+        data.attributes.documents.every(doc => doc.status === 'Pendente de assinatura externa')
+      ) {
+        setCurrentStep(1);
       }
 
       const updatedDocuments = data.attributes.documents.map(doc => {

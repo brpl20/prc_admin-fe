@@ -7,7 +7,7 @@ import { colors } from '../../../../../styles/globals';
 import { DataGrid } from '@mui/x-data-grid';
 import { useModal } from '../../../../../utils/useModal';
 import GenericModal from '../../../../Modals/GenericModal';
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { SignatureType } from '../../../../../types/signature';
 import { zapSign } from '@/services/zapsign';
 import { useRouter } from 'next/router';
@@ -37,6 +37,19 @@ const DigitalSignature: React.FunctionComponent<DigitalSignatureProps> = ({
   const cancelSignatureModal = useModal();
 
   const { id: workId } = router.query;
+
+  useEffect(() => {
+    if (documents.every(doc => doc.status === 'Pendente de assinatura externa')) {
+      setIsSigning(true);
+      setShowRadioButtons(false);
+      return;
+    }
+
+    if (documents.every(doc => doc.status === 'Assinado')) {
+      handleChangeStep('next');
+      return;
+    }
+  }, [documents, handleChangeStep, setShowRadioButtons]);
 
   const handleGoBack = () => {
     handleChangeStep('previous');
@@ -179,7 +192,7 @@ const DigitalSignature: React.FunctionComponent<DigitalSignatureProps> = ({
               }}
               onClick={cancelSignatureModal.open}
             >
-              {'Cancelar assinatura digital'}
+              {'Voltar'}
             </Button>
           ) : (
             <>
