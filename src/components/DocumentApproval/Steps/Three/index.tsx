@@ -86,7 +86,7 @@ const DocumentApprovalStepThree: React.FC<DocumentApprovalStepThreeProps> = ({ d
           </>
         </ContainerDetails>
         <ContentContainer>
-          <DocumentApprovalStepper currentStep={2} />
+          <DocumentApprovalStepper currentStep={3} />
 
           <Box className="w-full mt-4">
             <DataGrid

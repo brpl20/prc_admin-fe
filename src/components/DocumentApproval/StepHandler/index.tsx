@@ -35,6 +35,7 @@ const DocumentApprovalStepHandler: React.FunctionComponent<DocumentApprovalStepH
     />,
     <DocumentApprovalStepThree key={3} documents={documents} />,
   ];
+
   return steps[step] || null;
 };
 
