@@ -97,7 +97,7 @@ const Documents = () => {
   };
 
   const handleSearch = (search: string) => {
-    const regex = new RegExp(search, 'i');
+    const searchTerms = search.split(',').map(term => term.trim());
     let filteredWorks = works;
 
     if (search) {
@@ -105,7 +105,9 @@ const Documents = () => {
         const clientsNames = work.attributes.profile_customers.map(
           (customer: any) => customer.name,
         );
-        return clientsNames.some((name: string) => regex.test(name));
+        return searchTerms.every(term =>
+          clientsNames.some((name: string) => new RegExp(term, 'i').test(name)),
+        );
       });
     }
 
