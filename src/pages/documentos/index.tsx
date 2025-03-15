@@ -27,8 +27,6 @@ import dayjs from 'dayjs';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
-type DocumentSearchFilter = 'pending_review' | 'pending_signature' | 'signed';
-
 const Documents = () => {
   const router = useRouter();
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
@@ -38,7 +36,6 @@ const Documents = () => {
 
   const [responsibleLawyers, setResponsibleLawyers] = useState<any>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchFor, setSearchFor] = useState<DocumentSearchFilter>('pending_review');
 
   const invalidRequestModal = useModal();
 
@@ -100,29 +97,17 @@ const Documents = () => {
   };
 
   const handleSearch = (search: string) => {
-    const regex = new RegExp(search, 'i');
+    const searchTerms = search.split(',').map(term => term.trim());
     let filteredWorks = works;
 
     if (search) {
-      switch (searchFor) {
-        case 'pending_review':
-          // Insert pending review filter funcionality here
-          break;
-
-        case 'pending_signature':
-          // Insert pending signature filter functionality here
-          break;
-
-        case 'signed':
-          // Insert signed documents filter functionality here
-          break;
-
-        default:
-          break;
-      }
-
       filteredWorks = filteredWorks.filter((work: IWorksListProps) => {
-        return work.attributes.number !== null && regex.test(work.attributes.number.toString());
+        const clientsNames = work.attributes.profile_customers.map(
+          (customer: any) => customer.name,
+        );
+        return searchTerms.every(term =>
+          clientsNames.some((name: string) => new RegExp(term, 'i').test(name)),
+        );
       });
     }
 
@@ -165,52 +150,14 @@ const Documents = () => {
           <ContentContainer>
             <Box>
               <Typography mb={'8px'} variant="h6">
-                {'Buscar Por'}
+                {'Buscar Por Cliente'}
               </Typography>
               <Box display={'flex'} gap={'16px'} justifyContent={'space-between'}>
                 <Box display={'flex'} gap={'16px'}>
-                  <Box display={'flex'} gap={'16px'}>
-                    <Button
-                      onClick={() => setSearchFor('pending_review')}
-                      variant={searchFor === 'pending_review' ? 'contained' : 'outlined'}
-                      sx={{
-                        height: '36px',
-                        textTransform: 'none',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {'Pendentes de revisão'}
-                    </Button>
-
-                    <Button
-                      onClick={() => setSearchFor('pending_signature')}
-                      variant={searchFor === 'pending_signature' ? 'contained' : 'outlined'}
-                      sx={{
-                        height: '36px',
-                        textTransform: 'none',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {'Pendentes de assinatura'}
-                    </Button>
-
-                    <Button
-                      onClick={() => setSearchFor('signed')}
-                      variant={searchFor === 'signed' ? 'contained' : 'outlined'}
-                      sx={{
-                        height: '36px',
-                        textTransform: 'none',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {'Documentos assinados'}
-                    </Button>
-                  </Box>
-
                   <Input>
                     <input
                       type="text"
-                      placeholder="Buscar"
+                      placeholder="Nome do Cliente"
                       onChange={e => handleSearch(e.target.value)}
                     />
                     <MdSearch size={25} />
