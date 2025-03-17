@@ -9,7 +9,7 @@ import {
 import { useRouter } from 'next/router';
 
 import { getAllAdmins } from '@/services/admins';
-import { getOfficesWithLaws } from '@/services/offices';
+import { getOfficeById, getOfficesWithLaws } from '@/services/offices';
 
 import { WorkContext } from '@/contexts/WorkContext';
 import { IOfficeProps } from '@/interfaces/IOffice';
@@ -92,7 +92,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
     setOfficesSelected(offices);
   };
 
-  const handleSubmitForm = () => {
+  const handleSubmitForm = async () => {
     try {
       const updatedFormData = { ...formData };
       updatedFormData.lawyers = selectedLawyers;
@@ -126,6 +126,24 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
         responsible_lawyer: updatedFormData.responsible_lawyer,
       };
 
+      if (data.profile_admin_ids.length === 0) {
+        for (const office_id of data.office_ids) {
+          const office = await getOfficeById(String(office_id));
+          const officeRepresentativeId = office.data.attributes.responsible_lawyer_id;
+
+          if (officeRepresentativeId === 0) {
+            throw new Error(
+              'Não foi possível encontrar um representante para o escritório, selecione um advogado do escritório acima.',
+            );
+          }
+
+          console.log('office:', office);
+          console.log('id:', officeRepresentativeId);
+
+          officeRepresentativeId && workForm.profile_admin_ids.push(officeRepresentativeId);
+        }
+      }
+
       if (route.pathname == '/alterar') {
         let dataAux = {
           ...updateWorkForm,
@@ -147,15 +165,15 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
 
       setWorkForm(dataAux);
       nextStep();
-    } catch (err) {
-      handleFormError(err);
+    } catch (err: any) {
+      handleFormError(err, err.message);
     }
   };
 
-  const handleFormError = (error: any) => {
+  const handleFormError = (error: any, message?: string) => {
     const newErrors = error?.formErrors?.fieldErrors ?? {};
     const errorObject: { [key: string]: string } = {};
-    setMessage('Preencha todos os campos obrigatórios.');
+    setMessage(error.message || 'Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
 

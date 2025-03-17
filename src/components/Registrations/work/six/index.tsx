@@ -143,7 +143,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
     };
   };
 
-  const handleSubmitForm = async () => {
+  const handleSubmitForm = () => {
     try {
       if (documentsProduced.length <= 0) {
         setErrors({ ...errors, documents_attributes: true });
