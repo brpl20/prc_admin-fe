@@ -276,7 +276,7 @@ const Documents = () => {
                     renderCell: (params: any) => (
                       <span
                         className={`font-medium text-white leading-5 ${
-                          params.row.status === 'Assinado' ? 'bg-green-500' : 'bg-yellow-500'
+                          params.row.status === 'Assinado' ? 'bg-[#34b26e]' : 'bg-[#fec032]'
                         } rounded-full flex w-full px-1 py-1 text-center justify-center`}
                       >
                         {params.row.status}
