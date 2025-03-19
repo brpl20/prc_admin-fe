@@ -16,7 +16,7 @@ import { createDraftWork, createWork, updateWork } from '@/services/works';
 import { DescriptionText, ContentContainer, PageTitle } from '@/styles/globals';
 import { Container, Content } from './styles';
 
-import { Box, Stepper, Step, StepLabel, Button } from '@mui/material';
+import { Box, Stepper, Step, StepLabel, Button, CircularProgress } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
 
 import PFCustomerStepOne, { IRefPFCustomerStepOneProps } from './customer/PF/one';
@@ -79,7 +79,8 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
   const [openModal, setOpenModal] = useState(false);
   const [openDownloadModal, setOpenDownloadModal] = useState(false);
   const [urlsDocuments, setUrlsDocuments] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [confirmCreationLoading, setConfirmCreationLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [isEditing, setIsEditing] = useState(false);
   const [createdCustomerId, setCreatedCustomerId] = useState<number>();
@@ -145,7 +146,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
 
           const lastCustomerFile =
             customerForm.data.attributes.customer_files[
-            customerForm.data.attributes.customer_files.length - 1
+              customerForm.data.attributes.customer_files.length - 1
             ];
 
           const prof_aux = {
@@ -310,7 +311,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
 
   const handleSave = async (title: string) => {
     try {
-      setLoading(true);
+      setConfirmCreationLoading(true);
       await completeRegistration(title);
       setFinished(true);
     } catch (error: any) {
@@ -318,7 +319,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
       setTypeMessage('error');
       setOpenSnackbar(true);
     }
-    setLoading(false);
+    setConfirmCreationLoading(false);
   };
 
   const isStepSkipped = (step: number): boolean => {
@@ -451,7 +452,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
     <>
       {openModal && (
         <ConfirmCreation
-          isLoading={loading}
+          isLoading={confirmCreationLoading}
           isOpen={openModal}
           editMode={isEditing}
           onClose={handleCloseModal}
@@ -487,200 +488,230 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
         >
           <PageTitle showTitle={showTitle}>{`${pageTitle}`}</PageTitle>
         </Box>
-
         <ContentContainer>
-          <Box sx={{ width: '100%' }}>
-            <Stepper activeStep={activeStep}>
-              {titleSteps.map((label, index) => {
-                const stepProps: any = {};
-                const labelProps: any = {};
-
-                if (isStepSkipped(index)) {
-                  stepProps.completed = false;
-                }
-
-                return (
-                  <Step
-                    key={label}
-                    {...stepProps}
-                    onClick={() => {
-                      handleStepClick(index);
-                    }}
-                  >
-                    <StepLabel
-                      {...labelProps}
-                      StepIconProps={{
-                        style: {
-                          color:
-                            activeStep > index
-                              ? '#26B99A'
-                              : activeStep === index
-                                ? '#01013D'
-                                : '#A8A8B3',
-                          cursor: 'pointer',
-                        },
-                      }}
-                    >
-                      <DescriptionText
-                        style={{
-                          color:
-                            activeStep > index
-                              ? '#26B99A'
-                              : activeStep === index
-                                ? '#01013D'
-                                : '#A8A8B3',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {label}
-                      </DescriptionText>
-                    </StepLabel>
-                  </Step>
-                );
-              })}
-            </Stepper>
+          <Box
+            sx={{
+              width: '100%',
+              position: 'relative',
+              pointerEvents: loading ? 'none' : 'auto',
+            }}
+          >
+            {loading && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '40%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 9999,
+                }}
+              >
+                <CircularProgress />
+              </Box>
+            )}
 
             <Box
               sx={{
-                width: '100% !important',
-                height: '2px',
-                backgroundColor: '#01013D',
-                marginTop: '24px',
+                width: '100%',
+                height: '100%',
+                filter: loading ? 'blur(3px)' : 'none',
               }}
             >
+              <Stepper activeStep={activeStep}>
+                {titleSteps.map((label, index) => {
+                  const stepProps: any = {};
+                  const labelProps: any = {};
+
+                  if (isStepSkipped(index)) {
+                    stepProps.completed = false;
+                  }
+
+                  return (
+                    <Step
+                      key={label}
+                      {...stepProps}
+                      onClick={() => {
+                        handleStepClick(index);
+                      }}
+                    >
+                      <StepLabel
+                        {...labelProps}
+                        StepIconProps={{
+                          style: {
+                            color:
+                              activeStep > index
+                                ? '#26B99A'
+                                : activeStep === index
+                                ? '#01013D'
+                                : '#A8A8B3',
+                            cursor: 'pointer',
+                          },
+                        }}
+                      >
+                        <DescriptionText
+                          style={{
+                            color:
+                              activeStep > index
+                                ? '#26B99A'
+                                : activeStep === index
+                                ? '#01013D'
+                                : '#A8A8B3',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {label}
+                        </DescriptionText>
+                      </StepLabel>
+                    </Step>
+                  );
+                })}
+              </Stepper>
+
               <Box
                 sx={{
-                  width: getStepWidth(),
-                  height: '100%',
-                  maxWidth: '100%',
-                  backgroundColor: '#26B99A',
-                  transition: 'width 0.3s ease-in-out',
+                  width: '100% !important',
+                  height: '2px',
+                  backgroundColor: '#01013D',
+                  marginTop: '24px',
                 }}
-              />
-            </Box>
+              >
+                <Box
+                  sx={{
+                    width: getStepWidth(),
+                    height: '100%',
+                    maxWidth: '100%',
+                    backgroundColor: '#26B99A',
+                    transition: 'width 0.3s ease-in-out',
+                  }}
+                />
+              </Box>
 
-            <Content>
-              {registrationType === 'cliente/pessoa_fisica' && (
-                <>
-                  {currentStep === 0 && (
-                    <PFCustomerStepOne
-                      editMode={isEditing}
-                      ref={PFcustomerStepOneRef}
-                      nextStep={handleNext}
-                    />
-                  )}
+              <Content>
+                {registrationType === 'cliente/pessoa_fisica' && (
+                  <>
+                    {currentStep === 0 && (
+                      <PFCustomerStepOne
+                        editMode={isEditing}
+                        ref={PFcustomerStepOneRef}
+                        nextStep={handleNext}
+                      />
+                    )}
 
-                  {currentStep === 1 && (
-                    <PFCustomerStepTwo
-                      editMode={isEditing}
-                      ref={PFcustomerStepTwoRef}
-                      nextStep={handleNext}
-                    />
-                  )}
+                    {currentStep === 1 && (
+                      <PFCustomerStepTwo
+                        editMode={isEditing}
+                        ref={PFcustomerStepTwoRef}
+                        nextStep={handleNext}
+                      />
+                    )}
 
-                  {currentStep === 2 && (
-                    <PFCustomerStepThree
-                      editMode={isEditing}
-                      ref={PFcustomerStepThreeRef}
-                      nextStep={handleNext}
-                    />
-                  )}
+                    {currentStep === 2 && (
+                      <PFCustomerStepThree
+                        editMode={isEditing}
+                        ref={PFcustomerStepThreeRef}
+                        nextStep={handleNext}
+                      />
+                    )}
 
-                  {currentStep === 3 && (
-                    <PFCustomerStepFour
-                      editMode={isEditing}
-                      ref={PFcustomerStepFourRef}
-                      nextStep={handleNext}
-                    />
-                  )}
+                    {currentStep === 3 && (
+                      <PFCustomerStepFour
+                        editMode={isEditing}
+                        ref={PFcustomerStepFourRef}
+                        nextStep={handleNext}
+                      />
+                    )}
 
-                  {currentStep === 4 && (
-                    <PFCustomerStepFive
-                      editMode={isEditing}
-                      ref={PFcustomerStepFiveRef}
-                      nextStep={handleNext}
-                    />
-                  )}
+                    {currentStep === 4 && (
+                      <PFCustomerStepFive
+                        editMode={isEditing}
+                        ref={PFcustomerStepFiveRef}
+                        nextStep={handleNext}
+                      />
+                    )}
 
-                  {currentStep === 5 && (
-                    <PFCustomerStepSix
-                      editMode={isEditing}
-                      ref={PFcustomerStepSixRef}
-                      confirmation={() => {
-                        if (activeStep === 5) {
-                          setFinished(true);
-                          setOpenModal(true);
-                          scrollToTop();
-                          return;
-                        }
-                      }}
-                    />
-                  )}
-                </>
-              )}
+                    {currentStep === 5 && (
+                      <PFCustomerStepSix
+                        editMode={isEditing}
+                        ref={PFcustomerStepSixRef}
+                        confirmation={() => {
+                          if (activeStep === 5) {
+                            setFinished(true);
+                            setOpenModal(true);
+                            scrollToTop();
+                            return;
+                          }
+                        }}
+                      />
+                    )}
+                  </>
+                )}
 
-              {registrationType === 'cliente/pessoa_juridica' && (
-                <>
-                  {currentStep === 0 && (
-                    <PJCustomerStepOne
-                      editMode={isEditing}
-                      ref={PJcustomerStepOneRef}
-                      nextStep={handleNext}
-                    />
-                  )}
+                {registrationType === 'cliente/pessoa_juridica' && (
+                  <>
+                    {currentStep === 0 && (
+                      <PJCustomerStepOne
+                        editMode={isEditing}
+                        ref={PJcustomerStepOneRef}
+                        nextStep={handleNext}
+                      />
+                    )}
 
-                  {currentStep === 1 && (
-                    <PJCustomerStepTwo
-                      editMode={isEditing}
-                      ref={PJcustomerStepTwoRef}
-                      nextStep={handleNext}
-                    />
-                  )}
+                    {currentStep === 1 && (
+                      <PJCustomerStepTwo
+                        editMode={isEditing}
+                        ref={PJcustomerStepTwoRef}
+                        nextStep={handleNext}
+                      />
+                    )}
 
-                  {currentStep === 2 && (
-                    <PJCustomerStepThree
-                      editMode={isEditing}
-                      ref={PJcustomerStepThreeRef}
-                      nextStep={handleNext}
-                    />
-                  )}
+                    {currentStep === 2 && (
+                      <PJCustomerStepThree
+                        editMode={isEditing}
+                        ref={PJcustomerStepThreeRef}
+                        nextStep={handleNext}
+                      />
+                    )}
 
-                  {currentStep === 3 && (
-                    <PJCustomerStepFour
-                      editMode={isEditing}
-                      ref={PJcustomerStepFourRef}
-                      confirmation={() => {
-                        if (activeStep === 3) {
-                          setFinished(true);
-                          setOpenModal(true);
-                          scrollToTop();
-                          return;
-                        }
-                      }}
-                    />
-                  )}
-                </>
-              )}
+                    {currentStep === 3 && (
+                      <PJCustomerStepFour
+                        editMode={isEditing}
+                        ref={PJcustomerStepFourRef}
+                        confirmation={() => {
+                          if (activeStep === 3) {
+                            setFinished(true);
+                            setOpenModal(true);
+                            scrollToTop();
+                            return;
+                          }
+                        }}
+                      />
+                    )}
+                  </>
+                )}
 
-              {registrationType === 'trabalho' && (
-                <>
-                  {currentStep === 0 && <WorkStepOne ref={workStepOneRef} nextStep={handleNext} />}
+                {registrationType === 'trabalho' && (
+                  <>
+                    {currentStep === 0 && (
+                      <WorkStepOne ref={workStepOneRef} nextStep={handleNext} />
+                    )}
 
-                  {currentStep === 1 && <WorkStepTwo ref={workStepTwoRef} nextStep={handleNext} />}
+                    {currentStep === 1 && (
+                      <WorkStepTwo ref={workStepTwoRef} nextStep={handleNext} />
+                    )}
 
-                  {currentStep === 2 && (
-                    <WorkStepThree ref={workStepThreeRef} nextStep={handleNext} />
-                  )}
+                    {currentStep === 2 && (
+                      <WorkStepThree ref={workStepThreeRef} nextStep={handleNext} />
+                    )}
 
-                  {currentStep === 3 && (
-                    <WorkStepFour ref={workStepFourRef} nextStep={handleNext} />
-                  )}
+                    {currentStep === 3 && (
+                      <WorkStepFour ref={workStepFourRef} nextStep={handleNext} />
+                    )}
 
-                  {currentStep === 4 && (
-                    <WorkStepFive ref={workStepFiveRef} nextStep={handleNext} />
-                  )}
+                    {currentStep === 4 && (
+                      <WorkStepFive ref={workStepFiveRef} nextStep={handleNext} />
+                    )}
 
-                  {/* {session?.role != 'counter' && currentStep === 2 && (
+                    {/* {session?.role != 'counter' && currentStep === 2 && (
                     <WorkStepThree ref={workStepThreeRef} nextStep={handleNext} />
                   )}
 
@@ -692,92 +723,93 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
                     <WorkStepFive ref={workStepFiveRef} nextStep={handleNext} />
                   )} */}
 
-                  {currentStep === 5 && (
-                    <WorkStepSix
-                      ref={workStepSixRef}
-                      confirmation={() => {
-                        if (activeStep === 5) {
-                          setFinished(true);
-                          setOpenModal(true);
-                          scrollToTop();
-                          return;
-                        }
-                      }}
-                    />
-                  )}
-                </>
-              )}
+                    {currentStep === 5 && (
+                      <WorkStepSix
+                        ref={workStepSixRef}
+                        confirmation={() => {
+                          if (activeStep === 5) {
+                            setFinished(true);
+                            setOpenModal(true);
+                            scrollToTop();
+                            return;
+                          }
+                        }}
+                      />
+                    )}
+                  </>
+                )}
 
-              <Box className="buttonContainer">
-                <Button
-                  disabled={finished}
-                  variant="outlined"
-                  onClick={() => {
-                    router.asPath.includes('cliente')
-                      ? Router.push('/clientes')
-                      : Router.push('/trabalhos');
-                  }}
-                  sx={{
-                    width: '100px',
-                    height: '36px',
-                    textTransform: 'none',
-                  }}
-                  color="primary"
-                  tabIndex={-1}
-                >
-                  {'Cancelar'}
-                </Button>
-                {currentStep !== 0 && (
+                <Box className="buttonContainer">
                   <Button
                     disabled={finished}
-                    variant="contained"
+                    variant="outlined"
+                    onClick={() => {
+                      router.asPath.includes('cliente')
+                        ? Router.push('/clientes')
+                        : Router.push('/trabalhos');
+                    }}
                     sx={{
                       width: '100px',
                       height: '36px',
-                      marginLeft: '16px',
                       textTransform: 'none',
                     }}
                     color="primary"
                     tabIndex={-1}
-                    onClick={handlePreviousStep}
                   >
-                    {'Voltar'}
+                    {'Cancelar'}
                   </Button>
-                )}
-                {currentStep < titleSteps.length - 1 && (
-                  <Button
-                    variant="contained"
-                    sx={{
-                      width: '100px',
-                      height: '36px',
-                      marginLeft: '32px',
-                      color: '#FFFFFF',
-                      textTransform: 'none',
-                    }}
-                    color="secondary"
-                    onClick={handleNextStep}
-                  >
-                    {'Próximo'}
-                  </Button>
-                )}
-                {currentStep >= titleSteps.length - 1 && (
-                  <Button
-                    variant="contained"
-                    sx={{
-                      width: '100px',
-                      height: '36px',
-                      marginLeft: '32px',
-                      textTransform: 'none',
-                      color: '#FFFFFF',
-                    }}
-                    color="secondary"
-                    onClick={handleSubmit}
-                  >
-                    {'Finalizar'}
-                  </Button>
-                )}
-              </Box>
-            </Content>
+                  {currentStep !== 0 && (
+                    <Button
+                      disabled={finished}
+                      variant="contained"
+                      sx={{
+                        width: '100px',
+                        height: '36px',
+                        marginLeft: '16px',
+                        textTransform: 'none',
+                      }}
+                      color="primary"
+                      tabIndex={-1}
+                      onClick={handlePreviousStep}
+                    >
+                      {'Voltar'}
+                    </Button>
+                  )}
+                  {currentStep < titleSteps.length - 1 && (
+                    <Button
+                      variant="contained"
+                      sx={{
+                        width: '100px',
+                        height: '36px',
+                        marginLeft: '32px',
+                        color: '#FFFFFF',
+                        textTransform: 'none',
+                      }}
+                      color="secondary"
+                      onClick={handleNextStep}
+                    >
+                      {'Próximo'}
+                    </Button>
+                  )}
+                  {currentStep >= titleSteps.length - 1 && (
+                    <Button
+                      variant="contained"
+                      sx={{
+                        width: '100px',
+                        height: '36px',
+                        marginLeft: '32px',
+                        textTransform: 'none',
+                        color: '#FFFFFF',
+                      }}
+                      color="secondary"
+                      onClick={handleSubmit}
+                    >
+                      {'Finalizar'}
+                    </Button>
+                  )}
+                </Box>
+              </Content>
+            </Box>
           </Box>
         </ContentContainer>
       </Container>
