@@ -204,6 +204,10 @@ const Documents = () => {
                       (customer: any) => customer.name,
                     );
 
+                    const areAllDocumentsSigned = work.attributes.documents.every(
+                      (document: any) => document.status === 'Assinado',
+                    );
+
                     return {
                       id: work.id,
                       client:
@@ -216,6 +220,7 @@ const Documents = () => {
                       number: work.attributes.number,
                       created_by_id: work.attributes.created_by_id,
                       date: work.attributes.created_at_date,
+                      status: areAllDocumentsSigned ? 'Assinado' : 'Pendente',
                     };
                   })
                 }
@@ -260,6 +265,23 @@ const Documents = () => {
                       if (!v2) return -1;
                       return dayjs(v1).unix() - dayjs(v2).unix();
                     },
+                  },
+                  {
+                    flex: 1,
+                    field: 'status',
+                    headerName: 'Status',
+                    align: 'center',
+                    headerAlign: 'center',
+                    valueFormatter: defaultTableValueFormatter,
+                    renderCell: (params: any) => (
+                      <span
+                        className={`font-medium text-white leading-5 ${
+                          params.row.status === 'Assinado' ? 'bg-[#34b26e]' : 'bg-[#fec032]'
+                        } rounded-full flex w-full px-1 py-1 text-center justify-center`}
+                      >
+                        {params.row.status}
+                      </span>
+                    ),
                   },
                   {
                     flex: 1,
