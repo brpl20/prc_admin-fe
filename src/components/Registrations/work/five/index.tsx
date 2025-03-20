@@ -5,6 +5,8 @@ import React, {
   forwardRef,
   ForwardRefRenderFunction,
   useImperativeHandle,
+  Dispatch,
+  SetStateAction,
 } from 'react';
 import { Flex } from '@/styles/globals';
 import { Container, Input } from './styles';
@@ -27,10 +29,11 @@ export interface IRefWorkStepFiveProps {
 
 interface IStepFiveProps {
   nextStep: () => void;
+  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFiveProps> = (
-  { nextStep },
+  { nextStep, setFormLoading },
   ref,
 ) => {
   const router = useRouter();
@@ -216,6 +219,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
   useEffect(() => {
     const verifyDataLocalStorage = async () => {
+      // setFormLoading;
       const data = localStorage.getItem('WORK/Five');
 
       if (data) {
@@ -250,6 +254,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
           setSelectedCustomer(customer);
         }
       }
+      // setFormLoading(false);
     };
 
     verifyDataLocalStorage();

@@ -5,6 +5,8 @@ import React, {
   useEffect,
   ForwardRefRenderFunction,
   useImperativeHandle,
+  SetStateAction,
+  Dispatch,
 } from 'react';
 import { useRouter } from 'next/router';
 
@@ -22,6 +24,7 @@ export interface IRefWorkStepThreeProps {
 
 interface IStepThreeProps {
   nextStep: () => void;
+  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 const stepThreeSchema = z.object({
@@ -29,7 +32,7 @@ const stepThreeSchema = z.object({
 });
 
 const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThreeProps> = (
-  { nextStep },
+  { nextStep, setFormLoading },
   ref,
 ) => {
   const route = useRouter();
@@ -95,6 +98,7 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
   };
 
   const verifyDataLocalStorage = async () => {
+    // setFormLoading;
     const data = localStorage.getItem('WORK/Three');
 
     if (data) {
@@ -104,6 +108,8 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
         setPowersSelected(parsedData.power_ids);
       }
     }
+
+    // setFormLoading(false);
   };
 
   const saveDataLocalStorage = (data: any) => {

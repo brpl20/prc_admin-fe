@@ -5,6 +5,8 @@ import {
   forwardRef,
   ForwardRefRenderFunction,
   useImperativeHandle,
+  Dispatch,
+  SetStateAction,
 } from 'react';
 import { useRouter } from 'next/router';
 
@@ -43,6 +45,7 @@ export interface IRefWorkStepFourProps {
 }
 interface IStepFourProps {
   nextStep: () => void;
+  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 interface FormData {
@@ -56,7 +59,7 @@ interface FormData {
 }
 
 const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourProps> = (
-  { nextStep },
+  { nextStep, setFormLoading },
   ref,
 ) => {
   const [openSubTable, setOpenSubTable] = useState(true);
@@ -189,6 +192,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   };
 
   const verifyDataLocalStorage = async () => {
+    // setFormLoading;
     const data = localStorage.getItem('WORK/Four');
 
     if (data) {
@@ -251,6 +255,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
         }));
       }
     }
+    // setFormLoading(false);
   };
 
   useImperativeHandle(ref, () => ({

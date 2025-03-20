@@ -80,7 +80,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
   const [openDownloadModal, setOpenDownloadModal] = useState(false);
   const [urlsDocuments, setUrlsDocuments] = useState([]);
   const [confirmCreationLoading, setConfirmCreationLoading] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [formLoading, setFormLoading] = useState(true);
 
   const [isEditing, setIsEditing] = useState(false);
   const [createdCustomerId, setCreatedCustomerId] = useState<number>();
@@ -92,6 +92,11 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
     setOpenModal(false);
     setFinished(false);
   };
+
+  // DEBUG
+  useEffect(() => {
+    console.log('formLoading', formLoading);
+  }, [formLoading]);
 
   const handleSubmit = async () => {
     switch (registrationType) {
@@ -493,10 +498,10 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
             sx={{
               width: '100%',
               position: 'relative',
-              pointerEvents: loading ? 'none' : 'auto',
+              pointerEvents: formLoading ? 'none' : 'auto',
             }}
           >
-            {loading && (
+            {formLoading && (
               <Box
                 sx={{
                   position: 'absolute',
@@ -514,7 +519,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
               sx={{
                 width: '100%',
                 height: '100%',
-                filter: loading ? 'blur(3px)' : 'none',
+                filter: formLoading ? 'blur(3px)' : 'none',
               }}
             >
               <Stepper activeStep={activeStep}>
@@ -692,23 +697,43 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
                 {registrationType === 'trabalho' && (
                   <>
                     {currentStep === 0 && (
-                      <WorkStepOne ref={workStepOneRef} nextStep={handleNext} />
+                      <WorkStepOne
+                        ref={workStepOneRef}
+                        nextStep={handleNext}
+                        setFormLoading={setFormLoading}
+                      />
                     )}
 
                     {currentStep === 1 && (
-                      <WorkStepTwo ref={workStepTwoRef} nextStep={handleNext} />
+                      <WorkStepTwo
+                        ref={workStepTwoRef}
+                        nextStep={handleNext}
+                        setFormLoading={setFormLoading}
+                      />
                     )}
 
                     {currentStep === 2 && (
-                      <WorkStepThree ref={workStepThreeRef} nextStep={handleNext} />
+                      <WorkStepThree
+                        ref={workStepThreeRef}
+                        nextStep={handleNext}
+                        setFormLoading={setFormLoading}
+                      />
                     )}
 
                     {currentStep === 3 && (
-                      <WorkStepFour ref={workStepFourRef} nextStep={handleNext} />
+                      <WorkStepFour
+                        ref={workStepFourRef}
+                        nextStep={handleNext}
+                        setFormLoading={setFormLoading}
+                      />
                     )}
 
                     {currentStep === 4 && (
-                      <WorkStepFive ref={workStepFiveRef} nextStep={handleNext} />
+                      <WorkStepFive
+                        ref={workStepFiveRef}
+                        nextStep={handleNext}
+                        setFormLoading={setFormLoading}
+                      />
                     )}
 
                     {/* {session?.role != 'counter' && currentStep === 2 && (
@@ -726,6 +751,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
                     {currentStep === 5 && (
                       <WorkStepSix
                         ref={workStepSixRef}
+                        setFormLoading={setFormLoading}
                         confirmation={() => {
                           if (activeStep === 5) {
                             setFinished(true);

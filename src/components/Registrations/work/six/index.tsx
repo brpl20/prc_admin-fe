@@ -6,6 +6,8 @@ import React, {
   ForwardRefRenderFunction,
   useImperativeHandle,
   useEffect,
+  Dispatch,
+  SetStateAction,
 } from 'react';
 
 import { Flex } from '@/styles/globals';
@@ -25,7 +27,6 @@ import {
 } from '@mui/material';
 import CustomTooltip from '@/components/Tooltip';
 import { useRouter } from 'next/router';
-import { getOfficeById } from '@/services/offices';
 
 export interface IRefWorkStepSixProps {
   handleSubmitForm: () => void;
@@ -33,10 +34,11 @@ export interface IRefWorkStepSixProps {
 
 interface IStepSixProps {
   confirmation: () => void;
+  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps> = (
-  { confirmation },
+  { confirmation, setFormLoading },
   ref,
 ) => {
   const router = useRouter();
@@ -229,6 +231,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
 
   useEffect(() => {
     const verifyDataLocalStorage = async () => {
+      // setFormLoading;
       const data = localStorage.getItem('WORK/Six');
 
       if (data) {
@@ -255,6 +258,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
           setOtherDocuments(parsedData.extra_pending_document);
         }
       }
+      // setFormLoading(false);
     };
 
     verifyDataLocalStorage();
