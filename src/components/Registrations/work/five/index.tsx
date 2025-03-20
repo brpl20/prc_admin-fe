@@ -22,6 +22,8 @@ import { WorkContext } from '@/contexts/WorkContext';
 import { moneyMask, percentMask } from '@/utils/masks';
 import { Notification } from '@/components';
 import { useRouter } from 'next/router';
+import useLoadingCounter from '@/utils/useLoadingCounter';
+import { doesSectionFormatHaveLeadingZeros } from '@mui/x-date-pickers/internals/hooks/useField/useField.utils';
 
 export interface IRefWorkStepFiveProps {
   handleSubmitForm: () => void;
@@ -51,6 +53,8 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
   const [commission, setCommission] = useState<string>();
   const [selectedCustomer, setSelectedCustomer] = useState<ICustomerProps>();
 
+  const { setLoading } = useLoadingCounter(setFormLoading);
+
   useImperativeHandle(ref, () => ({
     handleSubmitForm,
   }));
@@ -67,8 +71,14 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
   useEffect(() => {
     const getCustomers = async () => {
-      const response = await getAllProfileCustomer('');
-      setCustomersList(response.data);
+      setLoading(true);
+
+      try {
+        const response = await getAllProfileCustomer('');
+        setCustomersList(response.data);
+      } finally {
+        setLoading(false);
+      }
     };
 
     getCustomers();
@@ -219,7 +229,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
   useEffect(() => {
     const verifyDataLocalStorage = async () => {
-      // setFormLoading;
+      setLoading(true);
       const data = localStorage.getItem('WORK/Five');
 
       if (data) {
@@ -254,7 +264,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
           setSelectedCustomer(customer);
         }
       }
-      // setFormLoading(false);
+      doesSectionFormatHaveLeadingZeros(false);
     };
 
     verifyDataLocalStorage();

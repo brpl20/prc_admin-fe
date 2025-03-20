@@ -23,6 +23,7 @@ import { FormControlLabel, Typography, Radio, Select, MenuItem } from '@mui/mate
 import { moneyMask, percentMask } from '@/utils/masks';
 import { useRouter } from 'next/router';
 import { z } from 'zod';
+import useLoadingCounter from '@/utils/useLoadingCounter';
 
 const instalmentOptions = [
   '1x',
@@ -71,6 +72,8 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
   const [parcelling, setParcelling] = useState(false);
   const [numberOfInstallments, setNumberOfInstallments] = useState('');
   const route = useRouter();
+
+  const { setLoading } = useLoadingCounter(setFormLoading);
 
   const handleCategorySelection = (value: string) => {
     const newValue = honoraryType != value ? value : '';
@@ -195,7 +198,7 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
   };
 
   const verifyDataLocalStorage = async () => {
-    // setFormLoading;
+    setLoading(true);
     const data = localStorage.getItem('WORK/Two');
 
     if (data) {
@@ -249,7 +252,7 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
         );
       }
     }
-    // setFormLoading(false);
+    setLoading(false);
   };
 
   const saveDataLocalStorage = (data: any) => {

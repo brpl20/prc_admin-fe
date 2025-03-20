@@ -17,6 +17,7 @@ import { WorkContext } from '@/contexts/WorkContext';
 import { getAllPowers } from '@/services/powers';
 import { Notification } from '@/components';
 import { z } from 'zod';
+import useLoadingCounter from '@/utils/useLoadingCounter';
 
 export interface IRefWorkStepThreeProps {
   handleSubmitForm: () => void;
@@ -45,6 +46,8 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
   const [powersSelected, setPowersSelected] = useState<number[]>([]);
   const [allPowers, setAllPowers] = useState<any>([]);
   const [filteredPowers, setFilteredPowers] = useState<any>([]);
+
+  const { setLoading: setContextLoading } = useLoadingCounter(setFormLoading);
 
   const getRowClassName = (params: any) => {
     return params.rowIndex % 2 === 0 ? 'even-row' : 'odd-row';
@@ -98,7 +101,7 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
   };
 
   const verifyDataLocalStorage = async () => {
-    // setFormLoading;
+    setContextLoading(true);
     const data = localStorage.getItem('WORK/Three');
 
     if (data) {
@@ -109,7 +112,7 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
       }
     }
 
-    // setFormLoading(false);
+    setContextLoading(false);
   };
 
   const saveDataLocalStorage = (data: any) => {
@@ -121,8 +124,8 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
   }));
 
   useEffect(() => {
-    setLoading(true);
     const getPowers = async () => {
+      setLoading(true);
       const response = await getAllPowers();
 
       const attributesArray: any = [];

@@ -27,6 +27,7 @@ import {
 } from '@mui/material';
 import CustomTooltip from '@/components/Tooltip';
 import { useRouter } from 'next/router';
+import useLoadingCounter from '@/utils/useLoadingCounter';
 
 export interface IRefWorkStepSixProps {
   handleSubmitForm: () => void;
@@ -59,6 +60,8 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
   const [gradesInGeneral, setGradesInGeneral] = useState<string>('');
   const [otherDocuments, setOtherDocuments] = useState<string>('');
   const [folder, setFolder] = useState('');
+
+  const { setLoading } = useLoadingCounter(setFormLoading);
 
   const handleDocumentsProducedSelection = (event: ChangeEvent<HTMLInputElement>) => {
     const { value, checked } = event.target;
@@ -231,7 +234,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
 
   useEffect(() => {
     const verifyDataLocalStorage = async () => {
-      // setFormLoading;
+      setLoading(true);
       const data = localStorage.getItem('WORK/Six');
 
       if (data) {
@@ -258,7 +261,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
           setOtherDocuments(parsedData.extra_pending_document);
         }
       }
-      // setFormLoading(false);
+      setLoading(false);
     };
 
     verifyDataLocalStorage();

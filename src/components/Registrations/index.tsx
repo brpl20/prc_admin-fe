@@ -38,6 +38,7 @@ import WorkStepFour, { IRefWorkStepFourProps } from './work/four';
 import WorkStepFive, { IRefWorkStepFiveProps } from './work/five';
 import WorkStepSix, { IRefWorkStepSixProps } from './work/six';
 import { ConfirmDownloadDocument } from '@/components';
+import useLoadingCounter from '@/utils/useLoadingCounter';
 
 interface IRegistrationProps {
   registrationType: string;

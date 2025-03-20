@@ -50,6 +50,7 @@ import { useRouter } from 'next/router';
 import { getAllDraftWorks } from '@/services/works';
 import { useSession } from 'next-auth/react';
 import roleSubjectAccess from './roleSubjectAccess';
+import useLoadingCounter from '@/utils/useLoadingCounter';
 
 interface Option {
   value: string;
@@ -107,12 +108,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   const [customerSelectedList, setCustomerSelectedList] = useState<ICustomerProps[]>([]);
   const [selectedDraftWork, setSelectedDraftWork] = useState<any>(null);
 
-  const loadingCounter = useRef(0);
-
-  const setLoading = (isLoading: boolean) => {
-    loadingCounter.current += isLoading ? 1 : -1;
-    setFormLoading(loadingCounter.current > 0);
-  };
+  const { setLoading } = useLoadingCounter(setFormLoading);
 
   const renderDragMessage = (isDragActive: boolean) => {
     if (!isDragActive) {
@@ -308,7 +304,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   };
 
   const verifyDataLocalStorage = async () => {
-    // setFormLoading;
+    setLoading(true);
     const data = localStorage.getItem('WORK/One');
 
     if (data) {
@@ -412,7 +408,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
         ]);
       }
     }
-    // setFormLoading(false);
+    setLoading(false);
   };
 
   const saveDataLocalStorage = (data: any) => {
@@ -457,18 +453,18 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   useEffect(() => {
     const getCustomers = async () => {
       console.log('called getCustomers');
-      setFormLoading(true);
+      setLoading(true);
       const response = await getAllProfileCustomer('');
       setCustomersList(response.data);
       console.log('response getCustomers');
-      setFormLoading(false);
+      setLoading(false);
     };
 
     const getDraftWorks = async () => {
-      // setFormLoading;
+      setLoading(true);
       const response = await getAllDraftWorks();
       setDraftWorksList(response.data);
-      // setFormLoading(false);
+      setLoading(false);
     };
 
     getCustomers();
@@ -483,7 +479,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
 
   useEffect(() => {
     const handleDataForm = async () => {
-      // setFormLoading;
+      setLoading(true);
       const attributes = workForm.data.attributes;
 
       if (attributes) {
@@ -603,7 +599,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
         }
       }
 
-      // setFormLoading(false);
+      setLoading(false);
     };
 
     if (workForm.data) {
