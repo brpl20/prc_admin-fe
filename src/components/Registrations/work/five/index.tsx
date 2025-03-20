@@ -71,9 +71,8 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
   useEffect(() => {
     const getCustomers = async () => {
-      setLoading(true);
-
       try {
+        setLoading(true);
         const response = await getAllProfileCustomer('');
         setCustomersList(response.data);
       } finally {
@@ -229,7 +228,6 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
   useEffect(() => {
     const verifyDataLocalStorage = async () => {
-      setLoading(true);
       const data = localStorage.getItem('WORK/Five');
 
       if (data) {
@@ -264,7 +262,6 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
           setSelectedCustomer(customer);
         }
       }
-      doesSectionFormatHaveLeadingZeros(false);
     };
 
     verifyDataLocalStorage();
@@ -314,7 +311,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
             <Autocomplete
               limitTags={1}
               options={customersList}
-              getOptionLabel={option => option.attributes.name}
+              getOptionLabel={option => option.attributes.name + ' ' + option.attributes.last_name}
               renderInput={params => (
                 <TextField placeholder="Selecione um Cliente" {...params} size="small" />
               )}
