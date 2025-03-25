@@ -7,6 +7,9 @@ import {
   forwardRef,
   ForwardRefRenderFunction,
   useImperativeHandle,
+  Dispatch,
+  SetStateAction,
+  useRef,
 } from 'react';
 
 import Dropzone from 'react-dropzone';
@@ -47,6 +50,7 @@ import { useRouter } from 'next/router';
 import { getAllDraftWorks } from '@/services/works';
 import { useSession } from 'next-auth/react';
 import roleSubjectAccess from './roleSubjectAccess';
+import useLoadingCounter from '@/utils/useLoadingCounter';
 
 interface Option {
   value: string;
@@ -65,6 +69,7 @@ export interface IRefWorkStepOneProps {
 
 interface IStepOneProps {
   nextStep: () => void;
+  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 const stepOneSchema = z.object({
@@ -74,7 +79,7 @@ const stepOneSchema = z.object({
 });
 
 const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps> = (
-  { nextStep },
+  { nextStep, setFormLoading },
   ref,
 ) => {
   const { data: session } = useSession();
@@ -102,6 +107,8 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   const [otherDescription, setOtherDescription] = useState<string>('');
   const [customerSelectedList, setCustomerSelectedList] = useState<ICustomerProps[]>([]);
   const [selectedDraftWork, setSelectedDraftWork] = useState<any>(null);
+
+  const { setLoading } = useLoadingCounter(setFormLoading);
 
   const renderDragMessage = (isDragActive: boolean) => {
     if (!isDragActive) {
@@ -297,6 +304,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   };
 
   const verifyDataLocalStorage = async () => {
+    setLoading(true);
     const data = localStorage.getItem('WORK/One');
 
     if (data) {
@@ -400,6 +408,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
         ]);
       }
     }
+    setLoading(false);
   };
 
   const saveDataLocalStorage = (data: any) => {
@@ -443,13 +452,19 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
 
   useEffect(() => {
     const getCustomers = async () => {
+      console.log('called getCustomers');
+      setLoading(true);
       const response = await getAllProfileCustomer('');
       setCustomersList(response.data);
+      console.log('response getCustomers');
+      setLoading(false);
     };
 
     const getDraftWorks = async () => {
+      setLoading(true);
       const response = await getAllDraftWorks();
       setDraftWorksList(response.data);
+      setLoading(false);
     };
 
     getCustomers();
@@ -464,6 +479,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
 
   useEffect(() => {
     const handleDataForm = async () => {
+      setLoading(true);
       const attributes = workForm.data.attributes;
 
       if (attributes) {
@@ -582,6 +598,8 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
             break;
         }
       }
+
+      setLoading(false);
     };
 
     if (workForm.data) {

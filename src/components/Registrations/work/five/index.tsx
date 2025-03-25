@@ -5,6 +5,8 @@ import React, {
   forwardRef,
   ForwardRefRenderFunction,
   useImperativeHandle,
+  Dispatch,
+  SetStateAction,
 } from 'react';
 import { Flex } from '@/styles/globals';
 import { Container, Input } from './styles';
@@ -20,6 +22,8 @@ import { WorkContext } from '@/contexts/WorkContext';
 import { moneyMask, percentMask } from '@/utils/masks';
 import { Notification } from '@/components';
 import { useRouter } from 'next/router';
+import useLoadingCounter from '@/utils/useLoadingCounter';
+import { doesSectionFormatHaveLeadingZeros } from '@mui/x-date-pickers/internals/hooks/useField/useField.utils';
 
 export interface IRefWorkStepFiveProps {
   handleSubmitForm: () => void;
@@ -27,10 +31,11 @@ export interface IRefWorkStepFiveProps {
 
 interface IStepFiveProps {
   nextStep: () => void;
+  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFiveProps> = (
-  { nextStep },
+  { nextStep, setFormLoading },
   ref,
 ) => {
   const router = useRouter();
@@ -48,6 +53,8 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
   const [commission, setCommission] = useState<string>();
   const [selectedCustomer, setSelectedCustomer] = useState<ICustomerProps>();
 
+  const { setLoading } = useLoadingCounter(setFormLoading);
+
   useImperativeHandle(ref, () => ({
     handleSubmitForm,
   }));
@@ -64,8 +71,13 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
   useEffect(() => {
     const getCustomers = async () => {
-      const response = await getAllProfileCustomer('');
-      setCustomersList(response.data);
+      try {
+        setLoading(true);
+        const response = await getAllProfileCustomer('');
+        setCustomersList(response.data);
+      } finally {
+        setLoading(false);
+      }
     };
 
     getCustomers();
@@ -299,7 +311,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
             <Autocomplete
               limitTags={1}
               options={customersList}
-              getOptionLabel={option => option.attributes.name}
+              getOptionLabel={option => option.attributes.name + ' ' + option.attributes.last_name}
               renderInput={params => (
                 <TextField placeholder="Selecione um Cliente" {...params} size="small" />
               )}

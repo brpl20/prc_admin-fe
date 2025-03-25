@@ -5,6 +5,8 @@ import {
   forwardRef,
   ForwardRefRenderFunction,
   useImperativeHandle,
+  Dispatch,
+  SetStateAction,
 } from 'react';
 import { useRouter } from 'next/router';
 
@@ -37,12 +39,14 @@ import { MdOutlineInfo, MdOutlineArrowDropUp, MdOutlineArrowDropDown } from 'rea
 import CustomTooltip from '@/components/Tooltip';
 import { Notification } from '@/components';
 import { z } from 'zod';
+import useLoadingCounter from '@/utils/useLoadingCounter';
 
 export interface IRefWorkStepFourProps {
   handleSubmitForm: () => void;
 }
 interface IStepFourProps {
   nextStep: () => void;
+  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 interface FormData {
@@ -56,7 +60,7 @@ interface FormData {
 }
 
 const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourProps> = (
-  { nextStep },
+  { nextStep, setFormLoading },
   ref,
 ) => {
   const [openSubTable, setOpenSubTable] = useState(true);
@@ -87,6 +91,8 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
     responsible_lawyer: '',
     physical_lawyer: '',
   });
+
+  const { setLoading } = useLoadingCounter(setFormLoading);
 
   const handleSelectedOffice = (offices: any) => {
     setOfficesSelected(offices);
@@ -140,7 +146,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
           console.log('office:', office);
           console.log('id:', officeRepresentativeId);
 
-          officeRepresentativeId && workForm.profile_admin_ids.push(officeRepresentativeId);
+          officeRepresentativeId && data.profile_admin_ids.push(officeRepresentativeId);
         }
       }
 
@@ -189,6 +195,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   };
 
   const verifyDataLocalStorage = async () => {
+    setLoading(true);
     const data = localStorage.getItem('WORK/Four');
 
     if (data) {
@@ -251,6 +258,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
         }));
       }
     }
+    setLoading(false);
   };
 
   useImperativeHandle(ref, () => ({
@@ -258,15 +266,25 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   }));
 
   const getOffices = async () => {
-    const response = await getOfficesWithLaws();
-    setOffices(response.data);
+    setLoading(true);
+    try {
+      const response = await getOfficesWithLaws();
+      setOffices(response.data);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getAdmins = async () => {
-    const response: {
-      data: IAdminProps[];
-    } = await getAllAdmins('');
-    SetAllLawyers(response.data);
+    setLoading(true);
+    try {
+      const response: {
+        data: IAdminProps[];
+      } = await getAllAdmins('');
+      SetAllLawyers(response.data);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
