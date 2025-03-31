@@ -724,19 +724,6 @@ const Customers = () => {
                     </Button>
 
                     <Button
-                      value="type"
-                      onClick={() => setSearchFor('type')}
-                      variant={searchFor === 'type' ? 'contained' : 'outlined'}
-                      sx={{
-                        height: '36px',
-                        width: '100px',
-                        textTransform: 'none',
-                      }}
-                    >
-                      {'Tipo'}
-                    </Button>
-
-                    <Button
                       onClick={() => setSearchFor('identification')}
                       variant={searchFor === 'identification' ? 'contained' : 'outlined'}
                       sx={{
