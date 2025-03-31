@@ -81,7 +81,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
   const [openDownloadModal, setOpenDownloadModal] = useState(false);
   const [urlsDocuments, setUrlsDocuments] = useState([]);
   const [confirmCreationLoading, setConfirmCreationLoading] = useState(false);
-  const [formLoading, setFormLoading] = useState(true);
+  const [formLoading, setFormLoading] = useState(registrationType === 'trabalho');
 
   const [isEditing, setIsEditing] = useState(false);
   const [createdCustomerId, setCreatedCustomerId] = useState<number>();
