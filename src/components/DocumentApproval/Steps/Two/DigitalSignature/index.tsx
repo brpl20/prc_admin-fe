@@ -7,8 +7,11 @@ import { colors } from '../../../../../styles/globals';
 import { DataGrid } from '@mui/x-data-grid';
 import { useModal } from '../../../../../utils/useModal';
 import GenericModal from '../../../../Modals/GenericModal';
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { SignatureType } from '../../../../../types/signature';
+import { zapSign } from '@/services/zapsign';
+import { useRouter } from 'next/router';
+import { Notification } from '@/components';
 
 interface DigitalSignatureProps {
   documents: IDocumentApprovalProps[];
@@ -24,28 +27,47 @@ const DigitalSignature: React.FunctionComponent<DigitalSignatureProps> = ({
   setShowRadioButtons,
 }) => {
   const [isSigning, setIsSigning] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const router = useRouter();
 
   const backModal = useModal();
   const beginSignatureModal = useModal();
   const cancelSignatureModal = useModal();
 
+  const { id: workId } = router.query;
+
+  useEffect(() => {
+    if (documents.every(doc => doc.status === 'Pendente de assinatura externa')) {
+      setIsSigning(true);
+      setShowRadioButtons(false);
+      return;
+    }
+
+    if (documents.every(doc => doc.status === 'Assinado')) {
+      handleChangeStep('next');
+      return;
+    }
+  }, [documents, handleChangeStep, setShowRadioButtons]);
+
   const handleGoBack = () => {
     handleChangeStep('previous');
   };
 
-  const handleBeginSignature = () => {
-    setIsSigning(true);
-    beginSignatureModal.close();
-    setShowRadioButtons(false);
+  const handleBeginSignature = async () => {
+    try {
+      setLoading(true);
+      await zapSign(Number(workId));
 
-    // TODO: proper await for signing API
-    const exampleTimeout = setTimeout(() => {
-      handleChangeStep('next');
-    }, 5 * 10 ** 3); // 5 seconds
-
-    return () => {
-      clearTimeout(exampleTimeout);
-    };
+      setIsSigning(true);
+      beginSignatureModal.close();
+      setShowRadioButtons(false);
+    } catch (error) {
+      setErrorMessage('Ocorreu um erro ao tentar assinar digitalmente os documentos.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancelSignature = () => {
@@ -75,7 +97,7 @@ const DigitalSignature: React.FunctionComponent<DigitalSignatureProps> = ({
         isOpen={beginSignatureModal.isOpen}
         onClose={beginSignatureModal.close}
         onConfirm={handleBeginSignature}
-        confirmButtonText="Sim, assinar!"
+        confirmButtonText={loading ? 'Enviando...' : 'Sim, assinar!'}
       />
 
       {/* Cancel Signature Modal */}
@@ -116,7 +138,7 @@ const DigitalSignature: React.FunctionComponent<DigitalSignatureProps> = ({
               return {
                 id: item.id,
                 type: documentTypeToReadable[item.document_type],
-                url: item.url,
+                url: item.original_file_url,
               };
             })}
             columns={[
@@ -170,7 +192,7 @@ const DigitalSignature: React.FunctionComponent<DigitalSignatureProps> = ({
               }}
               onClick={cancelSignatureModal.open}
             >
-              {'Cancelar assinatura digital'}
+              {'Voltar'}
             </Button>
           ) : (
             <>
@@ -201,6 +223,13 @@ const DigitalSignature: React.FunctionComponent<DigitalSignatureProps> = ({
           )}
         </Box>
       </Box>
+
+      <Notification
+        open={!!errorMessage}
+        message={errorMessage}
+        severity="error"
+        onClose={() => setErrorMessage('')}
+      />
     </>
   );
 };

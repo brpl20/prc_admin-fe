@@ -5,6 +5,8 @@ import React, {
   useEffect,
   ForwardRefRenderFunction,
   useImperativeHandle,
+  SetStateAction,
+  Dispatch,
 } from 'react';
 import { useRouter } from 'next/router';
 
@@ -15,6 +17,7 @@ import { WorkContext } from '@/contexts/WorkContext';
 import { getAllPowers } from '@/services/powers';
 import { Notification } from '@/components';
 import { z } from 'zod';
+import useLoadingCounter from '@/utils/useLoadingCounter';
 
 export interface IRefWorkStepThreeProps {
   handleSubmitForm: () => void;
@@ -22,6 +25,7 @@ export interface IRefWorkStepThreeProps {
 
 interface IStepThreeProps {
   nextStep: () => void;
+  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 const stepThreeSchema = z.object({
@@ -29,7 +33,7 @@ const stepThreeSchema = z.object({
 });
 
 const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThreeProps> = (
-  { nextStep },
+  { nextStep, setFormLoading },
   ref,
 ) => {
   const route = useRouter();
@@ -42,6 +46,8 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
   const [powersSelected, setPowersSelected] = useState<number[]>([]);
   const [allPowers, setAllPowers] = useState<any>([]);
   const [filteredPowers, setFilteredPowers] = useState<any>([]);
+
+  const { setLoading: setContextLoading } = useLoadingCounter(setFormLoading);
 
   const getRowClassName = (params: any) => {
     return params.rowIndex % 2 === 0 ? 'even-row' : 'odd-row';
@@ -95,6 +101,7 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
   };
 
   const verifyDataLocalStorage = async () => {
+    setContextLoading(true);
     const data = localStorage.getItem('WORK/Three');
 
     if (data) {
@@ -104,6 +111,8 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
         setPowersSelected(parsedData.power_ids);
       }
     }
+
+    setContextLoading(false);
   };
 
   const saveDataLocalStorage = (data: any) => {
@@ -115,8 +124,8 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
   }));
 
   useEffect(() => {
-    setLoading(true);
     const getPowers = async () => {
+      setLoading(true);
       const response = await getAllPowers();
 
       const attributesArray: any = [];

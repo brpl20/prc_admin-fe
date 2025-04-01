@@ -1,7 +1,7 @@
 import { Box, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup } from '@mui/material';
 import { IDocumentApprovalProps } from '../../../../interfaces/IDocument';
 import { colors, ContentContainer } from '../../../../styles/globals';
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { ContainerDetails, DetailsWrapper } from '../../../Details/styles';
 import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
@@ -12,14 +12,23 @@ import { SignatureType } from '../../../../types/signature';
 interface DocumentApprovalStepTwoProps {
   documents: IDocumentApprovalProps[];
   handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
+  refetch: () => void;
 }
 
 const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({
   documents,
   handleChangeStep,
+  refetch,
 }) => {
   const [signatureType, setSignatureType] = useState<SignatureType>('');
   const [showRadioButtons, setShowRadioButtons] = useState(true);
+
+  useEffect(() => {
+    if (documents.every(doc => doc.status === 'Pendente de assinatura externa')) {
+      setSignatureType('digital');
+      setShowRadioButtons(false);
+    }
+  }, [documents]);
 
   return (
     <>
@@ -99,6 +108,7 @@ const DocumentApprovalStepTwo: React.FC<DocumentApprovalStepTwoProps> = ({
               handleChangeStep={handleChangeStep}
               setSignatureType={setSignatureType}
               setShowRadioButtons={setShowRadioButtons}
+              refetch={refetch}
             />
           )}
         </ContentContainer>
@@ -113,6 +123,7 @@ interface SignatureContentHandlerProps {
   handleChangeStep: (action: 'previous' | 'next' | 'set', step?: number) => void;
   setSignatureType: Dispatch<SetStateAction<SignatureType>>;
   setShowRadioButtons: Dispatch<SetStateAction<boolean>>;
+  refetch: () => void;
 }
 
 const SignatureContentHandler: React.FunctionComponent<SignatureContentHandlerProps> = ({
@@ -121,6 +132,7 @@ const SignatureContentHandler: React.FunctionComponent<SignatureContentHandlerPr
   handleChangeStep,
   setSignatureType,
   setShowRadioButtons,
+  refetch,
 }) => {
   return (
     <Box className="mt-5">
@@ -132,7 +144,11 @@ const SignatureContentHandler: React.FunctionComponent<SignatureContentHandlerPr
           setShowRadioButtons={setShowRadioButtons}
         />
       ) : (
-        <TraditionalSignature documents={documents} handleChangeStep={handleChangeStep} />
+        <TraditionalSignature
+          documents={documents}
+          handleChangeStep={handleChangeStep}
+          refetch={refetch}
+        />
       )}
     </Box>
   );

@@ -11,7 +11,7 @@ import { ContainerDetails, DetailsWrapper } from '../../../Details/styles';
 import { GrDocumentText } from 'react-icons/gr';
 import DocumentApprovalStepper from '../../DocumentApprovalStepper';
 import { downloadS3FileByUrl } from '../../../../utils/files';
-import DocumentRevisionModal from '@/components/Modals/DocumentRevisionModal';
+import DocumentUploadModal from '@/components/Modals/DocumentUploadModal';
 import { useRouter } from 'next/router';
 import { convertDocumentsToPdf, uploadDocumentForRevision } from '@/services/works';
 import { Notification } from '@/components';
@@ -71,12 +71,9 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
 
     setLoading(true);
     try {
-      const uploadPromises = revisionDocuments.map(doc => {
-        const formData = new FormData();
-        formData.append('file', doc.file!);
-
-        return uploadDocumentForRevision(Number(workId), doc.id, formData);
-      });
+      const uploadPromises = revisionDocuments.map(doc =>
+        uploadDocumentForRevision(Number(workId), doc.id, doc.file!),
+      );
 
       await Promise.all(uploadPromises);
       await convertDocumentsToPdf(
@@ -134,24 +131,16 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
     revisionApproveModal.open();
   };
 
-  const approveSelectedDocuments = () => {
-    setDocuments(prevDocuments =>
-      prevDocuments.map(doc =>
-        selectedDocumentsIds.includes(doc.id) ? { ...doc, pending_revision: false } : doc,
-      ),
-    );
-    setSelectedDocumentsIds([]);
-  };
-
   const handleFileUploaded = (file: File) => {
     setRevisionDocuments(prev =>
       prev.map(doc => (doc.id === currentDocumentId ? { ...doc, file: file } : doc)),
     );
   };
+
   return (
     <>
       {/* Document Revision Modal */}
-      <DocumentRevisionModal
+      <DocumentUploadModal
         isOpen={uploadModal.isOpen}
         onClose={() => {
           uploadModal.close();
@@ -256,7 +245,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                   id: item.id,
                   type: documentTypeToReadable[item.document_type],
                   status: item.status,
-                  url: item.url,
+                  url: item.original_file_url,
                   showCheckbox: item.pending_revision,
                 };
               })}
@@ -285,7 +274,14 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                     <div>
                       <IconButton
                         aria-label="open"
-                        onClick={_ => downloadS3FileByUrl(params.row.url)}
+                        onClick={_ => {
+                          try {
+                            downloadS3FileByUrl(params.row.url);
+                          } catch (error: any) {
+                            setShowError(true);
+                            setErrorMessage(error.message);
+                          }
+                        }}
                       >
                         <TbDownload size={22} color={colors.icons} cursor={'pointer'} />
                       </IconButton>
@@ -423,7 +419,7 @@ const DocumentApprovalStepOne: React.FC<DocumentApprovalStepOneProps> = ({
                     id: item.id,
                     type: documentTypeToReadable[item.document_type],
                     status: item.file === null ? 'Pendente de upload' : 'Upload realizado',
-                    url: item.url,
+                    url: item.original_file_url,
                   };
                 })}
                 columns={[

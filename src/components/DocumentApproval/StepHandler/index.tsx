@@ -27,9 +27,15 @@ const DocumentApprovalStepHandler: React.FunctionComponent<DocumentApprovalStepH
       handleChangeStep={handleChangeStep}
       refetch={refetch}
     />,
-    <DocumentApprovalStepTwo key={2} documents={documents} handleChangeStep={handleChangeStep} />,
+    <DocumentApprovalStepTwo
+      key={2}
+      documents={documents}
+      handleChangeStep={handleChangeStep}
+      refetch={refetch}
+    />,
     <DocumentApprovalStepThree key={3} documents={documents} />,
   ];
+
   return steps[step] || null;
 };
 

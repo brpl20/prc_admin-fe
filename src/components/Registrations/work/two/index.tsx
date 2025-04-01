@@ -5,6 +5,8 @@ import React, {
   ForwardRefRenderFunction,
   useImperativeHandle,
   useEffect,
+  Dispatch,
+  SetStateAction,
 } from 'react';
 
 import { colors } from '@/styles/globals';
@@ -21,6 +23,7 @@ import { FormControlLabel, Typography, Radio, Select, MenuItem } from '@mui/mate
 import { moneyMask, percentMask } from '@/utils/masks';
 import { useRouter } from 'next/router';
 import { z } from 'zod';
+import useLoadingCounter from '@/utils/useLoadingCounter';
 
 const instalmentOptions = [
   '1x',
@@ -43,6 +46,7 @@ export interface IRefWorkStepTwoProps {
 
 interface IStepTwoProps {
   nextStep: () => void;
+  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 const stepTwoSchema = z.object({
@@ -50,7 +54,7 @@ const stepTwoSchema = z.object({
 });
 
 const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps> = (
-  { nextStep },
+  { nextStep, setFormLoading },
   ref,
 ) => {
   const [isVisibleOptionsArea, setIsVisibleOptionsArea] = useState(false);
@@ -68,6 +72,8 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
   const [parcelling, setParcelling] = useState(false);
   const [numberOfInstallments, setNumberOfInstallments] = useState('');
   const route = useRouter();
+
+  const { setLoading } = useLoadingCounter(setFormLoading);
 
   const handleCategorySelection = (value: string) => {
     const newValue = honoraryType != value ? value : '';
@@ -192,6 +198,7 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
   };
 
   const verifyDataLocalStorage = async () => {
+    setLoading(true);
     const data = localStorage.getItem('WORK/Two');
 
     if (data) {
@@ -245,6 +252,7 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
         );
       }
     }
+    setLoading(false);
   };
 
   const saveDataLocalStorage = (data: any) => {

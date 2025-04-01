@@ -6,6 +6,8 @@ import React, {
   ForwardRefRenderFunction,
   useImperativeHandle,
   useEffect,
+  Dispatch,
+  SetStateAction,
 } from 'react';
 
 import { Flex } from '@/styles/globals';
@@ -25,6 +27,7 @@ import {
 } from '@mui/material';
 import CustomTooltip from '@/components/Tooltip';
 import { useRouter } from 'next/router';
+import useLoadingCounter from '@/utils/useLoadingCounter';
 
 export interface IRefWorkStepSixProps {
   handleSubmitForm: () => void;
@@ -32,10 +35,11 @@ export interface IRefWorkStepSixProps {
 
 interface IStepSixProps {
   confirmation: () => void;
+  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps> = (
-  { confirmation },
+  { confirmation, setFormLoading },
   ref,
 ) => {
   const router = useRouter();
@@ -57,6 +61,8 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
   const [otherDocuments, setOtherDocuments] = useState<string>('');
   const [folder, setFolder] = useState('');
 
+  const { setLoading } = useLoadingCounter(setFormLoading);
+
   const handleDocumentsProducedSelection = (event: ChangeEvent<HTMLInputElement>) => {
     const { value, checked } = event.target;
 
@@ -67,6 +73,81 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
     }
   };
 
+  const createDocumentsProducedArray = () => {
+    let documentsProducedArray: any[] = [];
+
+    workForm.profile_customer_ids.forEach((profile: any) => {
+      documentsProducedArray = documentsProducedArray.concat(
+        documentsProduced.map((document: any) => ({
+          document_type: document.document_type ? document.document_type : document,
+          profile_customer_id: Number(profile),
+        })),
+      );
+    });
+
+    return documentsProducedArray;
+  };
+
+  const createNewProducedDocumentsArray = () => {
+    let newProducedDocumentsArray: any[] = [];
+    let documentTypesSet = new Set();
+
+    documentsProduced.forEach((document: any) => {
+      if (document.document_type) {
+        documentTypesSet.add(document.document_type);
+      }
+    });
+
+    const customersWithoutDocument = workForm.profile_customer_ids.filter((profile: any) => {
+      return !documentsProduced.some((document: any) => document.profile_customer_id == profile);
+    });
+
+    documentsProduced.forEach((document: any) => {
+      if (!document.id) {
+        workForm.profile_customer_ids.forEach((profile: any) => {
+          newProducedDocumentsArray.push({
+            document_type: document.document_type ? document.document_type : document,
+            profile_customer_id: Number(profile),
+          });
+        });
+      }
+
+      if (document.id) {
+        newProducedDocumentsArray.push({
+          id: document.id,
+          document_type: document.document_type ? document.document_type : document,
+          profile_customer_id: Number(document.profile_customer_id),
+          url: document.url,
+        });
+      }
+    });
+
+    customersWithoutDocument.forEach((profile: any) => {
+      documentTypesSet.forEach((document: any) => {
+        newProducedDocumentsArray.push({
+          document_type: document.document_type ? document.document_type : document,
+          profile_customer_id: Number(profile),
+        });
+      });
+    });
+
+    return newProducedDocumentsArray;
+  };
+
+  const createWorkData = () => {
+    const documentsAttributes = isEdit
+      ? createNewProducedDocumentsArray()
+      : createDocumentsProducedArray();
+
+    return {
+      documents_attributes: documentsAttributes,
+      pending_documents_attributes: pendingDocuments,
+      extra_pending_document: otherDocuments,
+      folder: folder,
+      note: gradesInGeneral,
+    };
+  };
+
   const handleSubmitForm = () => {
     try {
       if (documentsProduced.length <= 0) {
@@ -74,101 +155,26 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
         throw new Error('Selecione pelo menos um documento a ser produzido');
       }
 
-      let documentsProducedArray: any[] = [];
+      const workData = createWorkData();
 
-      workForm.profile_customer_ids.forEach((profile: any) => {
-        documentsProducedArray = documentsProducedArray.concat(
-          documentsProduced.map((document: any) => ({
-            document_type: document.document_type ? document.document_type : document,
-            profile_customer_id: Number(profile),
-          })),
-        );
-      });
-
-      let workData = {};
-
-      if (router.pathname.includes('alterar')) {
-        let newProducedDocumentsArray: any[] = [];
-        let documentTypesSet = new Set();
-
-        documentsProduced.forEach((document: any) => {
-          if (document.document_type) {
-            documentTypesSet.add(document.document_type);
-          }
-        });
-
-        const customersWithoutDocument = workForm.profile_customer_ids.filter((profile: any) => {
-          return !documentsProduced.some(
-            (document: any) => document.profile_customer_id == profile,
-          );
-        });
-
-        documentsProduced.forEach((document: any) => {
-          if (!document.id) {
-            workForm.profile_customer_ids.forEach((profile: any) => {
-              newProducedDocumentsArray.push({
-                document_type: document.document_type ? document.document_type : document,
-                profile_customer_id: Number(profile),
-              });
-            });
-          }
-
-          if (document.id) {
-            newProducedDocumentsArray.push({
-              id: document.id,
-              document_type: document.document_type ? document.document_type : document,
-              profile_customer_id: Number(document.profile_customer_id),
-              url: document.url,
-            });
-          }
-        });
-
-        customersWithoutDocument.forEach((profile: any) => {
-          documentTypesSet.forEach((document: any) => {
-            newProducedDocumentsArray.push({
-              document_type: document.document_type ? document.document_type : document,
-              profile_customer_id: Number(profile),
-            });
-          });
-        });
-
-        workData = {
-          documents_attributes: newProducedDocumentsArray,
-          pending_documents_attributes: pendingDocuments,
-          extra_pending_document: otherDocuments,
-          folder: folder,
-          note: gradesInGeneral,
-        };
-      } else {
-        workData = {
-          documents_attributes: documentsProducedArray,
-          pending_documents_attributes: pendingDocuments,
-          extra_pending_document: otherDocuments,
-          folder: folder,
-          note: gradesInGeneral,
-        };
-      }
-
-      if (router.pathname === '/alterar') {
-        let dataAux = {
+      if (isEdit) {
+        const updatedWorkForm = {
           ...updateWorkForm,
           ...workData,
         };
 
-        setUdateWorkForm(dataAux);
-        saveDataLocalStorage(dataAux);
+        setUdateWorkForm(updatedWorkForm);
+        saveDataLocalStorage(updatedWorkForm);
+      } else {
+        const newWorkForm = {
+          ...workForm,
+          ...workData,
+        };
+
+        saveDataLocalStorage(newWorkForm);
+        setWorkForm(newWorkForm);
       }
 
-      const dataAux = {
-        ...workForm,
-        ...workData,
-      };
-
-      if (router.pathname !== '/alterar') {
-        saveDataLocalStorage(dataAux);
-      }
-
-      setWorkForm(dataAux);
       confirmation();
     } catch (err) {
       handleFormError(err);
@@ -228,6 +234,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
 
   useEffect(() => {
     const verifyDataLocalStorage = async () => {
+      setLoading(true);
       const data = localStorage.getItem('WORK/Six');
 
       if (data) {
@@ -254,6 +261,7 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
           setOtherDocuments(parsedData.extra_pending_document);
         }
       }
+      setLoading(false);
     };
 
     verifyDataLocalStorage();
