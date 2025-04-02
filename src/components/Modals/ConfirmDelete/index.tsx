@@ -18,7 +18,7 @@ type RemoveProps = {
   model: string;
 };
 
-const ModalOfRemove = ({
+const DeleteModal = ({
   isOpen,
   onClose,
   id,
@@ -209,4 +209,4 @@ const ModalOfRemove = ({
   );
 };
 
-export default ModalOfRemove;
+export default DeleteModal;

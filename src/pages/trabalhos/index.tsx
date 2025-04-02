@@ -36,7 +36,7 @@ import { RxUpdate } from 'react-icons/rx';
 import { Box, Button, Typography, LinearProgress } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
-import { Footer, Notification, ModalOfRemove } from '@/components';
+import { Footer, Notification, DeleteModal } from '@/components';
 import dynamic from 'next/dynamic';
 import Router from 'next/router';
 import { IAdminProps } from '@/interfaces/IAdmin';
@@ -389,7 +389,7 @@ const Works = () => {
       )}
 
       {openRemoveModal && (
-        <ModalOfRemove
+        <DeleteModal
           isOpen={openRemoveModal}
           onClose={() => setOpenRemoveModal(false)}
           id={rowItem.id}

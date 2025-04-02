@@ -34,7 +34,7 @@ import { format } from 'date-fns';
 import { Box, Button, Typography, LinearProgress } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
-import { Footer, TaskModal, ViewDetailsModal, ModalOfRemove, Notification } from '@/components';
+import { Footer, TaskModal, ViewDetailsModal, DeleteModal, Notification } from '@/components';
 import dynamic from 'next/dynamic';
 import { getSession } from 'next-auth/react';
 import { ptBR } from 'date-fns/locale';
@@ -324,7 +324,7 @@ const Tasks = () => {
         )}
 
         {openRemoveModal && (
-          <ModalOfRemove
+          <DeleteModal
             isOpen={openRemoveModal}
             onClose={() => setOpenRemoveModal(false)}
             id={rowItem.id}
