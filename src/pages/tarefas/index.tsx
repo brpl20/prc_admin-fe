@@ -328,7 +328,7 @@ const Tasks = () => {
             isOpen={openRemoveModal}
             onClose={() => setOpenRemoveModal(false)}
             id={rowItem.id}
-            textConfirmation={`tarefa/${rowItem.description}`}
+            entityName={rowItem.description}
             handleCloseModal={() => {
               setRefetch(!refetch);
               setOpenRemoveModal(false);

@@ -393,7 +393,7 @@ const Works = () => {
           isOpen={openRemoveModal}
           onClose={() => setOpenRemoveModal(false)}
           id={rowItem.id}
-          textConfirmation={`tabalho/${rowItem.procedure}`}
+          entityName={rowItem.procedure}
           handleCloseModal={() => {
             setRefetch(!refetch);
             setOpenRemoveModal(false);

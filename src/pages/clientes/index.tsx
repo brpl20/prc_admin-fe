@@ -635,7 +635,7 @@ const Customers = () => {
           isOpen={openRemoveModal}
           onClose={() => setOpenRemoveModal(false)}
           id={rowItem.id}
-          textConfirmation={`cliente/${rowItem.name}`}
+          entityName={rowItem.name}
           handleCloseModal={() => {
             setRefetch(!refetch);
             setOpenRemoveModal(false);

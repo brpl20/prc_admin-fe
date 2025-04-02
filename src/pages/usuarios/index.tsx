@@ -321,7 +321,7 @@ const Admins = () => {
           isOpen={openRemoveModal}
           onClose={() => setOpenRemoveModal(false)}
           id={rowItem.id}
-          textConfirmation={`admin/${rowItem.name}`}
+          entityName={rowItem.name}
           handleCloseModal={() => {
             setRefetch(!refetch);
             setOpenRemoveModal(false);

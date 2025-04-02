@@ -357,7 +357,7 @@ const Offices = () => {
           isOpen={openRemoveModal}
           onClose={() => setOpenRemoveModal(false)}
           id={rowItem.id}
-          textConfirmation={`escritório/${rowItem.name}`}
+          entityName={rowItem.name}
           handleCloseModal={() => {
             setRefetch(!refetch);
             setOpenRemoveModal(false);
