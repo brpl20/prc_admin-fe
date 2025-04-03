@@ -14,7 +14,7 @@ type RemoveProps = {
   onClose: () => void;
   handleCloseModal: () => void;
   id: string;
-  textConfirmation: string;
+  entityName: string;
   model: string;
 };
 
@@ -22,8 +22,8 @@ const ModalOfRemove = ({
   isOpen,
   onClose,
   id,
-  textConfirmation,
   model,
+  entityName,
   handleCloseModal,
 }: RemoveProps) => {
   const [loading, setLoading] = useState(false);
@@ -33,12 +33,10 @@ const ModalOfRemove = ({
   const [typeMessage, setTypeMessage] = useState<'success' | 'error'>('success');
 
   const [inputValue, setInputValue] = useState('');
-  const [textButton, setTextButton] = useState('Eu quero remover este cliente');
+  const [textButton, setTextButton] = useState(`Eu quero remover este ${model}`);
   const [steps, setSteps] = useState(0);
 
-  const handleClose = () => {
-    onClose();
-  };
+  const textConfirmation = `${model}/${entityName}`;
 
   const deleteCustomerFull = async (id: string) => {
     try {
@@ -103,7 +101,7 @@ const ModalOfRemove = ({
             <label className="text-lg font-medium w-[420px] truncate overflow-hidden whitespace-nowrap">{`Remover ${textConfirmation}`}</label>
 
             <span className="flex justify-center items-center p-1 bg-[#01013D3f] w-[30px] h-[30px] rounded">
-              <MdClose onClick={handleClose} size={20} className="cursor-pointer" />
+              <MdClose onClick={onClose} size={20} className="cursor-pointer" />
             </span>
           </div>
 
@@ -127,7 +125,7 @@ const ModalOfRemove = ({
               </div>
 
               <div className="mt-3 text-center sm:mt-5">
-                <label className="text-xl	font-semibold">{textConfirmation}</label>
+                <label className="text-xl	font-semibold">{`Remover ${model}`}</label>
               </div>
             </div>
           )}
@@ -136,8 +134,7 @@ const ModalOfRemove = ({
             <div className="flex flex-col justify-center items-center border-[#C0C0C0] list-disc border-solid border-y-[1px] py-8">
               <li className="px-8">
                 <label className="text-lg	font-medium">
-                  Ao remover este item, todas as relações associadas serão permanentemente apagadas
-                  e não poderão mais ser encontradas no sistema.
+                  {`Ao remover este ${model}, todas as relações associadas serão permanentemente apagadas e não poderão mais ser encontradas no sistema.`}
                 </label>
               </li>
             </div>
@@ -163,7 +160,7 @@ const ModalOfRemove = ({
               </div>
 
               <div className="mt-3 text-center sm:mt-5">
-                <label className="text-xl	font-semibold">{textConfirmation}</label>
+                <label className="text-xl	font-semibold">{`Remover ${model}`}</label>
               </div>
             </div>
           )}

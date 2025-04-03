@@ -8,7 +8,7 @@ import TaskModal from './Modals/TaskModals/taskForm';
 import ViewDetailsModal from './Modals/TaskModals/ViewDetails';
 import ConfirmCreation from './Modals/ConfirmCreation';
 import WorkStatusModal from './Modals/WorkStatusModal';
-import ModalOfRemove from './Modals/ConfirmDelete';
+import DeleteModal from './Modals/ConfirmDelete';
 
 export {
   ActiveLink,
@@ -21,5 +21,5 @@ export {
   WorkStatusModal,
   ViewDetailsModal,
   ConfirmCreation,
-  ModalOfRemove,
+  DeleteModal,
 };

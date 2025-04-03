@@ -45,7 +45,7 @@ import { DataGrid } from '@mui/x-data-grid';
 
 import IconButton from '@mui/material/IconButton';
 
-import { Footer, Notification, Spinner, ModalOfRemove } from '@/components';
+import { Footer, Notification, Spinner, DeleteModal } from '@/components';
 
 import dynamic from 'next/dynamic';
 
@@ -631,11 +631,11 @@ const Customers = () => {
       )}
 
       {openRemoveModal && (
-        <ModalOfRemove
+        <DeleteModal
           isOpen={openRemoveModal}
           onClose={() => setOpenRemoveModal(false)}
           id={rowItem.id}
-          textConfirmation={`cliente/${rowItem.name}`}
+          entityName={rowItem.name}
           handleCloseModal={() => {
             setRefetch(!refetch);
             setOpenRemoveModal(false);
