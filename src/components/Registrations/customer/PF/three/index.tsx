@@ -238,13 +238,20 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
 
   useEffect(() => {
     const handleDataForm = () => {
-      const attributes = customerForm.data.attributes;
+      const attributes = customerForm.data?.attributes;
+
       if (attributes) {
         setFormData(prevData => ({
           ...prevData,
-          phoneInputFields: attributes.phones,
-          emailInputFields: attributes.emails,
+          phoneInputFields: attributes.phones?.length ? attributes.phones : [{ phone_number: '' }], // Ensure at least one empty phone input
+          emailInputFields: attributes.emails?.length ? attributes.emails : [{ email: '' }], // Ensure at least one empty email input
         }));
+      } else {
+        // Fallback in case attributes are undefined
+        setFormData({
+          phoneInputFields: [{ phone_number: '' }],
+          emailInputFields: [{ email: '' }],
+        });
       }
     };
 
@@ -299,62 +306,59 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
               <Typography style={{ marginBottom: '8px' }} variant="h6">
                 {'Telefone'}
               </Typography>
-              {formData.phoneInputFields &&
-                formData.phoneInputFields.map((inputValue, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      marginBottom: '8px',
-                      gap: '6px',
-                    }}
-                  >
-                    <div className="flex flex-row gap-1">
-                      <CustomTextField
-                        formData={formData}
-                        customValue={inputValue.phone_number}
-                        handleInputChange={(e: any) =>
-                          handleInputChange(index, e.target.value, 'phoneInputFields')
-                        }
-                        name="phone_number"
-                        placeholder="Insira um número de telefone"
-                        errorMessage={getErrorMessage(index, 'phone_numbers')}
-                      />
+              {formData.phoneInputFields.map((inputValue, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    marginBottom: '8px',
+                    gap: '6px',
+                  }}
+                >
+                  <div className="flex flex-row gap-1">
+                    <CustomTextField
+                      formData={formData}
+                      customValue={inputValue.phone_number}
+                      handleInputChange={(e: any) =>
+                        handleInputChange(index, e.target.value, 'phoneInputFields')
+                      }
+                      name="phone_number"
+                      placeholder="Insira um número de telefone"
+                      errorMessage={getErrorMessage(index, 'phone_numbers')}
+                    />
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleRemoveContact(index, 'phoneInputFields');
-                        }}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleRemoveContact(index, 'phoneInputFields');
+                      }}
+                    >
+                      <div
+                        className={`flex  ${formData.phoneInputFields.length > 1 ? '' : 'hidden'}`}
                       >
-                        <div
-                          className={`flex  ${
-                            formData.phoneInputFields.length > 1 ? '' : 'hidden'
-                          }`}
-                        >
-                          <IoMdTrash size={20} color="#a50000" />
-                        </div>
-                      </button>
-                    </div>
-                    {index === formData.phoneInputFields.length - 1 && (
-                      <button
-                        id="add-phone"
-                        type="button"
-                        className="flex items-center w-fit self-end"
-                        onClick={() => handleAddInput('phoneInputFields')}
-                      >
-                        <IoAddCircleOutline
-                          className={`cursor-pointer ml-auto ${
-                            formData.phoneInputFields.length > 1 ? 'mr-6' : ''
-                          }`}
-                          color={colors.quartiary}
-                          size={20}
-                        />
-                      </button>
-                    )}
+                        <IoMdTrash size={20} color="#a50000" />
+                      </div>
+                    </button>
                   </div>
-                ))}
+                  {index === formData.phoneInputFields.length - 1 && (
+                    <button
+                      id="add-phone"
+                      type="button"
+                      className="flex items-center w-fit self-end"
+                      onClick={() => handleAddInput('phoneInputFields')}
+                    >
+                      <IoAddCircleOutline
+                        className={`cursor-pointer ml-auto ${
+                          formData.phoneInputFields.length > 1 ? 'mr-6' : ''
+                        }`}
+                        color={colors.quartiary}
+                        size={20}
+                      />
+                    </button>
+                  )}
+                </div>
+              ))}
             </Box>
           </ColumnContainer>
           <ColumnContainer>
@@ -363,7 +367,6 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
                 {'E-mail'}
               </Typography>
               {formData &&
-                formData.emailInputFields &&
                 formData.emailInputFields.map((inputValue, index) => (
                   <div
                     key={index}
