@@ -35,7 +35,7 @@ import IconButton from '@mui/material/IconButton';
 import { Box, Button, LinearProgress, Typography } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
-import { Footer, Notification, ModalOfRemove } from '@/components';
+import { Footer, Notification, DeleteModal } from '@/components';
 import { IAdminProps, IAdminPropsAttributes } from '@/interfaces/IAdmin';
 
 import dynamic from 'next/dynamic';
@@ -317,11 +317,11 @@ const Admins = () => {
       )}
 
       {openRemoveModal && (
-        <ModalOfRemove
+        <DeleteModal
           isOpen={openRemoveModal}
           onClose={() => setOpenRemoveModal(false)}
           id={rowItem.id}
-          textConfirmation={`admin/${rowItem.name}`}
+          entityName={rowItem.name}
           handleCloseModal={() => {
             setRefetch(!refetch);
             setOpenRemoveModal(false);

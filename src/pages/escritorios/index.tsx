@@ -34,7 +34,7 @@ import { Box, Button, Typography, LinearProgress } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
 import dynamic from 'next/dynamic';
-import { Footer, Notification, ModalOfRemove } from '@/components';
+import { Footer, Notification, DeleteModal } from '@/components';
 
 import { IOfficeProps, IOfficePropsAttributes } from '@/interfaces/IOffice';
 import { getAllAdmins } from '@/services/admins';
@@ -353,11 +353,11 @@ const Offices = () => {
       )}
 
       {openRemoveModal && (
-        <ModalOfRemove
+        <DeleteModal
           isOpen={openRemoveModal}
           onClose={() => setOpenRemoveModal(false)}
           id={rowItem.id}
-          textConfirmation={`escritório/${rowItem.name}`}
+          entityName={rowItem.name}
           handleCloseModal={() => {
             setRefetch(!refetch);
             setOpenRemoveModal(false);
