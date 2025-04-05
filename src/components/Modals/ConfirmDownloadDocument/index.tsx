@@ -89,7 +89,7 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
 
   return (
     <>
-      <Modal open={isOpen} onClose={onClose} style={{ overflowY: 'auto' }}>
+      <Modal open={isOpen} onClose={handleClose} style={{ overflowY: 'auto' }}>
         <Content>
           <Box display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
             <Typography
@@ -98,7 +98,7 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
             >
               {'Arquivos para Download'}
             </Typography>
-            <Box sx={{ cursor: 'pointer' }} onClick={onClose}>
+            <Box sx={{ cursor: 'pointer' }} onClick={handleClose}>
               <MdClose size={26} onClick={handleClose} />
             </Box>
           </Box>
