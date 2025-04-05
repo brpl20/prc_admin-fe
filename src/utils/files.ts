@@ -8,10 +8,9 @@ export const downloadS3FileByUrl = (url: string, filename?: string) => {
   if (!url || !isValidHttpUrl(url)) {
     throw Error('Ocorreu um erro ao tentar baixar o arquivo. Por favor, tente novamente.');
   }
-
   const lowerCaseUrl = url.toLowerCase();
 
-  if (lowerCaseUrl.includes('.pdf')) {
+  if (lowerCaseUrl.includes('pdf')) {
     return openFileInNewTab(url);
   }
 
