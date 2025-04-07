@@ -768,36 +768,37 @@ const User = ({ dataToEdit }: props) => {
 
   useEffect(() => {
     const fetchCEPDetails = async () => {
-      if (formData.street !== '') {
+      if (!formData.cep || formData.address !== '') {
         return;
       }
 
       const numericCEP = formData.cep.replace(/\D/g, '');
 
-      if (numericCEP.length === 8) {
-        try {
-          const response = await getCEPDetails(numericCEP);
-          setFormData(prevData => ({
-            ...prevData,
-            state: response.state,
-            city: response.city,
-            street: response.street,
-            neighborhood: response.neighborhood,
-          }));
-        } catch (error: any) {
-          setErrors({
-            cep: 'CEP inválido.',
-          });
-          setMessage('CEP inválido.');
-          setType('error');
-          setOpenSnackbar(true);
-        }
+      if (numericCEP.length !== 8) {
+        return;
+      }
+
+      try {
+        const response = await getCEPDetails(numericCEP);
+        setFormData(prevData => ({
+          ...prevData,
+          state: response.state,
+          city: response.city,
+          address: response.street,
+          street: response.street,
+          neighborhood: response.neighborhood,
+        }));
+      } catch (error: any) {
+        setErrors({
+          cep: 'CEP inválido.',
+        });
+        setMessage('CEP inválido.');
+        setType('error');
+        setOpenSnackbar(true);
       }
     };
 
-    if (formData.cep) {
-      fetchCEPDetails();
-    }
+    fetchCEPDetails();
   }, [formData.cep]);
 
   return (
