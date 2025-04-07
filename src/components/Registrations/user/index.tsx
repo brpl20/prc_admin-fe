@@ -478,7 +478,14 @@ const User = ({ dataToEdit }: props) => {
 
   const handleFormError = (error: { issues: ZodFormError[] }) => {
     const newErrors = error.issues ?? [];
-    console.log(newErrors);
+
+    if (newErrors.length === 0) {
+      setMessage('Ocorreu um erro inesperado ao enviar os dados.');
+      setType('error');
+      setOpenSnackbar(true);
+      return;
+    }
+
     setMessage('Corrija os erros no formulário.');
     setType('error');
     setOpenSnackbar(true);
