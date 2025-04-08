@@ -115,7 +115,7 @@ const userSchema = z
       .string()
       .min(2, { message: 'O campo Data de Nascimento é obrigatório.' })
       .refine(isDateBeforeToday, { message: 'Data de Nascimento inválida.' }),
-    userType: z.string().min(2, { message: 'O campo Tipo do Usuário é obrigatório.' }),
+    role: z.string().min(2, { message: 'O campo Tipo do Usuário é obrigatório.' }),
     city: z.string().min(2, { message: 'O campo Cidade é obrigatório.' }),
     state: z.string().min(2, { message: 'O campo Estado é obrigatório.' }),
     neighborhood: z.string().min(2, { message: 'O campo Bairro é obrigatório.' }),
@@ -124,7 +124,7 @@ const userSchema = z
     cep: z.string().min(2, { message: 'O campo CEP é obrigatório.' }),
     oab: z.string().optional(),
   })
-  .refine(data => data.userType !== 'lawyer' || (data.oab && data.oab.trim().length > 0), {
+  .refine(data => data.role !== 'lawyer' || (data.oab && data.oab.trim().length > 0), {
     message: 'O campo OAB é obrigatório para advogados.',
     path: ['oab'],
   });
@@ -321,7 +321,7 @@ const User = ({ dataToEdit }: props) => {
         nationality: formData.nationality,
         phone_numbers: contactData.phoneInputFields.map(field => field.phone_number),
         emails: contactData.emailInputFields.map(field => field.email),
-        userType: formData.role,
+        role: formData.role,
         bank_name: formData.bank_name,
         agency: formData.agency,
         op: formData.op,
@@ -478,6 +478,14 @@ const User = ({ dataToEdit }: props) => {
 
   const handleFormError = (error: { issues: ZodFormError[] }) => {
     const newErrors = error.issues ?? [];
+
+    if (newErrors.length === 0) {
+      setMessage('Ocorreu um erro inesperado ao enviar os dados.');
+      setType('error');
+      setOpenSnackbar(true);
+      return;
+    }
+
     setMessage('Corrija os erros no formulário.');
     setType('error');
     setOpenSnackbar(true);
@@ -767,36 +775,37 @@ const User = ({ dataToEdit }: props) => {
 
   useEffect(() => {
     const fetchCEPDetails = async () => {
-      if (formData.street !== '') {
+      if (!formData.cep || formData.address !== '') {
         return;
       }
 
       const numericCEP = formData.cep.replace(/\D/g, '');
 
-      if (numericCEP.length === 8) {
-        try {
-          const response = await getCEPDetails(numericCEP);
-          setFormData(prevData => ({
-            ...prevData,
-            state: response.state,
-            city: response.city,
-            street: response.street,
-            neighborhood: response.neighborhood,
-          }));
-        } catch (error: any) {
-          setErrors({
-            cep: 'CEP inválido.',
-          });
-          setMessage('CEP inválido.');
-          setType('error');
-          setOpenSnackbar(true);
-        }
+      if (numericCEP.length !== 8) {
+        return;
+      }
+
+      try {
+        const response = await getCEPDetails(numericCEP);
+        setFormData(prevData => ({
+          ...prevData,
+          state: response.state,
+          city: response.city,
+          address: response.street,
+          street: response.street,
+          neighborhood: response.neighborhood,
+        }));
+      } catch (error: any) {
+        setErrors({
+          cep: 'CEP inválido.',
+        });
+        setMessage('CEP inválido.');
+        setType('error');
+        setOpenSnackbar(true);
       }
     };
 
-    if (formData.cep) {
-      fetchCEPDetails();
-    }
+    fetchCEPDetails();
   }, [formData.cep]);
 
   return (
