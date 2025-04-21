@@ -8,10 +8,16 @@ import { WorkContext } from '@/contexts/WorkContext';
 import { getAllAdmins } from '@/services/admins';
 
 import { inactiveWork, restoreWork } from '@/services/works';
+import {
+  getAllCustomers,
+  getAllProfileCustomer,
+} from '@/services/customers';
 
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+
+import { ICustomerProps } from '@/interfaces/ICustomer';
 
 import {
   colors,
@@ -42,7 +48,22 @@ import Router from 'next/router';
 import { IAdminProps } from '@/interfaces/IAdmin';
 import { WorkStatusModal } from '@/components';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
+import { translateCustomerType } from '@/utils/translateCustomerType';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
+
+type TranslatedCustomer = {
+  id: string;
+  attributes: {
+    [key: string]: any;
+  };
+};
+
+type AllCustomer = {
+  attributes: {
+    email: string;
+    profile_customer_id: number;
+  };
+};
 
 const Works = () => {
   const { setWorkForm } = useContext(WorkContext);
@@ -59,6 +80,10 @@ const Works = () => {
   const [statusModalisOpen, setStatusModalisOpen] = useState<boolean>(false);
   const [workId, setWorkId] = useState<string>('');
   const [workStatus, setWorkStatus] = useState<string>('');
+
+  const [profileCustomersList, setProfileCustomersList] = useState<ICustomerProps[]>([]);
+
+
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -213,10 +238,6 @@ const Works = () => {
     }
   };
 
-  const getFirstName = (name: string) => {
-    return name.split(' ')[0];
-  };
-
   useEffect(() => {
     getAdmins();
   }, []);
@@ -235,6 +256,7 @@ const Works = () => {
     }
 
     getWorks();
+    getProfileCustomers();
     setWorkForm({});
   }, [refetch, getForStatus]);
 
@@ -260,6 +282,33 @@ const Works = () => {
     setWorkStatus('');
 
     await getWorks();
+  };
+
+  const getProfileCustomers = async () => {
+    const allProfileCustomer = await getAllProfileCustomer('active');
+    const allCustomer = await getAllCustomers();
+
+    const translatedCustomers = allProfileCustomer.data.map((profileCustomer: ICustomerProps) => ({
+      ...profileCustomer,
+      attributes: {
+        ...profileCustomer.attributes,
+        customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
+      },
+    }));
+
+    translatedCustomers.forEach((translatedCustomer: TranslatedCustomer) => {
+      const matchingCustomer = allCustomer.data.find(
+        (customer: AllCustomer) =>
+          customer.attributes.profile_customer_id === Number(translatedCustomer.id),
+      );
+
+      if (matchingCustomer) {
+        translatedCustomer.attributes.customer_email = matchingCustomer.attributes.email;
+      }
+    });
+
+    setProfileCustomersList(translatedCustomers);
+    setIsLoading(false);
   };
 
   return (
@@ -553,7 +602,19 @@ const Works = () => {
                       : work.attributes.procedures.map(mapProcedureName);
 
                     const clients_names = work.attributes.profile_customers.map(
-                      (customer: any) => customer.name,
+                      (customer: any) => {
+
+                        const profileCustomer = profileCustomersList.find(
+                          (profileCustomer: any) =>
+                            Number(profileCustomer.id) === customer.id,
+                        );
+
+                        const customerName = profileCustomer
+                          ? `${profileCustomer.attributes.name} ${profileCustomer.attributes.last_name}`
+                          : customer.name;
+
+                        return customerName;
+                      },
                     );
 
                     const subject = work.attributes.subject
@@ -563,9 +624,7 @@ const Works = () => {
                     return {
                       id: Number(work.id),
                       client:
-                        clients_names.length > 1
-                          ? clients_names.map(getFirstName).join(', ')
-                          : clients_names,
+                        clients_names.map((name: string) => name.split(', ')).join(', '),
                       procedure: procedures,
                       deleted: work.attributes.deleted,
                       subject: subject,
@@ -623,40 +682,6 @@ const Works = () => {
                     editable: false,
                     valueFormatter: defaultTableValueFormatter,
                     renderCell: (params: any) => (
-                      // <Box width={'100%'} display={'flex'} justifyContent={'space-around'}>
-                      //   <MdVisibility
-                      //     size={22}
-                      //     color={colors.icons}
-                      //     cursor={'pointer'}
-                      //     onClick={() => handleDetails(params.row)}
-                      //   />
-                      //   <button
-                      //     style={{
-                      //       backgroundColor: 'transparent',
-                      //       border: 'none',
-                      //       cursor: 'pointer',
-                      //     }}
-                      //     disabled={params.row.created_by_id !== adminId}
-                      //     onClick={() => {
-                      //       handleEdit(params.row);
-                      //     }}
-                      //   >
-                      //     <MdModeEdit size={22} color={colors.icons} cursor={'pointer'} />
-                      //   </button>
-                      //   <button
-                      //     style={{
-                      //       backgroundColor: 'transparent',
-                      //       border: 'none',
-                      //       cursor: 'pointer',
-                      //     }}
-                      //     disabled={params.row.created_by_id !== adminId}
-                      //     onClick={() => {
-                      //       handleStatus(params.row);
-                      //     }}
-                      //   >
-                      //     <MdNoteAdd size={22} color={colors.icons} cursor={'pointer'} />
-                      //   </button>
-                      // </Box>
                       <div>
                         <IconButton
                           aria-label="more"

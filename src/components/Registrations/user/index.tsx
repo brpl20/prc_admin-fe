@@ -405,8 +405,6 @@ const User = ({ dataToEdit }: props) => {
           },
         };
 
-        console.log('profile admin:', editData);
-        console.log('admin:', adminEmailData);
         await updateAdmin(id, adminEmailData);
 
         Router.push('/usuarios');
@@ -588,7 +586,7 @@ const User = ({ dataToEdit }: props) => {
           bank => bank.name !== 'Selic' && bank.name !== 'Bacen',
         );
         setBankList(filteredBanks);
-      } catch (error: any) {}
+      } catch (error: any) { }
     };
 
     const removeDuplicateBanks = (banks: any) => {
@@ -670,24 +668,24 @@ const User = ({ dataToEdit }: props) => {
         const addresses = attributes.addresses[0]
           ? attributes.addresses[0]
           : {
-              description: '',
-              zip_code: '',
-              street: '',
-              number: '',
-              neighborhood: '',
-              city: '',
-              state: '',
-            };
+            description: '',
+            zip_code: '',
+            street: '',
+            number: '',
+            neighborhood: '',
+            city: '',
+            state: '',
+          };
 
         const bankAccounts = attributes.bank_accounts[0]
           ? attributes.bank_accounts[0]
           : {
-              bank_name: '',
-              type_account: '',
-              agency: '',
-              account: '',
-              pix: '',
-            };
+            bank_name: '',
+            type_account: '',
+            agency: '',
+            account: '',
+            pix: '',
+          };
 
         handleBankChange(bankAccounts.bank_name);
 
@@ -1063,9 +1061,8 @@ const User = ({ dataToEdit }: props) => {
                           onClick={() => handleRemoveContact(index, 'phoneInputFields')}
                         >
                           <div
-                            className={`flex ${
-                              contactData.phoneInputFields.length > 1 ? '' : 'hidden'
-                            }`}
+                            className={`flex ${contactData.phoneInputFields.length > 1 ? '' : 'hidden'
+                              }`}
                           >
                             <IoMdTrash size={20} color="#a50000" />
                           </div>
@@ -1080,9 +1077,8 @@ const User = ({ dataToEdit }: props) => {
                           onClick={() => handleAddInput('phoneInputFields')}
                         >
                           <IoAddCircleOutline
-                            className={`cursor-pointer ml-auto ${
-                              contactData.phoneInputFields.length > 1 ? 'mr-6' : ''
-                            }`}
+                            className={`cursor-pointer ml-auto ${contactData.phoneInputFields.length > 1 ? 'mr-6' : ''
+                              }`}
                             color={colors.quartiary}
                             size={20}
                           />
@@ -1119,9 +1115,8 @@ const User = ({ dataToEdit }: props) => {
                           onClick={() => handleRemoveContact(index, 'emailInputFields')}
                         >
                           <div
-                            className={`flex ${
-                              contactData.emailInputFields.length > 1 ? '' : 'hidden'
-                            }`}
+                            className={`flex ${contactData.emailInputFields.length > 1 ? '' : 'hidden'
+                              }`}
                           >
                             <IoMdTrash size={20} color="#a50000" />
                           </div>
@@ -1136,9 +1131,8 @@ const User = ({ dataToEdit }: props) => {
                           onClick={() => handleAddInput('emailInputFields')}
                         >
                           <IoAddCircleOutline
-                            className={`cursor-pointer ml-auto ${
-                              contactData.emailInputFields.length > 1 ? 'mr-6' : ''
-                            }`}
+                            className={`cursor-pointer ml-auto ${contactData.emailInputFields.length > 1 ? 'mr-6' : ''
+                              }`}
                             color={colors.quartiary}
                             size={20}
                           />

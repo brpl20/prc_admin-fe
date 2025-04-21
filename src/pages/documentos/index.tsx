@@ -25,7 +25,28 @@ import { useModal } from '@/utils/useModal';
 import GenericModal from '@/components/Modals/GenericModal';
 import dayjs from 'dayjs';
 
+import {
+  getAllCustomers,
+  getAllProfileCustomer,
+} from '@/services/customers';
+import { ICustomerProps } from '@/interfaces/ICustomer';
+import { translateCustomerType } from '@/utils/translateCustomerType';
+
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
+
+type TranslatedCustomer = {
+  id: string;
+  attributes: {
+    [key: string]: any;
+  };
+};
+
+type AllCustomer = {
+  attributes: {
+    email: string;
+    profile_customer_id: number;
+  };
+};
 
 const Documents = () => {
   const router = useRouter();
@@ -37,12 +58,15 @@ const Documents = () => {
   const [responsibleLawyers, setResponsibleLawyers] = useState<any>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [profileCustomersList, setProfileCustomersList] = useState<ICustomerProps[]>([]);
+
   const invalidRequestModal = useModal();
 
   useEffect(() => {
     setIsLoading(true);
 
     fetchWorks();
+    getProfileCustomers();
   }, []);
 
   useEffect(() => {
@@ -133,6 +157,33 @@ const Documents = () => {
     });
   };
 
+  const getProfileCustomers = async () => {
+    const allProfileCustomer = await getAllProfileCustomer('active');
+    const allCustomer = await getAllCustomers();
+
+    const translatedCustomers = allProfileCustomer.data.map((profileCustomer: ICustomerProps) => ({
+      ...profileCustomer,
+      attributes: {
+        ...profileCustomer.attributes,
+        customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
+      },
+    }));
+
+    translatedCustomers.forEach((translatedCustomer: TranslatedCustomer) => {
+      const matchingCustomer = allCustomer.data.find(
+        (customer: AllCustomer) =>
+          customer.attributes.profile_customer_id === Number(translatedCustomer.id),
+      );
+
+      if (matchingCustomer) {
+        translatedCustomer.attributes.customer_email = matchingCustomer.attributes.email;
+      }
+    });
+
+    setProfileCustomersList(translatedCustomers);
+    setIsLoading(false);
+  };
+
   return (
     <>
       <GenericModal
@@ -152,17 +203,20 @@ const Documents = () => {
               <Typography mb={'8px'} variant="h6">
                 {'Buscar Por Cliente'}
               </Typography>
+
               <Box display={'flex'} gap={'16px'} justifyContent={'space-between'}>
-                <Box display={'flex'} gap={'16px'}>
+                <div className='flex gap-[16px] w-[350px]'>
                   <Input>
                     <input
+                      className='w-full'
                       type="text"
                       placeholder="Nome do Cliente"
                       onChange={e => handleSearch(e.target.value)}
                     />
                     <MdSearch size={25} />
                   </Input>
-                </Box>
+                </div>
+
                 <Link href="/cadastrar?type=trabalho">
                   <Button
                     variant="contained"
@@ -201,8 +255,21 @@ const Documents = () => {
                     const responsible = getLawyerName(work.attributes.responsible_lawyer);
 
                     const clients_names = work.attributes.profile_customers.map(
-                      (customer: any) => customer.name,
+                      (customer: any) => {
+
+                        const profileCustomer = profileCustomersList.find(
+                          (profileCustomer: any) =>
+                            Number(profileCustomer.id) === customer.id,
+                        );
+
+                        const customerName = profileCustomer
+                          ? `${profileCustomer.attributes.name} ${profileCustomer.attributes.last_name}`
+                          : customer.name;
+
+                        return customerName;
+                      },
                     );
+
 
                     const areAllDocumentsSigned = work.attributes.documents.every(
                       (document: any) => document.status === 'Assinado',
@@ -211,9 +278,7 @@ const Documents = () => {
                     return {
                       id: work.id,
                       client:
-                        clients_names.length > 1
-                          ? clients_names.map((name: string) => name.split(' ')[0]).join(', ')
-                          : clients_names,
+                        clients_names.map((name: string) => name.split(', ')).join(', '),
                       deleted: work.attributes.deleted,
                       responsible: responsible,
                       documents: work.attributes.documents,
@@ -226,27 +291,36 @@ const Documents = () => {
                 }
                 columns={[
                   {
-                    flex: 2,
-                    field: 'client',
-                    headerName: 'Cliente',
-                    align: 'center',
-                    headerAlign: 'center',
-                    valueFormatter: defaultTableValueFormatter,
-                  },
-                  {
-                    flex: 2,
-                    field: 'responsible',
-                    headerName: 'Responsável',
+                    width: 80,
+                    field: 'id',
+                    headerName: 'ID',
+                    cellClassName: 'font-medium text-black',
                     align: 'center',
                     headerAlign: 'center',
                     valueFormatter: defaultTableValueFormatter,
                   },
                   {
                     flex: 1,
+                    field: 'client',
+                    headerName: 'Cliente',
+                    align: 'left',
+                    headerAlign: 'left',
+                    valueFormatter: defaultTableValueFormatter,
+                  },
+                  {
+                    flex: 1,
+                    field: 'responsible',
+                    headerName: 'Responsável',
+                    align: 'left',
+                    headerAlign: 'left',
+                    valueFormatter: defaultTableValueFormatter,
+                  },
+                  {
+                    flex: 1,
                     field: 'number',
                     headerName: 'Nº do trabalho',
-                    align: 'center',
-                    headerAlign: 'center',
+                    align: 'left',
+                    headerAlign: 'left',
                     valueFormatter: defaultTableValueFormatter,
                   },
                   {
@@ -270,14 +344,13 @@ const Documents = () => {
                     flex: 1,
                     field: 'status',
                     headerName: 'Status',
-                    align: 'center',
-                    headerAlign: 'center',
+                    align: 'left',
+                    headerAlign: 'left',
                     valueFormatter: defaultTableValueFormatter,
                     renderCell: (params: any) => (
                       <span
-                        className={`font-medium text-white leading-5 ${
-                          params.row.status === 'Assinado' ? 'bg-[#34b26e]' : 'bg-[#fec032]'
-                        } rounded-full flex w-full px-1 py-1 text-center justify-center`}
+                        className={`font-medium text-white leading-5 ${params.row.status === 'Assinado' ? 'bg-[#34b26e]' : 'bg-[#fec032]'
+                          } rounded-full flex w-full px-1 py-1 text-center justify-center`}
                       >
                         {params.row.status}
                       </span>

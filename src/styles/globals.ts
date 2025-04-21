@@ -106,6 +106,8 @@ export const Input = styled.div`
   align-items: center;
   justify-content: space-between;
 
+  width: 100%;
+  min-width: 300px;
   height: 36px;
   padding: 8px;
   border-radius: 4px;
