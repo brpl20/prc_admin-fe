@@ -3,8 +3,6 @@ import { getOfficeById } from '@/services/offices';
 import { useEffect, useState } from 'react';
 
 import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
-import { cnpjMask, phoneMask } from '@/utils/masks';
-import { MdKeyboardArrowDown } from 'react-icons/md';
 import { Box, Button, CircularProgress } from '@mui/material';
 import Link from 'next/link';
 import { IAdminProps } from '@/interfaces/IAdmin';
@@ -39,8 +37,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
 
       return (
         lawyer &&
-        `${lawyer?.attributes.name ? lawyer?.attributes.name : ''} ${
-          lawyer?.attributes.last_name ? lawyer?.attributes.last_name : ''
+        `${lawyer?.attributes.name ? lawyer?.attributes.name : ''} ${lawyer?.attributes.last_name ? lawyer?.attributes.last_name : ''
         }`
       );
     }
@@ -99,56 +96,19 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
       }}
     >
       {loading && (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100vh',
-          }}
-        >
+        <div className='flex justify-center items-center h-screen'>
           <CircularProgress />
         </div>
       )}
 
       {!loading && officeData && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '20px',
-          }}
-        >
-          <DetailsWrapper
-            style={{
-              borderBottom: '1px solid #C0C0C0',
-              boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
-            }}
-          >
-            <ContainerDetails
-              style={{
-                gap: '18px',
-              }}
-            >
+        <div className='flex flex-col gap-[20px] p-5 rounded-lg'>
+
+          <DetailsWrapper className="border-b border-[#C0C0C0] shadow-[0px_2px_2px_rgba(0,0,0,0.25)]">
+            <ContainerDetails className="gap-[18px]">
               <>
-                <div
-                  className="flex bg-white"
-                  style={{
-                    padding: '20px 32px 20px 32px',
-                    borderBottom: '1px solid #C0C0C0',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '22px',
-                      fontWeight: '500',
-                      color: '#344054',
-                    }}
-                  >
-                    Identificação do Escritório
-                  </span>
+                <div className="flex bg-white px-8 py-5 border-b border-[#C0C0C0] items-center justify-between">
+                  <span className="text-[22px] font-medium text-[#344054]">Identificação do Escritório</span>
 
                   <ButtonShowContact>
                     {officeDataIsOpen ? (
@@ -166,212 +126,63 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                     )}
                   </ButtonShowContact>
                 </div>
+
                 {officeDataIsOpen && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '18px',
-                      paddingBottom: '20px',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: '18px',
-                        padding: '0 32px',
-                      }}
-                    >
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Nome
+                  <div className="flex flex-col gap-[18px] pb-[20px]">
+                    <div className="grid [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))] gap-[18px] px-8">
+                      <div className="flex flex-col gap-[8px]">
+                        <span className="text-[#344054] text-[20px] font-medium">Nome</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
+                          {`${officeData.name ? officeData.name : ''} ${officeData.last_name ? officeData.last_name : ''}`}
                         </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {`${officeData.name ? officeData.name : ''} ${
-                            officeData.last_name ? officeData.last_name : ''
-                          }`}
-                        </span>
-                      </Flex>
+                      </div>
 
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Tipo de Escritório
+                      <div className="flex flex-col gap-[8px]">
+                        <span className="text-[#344054] text-[20px] font-medium">Tipo de Escritório</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
+                          {officeData.office_type_description || 'Não Informado'}
                         </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {officeData.office_type_description
-                            ? officeData.office_type_description
-                            : 'Não Informado'}
-                        </span>
-                      </Flex>
+                      </div>
 
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          OAB
+                      <div className="flex flex-col gap-[8px]">
+                        <span className="text-[#344054] text-[20px] font-medium">OAB</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
+                          {officeData.oab || 'Não Informado'}
                         </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {officeData.oab ? officeData.oab : 'Não Informado'}
-                        </span>
-                      </Flex>
+                      </div>
 
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          CNPJ
+                      <div className="flex flex-col gap-[8px]">
+                        <span className="text-[#344054] text-[20px] font-medium">CNPJ</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
+                          {officeData.cnpj || 'Não Informado'}
                         </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {officeData.cnpj ? officeData.cnpj : 'Não Informado'}
-                        </span>
-                      </Flex>
+                      </div>
 
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      ></Flex>
+                      <div className="flex flex-col gap-[8px]"></div>
                     </div>
 
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: '18px',
-                        padding: '0 32px',
-                      }}
-                    >
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Tipo da Sociedade
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
+                    <div className="grid [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))] gap-[18px] px-8">
+                      <div className="flex flex-col gap-[8px]">
+                        <span className="text-[#344054] text-[20px] font-medium">Tipo da Sociedade</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
                           {officeData.society === 'company'
                             ? 'Empresarial'
                             : officeData.society === 'sole_proprietorship'
-                            ? 'Sociedade Simples'
-                            : officeData.society === 'individual'
-                            ? 'Sociedade Empresária'
-                            : 'Não Informado'}
+                              ? 'Sociedade Simples'
+                              : officeData.society === 'individual'
+                                ? 'Sociedade Empresária'
+                                : 'Não Informado'}
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Data de Função Exp. OAB
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
+                      </div>
+
+                      <div className="flex flex-col gap-[8px]">
+                        <span className="text-[#344054] text-[20px] font-medium">Data de Função Exp. OAB</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
                           {officeData.foundation
                             ? officeData.foundation.split('-').reverse().join('/')
                             : 'Não Informado'}
                         </span>
-                      </Flex>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -379,36 +190,12 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
             </ContainerDetails>
           </DetailsWrapper>
 
-          <DetailsWrapper
-            style={{
-              borderBottom: '1px solid #C0C0C0',
-              boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
-            }}
-          >
-            <ContainerDetails
-              style={{
-                gap: '18px',
-              }}
-            >
+          <DetailsWrapper className="border-b border-[#C0C0C0] shadow-[0px_2px_2px_rgba(0,0,0,0.25)]">
+            <ContainerDetails className="gap-[18px]">
               <>
-                <div
-                  className="flex bg-white"
-                  style={{
-                    padding: '20px 32px 20px 32px',
-                    borderBottom: '1px solid #C0C0C0',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '22px',
-                      fontWeight: '500',
-                      color: '#344054',
-                    }}
-                  >
-                    Endereço
-                  </span>
+                <div className="flex bg-white px-8 py-5 border-b border-[#C0C0C0] items-center justify-between">
+                  <span className="text-[22px] font-medium text-[#344054]">Endereço</span>
+
                   <ButtonShowContact>
                     {officeAddressIsOpen ? (
                       <FiMinusCircle
@@ -425,221 +212,60 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                     )}
                   </ButtonShowContact>
                 </div>
+
                 {officeAddressIsOpen && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '18px',
-                      paddingBottom: '20px',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: '18px',
-                        padding: '0 32px',
-                      }}
-                    >
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Endereço
+                  <div className="flex flex-col gap-[18px] pb-[20px]">
+                    <div className="grid [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))] gap-[18px] px-8">
+                      <div className="flex flex-col gap-[8px]">
+                        <span className="text-[#344054] text-[20px] font-medium">Endereço</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
+                          {`${officeData.street || 'Não Informado'}`}
                         </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {`${officeData.street ? officeData.street : 'Não Informado'}`}
+                      </div>
+
+                      <div className="flex flex-col gap-[8px]">
+                        <span className="text-[#344054] text-[20px] font-medium">Número</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
+                          {`${officeData.number || 'Não Informado'}`}
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Número
+                      </div>
+
+                      <div className="flex flex-col gap-[8px]">
+                        <span className="text-[#344054] text-[20px] font-medium">Complemento</span>
+                        <span className="text-[18px] text-[#344054] font-normal">Não Informado</span>
+                      </div>
+
+                      <div className="flex flex-col gap-[8px]">
+                        <span className="text-[#344054] text-[20px] font-medium">CEP</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
+                          {officeData.cep || 'Não Informado'}
                         </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {`${officeData.number ? officeData.number : 'Não Informado'}`}
-                        </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Complemento
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          Não Informado
-                        </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          CEP
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {officeData.cep ? officeData.cep : 'Não Informado'}
-                        </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      ></Flex>
+                      </div>
+
+                      <div className="flex flex-col gap-[8px]"></div>
                     </div>
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: '18px',
-                        padding: '0 32px',
-                      }}
-                    >
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Cidade
+
+                    <div className="grid [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))] gap-[18px] px-8">
+                      <div className="flex flex-col gap-[8px]">
+                        <span className="text-[#344054] text-[20px] font-medium">Cidade</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
+                          {`${officeData.city || 'Não Informado'}`}
                         </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {`${officeData.city ? officeData.city : 'Não Informado'}`}
+                      </div>
+
+                      <div className="flex flex-col gap-[8px]">
+                        <span className="text-[#344054] text-[20px] font-medium">Bairro</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
+                          {`${officeData.neighborhood || 'Não Informado'}`}
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Bairro
+                      </div>
+
+                      <div className="flex flex-col gap-[8px]">
+                        <span className="text-[#344054] text-[20px] font-medium">Estado</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
+                          {`${officeData.state || 'Não Informado'}`}
                         </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {`${officeData.neighborhood ? officeData.neighborhood : 'Não Informado'}`}
-                        </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Estado
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {`${officeData.state ? officeData.state : 'Não Informado'}`}
-                        </span>
-                      </Flex>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -647,36 +273,12 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
             </ContainerDetails>
           </DetailsWrapper>
 
-          <DetailsWrapper
-            style={{
-              borderBottom: '1px solid #C0C0C0',
-              boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
-            }}
-          >
-            <ContainerDetails
-              style={{
-                gap: '18px',
-              }}
-            >
+          <DetailsWrapper className="border-b border-[#C0C0C0] shadow-[0px_2px_2px_rgba(0,0,0,0.25)]">
+            <ContainerDetails className="gap-[18px]">
               <>
-                <div
-                  className="flex bg-white"
-                  style={{
-                    padding: '20px 32px 20px 32px',
-                    borderBottom: '1px solid #C0C0C0',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '22px',
-                      fontWeight: '500',
-                      color: '#344054',
-                    }}
-                  >
-                    Contato
-                  </span>
+                <div className="flex bg-white px-8 py-5 border-b border-[#C0C0C0] items-center justify-between">
+                  <span className="text-[22px] font-medium text-[#344054]">Contato</span>
+
                   <ButtonShowContact>
                     {officeContactIsOpen ? (
                       <FiMinusCircle
@@ -693,96 +295,29 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                     )}
                   </ButtonShowContact>
                 </div>
-                {officeContactIsOpen && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '18px',
-                      paddingBottom: '20px',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: '18px',
-                        padding: '0 32px',
-                      }}
-                    >
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '300px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Telefone
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {`${
-                            officeData.phones &&
-                            officeData.phones[0] &&
-                            officeData.phones[0].phone_number
-                              ? officeData.phones[0].phone_number
-                              : 'Não Informado'
-                          }`}
-                        </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          E-mail
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
-                          {`${
-                            officeData.emails && officeData.emails[0] && officeData.emails[0].email
-                              ? officeData.emails[0].email
-                              : 'Não Informado'
-                          }`}
-                        </span>
-                      </Flex>
 
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      ></Flex>
+                {officeContactIsOpen && (
+                  <div className="flex flex-col gap-[18px] pb-[20px]">
+                    <div className="grid [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))] gap-[18px] px-8">
+                      <div className="flex flex-col gap-[8px] w-[300px]">
+                        <span className="text-[#344054] text-[20px] font-medium">Telefone</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
+                          {`${officeData.phones && officeData.phones[0] && officeData.phones[0].phone_number
+                            ? officeData.phones[0].phone_number
+                            : 'Não Informado'}`}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-[8px] w-[220px]">
+                        <span className="text-[#344054] text-[20px] font-medium">E-mail</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
+                          {`${officeData.emails && officeData.emails[0] && officeData.emails[0].email
+                            ? officeData.emails[0].email
+                            : 'Não Informado'}`}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-[8px] w-[220px]"></div>
                     </div>
                   </div>
                 )}
@@ -790,36 +325,13 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
             </ContainerDetails>
           </DetailsWrapper>
 
-          <DetailsWrapper
-            style={{
-              borderBottom: '1px solid #C0C0C0',
-              boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.25)',
-            }}
-          >
-            <ContainerDetails
-              style={{
-                gap: '18px',
-              }}
-            >
+
+          <DetailsWrapper className="border-b border-[#C0C0C0] shadow-[0px_2px_2px_rgba(0,0,0,0.25)]">
+            <ContainerDetails className="gap-[18px]">
               <>
-                <div
-                  className="flex bg-white"
-                  style={{
-                    padding: '20px 32px 20px 32px',
-                    borderBottom: '1px solid #C0C0C0',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '22px',
-                      fontWeight: '500',
-                      color: '#344054',
-                    }}
-                  >
-                    Informações Adicionais
-                  </span>
+                <div className="flex bg-white px-8 py-5 border-b border-[#C0C0C0] items-center justify-between">
+                  <span className="text-[22px] font-medium text-[#344054]">Informações Adicionais</span>
+
                   <ButtonShowContact>
                     {officeAdicionalIsOpen ? (
                       <FiMinusCircle
@@ -836,94 +348,34 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
                     )}
                   </ButtonShowContact>
                 </div>
+
                 {officeAdicionalIsOpen && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '18px',
-                      paddingBottom: '20px',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: '18px',
-                        padding: '0 32px',
-                      }}
-                    >
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '300px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Site
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
+                  <div className="flex flex-col gap-[18px] pb-[20px]">
+                    <div className="grid [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))] gap-[18px] px-8">
+                      <div className="flex flex-col gap-[8px] w-[300px]">
+                        <span className="text-[#344054] text-[20px] font-medium">Site</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
                           {officeData.site ? officeData.site : 'Não Informado'}
                         </span>
-                      </Flex>
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '330px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#344054',
-                            fontSize: '20px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Responsável pelo Escritório
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '18px',
-                            color: '#344054',
-                            fontWeight: '400',
-                          }}
-                        >
+                      </div>
+
+                      <div className="flex flex-col gap-[8px] w-[330px]">
+                        <span className="text-[#344054] text-[20px] font-medium">Responsável pelo Escritório</span>
+                        <span className="text-[18px] text-[#344054] font-normal">
                           {officeData.responsible_lawyer_id
                             ? officeData.responsible_lawyer_id
                             : 'Não Informado'}
                         </span>
-                      </Flex>
+                      </div>
 
-                      <Flex
-                        style={{
-                          flexDirection: 'column',
-                          gap: '8px',
-                          alignItems: 'flex-start',
-                          width: '220px',
-                        }}
-                      ></Flex>
+                      <div className="flex flex-col gap-[8px] w-[220px]"></div>
                     </div>
                   </div>
                 )}
               </>
             </ContainerDetails>
           </DetailsWrapper>
+
         </div>
       )}
 

@@ -45,8 +45,6 @@ const DocumentApproval = () => {
 
       const updatedDocuments = data.attributes.documents.map(doc => {
         const { status } = doc;
-        console.log(doc.id, ':', status);
-
         return {
           ...doc,
           pending_revision: status === 'Pendente de revisão',

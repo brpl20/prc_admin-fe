@@ -94,11 +94,6 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
     setFinished(false);
   };
 
-  // DEBUG
-  useEffect(() => {
-    console.log('formLoading', formLoading);
-  }, [formLoading]);
-
   const handleSubmit = async () => {
     switch (registrationType) {
       case 'cliente/pessoa_fisica':
@@ -152,7 +147,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
 
           const lastCustomerFile =
             customerForm.data.attributes.customer_files[
-              customerForm.data.attributes.customer_files.length - 1
+            customerForm.data.attributes.customer_files.length - 1
             ];
 
           const prof_aux = {
@@ -548,8 +543,8 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
                               activeStep > index
                                 ? '#26B99A'
                                 : activeStep === index
-                                ? '#01013D'
-                                : '#A8A8B3',
+                                  ? '#01013D'
+                                  : '#A8A8B3',
                             cursor: 'pointer',
                           },
                         }}
@@ -560,8 +555,8 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
                               activeStep > index
                                 ? '#26B99A'
                                 : activeStep === index
-                                ? '#01013D'
-                                : '#A8A8B3',
+                                  ? '#01013D'
+                                  : '#A8A8B3',
                             cursor: 'pointer',
                           }}
                         >

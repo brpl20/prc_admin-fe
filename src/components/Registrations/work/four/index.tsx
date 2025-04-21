@@ -38,7 +38,6 @@ import { MdOutlineInfo, MdOutlineArrowDropUp, MdOutlineArrowDropDown } from 'rea
 
 import CustomTooltip from '@/components/Tooltip';
 import { Notification } from '@/components';
-import { z } from 'zod';
 import useLoadingCounter from '@/utils/useLoadingCounter';
 
 export interface IRefWorkStepFourProps {
@@ -142,9 +141,6 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               'Não foi possível encontrar um representante para o escritório, selecione um advogado do escritório acima.',
             );
           }
-
-          console.log('office:', office);
-          console.log('id:', officeRepresentativeId);
 
           officeRepresentativeId && data.profile_admin_ids.push(officeRepresentativeId);
         }
@@ -327,7 +323,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
     }
   }, [isLegalPerson]);
 
-  useEffect(() => {}, [isLegalPerson]);
+  useEffect(() => { }, [isLegalPerson]);
 
   useEffect(() => {
     const handleDraftWork = () => {
@@ -460,24 +456,24 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
                   <TableBody>
                     {lawyers && lawyers.length > 0
                       ? lawyers.map((lawyer: any) => (
-                          <TableRow key={lawyer.name}>
-                            <TableCell padding="checkbox">
-                              <Box display={'flex'}>
-                                <Checkbox
-                                  color="primary"
-                                  checked={selectedLawyers.includes(lawyer.id)}
-                                  onChange={() => handleSelectedLawyers(lawyer)}
-                                  inputProps={{
-                                    'aria-label': 'select all desserts',
-                                  }}
-                                />
-                              </Box>
-                            </TableCell>
-                            <TableCell component="th" scope="row">
-                              {lawyer.name}
-                            </TableCell>
-                          </TableRow>
-                        ))
+                        <TableRow key={lawyer.name}>
+                          <TableCell padding="checkbox">
+                            <Box display={'flex'}>
+                              <Checkbox
+                                color="primary"
+                                checked={selectedLawyers.includes(lawyer.id)}
+                                onChange={() => handleSelectedLawyers(lawyer)}
+                                inputProps={{
+                                  'aria-label': 'select all desserts',
+                                }}
+                              />
+                            </Box>
+                          </TableCell>
+                          <TableCell component="th" scope="row">
+                            {lawyer.name}
+                          </TableCell>
+                        </TableRow>
+                      ))
                       : []}
                   </TableBody>
                 </Table>
@@ -633,9 +629,9 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
                 value={
                   selectedLawyers.length > 0
                     ? allLawyers.find(
-                        (lawyer: IAdminPropsAttributes) =>
-                          lawyer.id.toString() == selectedLawyers[0].toString(),
-                      )
+                      (lawyer: IAdminPropsAttributes) =>
+                        lawyer.id.toString() == selectedLawyers[0].toString(),
+                    )
                     : ''
                 }
                 options={allLawyers}
@@ -670,9 +666,9 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               value={
                 formData.responsible_lawyer
                   ? lawyers.find(
-                      (lawyer: IAdminPropsAttributes) =>
-                        lawyer.id.toString() == formData.responsible_lawyer,
-                    )
+                    (lawyer: IAdminPropsAttributes) =>
+                      lawyer.id.toString() == formData.responsible_lawyer,
+                  )
                   : ''
               }
               options={lawyers}
@@ -699,9 +695,9 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               value={
                 formData.initial_atendee
                   ? allLawyers.find(
-                      (lawyer: IAdminPropsAttributes) =>
-                        lawyer.id.toString() == formData.initial_atendee,
-                    )
+                    (lawyer: IAdminPropsAttributes) =>
+                      lawyer.id.toString() == formData.initial_atendee,
+                  )
                   : ''
               }
               options={allLawyers}
@@ -728,8 +724,8 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               value={
                 formData.intern
                   ? allLawyers.find(
-                      (lawyer: IAdminPropsAttributes) => lawyer.id.toString() == formData.intern,
-                    )
+                    (lawyer: IAdminPropsAttributes) => lawyer.id.toString() == formData.intern,
+                  )
                   : ''
               }
               options={trainee}
