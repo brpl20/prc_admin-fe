@@ -1,0 +1,40 @@
+name: Deploy HML
+
+on:
+  push:
+    branches: [staging]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build Docker image
+      run: docker build -t staging_procstudio_admin_fe .
+
+    - name: Save Docker image to .tar
+      run: docker save staging_procstudio_admin_fe -o staging_procstudio_admin_fe.tar
+
+    - name: Upload image to server via SCP
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.HOSTINGER_HOST }}
+        username: ${{ secrets.HOSTINGER_USER_HML }}
+        key: ${{ secrets.HOSTINGER_KEY_HML }}
+        source: "staging_procstudio_admin_fe.tar"
+        target: "/home/procstudio_hml/images/"
+
+    - name: Executar script de deploy remoto
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.HOSTINGER_HOST }}
+        username: ${{ secrets.HOSTINGER_USER_HML }}
+        key: ${{ secrets.HOSTINGER_KEY_HML }}
+        script: |
+          bash /home/procstudio_hml/config/deploy-hml.sh
