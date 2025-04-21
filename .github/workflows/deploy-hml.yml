@@ -35,6 +35,7 @@ jobs:
       with:
         host: ${{ secrets.HOSTINGER_HOST }}
         username: ${{ secrets.HOSTINGER_USER_HML }}
+        password: ${{ secrets.HOSTINGER_PASS_HML }}
         key: ${{ secrets.HOSTINGER_KEY_HML }}
         script: |
           bash /home/procstudio_hml/config/deploy-hml.sh
