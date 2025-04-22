@@ -38,13 +38,18 @@ jobs:
         key: ${{ secrets.HOSTINGER_KEY_HML }}
         script: |
           echo "Starting deploy..."
-          # Loading docker image:
+          # Load docker image
           docker load -i /home/procstudio_hml/images/staging_procstudio_admin_fe.tar
+
+          # Remove any existing container to avoid conflict
           docker rm -f staging_procstudio_admin_fe || true
+
+          # Run the container
           docker run -d \
             --name staging_procstudio_admin_fe \
             -p 3002:3002 \
             -v /home/procstudio_hml/images:/images \
-            staging_procstudio_admin_fe 
+            staging_procstudio_admin_fe
+
           echo "Deploy completed."
           
