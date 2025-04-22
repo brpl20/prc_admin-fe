@@ -31,8 +31,22 @@ jobs:
         target: "/home/procstudio_hml/images/"
 
     - name: Run remote deploy script
-      uses: appleboy/scp-action@master
+      uses: appleboy/ssh-action@v0.1.4
       with:
         host: ${{ secrets.HOSTINGER_HOST }}
         username: ${{ secrets.HOSTINGER_USER_HML }}
         key: ${{ secrets.HOSTINGER_KEY_HML }}
+        script: |
+          echo "Starting deploy..."
+          # Loading docker image:
+          docker load -i /home/procstudio_hml/images/staging_procstudio_admin_fe.tar
+          docker rm -f staging_procstudio_admin_fe || true
+          docker run -d \
+            --name staging_procstudio_admin_fe \
+            -p 3002:3002 \
+            -v /home/procstudio_hml/images:/images \
+            staging_procstudio_admin_fe 
+          # Clean up
+          rm -f /home/procstudio_hml/images/staging_procstudio_admin_fe.tar
+          echo "Deploy completed."
+          
