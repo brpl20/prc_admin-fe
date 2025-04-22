@@ -59,7 +59,7 @@ const WorkStepThree: ForwardRefRenderFunction<IRefWorkStepThreeProps, IStepThree
 
       if (powersSelected.length > 0) {
         if (route.pathname == '/alterar') {
-          let dataAux = {
+          const dataAux = {
             ...updateWorkForm,
             power_ids: powersSelected,
           };

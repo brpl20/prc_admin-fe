@@ -147,7 +147,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
       }
 
       if (route.pathname == '/alterar') {
-        let dataAux = {
+        const dataAux = {
           ...updateWorkForm,
           ...data,
         };

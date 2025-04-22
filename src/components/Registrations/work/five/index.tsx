@@ -93,7 +93,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
 
   const handleSubmitForm = () => {
     try {
-      let data = {
+      const data = {
         ...workForm,
       };
 
@@ -121,7 +121,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
       }
 
       if (router.pathname == '/alterar') {
-        let dataAux = {
+        const dataAux = {
           ...updateWorkForm,
           recommendations_attributes: data.recommendations_attributes,
         };
