@@ -46,11 +46,12 @@ jobs:
 
           # Run the container
           docker run -d \
-            --name staging_procstudio_admin_fe \
-            -p 3002:3002 \
-            -e PORT=3002 \
-            -v /home/procstudio_hml/images:/images \
-            staging_procstudio_admin_fe next start -p 3002
+          --name staging_procstudio_admin_fe \
+          -p 3002:3002 \
+          -e PORT=3002 \
+          -v /home/procstudio_hml/images:/images \
+          staging_procstudio_admin_fe \
+          npm start -- -p 3002
 
           echo "Deploy completed."
           
