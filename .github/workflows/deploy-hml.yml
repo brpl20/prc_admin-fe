@@ -11,6 +11,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+      env:
+        NEXT_PUBLIC_SERVER_URL: ${{ secrets.NEXT_PUBLIC_SERVER_URL }}
+        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+        HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
 
     - name: Setup Docker Buildx
       uses: docker/setup-buildx-action@v2
@@ -41,11 +45,9 @@ jobs:
           docker load -i /home/procstudio_hml/images/staging_procstudio_admin_fe.tar
           docker rm -f staging_procstudio_admin_fe || true
           docker run -d \
-            --name staging_procstudio_admin_fe \
-            -p 3002:3002 \
-            -e PORT=3002 \
-            -e NEXT_PUBLIC_SERVER_URL=${{ secrets.NEXT_PUBLIC_SERVER_URL }} \
-            -e NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
-            -v /home/procstudio_hml/images:/images \
-            staging_procstudio_admin_fe npm start -- -p 3002
+          --name staging_procstudio_admin_fe \
+          -p 3002:3002 \
+          staging_procstudio_admin_fe \
+          npm start -- -p 3002
+
           echo "Deploy completed."
