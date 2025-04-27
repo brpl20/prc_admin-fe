@@ -20,6 +20,7 @@ jobs:
         docker build \
           --build-arg NEXT_PUBLIC_SERVER_URL="${{ secrets.NEXT_PUBLIC_SERVER_URL }}" \
           --build-arg NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
+          --build-arg NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
           --build-arg GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
           --build-arg GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
           -t staging_procstudio_admin_fe .
@@ -53,6 +54,7 @@ jobs:
             -e PORT=3002 \
             -e NEXT_PUBLIC_SERVER_URL="${{ secrets.NEXT_PUBLIC_SERVER_URL }}" \
             -e NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
+            -e NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
             -e GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
             -e GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
             -v /home/procstudio_hml/images:/images \
