@@ -1,65 +1,77 @@
-import NextAuth from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import { signInRequest } from '@/services/auth';
+import NextAuth, { type NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 
-interface GoogleProviderConfig {
-  clientId: string;
-  clientSecret: string;
-}
-
-export default NextAuth({
-  secret: process.env.NEXTAUTH_SECRET,
-
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-      name: 'Credentials',
+      name: "Credentials",
       credentials: {
-        email: { label: 'E-mail', type: 'email' },
-        password: { label: 'Senha', type: 'password' },
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
       },
-      async authorize(credentials): Promise<any> {
-        if (!credentials?.email || !credentials.password) return null;
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email e senha são obrigatórios");
+        }
 
-        const user = await signInRequest({
-          email: credentials.email,
-          password: credentials.password,
-        });
+        try {
+          const res = await fetch("https://api_staging.procstudio.com.br/api/v1/login", {
+            method: "POST",
+            body: JSON.stringify({
+              auth: {
+                email: credentials.email,
+                password: credentials.password
+              }
+            }),
+            headers: { "Content-Type": "application/json" },
+          });
 
-        if (user) {
-          return user;
-        } else {
+          if (!res.ok) throw new Error(await res.text());
+
+          const { token, role } = await res.json();
+
+          return {
+            id: token,
+            email: credentials.email,
+            token,
+            role
+          };
+
+        } catch (error) {
+          console.error("Erro na autenticação:", error);
           return null;
         }
-      },
-    }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    } as GoogleProviderConfig),
+      }
+    })
   ],
-  pages: {
-    signIn: '/',
-  },
+
   callbacks: {
-    jwt: ({ token, user }) => {
-      return user ? { ...token, user } : token;
+    async jwt({ token, user }: any) {
+      if (user) {
+        token.token = user.token;
+        token.role = user.role;
+      }
+      return token;
     },
+    
     session: ({ session, token }: any) => {
-      if (token?.user) {
-        return token.user;
+      if (token) {
+        session.token = token.token;
+        session.role = token.role;
       }
       return session;
     },
-    signIn: ({ account, profile }) => {
-      if (account?.provider === 'google') {
-        return profile?.email ? true : false;
-      }
-
-      return true;
-    },
   },
+  
   session: {
-    maxAge: 60 * 60 * 24, // 24 hours
+    strategy: "jwt",
   },
-});
+
+  pages: {
+    signIn: "/auth/login",
+    error: "/auth/error",
+  },
+
+};
+
+export default NextAuth(authOptions);
