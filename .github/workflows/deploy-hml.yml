@@ -16,7 +16,13 @@ jobs:
       uses: docker/setup-buildx-action@v2
 
     - name: Build Docker image
-      run: docker build -t staging_procstudio_admin_fe .
+      run: |
+        docker build \
+          --build-arg NEXT_PUBLIC_SERVER_URL="${{ secrets.NEXT_PUBLIC_SERVER_URL }}" \
+          --build-arg NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
+          --build-arg GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
+          --build-arg GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+          -t staging_procstudio_admin_fe .
 
     - name: Save Docker image to .tar
       run: docker save staging_procstudio_admin_fe -o staging_procstudio_admin_fe.tar
@@ -39,6 +45,7 @@ jobs:
         script: |
           echo "Starting deploy..."
           docker load -i /home/procstudio_hml/images/staging_procstudio_admin_fe.tar
+          docker rm /home/procstudio_hml/images/staging_procstudio_admin_fe.tar
           docker rm -f staging_procstudio_admin_fe || true
           docker run -d \
             --name staging_procstudio_admin_fe \
@@ -46,6 +53,8 @@ jobs:
             -e PORT=3002 \
             -e NEXT_PUBLIC_SERVER_URL="${{ secrets.NEXT_PUBLIC_SERVER_URL }}" \
             -e NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
+            -e GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
+            -e GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
             -v /home/procstudio_hml/images:/images \
             staging_procstudio_admin_fe npm start -- -p 3002
           echo "Deploy completed."
