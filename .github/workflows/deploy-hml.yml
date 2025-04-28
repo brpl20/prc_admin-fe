@@ -2,7 +2,7 @@ name: Deploy HML
 
 on:
   push:
-    branches: [staging]
+    branches: [hml]
 
 jobs:
   build-and-deploy:

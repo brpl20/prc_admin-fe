@@ -15,7 +15,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const res = await fetch("https://api_staging.procstudio.com.br/api/v1/login", {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/login`, {
             method: "POST",
             body: JSON.stringify({
               auth: {
