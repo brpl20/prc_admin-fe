@@ -37,6 +37,8 @@ import {
   MdOutlineArchive,
   MdDeleteOutline,
   MdOutlineUnarchive,
+  MdContentCopy,
+  MdCheck,
 } from 'react-icons/md';
 import { BsFilterCircle } from 'react-icons/bs';
 
@@ -58,6 +60,8 @@ import { CustomerContext } from '@/contexts/CustomerContext';
 import { AuthContext } from '@/contexts/AuthContext';
 import { getSession, useSession } from 'next-auth/react';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
+import { copyToClipboard } from '@/utils/copyToClipboard';
+import { translateCustomerType } from '@/utils/translateCustomerType';
 
 export type CustomersProps = {
   id: string;
@@ -118,10 +122,10 @@ const Customers = () => {
     return params.row.type === 'Pessoa Fisica'
       ? styles.physicalPerson
       : params.row.type === 'Pessoa Juridica'
-      ? styles.legalPerson
-      : params.row.type === 'Contador'
-      ? styles.counter
-      : styles.representative;
+        ? styles.legalPerson
+        : params.row.type === 'Contador'
+          ? styles.counter
+          : styles.representative;
   };
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -202,10 +206,10 @@ const Customers = () => {
       customerTypeUnformatted == 'Pessoa Fisica'
         ? 'physical_person'
         : customerTypeUnformatted == 'Pessoa Juridica'
-        ? 'legal_person'
-        : customerTypeUnformatted == 'Contador'
-        ? 'counter'
-        : 'representative';
+          ? 'legal_person'
+          : customerTypeUnformatted == 'Contador'
+            ? 'counter'
+            : 'representative';
 
     switch (profileCustomerType) {
       case 'physical_person':
@@ -231,10 +235,10 @@ const Customers = () => {
       customerTypeUnformatted == 'Pessoa Fisica'
         ? 'physical_person'
         : customerTypeUnformatted == 'Pessoa Juridica'
-        ? 'legal_person'
-        : customerTypeUnformatted == 'Contador'
-        ? 'counter'
-        : 'representative';
+          ? 'legal_person'
+          : customerTypeUnformatted == 'Contador'
+            ? 'counter'
+            : 'representative';
 
     switch (profileCustomerType) {
       case 'physical_person':
@@ -287,20 +291,6 @@ const Customers = () => {
     setOpenRemoveModal(true);
   };
 
-  const translateCustomerType = (profileCustomerType: string) => {
-    switch (profileCustomerType) {
-      case 'physical_person':
-        return 'Pessoa Fisica';
-      case 'legal_person':
-        return 'Pessoa Juridica';
-      case 'counter':
-        return 'Contador';
-      case 'representative':
-        return 'Representante Legal';
-      default:
-        return profileCustomerType;
-    }
-  };
 
   const getProfileCustomers = async () => {
     const requestParams = getForStatus === 'active' ? '' : getForStatus;
@@ -468,13 +458,13 @@ const Customers = () => {
                         className="h-6 w-6 text-red-600"
                         fill="none"
                         viewBox="0 0 24 24"
-                        stroke-width="1.5"
+                        strokeWidth="1.5"
                         stroke="currentColor"
                         aria-hidden="true"
                       >
                         <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                           d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
                         />
                       </svg>
@@ -833,19 +823,19 @@ const Customers = () => {
                   profileCustomersListFiltered &&
                   profileCustomersListFiltered.map((profileCustomer: ICustomerProps) => ({
                     id: Number(profileCustomer.id),
-                    name: profileCustomer.attributes.name,
+                    name: profileCustomer.attributes.name + ' ' + profileCustomer.attributes.last_name,
                     deleted: profileCustomer.attributes.deleted,
                     type: profileCustomer.attributes.customer_type,
                     cpf:
                       (profileCustomer.attributes.cpf &&
                         profileCustomer.attributes.customer_type === 'Pessoa Fisica') ||
-                      profileCustomer.attributes.customer_type === 'Contador' ||
-                      profileCustomer.attributes.customer_type === 'Representante Legal'
+                        profileCustomer.attributes.customer_type === 'Contador' ||
+                        profileCustomer.attributes.customer_type === 'Representante Legal'
                         ? profileCustomer.attributes.cpf
                         : profileCustomer.attributes.cnpj &&
                           profileCustomer.attributes.customer_type === 'Pessoa Juridica'
-                        ? profileCustomer.attributes.cnpj
-                        : '',
+                          ? profileCustomer.attributes.cnpj
+                          : '',
                     customer_email: profileCustomer.attributes.customer_email,
                     city: profileCustomer.attributes.city,
                     contact: profileCustomer.attributes.default_phone
@@ -864,12 +854,44 @@ const Customers = () => {
                     valueFormatter: defaultTableValueFormatter,
                   },
                   {
-                    width: 210,
+                    width: 270,
                     field: 'name',
                     headerName: 'Nome',
                     cellClassName: 'font-medium text-black',
                     align: 'left',
                     headerAlign: 'left',
+                    valueFormatter: defaultTableValueFormatter,
+                  },
+                  {
+                    width: 200,
+                    field: 'cpf',
+                    headerName: 'CPF/CNPJ',
+                    cellClassName: 'font-medium text-black',
+                    align: 'left',
+                    sortable: false,
+                    renderCell: (params: any) => {
+                      const [copied, setCopied] = React.useState(false);
+
+                      const handleCopy = () => {
+                        copyToClipboard(params.value, () => {
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        });
+                      };
+
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <IconButton onClick={handleCopy} size="small" title="Copiar CPF/CNPJ">
+                            {copied ? (
+                              <MdCheck size={16} color="green" />
+                            ) : (
+                              <MdContentCopy size={16} />
+                            )}
+                          </IconButton>
+                          <span>{params.value}</span>
+                        </div>
+                      );
+                    },
                     valueFormatter: defaultTableValueFormatter,
                   },
                   {
@@ -880,15 +902,6 @@ const Customers = () => {
                     headerName: 'E-mail de Acesso',
                     align: 'left',
                     cellClassName: 'font-medium text-black',
-                    sortable: false,
-                    valueFormatter: defaultTableValueFormatter,
-                  },
-                  {
-                    width: 180,
-                    field: 'cpf',
-                    headerName: 'CPF/CNPJ',
-                    cellClassName: 'font-medium text-black',
-                    align: 'left',
                     sortable: false,
                     valueFormatter: defaultTableValueFormatter,
                   },

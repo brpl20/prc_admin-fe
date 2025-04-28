@@ -12,7 +12,7 @@ export default withAuth(
   {
     callbacks: {
       authorized: params => {
-        let { token } = params;
+        const { token } = params;
         return !!token;
       },
     },

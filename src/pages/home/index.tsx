@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 
 import { Container } from '@/styles/globals';
-import {} from 'react-icons/md';
+import { } from 'react-icons/md';
 
 import { Box, Typography } from '@mui/material';
 
@@ -11,7 +11,7 @@ import dynamic from 'next/dynamic';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Home = () => {
-  useEffect(() => {}, []);
+  useEffect(() => { }, []);
 
   return (
     <>

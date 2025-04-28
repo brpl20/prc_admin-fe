@@ -452,11 +452,9 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
 
   useEffect(() => {
     const getCustomers = async () => {
-      console.log('called getCustomers');
       setLoading(true);
       const response = await getAllProfileCustomer('');
       setCustomersList(response.data);
-      console.log('response getCustomers');
       setLoading(false);
     };
 
@@ -611,10 +609,6 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
     verifyDataLocalStorage();
   }, [customersList]);
 
-  useEffect(() => {
-    console.log(errors);
-  }, [errors]);
-
   return (
     <>
       {openSnackbar && (
@@ -640,7 +634,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                 id="multiple-limit-tags"
                 options={customersList}
                 getOptionLabel={option =>
-                  option && option.attributes && `${option.id} - ${option.attributes.name}`
+                  option && option.attributes && `${option.id} - ${option.attributes.name} ${option.attributes.last_name}`
                 }
                 renderInput={params => (
                   <TextField
@@ -822,11 +816,11 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                     style={{
                       color:
                         selectedProcedures.length <= 0 &&
-                        selectedArea === '' &&
-                        selectedSubject !== 'others' &&
-                        selectedSubject !== 'administrative_subject' &&
-                        selectedSubject !== 'criminal' &&
-                        selectedSubject !== 'tributary_pis'
+                          selectedArea === '' &&
+                          selectedSubject !== 'others' &&
+                          selectedSubject !== 'administrative_subject' &&
+                          selectedSubject !== 'criminal' &&
+                          selectedSubject !== 'tributary_pis'
                           ? '#FF0000'
                           : 'black',
                     }}
@@ -1057,11 +1051,11 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                     style={{
                       color:
                         selectedProcedures.length <= 0 &&
-                        selectedArea === '' &&
-                        selectedSubject !== 'others' &&
-                        selectedSubject !== 'administrative_subject' &&
-                        selectedSubject !== 'criminal' &&
-                        selectedSubject !== 'tributary_pis'
+                          selectedArea === '' &&
+                          selectedSubject !== 'others' &&
+                          selectedSubject !== 'administrative_subject' &&
+                          selectedSubject !== 'criminal' &&
+                          selectedSubject !== 'tributary_pis'
                           ? '#FF0000'
                           : 'black',
                     }}

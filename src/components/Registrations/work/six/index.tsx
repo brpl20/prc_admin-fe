@@ -89,8 +89,8 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
   };
 
   const createNewProducedDocumentsArray = () => {
-    let newProducedDocumentsArray: any[] = [];
-    let documentTypesSet = new Set();
+    const newProducedDocumentsArray: any[] = [];
+    const documentTypesSet = new Set();
 
     documentsProduced.forEach((document: any) => {
       if (document.document_type) {

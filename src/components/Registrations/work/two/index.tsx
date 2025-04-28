@@ -153,7 +153,7 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
       }
 
       if (route.pathname == '/alterar') {
-        let dataAux = {
+        const dataAux = {
           ...updateWorkForm,
           honorary_attributes: honorary_attributes,
         };

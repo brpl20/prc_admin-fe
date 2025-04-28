@@ -251,7 +251,6 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
     const getBanks = async () => {
       try {
         const response = await getAllBanks(true);
-        console.log(response);
         setBankList(response);
       } catch (error: any) {
         console.error(error);
