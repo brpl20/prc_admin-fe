@@ -39,16 +39,10 @@ const ModalOfRemove = ({
   const textConfirmation = `${model}/${entityName}`;
 
   const deleteCustomerFull = async (id: string) => {
-    try {
-      const customerId = (await getCustomerById(id)).data.attributes.customer_id;
+    const customerId = (await getCustomerById(id)).data.attributes.customer_id;
 
-      await deleteProfileCustomer(id);
-      await deleteCustomer(customerId);
-    } catch (error: any) {
-      setMessage('Erro ao remover cliente');
-      setTypeMessage('error');
-      setOpenSnackbar(true);
-    }
+    await deleteProfileCustomer(id);
+    await deleteCustomer(customerId);
   };
 
   const handleNext = async () => {
