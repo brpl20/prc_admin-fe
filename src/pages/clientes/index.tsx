@@ -100,12 +100,12 @@ const Customers = () => {
   const legend = [
     {
       id: 1,
-      name: 'Pessoa Juridica',
+      name: 'Pessoa Jurídica',
       color: '#57a72160',
     },
     {
       id: 2,
-      name: 'Pessoa Fisica',
+      name: 'Pessoa Física',
       color: '#3281f75b',
     },
     {
@@ -121,9 +121,9 @@ const Customers = () => {
   ];
 
   const getRowClassName = (params: any) => {
-    return params.row.type === 'Pessoa Fisica'
+    return params.row.type === 'Pessoa Física'
       ? styles.physicalPerson
-      : params.row.type === 'Pessoa Juridica'
+      : params.row.type === 'Pessoa Jurídica'
       ? styles.legalPerson
       : params.row.type === 'Contador'
       ? styles.counter
@@ -208,9 +208,9 @@ const Customers = () => {
   const handleEdit = (profileCustomer: ICustomerProps) => {
     const customerTypeUnformatted = profileCustomer.type;
     const profileCustomerType =
-      customerTypeUnformatted == 'Pessoa Fisica'
+      customerTypeUnformatted == 'Pessoa Física'
         ? 'physical_person'
-        : customerTypeUnformatted == 'Pessoa Juridica'
+        : customerTypeUnformatted == 'Pessoa Jurídica'
         ? 'legal_person'
         : customerTypeUnformatted == 'Contador'
         ? 'counter'
@@ -237,9 +237,9 @@ const Customers = () => {
   const handleDetails = (profileCustomer: ICustomerProps) => {
     const customerTypeUnformatted = profileCustomer.type;
     const profileCustomerType =
-      customerTypeUnformatted == 'Pessoa Fisica'
+      customerTypeUnformatted == 'Pessoa Física'
         ? 'physical_person'
-        : customerTypeUnformatted == 'Pessoa Juridica'
+        : customerTypeUnformatted == 'Pessoa Jurídica'
         ? 'legal_person'
         : customerTypeUnformatted == 'Contador'
         ? 'counter'
@@ -409,13 +409,13 @@ const Customers = () => {
       case 1:
         filteredList = profileCustomersList.filter(
           (profileCustomer: ICustomerProps) =>
-            profileCustomer.attributes.customer_type === 'Pessoa Juridica',
+            profileCustomer.attributes.customer_type === 'Pessoa Jurídica',
         );
         break;
       case 2:
         filteredList = profileCustomersList.filter(
           (profileCustomer: ICustomerProps) =>
-            profileCustomer.attributes.customer_type === 'Pessoa Fisica',
+            profileCustomer.attributes.customer_type === 'Pessoa Física',
         );
         break;
       case 3:
@@ -769,13 +769,13 @@ const Customers = () => {
                     <Flex className="selectItemsContainer">
                       <Link href={'/cadastrar?type=cliente/pessoa_fisica'}>
                         <Box className={'item'}>
-                          <Typography variant="subtitle2">{'Pessoa Fisica'}</Typography>
+                          <Typography variant="subtitle2">{'Pessoa Física'}</Typography>
                           <MdKeyboardArrowRight size={24} color={colors.white} />
                         </Box>
                       </Link>
                       <Link href={'/cadastrar?type=cliente/pessoa_juridica'}>
                         <Box className={'item'}>
-                          <Typography variant="subtitle2">{'Pessoa Juridica'}</Typography>
+                          <Typography variant="subtitle2">{'Pessoa Jurídica'}</Typography>
                           <MdKeyboardArrowRight size={24} color={colors.white} />
                         </Box>
                       </Link>
@@ -847,12 +847,12 @@ const Customers = () => {
                     type: profileCustomer.attributes.customer_type,
                     cpf:
                       (profileCustomer.attributes.cpf &&
-                        profileCustomer.attributes.customer_type === 'Pessoa Fisica') ||
+                        profileCustomer.attributes.customer_type === 'Pessoa Física') ||
                       profileCustomer.attributes.customer_type === 'Contador' ||
                       profileCustomer.attributes.customer_type === 'Representante Legal'
                         ? profileCustomer.attributes.cpf
                         : profileCustomer.attributes.cnpj &&
-                          profileCustomer.attributes.customer_type === 'Pessoa Juridica'
+                          profileCustomer.attributes.customer_type === 'Pessoa Jurídica'
                         ? profileCustomer.attributes.cnpj
                         : '',
                     customer_email: profileCustomer.attributes.customer_email,
