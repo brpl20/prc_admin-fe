@@ -62,6 +62,8 @@ import { getSession, useSession } from 'next-auth/react';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 import { copyToClipboard } from '@/utils/copyToClipboard';
 import { translateCustomerType } from '@/utils/translateCustomerType';
+import { useModal } from '@/utils/useModal';
+import GenericModal from '@/components/Modals/GenericModal';
 
 export type CustomersProps = {
   id: string;
@@ -122,10 +124,10 @@ const Customers = () => {
     return params.row.type === 'Pessoa Fisica'
       ? styles.physicalPerson
       : params.row.type === 'Pessoa Juridica'
-        ? styles.legalPerson
-        : params.row.type === 'Contador'
-          ? styles.counter
-          : styles.representative;
+      ? styles.legalPerson
+      : params.row.type === 'Contador'
+      ? styles.counter
+      : styles.representative;
   };
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -163,6 +165,9 @@ const Customers = () => {
   >([]);
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [customerToChange, setCustomerToChange] = useState<CustomersProps>();
+  const [customerToInactivate, setCustomerToInactivate] = useState<ICustomerProps>();
+
+  const inactivationModal = useModal();
 
   const handleSearch = (search: string) => {
     const regex = new RegExp(search, 'i');
@@ -206,10 +211,10 @@ const Customers = () => {
       customerTypeUnformatted == 'Pessoa Fisica'
         ? 'physical_person'
         : customerTypeUnformatted == 'Pessoa Juridica'
-          ? 'legal_person'
-          : customerTypeUnformatted == 'Contador'
-            ? 'counter'
-            : 'representative';
+        ? 'legal_person'
+        : customerTypeUnformatted == 'Contador'
+        ? 'counter'
+        : 'representative';
 
     switch (profileCustomerType) {
       case 'physical_person':
@@ -235,10 +240,10 @@ const Customers = () => {
       customerTypeUnformatted == 'Pessoa Fisica'
         ? 'physical_person'
         : customerTypeUnformatted == 'Pessoa Juridica'
-          ? 'legal_person'
-          : customerTypeUnformatted == 'Contador'
-            ? 'counter'
-            : 'representative';
+        ? 'legal_person'
+        : customerTypeUnformatted == 'Contador'
+        ? 'counter'
+        : 'representative';
 
     switch (profileCustomerType) {
       case 'physical_person':
@@ -290,7 +295,6 @@ const Customers = () => {
     setRowItem(profileCustomer);
     setOpenRemoveModal(true);
   };
-
 
   const getProfileCustomers = async () => {
     const requestParams = getForStatus === 'active' ? '' : getForStatus;
@@ -436,6 +440,19 @@ const Customers = () => {
 
   return (
     <>
+      {/* Inactivation Modal */}
+      <GenericModal
+        isOpen={inactivationModal.isOpen}
+        onClose={inactivationModal.close}
+        onConfirm={async () => {
+          handleInactive(customerToInactivate!);
+          inactivationModal.close();
+        }}
+        content={'Tem certeza de que deseja inativar esse usuário?'}
+        confirmButtonText="Sim, Inativar"
+        showConfirmButton
+      />
+
       {openModal && (
         <div
           className="relative z-10"
@@ -597,7 +614,8 @@ const Customers = () => {
                   className="flex gap-2 w-full"
                   onClick={() => {
                     handleCloseMenu();
-                    handleInactive(rowItem);
+                    inactivationModal.open();
+                    setCustomerToInactivate(rowItem);
                   }}
                 >
                   <MdOutlineArchive size={22} color={colors.icons} cursor={'pointer'} />
@@ -823,19 +841,20 @@ const Customers = () => {
                   profileCustomersListFiltered &&
                   profileCustomersListFiltered.map((profileCustomer: ICustomerProps) => ({
                     id: Number(profileCustomer.id),
-                    name: profileCustomer.attributes.name + ' ' + profileCustomer.attributes.last_name,
+                    name:
+                      profileCustomer.attributes.name + ' ' + profileCustomer.attributes.last_name,
                     deleted: profileCustomer.attributes.deleted,
                     type: profileCustomer.attributes.customer_type,
                     cpf:
                       (profileCustomer.attributes.cpf &&
                         profileCustomer.attributes.customer_type === 'Pessoa Fisica') ||
-                        profileCustomer.attributes.customer_type === 'Contador' ||
-                        profileCustomer.attributes.customer_type === 'Representante Legal'
+                      profileCustomer.attributes.customer_type === 'Contador' ||
+                      profileCustomer.attributes.customer_type === 'Representante Legal'
                         ? profileCustomer.attributes.cpf
                         : profileCustomer.attributes.cnpj &&
                           profileCustomer.attributes.customer_type === 'Pessoa Juridica'
-                          ? profileCustomer.attributes.cnpj
-                          : '',
+                        ? profileCustomer.attributes.cnpj
+                        : '',
                     customer_email: profileCustomer.attributes.customer_email,
                     city: profileCustomer.attributes.city,
                     contact: profileCustomer.attributes.default_phone

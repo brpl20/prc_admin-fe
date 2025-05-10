@@ -116,7 +116,7 @@ const Drawer = styled(MuiDrawer, {
 const Layout = ({ children }: ILayoutProps) => {
   const theme = useTheme();
   const { asPath, route } = useRouter();
-  const { handleLogout } = useContext(AuthContext);
+  const { userData, handleLogout } = useContext(AuthContext);
   const { data: session } = useSession();
 
   const { showTitle, pageTitle } = useContext(PageTitleContext);
@@ -202,7 +202,7 @@ const Layout = ({ children }: ILayoutProps) => {
             <Flex>
               <Flex>
                 <Typography fontSize="md" color={colors.white} marginLeft={2} marginRight={2}>
-                  {'procstudio'}
+                  {userData && userData.name}
                 </Typography>
               </Flex>
               <MdKeyboardArrowDown size={24} className="arrow" />
