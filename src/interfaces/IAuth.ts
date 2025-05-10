@@ -1,3 +1,5 @@
+import { IAdminPropsAttributes } from '@/interfaces/IAdmin';
+
 interface IUser {
   admin_id: string;
   name?: string;
@@ -12,8 +14,10 @@ interface ISignInData {
 interface IAuthContextType {
   isAuthenticated: boolean;
   user: IUser;
+  userData: IAdminPropsAttributes | null;
   handleLogout: () => void;
   saveToken: (token: string) => void;
+  fetchUserData: (adminId: string) => Promise<IAdminPropsAttributes | null>;
 }
 
 interface ISignInRequestData {
