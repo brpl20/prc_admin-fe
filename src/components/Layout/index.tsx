@@ -33,12 +33,13 @@ import { IoDocumentText, IoExitOutline } from 'react-icons/io5';
 
 import Image from 'next/image';
 import { colors, HeaderPageTitle } from '@/styles/globals';
-import { Container, SelectContainer, Flex, MenuItem, CloseDropdown, TitleWrapper } from './styles';
+import { Container, Flex, MenuItem, CloseDropdown, TitleWrapper } from './styles';
 
 import Logo from '../../assets/logo-white.png';
 import Profile from '../../assets/Profile.png';
 import { useSession } from 'next-auth/react';
 import { jwtDecode } from 'jwt-decode';
+import { SelectContainer, SelectItem, SelectItemsContainer } from '@/components/SelectContainer';
 
 const drawerWidth = 224;
 
@@ -168,6 +169,13 @@ const Layout = ({ children }: ILayoutProps) => {
     }
   }, [session]);
 
+  function formatUserName(fullName: string): string {
+    const names = fullName.split(' ');
+    if (names.length <= 2) return fullName; // Show whole name if there's only a name and surname
+
+    return `${names[0]} ${names[1]}...`;
+  }
+
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
@@ -198,30 +206,31 @@ const Layout = ({ children }: ILayoutProps) => {
           </TitleWrapper>
           <SelectContainer onClick={() => setOpenUserMenu(!openUserMenu)} isOpen={openUserMenu}>
             <CloseDropdown className="close" onClick={() => setOpenUserMenu(false)} />
+
             <Image width={28} height={28} src={Profile} alt="Logo" priority />
-            <Flex>
-              <Flex>
-                <Typography fontSize="md" color={colors.white} marginLeft={2} marginRight={2}>
-                  {userData && userData.name}
+            <Flex className="min-w-0">
+              <Flex className="overflow-hidden">
+                <Typography fontSize="md" color={colors.white} className="px-4 truncate">
+                  {userData && formatUserName(userData.name + ' ' + userData.last_name)}
                 </Typography>
               </Flex>
-              <MdKeyboardArrowDown size={24} className="arrow" />
+              <MdKeyboardArrowDown
+                size={24}
+                className={`arrow ${openUserMenu ? 'rotate-180' : ''}`}
+              />
             </Flex>
             {openUserMenu && (
-              <Flex className="selectItemsContainer">
-                <Link href={`/alterar?type=usuario&id=${adminId}`}>
-                  <Box className={'item'}>
-                    <AiOutlineUser size={20} />
-                    <Typography variant="subtitle2"> {'Conta'} </Typography>
-                  </Box>
-                </Link>
-                <Link href={'/'}>
-                  <Box className={'item'} onClick={handleLogout}>
-                    <IoExitOutline size={20} />
-                    <Typography variant="subtitle2"> {'Sair'} </Typography>
-                  </Box>
-                </Link>
-              </Flex>
+              <SelectItemsContainer>
+                <SelectItem href={`/alterar?type=usuario&id=${adminId}`}>
+                  <AiOutlineUser size={20} />
+                  <span className="text-sm font-medium">Conta</span>
+                </SelectItem>
+
+                <SelectItem href="/" onClick={handleLogout}>
+                  <IoExitOutline size={20} />
+                  <span className="text-sm font-medium">Sair</span>
+                </SelectItem>
+              </SelectItemsContainer>
             )}
           </SelectContainer>
         </Toolbar>
