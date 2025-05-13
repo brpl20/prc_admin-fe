@@ -54,7 +54,7 @@ import dynamic from 'next/dynamic';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 import { ICustomerProps } from '@/interfaces/ICustomer';
-import { phoneMask } from '@/utils/masks';
+import { cpfMask, phoneMask } from '@/utils/masks';
 
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { AuthContext } from '@/contexts/AuthContext';
@@ -437,6 +437,16 @@ const Customers = () => {
 
     setProfileCustomersListFiltered(filteredList);
   };
+
+  function getProfileCustomerCpfOrCpnj(profileCustomer: ICustomerProps): string {
+    const { cpf, cnpj, customer_type } = profileCustomer.attributes;
+
+    if (cnpj && customer_type === 'Pessoa Jurídica') {
+      return cnpj;
+    }
+
+    return cpf ? cpfMask(cpf) : '';
+  }
 
   return (
     <>
@@ -882,11 +892,12 @@ const Customers = () => {
                     valueFormatter: defaultTableValueFormatter,
                   },
                   {
-                    width: 200,
-                    field: 'cpf',
+                    width: 190,
+                    field: 'cpfOrCnpj',
                     headerName: 'CPF/CNPJ',
                     cellClassName: 'font-medium text-black',
-                    align: 'left',
+                    align: 'center',
+                    headerAlign: 'center',
                     sortable: false,
                     renderCell: (params: any) => {
                       const [copied, setCopied] = React.useState(false);
@@ -899,7 +910,25 @@ const Customers = () => {
                       };
 
                       return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-end',
+                            width: '100%',
+                          }}
+                        >
+                          <span
+                            style={{
+                              marginRight: '8px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              textAlign: 'right',
+                            }}
+                          >
+                            {params.value}
+                          </span>
                           <IconButton onClick={handleCopy} size="small" title="Copiar CPF/CNPJ">
                             {copied ? (
                               <MdCheck size={16} color="green" />
@@ -907,7 +936,6 @@ const Customers = () => {
                               <MdContentCopy size={16} />
                             )}
                           </IconButton>
-                          <span>{params.value}</span>
                         </div>
                       );
                     },
