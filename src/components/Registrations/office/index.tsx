@@ -36,7 +36,7 @@ import { createOffice, updateOffice } from '@/services/offices';
 import Router, { useRouter } from 'next/router';
 import { cepMask, cnpjMask } from '@/utils/masks';
 
-import { IAdminPropsAttributes } from '@/interfaces/IAdmin';
+import { IAdminProps, IAdminPropsAttributes } from '@/interfaces/IAdmin';
 import { getAllAdmins } from '@/services/admins';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
@@ -433,7 +433,7 @@ const Office = ({ dataToEdit }: props) => {
           bank => bank.name !== 'Selic' && bank.name !== 'Bacen',
         );
         setBankList(filteredBanks);
-      } catch (error: any) { }
+      } catch (error: any) {}
     };
 
     const removeDuplicateBanks = (banks: any) => {
@@ -933,8 +933,9 @@ const Office = ({ dataToEdit }: props) => {
                           onClick={() => handleRemoveContact(index, 'phoneInputFields')}
                         >
                           <div
-                            className={`flex ${contactData.phoneInputFields.length > 1 ? '' : 'hidden'
-                              }`}
+                            className={`flex ${
+                              contactData.phoneInputFields.length > 1 ? '' : 'hidden'
+                            }`}
                           >
                             <IoMdTrash size={20} color="#a50000" />
                           </div>
@@ -949,8 +950,9 @@ const Office = ({ dataToEdit }: props) => {
                           onClick={() => handleAddInput('phoneInputFields')}
                         >
                           <IoAddCircleOutline
-                            className={`cursor-pointer ml-auto ${contactData.phoneInputFields.length > 1 ? 'mr-6' : ''
-                              }`}
+                            className={`cursor-pointer ml-auto ${
+                              contactData.phoneInputFields.length > 1 ? 'mr-6' : ''
+                            }`}
                             color={colors.quartiary}
                             size={20}
                           />
@@ -987,8 +989,9 @@ const Office = ({ dataToEdit }: props) => {
                           onClick={() => handleRemoveContact(index, 'emailInputFields')}
                         >
                           <div
-                            className={`flex ${contactData.emailInputFields.length > 1 ? '' : 'hidden'
-                              }`}
+                            className={`flex ${
+                              contactData.emailInputFields.length > 1 ? '' : 'hidden'
+                            }`}
                           >
                             <IoMdTrash size={20} color="#a50000" />
                           </div>
@@ -1003,8 +1006,9 @@ const Office = ({ dataToEdit }: props) => {
                           onClick={() => handleAddInput('emailInputFields')}
                         >
                           <IoAddCircleOutline
-                            className={`cursor-pointer ml-auto ${contactData.emailInputFields.length > 1 ? 'mr-6' : ''
-                              }`}
+                            className={`cursor-pointer ml-auto ${
+                              contactData.emailInputFields.length > 1 ? 'mr-6' : ''
+                            }`}
                             color={colors.quartiary}
                             size={20}
                           />
@@ -1054,13 +1058,15 @@ const Office = ({ dataToEdit }: props) => {
                       value={
                         formData.responsible_lawyer
                           ? adminsList.find(
-                            (lawyer: any) => lawyer.id == formData.responsible_lawyer,
-                          )
+                              (lawyer: any) => lawyer.id == formData.responsible_lawyer,
+                            )
                           : ''
                       }
                       options={adminsList}
                       getOptionLabel={(option: any) =>
-                        option && option.attributes ? option.attributes.name : ''
+                        option && option.attributes
+                          ? `${option.attributes.name} ${option.attributes.last_name}`
+                          : ''
                       }
                       onChange={(event, value) =>
                         handleResponsibleChange('responsible_lawyer', value)

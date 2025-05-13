@@ -1,9 +1,9 @@
 export const translateCustomerType = (profileCustomerType: string) => {
   switch (profileCustomerType) {
     case 'physical_person':
-      return 'Pessoa Fisica';
+      return 'Pessoa Física';
     case 'legal_person':
-      return 'Pessoa Juridica';
+      return 'Pessoa Jurídica';
     case 'counter':
       return 'Contador';
     case 'representative':

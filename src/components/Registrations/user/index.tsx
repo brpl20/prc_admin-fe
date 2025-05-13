@@ -40,6 +40,7 @@ import { ZodFormError, ZodFormErrors } from '@/types/zod';
 import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import CustomDateField from '@/components/FormInputFields/CustomDateField';
 import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
+import { isAxiosError } from 'axios';
 
 interface FormData {
   officeId: string;
@@ -399,13 +400,15 @@ const User = ({ dataToEdit }: props) => {
         const id = dataToEdit.data.id;
         await updateProfileAdmin(id, editData);
 
-        const adminEmailData = {
-          admin: {
-            email: formData.userEmail,
-          },
-        };
-
-        await updateAdmin(id, adminEmailData);
+        // Only attempt email update if it was actually changed
+        if (formData.userEmail !== dataToEdit.data.attributes.email) {
+          const adminEmailData = {
+            admin: {
+              email: formData.userEmail,
+            },
+          };
+          await updateAdmin(id, adminEmailData);
+        }
 
         Router.push('/usuarios');
       }
@@ -473,9 +476,21 @@ const User = ({ dataToEdit }: props) => {
       setLoading(false);
     }
   };
+  const handleFormError = (error: unknown) => {
+    // Check if its an API error
+    if (isAxiosError(error)) {
+      if (error.response?.data.errors && Array.isArray(error.response?.data.errors)) {
+        const apiError = error.response.data.errors[0].code;
+        setMessage(apiError || 'Ocorreu um erro inesperado. Por favor, tente novamente.');
+        setType('error');
+        setOpenSnackbar(true);
+        return;
+      }
+    }
 
-  const handleFormError = (error: { issues: ZodFormError[] }) => {
-    const newErrors = error.issues ?? [];
+    // Assume the error is of type `{ issues: ZodFormError[] }`
+    const zodError = error as { issues: ZodFormError[] };
+    const newErrors = zodError.issues ?? [];
 
     if (newErrors.length === 0) {
       setMessage('Ocorreu um erro inesperado ao enviar os dados.');
@@ -489,11 +504,8 @@ const User = ({ dataToEdit }: props) => {
     setOpenSnackbar(true);
     const result: ZodFormErrors = {};
 
-    // Loop through the errors and process them
     newErrors.forEach(err => {
-      let [field, index] = err.path;
-
-      index = index || 0;
+      const [field, index] = err.path;
 
       if (!result[field]) {
         result[field] = []; // Initialize array for the field if not present
@@ -586,7 +598,7 @@ const User = ({ dataToEdit }: props) => {
           bank => bank.name !== 'Selic' && bank.name !== 'Bacen',
         );
         setBankList(filteredBanks);
-      } catch (error: any) { }
+      } catch (error: any) {}
     };
 
     const removeDuplicateBanks = (banks: any) => {
@@ -668,24 +680,24 @@ const User = ({ dataToEdit }: props) => {
         const addresses = attributes.addresses[0]
           ? attributes.addresses[0]
           : {
-            description: '',
-            zip_code: '',
-            street: '',
-            number: '',
-            neighborhood: '',
-            city: '',
-            state: '',
-          };
+              description: '',
+              zip_code: '',
+              street: '',
+              number: '',
+              neighborhood: '',
+              city: '',
+              state: '',
+            };
 
         const bankAccounts = attributes.bank_accounts[0]
           ? attributes.bank_accounts[0]
           : {
-            bank_name: '',
-            type_account: '',
-            agency: '',
-            account: '',
-            pix: '',
-          };
+              bank_name: '',
+              type_account: '',
+              agency: '',
+              account: '',
+              pix: '',
+            };
 
         handleBankChange(bankAccounts.bank_name);
 
@@ -1061,8 +1073,9 @@ const User = ({ dataToEdit }: props) => {
                           onClick={() => handleRemoveContact(index, 'phoneInputFields')}
                         >
                           <div
-                            className={`flex ${contactData.phoneInputFields.length > 1 ? '' : 'hidden'
-                              }`}
+                            className={`flex ${
+                              contactData.phoneInputFields.length > 1 ? '' : 'hidden'
+                            }`}
                           >
                             <IoMdTrash size={20} color="#a50000" />
                           </div>
@@ -1077,8 +1090,9 @@ const User = ({ dataToEdit }: props) => {
                           onClick={() => handleAddInput('phoneInputFields')}
                         >
                           <IoAddCircleOutline
-                            className={`cursor-pointer ml-auto ${contactData.phoneInputFields.length > 1 ? 'mr-6' : ''
-                              }`}
+                            className={`cursor-pointer ml-auto ${
+                              contactData.phoneInputFields.length > 1 ? 'mr-6' : ''
+                            }`}
                             color={colors.quartiary}
                             size={20}
                           />
@@ -1115,8 +1129,9 @@ const User = ({ dataToEdit }: props) => {
                           onClick={() => handleRemoveContact(index, 'emailInputFields')}
                         >
                           <div
-                            className={`flex ${contactData.emailInputFields.length > 1 ? '' : 'hidden'
-                              }`}
+                            className={`flex ${
+                              contactData.emailInputFields.length > 1 ? '' : 'hidden'
+                            }`}
                           >
                             <IoMdTrash size={20} color="#a50000" />
                           </div>
@@ -1131,8 +1146,9 @@ const User = ({ dataToEdit }: props) => {
                           onClick={() => handleAddInput('emailInputFields')}
                         >
                           <IoAddCircleOutline
-                            className={`cursor-pointer ml-auto ${contactData.emailInputFields.length > 1 ? 'mr-6' : ''
-                              }`}
+                            className={`cursor-pointer ml-auto ${
+                              contactData.emailInputFields.length > 1 ? 'mr-6' : ''
+                            }`}
                             color={colors.quartiary}
                             size={20}
                           />
