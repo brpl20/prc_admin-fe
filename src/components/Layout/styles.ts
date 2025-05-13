@@ -109,67 +109,6 @@ export const MenuItem = styled(Box)`
   height: 32px;
 `;
 
-export const SelectContainer = styled.div<any>`
-  width: 180px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-left: auto;
-  margin-right: 16px;
-  cursor: pointer;
-
-  padding: 6px;
-  border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.2);
-
-  .selectItemsContainer {
-    width: 180px;
-    margin-top: 145px;
-    position: absolute;
-
-    flex-direction: column;
-    align-items: baseline;
-
-    z-index: 1;
-    border-radius: 8px;
-    background-color: white;
-    box-shadow: ${border.shadow};
-    background-color: ${colors.white};
-
-    a {
-      width: 100%;
-      padding: 8px;
-
-      text-decoration: none;
-      color: ${colors.black};
-    }
-
-    .item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px;
-      padding-left: 12px;
-
-      :hover {
-        border-radius: 8px;
-        background-color: ${colors.background};
-      }
-    }
-  }
-  ${props =>
-    props.isOpen &&
-    css`
-      .arrow {
-        rotate: 180deg;
-      }
-
-      .close {
-        display: block;
-      }
-    `}
-`;
-
 export const CloseDropdown = styled.div<any>`
   display: none;
   cursor: default;
