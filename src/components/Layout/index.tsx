@@ -6,7 +6,6 @@ import { AuthContext } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
 
 import { ActiveLink } from '@/components';
-import Link from 'next/link';
 
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
@@ -117,7 +116,7 @@ const Drawer = styled(MuiDrawer, {
 const Layout = ({ children }: ILayoutProps) => {
   const theme = useTheme();
   const { asPath, route } = useRouter();
-  const { userData, handleLogout } = useContext(AuthContext);
+  const { userData, handleLogout, fetchUserData } = useContext(AuthContext);
   const { data: session } = useSession();
 
   const { showTitle, pageTitle } = useContext(PageTitleContext);
@@ -165,6 +164,7 @@ const Layout = ({ children }: ILayoutProps) => {
       const token: any = jwtDecode(session.token);
       if (token) {
         setAdminId(token.admin_id);
+        fetchUserData(token.admin_id);
       }
     }
   }, [session]);
@@ -209,7 +209,7 @@ const Layout = ({ children }: ILayoutProps) => {
 
             <Image width={28} height={28} src={Profile} alt="Logo" priority />
             <Flex className="min-w-0">
-              <Flex className="overflow-hidden">
+              <Flex className="overflow-hidden select-none">
                 <Typography fontSize="md" color={colors.white} className="px-4 truncate">
                   {userData && formatUserName(userData.name + ' ' + userData.last_name)}
                 </Typography>
