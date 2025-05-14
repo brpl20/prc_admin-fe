@@ -1,44 +1,45 @@
 'use client';
 
-import { useState, useEffect, useContext } from 'react';
-import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { AuthContext } from '@/contexts/AuthContext';
+import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { useRouter } from 'next/router';
+import { useContext, useEffect, useState } from 'react';
 
 import { ActiveLink } from '@/components';
 
+import MuiAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
-import MuiAppBar from '@mui/material/AppBar';
 
 import { AppBarProps, ILayoutProps } from '@/interfaces/ILayout';
-import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
-import { Typography, Stack, Toolbar, CssBaseline, IconButton } from '@mui/material';
+import { CssBaseline, IconButton, Stack, Toolbar, Typography } from '@mui/material';
+import { CSSObject, styled, Theme, useTheme } from '@mui/material/styles';
 
 import {
+  MdAccountBalance,
   MdGroups,
   MdHandyman,
-  MdOutlineFormatListNumbered,
-  MdPerson,
-  MdAccountBalance,
-  MdOutlineArrowRight,
-  MdMenu,
   MdKeyboardArrowDown,
   MdKeyboardArrowLeft,
+  MdMenu,
+  MdOutlineArrowRight,
+  MdOutlineFormatListNumbered,
+  MdPerson,
 } from 'react-icons/md';
 
 import { AiOutlineUser } from 'react-icons/ai';
 import { IoDocumentText, IoExitOutline } from 'react-icons/io5';
 
-import Image from 'next/image';
 import { colors, HeaderPageTitle } from '@/styles/globals';
-import { Container, Flex, MenuItem, CloseDropdown, TitleWrapper } from './styles';
+import Image from 'next/image';
+import { CloseDropdown, Container, Flex, MenuItem, TitleWrapper } from './styles';
 
+import { SelectContainer, SelectItem, SelectItemsContainer } from '@/components/SelectContainer';
+import { jwtDecode } from 'jwt-decode';
+import { useSession } from 'next-auth/react';
+import { TbLoader2 } from 'react-icons/tb';
 import Logo from '../../assets/logo-white.png';
 import Profile from '../../assets/Profile.png';
-import { useSession } from 'next-auth/react';
-import { jwtDecode } from 'jwt-decode';
-import { SelectContainer, SelectItem, SelectItemsContainer } from '@/components/SelectContainer';
 
 const drawerWidth = 224;
 
@@ -210,9 +211,18 @@ const Layout = ({ children }: ILayoutProps) => {
             <Image width={28} height={28} src={Profile} alt="Logo" priority />
             <Flex className="min-w-0">
               <Flex className="overflow-hidden select-none">
-                <Typography fontSize="md" color={colors.white} className="px-4 truncate">
-                  {userData && formatUserName(userData.name + ' ' + userData.last_name)}
-                </Typography>
+                {userData ? (
+                  <Typography fontSize="md" color={colors.white} className="px-4 truncate">
+                    {formatUserName(userData.name + ' ' + userData.last_name)}
+                  </Typography>
+                ) : (
+                  <Flex>
+                    <Typography fontSize="md" color={colors.white} className="px-4 truncate">
+                      Procstudio
+                    </Typography>
+                    <TbLoader2 className="animate-spin mr-4" />
+                  </Flex>
+                )}
               </Flex>
               <MdKeyboardArrowDown
                 size={24}
