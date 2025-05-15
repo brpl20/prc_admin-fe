@@ -895,6 +895,14 @@ const Customers = () => {
 
                       const handleCopy = () => {
                         copyToClipboard(params.value, () => {
+                          if (!params.value) {
+                            setMessage(
+                              'Ocorreu um erro ao copiar o valor do campo. Por favor, tente novamente.',
+                            );
+                            setTypeMessage('error');
+                            setOpenSnackbar(true);
+                          }
+
                           setCopied(true);
                           setTimeout(() => setCopied(false), 2000);
                         });
