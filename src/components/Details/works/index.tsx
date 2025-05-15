@@ -14,7 +14,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { getAllAdmins } from '@/services/admins';
+import { getAllProfileAdmins } from '@/services/admins';
 import { getAllOffices } from '@/services/offices';
 import { FiMinusCircle } from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
@@ -75,7 +75,7 @@ export default function WorkDetails({ id }: WorkDetailsProps) {
   const getAdmins = async () => {
     const response: {
       data: any;
-    } = await getAllAdmins('');
+    } = await getAllProfileAdmins('');
     setAllAdmins(response.data);
   };
 

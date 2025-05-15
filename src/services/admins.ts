@@ -1,6 +1,6 @@
 import api from './api';
 
-const createAdmin = async (data: any) => {
+const createProfileAdmin = async (data: any) => {
   try {
     const response = await api.post('/profile_admins', data);
     return response.data;
@@ -18,7 +18,7 @@ const updateAdmin = async (id: string, data: any) => {
   }
 };
 
-const getAllAdmins = async (typeOfParams: string) => {
+const getAllProfileAdmins = async (typeOfParams: string) => {
   const url = typeOfParams !== '' ? `/profile_admins?deleted=${typeOfParams}` : '/profile_admins';
 
   try {
@@ -29,7 +29,7 @@ const getAllAdmins = async (typeOfParams: string) => {
   }
 };
 
-const getAdminByID = async (id: string) => {
+const getProfileAdminById = async (id: string) => {
   try {
     const response = await api.get(`/profile_admins/${id}`);
     return response;
@@ -81,9 +81,9 @@ const restoreProfileAdmin = async (id: string) => {
 };
 
 export {
-  createAdmin,
-  getAllAdmins,
-  getAdminByID,
+  createProfileAdmin,
+  getAllProfileAdmins,
+  getProfileAdminById,
   getAdmins,
   updateAdmin,
   updateProfileAdmin,

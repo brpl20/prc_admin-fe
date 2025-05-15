@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { WorkContext } from '@/contexts/WorkContext';
 import { getWorkById } from '@/services/works';
-import { getAdminByID } from '@/services/admins';
+import { getProfileAdminById } from '@/services/admins';
 import { getOfficeById } from '@/services/offices';
 import { getCustomerById } from '@/services/customers';
 
@@ -44,7 +44,7 @@ const Registration = () => {
     };
 
     const handleEditUser = async () => {
-      const response = await getAdminByID(id as string);
+      const response = await getProfileAdminById(id as string);
 
       if (response) {
         setForm(response.data);

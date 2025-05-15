@@ -37,7 +37,7 @@ import dynamic from 'next/dynamic';
 import { Footer, Notification, DeleteModal } from '@/components';
 
 import { IOfficeProps, IOfficePropsAttributes } from '@/interfaces/IOffice';
-import { getAllAdmins } from '@/services/admins';
+import { getAllProfileAdmins } from '@/services/admins';
 import { getSession, useSession } from 'next-auth/react';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
@@ -172,7 +172,7 @@ const Offices = () => {
 
   useEffect(() => {
     const getUserType = async () => {
-      const response = await getAllAdmins('');
+      const response = await getAllProfileAdmins('');
       const admins = response.data;
 
       const admin = admins.find((admin: any) => admin.attributes.email == user.email);

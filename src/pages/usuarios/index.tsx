@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import Router from 'next/router';
 
-import { getAllAdmins } from '@/services/admins';
+import { getAllProfileAdmins } from '@/services/admins';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { AuthContext } from '@/contexts/AuthContext';
 
@@ -171,7 +171,7 @@ const Admins = () => {
 
   const getAdmins = async () => {
     const requestParams = getForStatus === 'active' ? '' : getForStatus;
-    const response = await getAllAdmins(requestParams);
+    const response = await getAllProfileAdmins(requestParams);
     const translatedRole = response.data.map((user: IAdminProps) => ({
       ...user,
       attributes: {

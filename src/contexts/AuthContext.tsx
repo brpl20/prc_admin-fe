@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { logoutRequest } from '../services/auth';
 import { IAuthContextType, IUser } from '@/interfaces/IAuth';
 import { IAdminPropsAttributes } from '@/interfaces/IAdmin';
-import { getAdminByID } from '@/services/admins';
+import { getProfileAdminById } from '@/services/admins';
 
 export const AuthContext = createContext({} as IAuthContextType);
 
@@ -15,7 +15,7 @@ const AuthProvider = ({ children }: any) => {
 
   const fetchUserData = useCallback(async (adminId: string) => {
     try {
-      const data: IAdminPropsAttributes = (await getAdminByID(adminId)).data.data.attributes;
+      const data: IAdminPropsAttributes = (await getProfileAdminById(adminId)).data.data.attributes;
       setUserData(data);
       return data;
     } catch (error) {

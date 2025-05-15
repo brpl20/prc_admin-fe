@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
 import { Box, Button, CircularProgress } from '@mui/material';
-import { getAdminByID } from '@/services/admins';
+import { getProfileAdminById } from '@/services/admins';
 import { getAllOffices } from '@/services/offices';
 import {
   FiMinusCircle,
@@ -106,7 +106,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const { data } = await getAdminByID(id as string);
+      const { data } = await getProfileAdminById(id as string);
 
       if (data) {
         const addresses = data.data.attributes.addresses.map((address: any) => {

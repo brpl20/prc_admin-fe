@@ -37,7 +37,7 @@ import Router, { useRouter } from 'next/router';
 import { cepMask, cnpjMask } from '@/utils/masks';
 
 import { IAdminProps, IAdminPropsAttributes } from '@/interfaces/IAdmin';
-import { getAllAdmins } from '@/services/admins';
+import { getAllProfileAdmins } from '@/services/admins';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
 import {
@@ -345,7 +345,7 @@ const Office = ({ dataToEdit }: props) => {
   };
 
   const getAdmins = async () => {
-    const response = await getAllAdmins('');
+    const response = await getAllProfileAdmins('');
     setAdminsList(response.data);
   };
 
