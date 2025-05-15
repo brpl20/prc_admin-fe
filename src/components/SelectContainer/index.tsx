@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect, useRef } from 'react';
 
 interface SelectContainerProps {
   isOpen?: boolean;
@@ -14,11 +14,28 @@ export const SelectContainer: React.FC<SelectContainerProps> = ({
   onClick,
   ...props
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node) && isOpen) {
+        onClick?.();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClick]);
+
   return (
     <div
-      className={`flex justify-start items-center ml-auto mr-4 cursor-pointer p-1.5 rounded bg-white bg-opacity-20 ${className}`}
+      ref={containerRef}
+      className={`min-w-[180px] flex justify-start items-center ml-auto cursor-pointer p-1.5 rounded bg-white bg-opacity-20 ${className}`}
       onClick={onClick}
       {...props}
+      style={{ '--parent-width': `${containerRef.current?.offsetWidth}px` } as React.CSSProperties}
     >
       {React.Children.map(children, child => {
         if (React.isValidElement(child)) {
@@ -50,7 +67,7 @@ export const SelectItemsContainer: React.FC<SelectItemsContainerProps> = ({
 
   return (
     <div
-      className={`w-[180px] mt-[145px] absolute flex flex-col items-start z-10 rounded-lg bg-white shadow ${className}`}
+      className={`min-w-[180px] w-[--parent-width] mt-[145px] absolute flex flex-col items-start z-10 rounded-lg bg-white shadow ${className}`}
     >
       {children}
     </div>
