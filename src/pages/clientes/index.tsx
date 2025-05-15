@@ -855,16 +855,7 @@ const Customers = () => {
                       profileCustomer.attributes.name + ' ' + profileCustomer.attributes.last_name,
                     deleted: profileCustomer.attributes.deleted,
                     type: profileCustomer.attributes.customer_type,
-                    cpf:
-                      (profileCustomer.attributes.cpf &&
-                        profileCustomer.attributes.customer_type === 'Pessoa Física') ||
-                      profileCustomer.attributes.customer_type === 'Contador' ||
-                      profileCustomer.attributes.customer_type === 'Representante Legal'
-                        ? profileCustomer.attributes.cpf
-                        : profileCustomer.attributes.cnpj &&
-                          profileCustomer.attributes.customer_type === 'Pessoa Jurídica'
-                        ? profileCustomer.attributes.cnpj
-                        : '',
+                    cpfOrCnpj: getProfileCustomerCpfOrCpnj(profileCustomer),
                     customer_email: profileCustomer.attributes.customer_email,
                     city: profileCustomer.attributes.city,
                     contact: profileCustomer.attributes.default_phone
@@ -904,6 +895,15 @@ const Customers = () => {
 
                       const handleCopy = () => {
                         copyToClipboard(params.value, () => {
+                          if (!params.value) {
+                            setMessage(
+                              'Ocorreu um erro ao copiar o valor do campo. Por favor, tente novamente.',
+                            );
+                            setTypeMessage('error');
+                            setOpenSnackbar(true);
+                            return;
+                          }
+
                           setCopied(true);
                           setTimeout(() => setCopied(false), 2000);
                         });
