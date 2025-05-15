@@ -901,6 +901,7 @@ const Customers = () => {
                             );
                             setTypeMessage('error');
                             setOpenSnackbar(true);
+                            return;
                           }
 
                           setCopied(true);
