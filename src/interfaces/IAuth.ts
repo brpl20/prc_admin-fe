@@ -10,14 +10,24 @@ export interface ILoginResponse {
   role: string;
 }
 
-export interface IAuthContext {
-  userId: string | null;
-  userData: IAdmin | null;
-  userProfileData: IProfileAdmin | null;
-  isAuthenticated: boolean;
-  handleLogout: () => Promise<void>;
-  saveToken: (token: string) => Promise<void>;
-  fetchUserData: (adminI: string) => Promise<void>;
+export interface IJwtPayload {
+  admin_id?: string;
+}
+
+export interface IUser {
+  id: string;
+  email: string;
+  token: string;
+  role: string;
+  userData: IAdmin;
+  userProfileData: IProfileAdmin;
+}
+
+export interface IToken {
+  token?: string;
+  role?: string;
+  userData?: IAdmin;
+  userProfileData?: IProfileAdmin;
 }
 
 export interface IGoogleProps {
