@@ -1,3 +1,4 @@
+import { IAdminResponse, IProfileAdmin } from '@/interfaces/IAdmin';
 import api from './api';
 
 const createProfileAdmin = async (data: any) => {
@@ -29,10 +30,10 @@ const getAllProfileAdmins = async (typeOfParams: string) => {
   }
 };
 
-const getProfileAdminById = async (id: string) => {
+const getProfileAdminById = async (id: string): Promise<IProfileAdmin> => {
   try {
     const response = await api.get(`/profile_admins/${id}`);
-    return response;
+    return response.data.data;
   } catch (error) {
     throw error;
   }
@@ -45,6 +46,11 @@ const getAdmins = async () => {
   } catch (error) {
     throw error;
   }
+};
+
+const getAdminById = async (id: string): Promise<IAdminResponse> => {
+  const response = await api.get(`/admins/${id}`);
+  return response.data;
 };
 
 const updateProfileAdmin = async (id: string, data: any) => {
@@ -85,6 +91,7 @@ export {
   getAllProfileAdmins,
   getProfileAdminById,
   getAdmins,
+  getAdminById,
   updateAdmin,
   updateProfileAdmin,
   inactiveProfileAdmin,
