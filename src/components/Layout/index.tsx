@@ -1,6 +1,5 @@
 'use client';
 
-import { AuthContext } from '@/contexts/AuthContext';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
@@ -35,8 +34,7 @@ import Image from 'next/image';
 import { CloseDropdown, Container, Flex, MenuItem, TitleWrapper } from './styles';
 
 import { SelectContainer, SelectItem, SelectItemsContainer } from '@/components/SelectContainer';
-import { jwtDecode } from 'jwt-decode';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { TbLoader2 } from 'react-icons/tb';
 import Logo from '../../assets/logo-white.png';
 import Profile from '../../assets/Profile.png';
@@ -117,7 +115,6 @@ const Drawer = styled(MuiDrawer, {
 const Layout = ({ children }: ILayoutProps) => {
   const theme = useTheme();
   const { asPath, route } = useRouter();
-  const { userProfile, handleLogout, fetchUserProfile } = useContext(AuthContext);
   const { data: session } = useSession();
 
   const { showTitle, pageTitle } = useContext(PageTitleContext);
@@ -157,18 +154,6 @@ const Layout = ({ children }: ILayoutProps) => {
       localStorage.setItem('openSidebar', openSidebar.toString());
     }
   }, [openSidebar]);
-
-  const [adminId, setAdminId] = useState<number>(0);
-
-  useEffect(() => {
-    if (session) {
-      const token: any = jwtDecode(session.token);
-      if (token) {
-        setAdminId(token.admin_id);
-        fetchUserProfile(token.admin_id);
-      }
-    }
-  }, [session]);
 
   function formatUserName(fullName: string): string {
     const names = fullName.split(' ');
@@ -211,9 +196,13 @@ const Layout = ({ children }: ILayoutProps) => {
             <Image width={28} height={28} src={Profile} alt="Logo" priority />
             <Flex className="min-w-0">
               <Flex className="overflow-hidden select-none">
-                {userProfile ? (
+                {session?.user.profile ? (
                   <Typography fontSize="md" color={colors.white} className="px-4 truncate">
-                    {formatUserName(userProfile.name + ' ' + userProfile.last_name)}
+                    {formatUserName(
+                      session.user.profile.attributes.name +
+                        ' ' +
+                        session.user.profile.attributes.last_name,
+                    )}
                   </Typography>
                 ) : (
                   <Flex>
@@ -231,12 +220,12 @@ const Layout = ({ children }: ILayoutProps) => {
             </Flex>
             {openUserMenu && (
               <SelectItemsContainer>
-                <SelectItem href={`/alterar?type=usuario&id=${adminId}`}>
+                <SelectItem href={`/alterar?type=usuario&id=${session?.user.profile?.id}`}>
                   <AiOutlineUser size={20} />
                   <span className="text-sm font-medium">Conta</span>
                 </SelectItem>
 
-                <SelectItem href="/" onClick={handleLogout}>
+                <SelectItem href="/" onClick={() => signOut()}>
                   <IoExitOutline size={20} />
                   <span className="text-sm font-medium">Sair</span>
                 </SelectItem>
