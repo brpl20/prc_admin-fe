@@ -590,6 +590,8 @@ const User = ({ dataToEdit }: props) => {
   };
 
   useEffect(() => {
+    console.log(dataToEdit);
+
     const getBanks = async () => {
       try {
         const response = await getAllBanks();

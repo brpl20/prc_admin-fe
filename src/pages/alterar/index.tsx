@@ -47,7 +47,7 @@ const Registration = () => {
       const response = await getProfileAdminById(id as string);
 
       if (response) {
-        setForm(response.data);
+        setForm(response);
       }
     };
 
@@ -55,7 +55,7 @@ const Registration = () => {
       const response = await getOfficeById(id as string);
 
       if (response) {
-        setForm(response.data);
+        setForm(response);
       }
     };
 

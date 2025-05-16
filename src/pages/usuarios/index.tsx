@@ -3,8 +3,6 @@ import Router from 'next/router';
 
 import { getAllProfileAdmins } from '@/services/admins';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
-import { AuthContext } from '@/contexts/AuthContext';
-
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 
@@ -44,19 +42,7 @@ import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatt
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Admins = () => {
-  const { user, saveToken } = useContext(AuthContext);
   const { data: session } = useSession();
-
-  useEffect(() => {
-    if (!user.admin_id) {
-      if (session) {
-        const token = session.token;
-        if (token) {
-          saveToken(token);
-        }
-      }
-    }
-  }, []);
 
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
 
@@ -285,7 +271,7 @@ const Admins = () => {
                   <label className="font-medium	cursor-pointer">Alterar</label>
                 </MenuItem>
 
-                {Number(user.admin_id) === Number(rowItem.id) ? null : (
+                {Number(session?.user.admin?.id) === Number(rowItem.id) ? null : (
                   <>
                     <MenuItem
                       className="flex gap-2 w-full"
