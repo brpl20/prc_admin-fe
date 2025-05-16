@@ -1,29 +1,14 @@
 import api from './api';
-import { ISignInRequestData } from '@/interfaces/IAuth';
+import { ILogin, ILoginResponse } from '@/interfaces/IAuth';
 
-const signInRequest = async (data: ISignInRequestData) => {
-  const { email, password } = data;
-
-  const auth = {
-    email,
-    password,
-  };
-
-  try {
-    const response = await api.post('/login', auth);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+export const login = async (credentials: ILogin): Promise<ILoginResponse> => {
+  const response = await api.post('/login', {
+    auth: credentials,
+  });
+  return response.data;
 };
 
-const logoutRequest = async () => {
-  try {
-    const response = await api.delete('/logout');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+export const logout = async () => {
+  const response = await api.delete('/logout');
+  return response.data;
 };
-
-export { signInRequest, logoutRequest };
