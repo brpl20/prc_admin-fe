@@ -15,7 +15,7 @@ import { getOfficeById, getOfficesWithLaws } from '@/services/offices';
 
 import { WorkContext } from '@/contexts/WorkContext';
 import { IOfficeProps } from '@/interfaces/IOffice';
-import { IAdminProps, IAdminPropsAttributes } from '@/interfaces/IAdmin';
+import { IProfileAdmin, IProfileAdminAttributes } from '@/interfaces/IAdmin';
 
 import { Container } from './styles';
 import { Flex } from '@/styles/globals';
@@ -70,9 +70,9 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
   const [offices, setOffices] = useState<IOfficeProps[]>([]);
   const [officesSelected, setOfficesSelected] = useState<any>([]);
   const [selectedLawyers, setSelectedLawyers] = useState<any[]>([]);
-  const [trainee, SetTrainee] = useState<IAdminPropsAttributes[]>([]);
-  const [paralegal, SetParalegal] = useState<IAdminPropsAttributes[]>([]);
-  const [lawyers, SetLawyers] = useState<IAdminPropsAttributes[]>([]);
+  const [trainee, SetTrainee] = useState<IProfileAdminAttributes[]>([]);
+  const [paralegal, SetParalegal] = useState<IProfileAdminAttributes[]>([]);
+  const [lawyers, SetLawyers] = useState<IProfileAdminAttributes[]>([]);
   const [isLegalPerson, setIsLegalPerson] = useState(true);
 
   const [legalPersonError, setLegalPersonError] = useState(false);
@@ -275,7 +275,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
     setLoading(true);
     try {
       const response: {
-        data: IAdminProps[];
+        data: IProfileAdmin[];
       } = await getAllProfileAdmins('');
       SetAllLawyers(response.data);
     } finally {
@@ -629,7 +629,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
                 value={
                   selectedLawyers.length > 0
                     ? allLawyers.find(
-                        (lawyer: IAdminPropsAttributes) =>
+                        (lawyer: IProfileAdminAttributes) =>
                           lawyer.id.toString() == selectedLawyers[0].toString(),
                       )
                     : ''
@@ -666,7 +666,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               value={
                 formData.responsible_lawyer
                   ? lawyers.find(
-                      (lawyer: IAdminPropsAttributes) =>
+                      (lawyer: IProfileAdminAttributes) =>
                         lawyer.id.toString() == formData.responsible_lawyer,
                     )
                   : ''
@@ -695,7 +695,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               value={
                 formData.initial_atendee
                   ? allLawyers.find(
-                      (lawyer: IAdminPropsAttributes) =>
+                      (lawyer: IProfileAdminAttributes) =>
                         lawyer.id.toString() == formData.initial_atendee,
                     )
                   : ''
@@ -724,7 +724,7 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
               value={
                 formData.intern
                   ? allLawyers.find(
-                      (lawyer: IAdminPropsAttributes) => lawyer.id.toString() == formData.intern,
+                      (lawyer: IProfileAdminAttributes) => lawyer.id.toString() == formData.intern,
                     )
                   : ''
               }

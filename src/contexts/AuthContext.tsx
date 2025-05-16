@@ -3,20 +3,21 @@ import { setCookie, destroyCookie } from 'nookies';
 import jwt from 'jsonwebtoken';
 import { logoutRequest } from '../services/auth';
 import { IAuthContextType, IUser } from '@/interfaces/IAuth';
-import { IAdminPropsAttributes } from '@/interfaces/IAdmin';
+import { IProfileAdminAttributes } from '@/interfaces/IAdmin';
 import { getProfileAdminById } from '@/services/admins';
 
 export const AuthContext = createContext({} as IAuthContextType);
 
 const AuthProvider = ({ children }: any) => {
   const [user, setUser] = useState<IUser>({} as IUser);
-  const [userData, setUserData] = useState<IAdminPropsAttributes | null>(null);
+  const [userProfile, setUserProfile] = useState<IProfileAdminAttributes | null>(null);
   const isAuthenticated = !!user;
 
-  const fetchUserData = useCallback(async (adminId: string) => {
+  const fetchUserProfile = useCallback(async (profileAdminId: string) => {
     try {
-      const data: IAdminPropsAttributes = (await getProfileAdminById(adminId)).data.data.attributes;
-      setUserData(data);
+      const data: IProfileAdminAttributes = (await getProfileAdminById(profileAdminId)).data.data
+        .attributes;
+      setUserProfile(data);
       return data;
     } catch (error) {
       console.error('Failed to fetch user data:', error);
@@ -27,9 +28,9 @@ const AuthProvider = ({ children }: any) => {
   // Automatically fetch user data when user changes
   useEffect(() => {
     if (user.admin_id) {
-      fetchUserData(user.admin_id);
+      fetchUserProfile(user.admin_id);
     }
-  }, [user, fetchUserData]);
+  }, [user, fetchUserProfile]);
 
   const saveToken = async (token: string) => {
     const decodedToken = jwt.decode(token) as any;
@@ -50,7 +51,7 @@ const AuthProvider = ({ children }: any) => {
       destroyCookie(undefined, 'nextauth.isAuth');
       destroyCookie(undefined, 'admin_id');
       setUser({} as IUser);
-      setUserData(null);
+      setUserProfile(null);
     } catch (error: any) {}
   };
 
@@ -58,11 +59,11 @@ const AuthProvider = ({ children }: any) => {
     <AuthContext.Provider
       value={{
         user,
-        userData,
+        userProfile,
         isAuthenticated,
         handleLogout,
         saveToken,
-        fetchUserData, // IMPORTANT: for manual refreshes
+        fetchUserProfile, // IMPORTANT: for manual refreshes
       }}
     >
       {children}

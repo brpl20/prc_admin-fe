@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { ContainerDetails, Flex, DetailsWrapper, ButtonShowContact } from '../styles';
 import { Box, Button, CircularProgress } from '@mui/material';
 import Link from 'next/link';
-import { IAdminProps } from '@/interfaces/IAdmin';
+import { IProfileAdmin } from '@/interfaces/IAdmin';
 import { getAllProfileAdmins } from '@/services/admins';
 import { FiMinusCircle } from 'react-icons/fi';
 import { GoPlusCircle } from 'react-icons/go';
@@ -26,7 +26,7 @@ export default function OfficeDetails({ id }: OfficeDetailsProps) {
 
   const getAdmins = async () => {
     const response: {
-      data: IAdminProps[];
+      data: IProfileAdmin[];
     } = await getAllProfileAdmins('');
     SetAllLawyers(response.data);
   };

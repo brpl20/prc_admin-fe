@@ -13,7 +13,7 @@ import {
 } from '../../styles/globals';
 import { Box, Button, IconButton, LinearProgress, Typography } from '@mui/material';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
-import { IAdminProps } from '../../interfaces/IAdmin';
+import { IProfileAdmin } from '../../interfaces/IAdmin';
 import { getAllProfileAdmins } from '../../services/admins';
 import { PageTitleContext } from '../../contexts/PageTitleContext';
 import { Footer } from '../../components';
@@ -105,7 +105,7 @@ const Documents = () => {
 
   const fetchResponsibleLawyers = async () => {
     const response: {
-      data: IAdminProps[];
+      data: IProfileAdmin[];
     } = await getAllProfileAdmins('');
     setResponsibleLawyers(response.data);
   };

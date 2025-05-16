@@ -36,7 +36,7 @@ import { createOffice, updateOffice } from '@/services/offices';
 import Router, { useRouter } from 'next/router';
 import { cepMask, cnpjMask } from '@/utils/masks';
 
-import { IAdminProps, IAdminPropsAttributes } from '@/interfaces/IAdmin';
+import { IProfileAdmin, IProfileAdminAttributes } from '@/interfaces/IAdmin';
 import { getAllProfileAdmins } from '@/services/admins';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
@@ -116,7 +116,7 @@ const Office = ({ dataToEdit }: props) => {
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [adminsList, setAdminsList] = useState<IAdminPropsAttributes[]>([]);
+  const [adminsList, setAdminsList] = useState<IProfileAdminAttributes[]>([]);
   const [officeTypes, setOfficeTypes] = useState<any[]>([]);
   const [selectedOfficeType, setSelectedOfficeType] = useState<any>({});
   const [selectedSocialType, setSelectedSocialType] = useState<any>({});

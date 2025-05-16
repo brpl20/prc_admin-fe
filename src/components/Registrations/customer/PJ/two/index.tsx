@@ -20,7 +20,7 @@ import { z } from 'zod';
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { TextField, Box, Autocomplete, Typography, Button } from '@mui/material';
 import { Notification } from '@/components';
-import { IAdminProps } from '@/interfaces/IAdmin';
+import { IProfileAdmin } from '@/interfaces/IAdmin';
 import { getAllProfileCustomer } from '@/services/customers';
 import RepresentativeModal from '../../representative/representativeModal';
 import { MdOutlineAddCircle } from 'react-icons/md';
@@ -253,7 +253,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
     return null;
   };
 
-  const handleSelectedCustomer = (admin: IAdminProps) => {
+  const handleSelectedCustomer = (admin: IProfileAdmin) => {
     if (errors.profile_admin) {
       delete errors.profile_admin;
       setErrors(errors);
@@ -410,7 +410,7 @@ const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IS
                   />
                 )}
                 noOptionsText="Não Encontrado"
-                onChange={(event, value) => handleSelectedCustomer(value as IAdminProps)}
+                onChange={(event, value) => handleSelectedCustomer(value as IProfileAdmin)}
                 value={profileAdmin || null}
               />
             </div>

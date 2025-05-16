@@ -36,7 +36,7 @@ import { Box, Button, LinearProgress, Typography } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
 import { Footer, Notification, DeleteModal } from '@/components';
-import { IAdminProps, IAdminPropsAttributes } from '@/interfaces/IAdmin';
+import { IProfileAdmin, IProfileAdminAttributes } from '@/interfaces/IAdmin';
 
 import dynamic from 'next/dynamic';
 import { getSession, useSession } from 'next-auth/react';
@@ -63,8 +63,8 @@ const Admins = () => {
   const [getForStatus, setGetForStatus] = useState<string>('active');
 
   const [searchFor, setSearchFor] = useState<string>('name');
-  const [adminsList, setAdminsList] = useState<IAdminProps[]>([]);
-  const [adminsListFiltered, setAdminsListFiltered] = useState<IAdminProps[]>([]);
+  const [adminsList, setAdminsList] = useState<IProfileAdmin[]>([]);
+  const [adminsListFiltered, setAdminsListFiltered] = useState<IProfileAdmin[]>([]);
   const [refetch, setRefetch] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -73,7 +73,7 @@ const Admins = () => {
   const [typeMessage, setTypeMessage] = useState<'success' | 'error'>('success');
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [rowItem, setRowItem] = useState<IAdminPropsAttributes>({} as IAdminPropsAttributes);
+  const [rowItem, setRowItem] = useState<IProfileAdminAttributes>({} as IProfileAdminAttributes);
   const open = Boolean(anchorEl);
   const [openRemoveModal, setOpenRemoveModal] = useState<boolean>(false);
 
@@ -83,7 +83,7 @@ const Admins = () => {
 
   const handleCloseMenu = () => {
     setAnchorEl(null);
-    setRowItem({} as IAdminPropsAttributes);
+    setRowItem({} as IProfileAdminAttributes);
   };
 
   const translateRole = (userRole: string) => {
@@ -128,15 +128,15 @@ const Admins = () => {
     }
   };
 
-  const handleEdit = (user: IAdminPropsAttributes) => {
+  const handleEdit = (user: IProfileAdminAttributes) => {
     Router.push(`/alterar?type=usuario&id=${user.id}`);
   };
 
-  const handleDetails = (user: IAdminPropsAttributes) => {
+  const handleDetails = (user: IProfileAdminAttributes) => {
     Router.push(`/detalhes?type=usuario&id=${user.id}`);
   };
 
-  const handleRestore = async (user: IAdminPropsAttributes) => {
+  const handleRestore = async (user: IProfileAdminAttributes) => {
     try {
       await restoreProfileAdmin(user.id);
       setMessage('Cliente restaurado com sucesso!');
@@ -150,7 +150,7 @@ const Admins = () => {
     }
   };
 
-  const handleInactive = async (user: IAdminPropsAttributes) => {
+  const handleInactive = async (user: IProfileAdminAttributes) => {
     try {
       await inactiveProfileAdmin(user.id);
       setMessage('Admin inativado com sucesso!');
@@ -164,7 +164,7 @@ const Admins = () => {
     }
   };
 
-  const handleDelete = async (user: IAdminPropsAttributes) => {
+  const handleDelete = async (user: IProfileAdminAttributes) => {
     setRowItem(user);
     setOpenRemoveModal(true);
   };
@@ -172,7 +172,7 @@ const Admins = () => {
   const getAdmins = async () => {
     const requestParams = getForStatus === 'active' ? '' : getForStatus;
     const response = await getAllProfileAdmins(requestParams);
-    const translatedRole = response.data.map((user: IAdminProps) => ({
+    const translatedRole = response.data.map((user: IProfileAdmin) => ({
       ...user,
       attributes: {
         ...user.attributes,
@@ -462,7 +462,7 @@ const Admins = () => {
                 }}
                 rows={
                   adminsListFiltered &&
-                  adminsListFiltered.map((admin: IAdminProps) => ({
+                  adminsListFiltered.map((admin: IProfileAdmin) => ({
                     id: Number(admin.id),
                     deleted: admin.attributes.deleted,
                     role: admin.attributes.role,

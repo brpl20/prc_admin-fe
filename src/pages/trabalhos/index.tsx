@@ -42,7 +42,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Footer, Notification, DeleteModal } from '@/components';
 import dynamic from 'next/dynamic';
 import Router from 'next/router';
-import { IAdminProps } from '@/interfaces/IAdmin';
+import { IProfileAdmin } from '@/interfaces/IAdmin';
 import { WorkStatusModal } from '@/components';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 import { translateCustomerType } from '@/utils/translateCustomerType';
@@ -212,7 +212,7 @@ const Works = () => {
 
   const getAdmins = async () => {
     const response: {
-      data: IAdminProps[];
+      data: IProfileAdmin[];
     } = await getAllProfileAdmins('');
     SetAllLawyers(response.data);
   };

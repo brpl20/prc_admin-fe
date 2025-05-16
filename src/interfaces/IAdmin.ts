@@ -1,4 +1,4 @@
-interface IAdminPropsAttributes {
+interface IProfileAdminAttributes {
   id: string;
   admin_id: number;
   office_id: number;
@@ -20,11 +20,51 @@ interface IAdminPropsAttributes {
   deleted: boolean;
 }
 
-interface IAdminProps {
+interface IProfileAdmin {
   id: string;
   type: string;
-  attributes: IAdminPropsAttributes;
+  attributes: IProfileAdminAttributes;
   deleted: boolean;
 }
 
-export type { IAdminProps, IAdminPropsAttributes };
+interface IAdminResponse {
+  data: IAdminResponseData;
+  included: IAdminResponseProfileAdmin[];
+}
+
+interface IAdminResponseData {
+  id: string;
+  type: string;
+  attributes: {
+    email: string;
+    deleted: boolean;
+  };
+  relationships: {
+    profile_admin: {
+      data: {
+        id: string;
+        type: string;
+      };
+    };
+  };
+}
+
+interface IAdminResponseProfileAdmin {
+  id: string;
+  type: string;
+  attributes: {
+    role: string;
+    name: string;
+    last_name: string;
+    email: string;
+    deleted: boolean;
+  };
+}
+
+export type {
+  IProfileAdmin,
+  IProfileAdminAttributes,
+  IAdminResponse,
+  IAdminResponseData,
+  IAdminResponseProfileAdmin,
+};
