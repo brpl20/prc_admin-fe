@@ -54,7 +54,6 @@ const Tasks = () => {
   const [searchFor, setSearchFor] = useState<string>('description');
   const [tasksList, setTasksList] = useState<ITaskProps[]>([]);
   const [filteredTasksList, setFilteredTasksList] = useState<ITaskProps[]>([]);
-  console.log('filteredTasksList', filteredTasksList);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [message, setMessage] = useState('');
   const [typeMessage, setTypeMessage] = useState<'success' | 'error'>('success');
@@ -475,28 +474,28 @@ const Tasks = () => {
                 rows={
                   filteredTasksList.length > 0
                     ? filteredTasksList.map(task => ({
-                      id: Number(task.id),
-                      description: task.attributes.description,
-                      deleted: task.attributes.deleted,
-                      work: task.attributes.work_number ? task.attributes.work_number : '-',
-                      customer:
-                        task.attributes.customer && task.attributes.customer?.length > 2
-                          ? task.attributes.customer
-                          : '-',
-                      responsible: task.attributes.responsible,
-                      priority: task.attributes.priority,
-                      comment: task.attributes.comment,
-                      created_by_id: task.attributes.created_by_id,
-                      deadline: format(new Date(task.attributes.deadline), 'dd MMMM yyyy', {
-                        locale: ptBR,
-                      }),
-                      status:
-                        task.attributes.status === 'pending'
-                          ? 'Pendente'
-                          : task.attributes.status === 'late'
+                        id: Number(task.id),
+                        description: task.attributes.description,
+                        deleted: task.attributes.deleted,
+                        work: task.attributes.work_number ? task.attributes.work_number : '-',
+                        customer:
+                          task.attributes.customer && task.attributes.customer?.length > 2
+                            ? task.attributes.customer
+                            : '-',
+                        responsible: task.attributes.responsible,
+                        priority: task.attributes.priority,
+                        comment: task.attributes.comment,
+                        created_by_id: task.attributes.created_by_id,
+                        deadline: format(new Date(task.attributes.deadline), 'dd MMMM yyyy', {
+                          locale: ptBR,
+                        }),
+                        status:
+                          task.attributes.status === 'pending'
+                            ? 'Pendente'
+                            : task.attributes.status === 'late'
                             ? 'Atrasado'
                             : 'Finalizado',
-                    }))
+                      }))
                     : []
                 }
                 columns={[
@@ -539,12 +538,13 @@ const Tasks = () => {
                     valueFormatter: defaultTableValueFormatter,
                     renderCell: (params: any) => (
                       <div
-                        className={`status-cell ${params.value === 'Pendente'
-                          ? 'pending'
-                          : params.value === 'Atrasado'
+                        className={`status-cell ${
+                          params.value === 'Pendente'
+                            ? 'pending'
+                            : params.value === 'Atrasado'
                             ? 'late'
                             : 'completed'
-                          }`}
+                        }`}
                       >
                         {params.value}
                       </div>
