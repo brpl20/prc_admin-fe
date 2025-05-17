@@ -22,7 +22,7 @@ import { IoMdTrash } from 'react-icons/io';
 import { Flex, Divider } from '@/styles/globals';
 import { getAllOffices } from '@/services/offices';
 import { getAllBanks } from '@/services/brasilAPI';
-import { createAdmin, updateAdmin, updateProfileAdmin } from '@/services/admins';
+import { createProfileAdmin, updateAdmin, updateProfileAdmin } from '@/services/admins';
 import { IOfficeProps } from '@/interfaces/IOffice';
 
 import Router, { useRouter } from 'next/router';
@@ -466,7 +466,7 @@ const User = ({ dataToEdit }: props) => {
           data = newEditData;
         }
 
-        await createAdmin(data);
+        await createProfileAdmin(data);
 
         Router.push('/usuarios');
       }

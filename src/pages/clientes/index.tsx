@@ -57,7 +57,6 @@ import { ICustomerProps } from '@/interfaces/ICustomer';
 import { cpfMask, phoneMask } from '@/utils/masks';
 
 import { CustomerContext } from '@/contexts/CustomerContext';
-import { AuthContext } from '@/contexts/AuthContext';
 import { getSession, useSession } from 'next-auth/react';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 import { copyToClipboard } from '@/utils/copyToClipboard';
@@ -85,18 +84,6 @@ type AllCustomer = {
 };
 
 const Customers = () => {
-  const { saveToken } = useContext(AuthContext);
-  const { data: session } = useSession();
-
-  useEffect(() => {
-    if (session) {
-      const token = session.token;
-      if (token) {
-        saveToken(token);
-      }
-    }
-  }, []);
-
   const legend = [
     {
       id: 1,

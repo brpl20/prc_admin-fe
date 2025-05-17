@@ -1,6 +1,7 @@
+import { IAdminResponse, IProfileAdmin } from '@/interfaces/IAdmin';
 import api from './api';
 
-const createAdmin = async (data: any) => {
+export const createProfileAdmin = async (data: any) => {
   try {
     const response = await api.post('/profile_admins', data);
     return response.data;
@@ -9,7 +10,7 @@ const createAdmin = async (data: any) => {
   }
 };
 
-const updateAdmin = async (id: string, data: any) => {
+export const updateAdmin = async (id: string, data: any) => {
   try {
     const response = await api.put(`/admins/${id}`, data);
     return response.data;
@@ -18,7 +19,7 @@ const updateAdmin = async (id: string, data: any) => {
   }
 };
 
-const getAllAdmins = async (typeOfParams: string) => {
+export const getAllProfileAdmins = async (typeOfParams: string) => {
   const url = typeOfParams !== '' ? `/profile_admins?deleted=${typeOfParams}` : '/profile_admins';
 
   try {
@@ -29,16 +30,12 @@ const getAllAdmins = async (typeOfParams: string) => {
   }
 };
 
-const getAdminByID = async (id: string) => {
-  try {
-    const response = await api.get(`/profile_admins/${id}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+export const getProfileAdminById = async (id: string): Promise<{ data: IProfileAdmin }> => {
+  const response = await api.get(`/profile_admins/${id}`);
+  return response.data;
 };
 
-const getAdmins = async () => {
+export const getAdmins = async () => {
   try {
     const response = await api.get(`/admins`);
     return response;
@@ -47,7 +44,12 @@ const getAdmins = async () => {
   }
 };
 
-const updateProfileAdmin = async (id: string, data: any) => {
+export const getAdminById = async (id: string): Promise<IAdminResponse> => {
+  const response = await api.get(`/admins/${id}`);
+  return response.data;
+};
+
+export const updateProfileAdmin = async (id: string, data: any) => {
   try {
     const response = await api.put(`/profile_admins/${id}`, data);
     return response.data;
@@ -56,7 +58,7 @@ const updateProfileAdmin = async (id: string, data: any) => {
   }
 };
 
-const inactiveProfileAdmin = async (id: string) => {
+export const inactiveProfileAdmin = async (id: string) => {
   try {
     await api.delete(`/profile_admins/${id}`);
   } catch (error) {
@@ -64,7 +66,7 @@ const inactiveProfileAdmin = async (id: string) => {
   }
 };
 
-const deleteProfileAdmin = async (id: string) => {
+export const deleteProfileAdmin = async (id: string) => {
   try {
     await api.delete(`/profile_admins/${id}?destroy_fully=true`);
   } catch (error) {
@@ -72,22 +74,10 @@ const deleteProfileAdmin = async (id: string) => {
   }
 };
 
-const restoreProfileAdmin = async (id: string) => {
+export const restoreProfileAdmin = async (id: string) => {
   try {
     await api.post(`/profile_admins/${id}/restore`);
   } catch (error) {
     throw error;
   }
-};
-
-export {
-  createAdmin,
-  getAllAdmins,
-  getAdminByID,
-  getAdmins,
-  updateAdmin,
-  updateProfileAdmin,
-  inactiveProfileAdmin,
-  deleteProfileAdmin,
-  restoreProfileAdmin,
 };

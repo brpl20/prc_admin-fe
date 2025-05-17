@@ -10,6 +10,13 @@ const api = axios.create({
   },
 });
 
+export const serverApi = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 api.interceptors.request.use(
   async config => {
     const session = await getSession();
@@ -20,7 +27,9 @@ api.interceptors.request.use(
   },
   error => {
     if (error.response.status === 401) {
-      window.location.href = '/';
+      if (window) {
+        window.location.href = '/';
+      }
       signOut();
     } else {
       return Promise.reject(error);
@@ -34,10 +43,13 @@ api.interceptors.response.use(
   },
   error => {
     if (error.response.status === 401) {
-      window.location.href = '/';
+      if (window) {
+        window.location.href = '/';
+      }
     } else {
       return Promise.reject(error);
     }
   },
 );
+
 export default api;
