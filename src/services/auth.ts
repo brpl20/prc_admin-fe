@@ -1,29 +1,41 @@
-import api from './api';
-import { ISignInRequestData } from '@/interfaces/IAuth';
+import { IAdminResponse, IProfileAdmin } from '@/interfaces/IAdmin';
+import { ILogin, ILoginResponse } from '@/interfaces/IAuth';
+import { serverApi } from '@/services/api';
 
-const signInRequest = async (data: ISignInRequestData) => {
-  const { email, password } = data;
-
-  const auth = {
-    email,
-    password,
-  };
-
-  try {
-    const response = await api.post('/login', auth);
+const authService = {
+  async login(credentials: ILogin): Promise<ILoginResponse> {
+    const response = await serverApi.post('/login', {
+      auth: credentials,
+    });
     return response.data;
-  } catch (error) {
-    throw error;
-  }
+  },
+
+  async logout() {
+    const response = await serverApi.delete('/logout');
+    return response.data;
+  },
+
+  async getAdminById(id: string, token: string): Promise<IAdminResponse> {
+    const config = token
+      ? {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      : {};
+
+    const response = await serverApi.get(`/admins/${id}`, config);
+    return response.data;
+  },
+
+  async getProfileAdminById(id: string, token: string): Promise<{ data: IProfileAdmin }> {
+    const config = token
+      ? {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      : {};
+
+    const response = await serverApi.get(`/profile_admins/${id}`, config);
+    return response.data;
+  },
 };
 
-const logoutRequest = async () => {
-  try {
-    const response = await api.delete('/logout');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export { signInRequest, logoutRequest };
+export default authService;

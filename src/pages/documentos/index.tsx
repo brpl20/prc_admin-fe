@@ -13,8 +13,8 @@ import {
 } from '../../styles/globals';
 import { Box, Button, IconButton, LinearProgress, Typography } from '@mui/material';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
-import { IAdminProps } from '../../interfaces/IAdmin';
-import { getAllAdmins } from '../../services/admins';
+import { IProfileAdmin } from '../../interfaces/IAdmin';
+import { getAllProfileAdmins } from '../../services/admins';
 import { PageTitleContext } from '../../contexts/PageTitleContext';
 import { Footer } from '../../components';
 import { MdOutlineAddCircle, MdSearch } from 'react-icons/md';
@@ -25,10 +25,7 @@ import { useModal } from '@/utils/useModal';
 import GenericModal from '@/components/Modals/GenericModal';
 import dayjs from 'dayjs';
 
-import {
-  getAllCustomers,
-  getAllProfileCustomer,
-} from '@/services/customers';
+import { getAllCustomers, getAllProfileCustomer } from '@/services/customers';
 import { ICustomerProps } from '@/interfaces/ICustomer';
 import { translateCustomerType } from '@/utils/translateCustomerType';
 
@@ -108,8 +105,8 @@ const Documents = () => {
 
   const fetchResponsibleLawyers = async () => {
     const response: {
-      data: IAdminProps[];
-    } = await getAllAdmins('');
+      data: IProfileAdmin[];
+    } = await getAllProfileAdmins('');
     setResponsibleLawyers(response.data);
   };
 
@@ -205,10 +202,10 @@ const Documents = () => {
               </Typography>
 
               <Box display={'flex'} gap={'16px'} justifyContent={'space-between'}>
-                <div className='flex gap-[16px] w-[350px]'>
+                <div className="flex gap-[16px] w-[350px]">
                   <Input>
                     <input
-                      className='w-full'
+                      className="w-full"
                       type="text"
                       placeholder="Nome do Cliente"
                       onChange={e => handleSearch(e.target.value)}
@@ -254,22 +251,17 @@ const Documents = () => {
                   filteredWorks.map((work: IWorksListProps) => {
                     const responsible = getLawyerName(work.attributes.responsible_lawyer);
 
-                    const clients_names = work.attributes.profile_customers.map(
-                      (customer: any) => {
+                    const clients_names = work.attributes.profile_customers.map((customer: any) => {
+                      const profileCustomer = profileCustomersList.find(
+                        (profileCustomer: any) => Number(profileCustomer.id) === customer.id,
+                      );
 
-                        const profileCustomer = profileCustomersList.find(
-                          (profileCustomer: any) =>
-                            Number(profileCustomer.id) === customer.id,
-                        );
+                      const customerName = profileCustomer
+                        ? `${profileCustomer.attributes.name} ${profileCustomer.attributes.last_name}`
+                        : customer.name;
 
-                        const customerName = profileCustomer
-                          ? `${profileCustomer.attributes.name} ${profileCustomer.attributes.last_name}`
-                          : customer.name;
-
-                        return customerName;
-                      },
-                    );
-
+                      return customerName;
+                    });
 
                     const areAllDocumentsSigned = work.attributes.documents.every(
                       (document: any) => document.status === 'Assinado',
@@ -277,8 +269,7 @@ const Documents = () => {
 
                     return {
                       id: work.id,
-                      client:
-                        clients_names.map((name: string) => name.split(', ')).join(', '),
+                      client: clients_names.map((name: string) => name.split(', ')).join(', '),
                       deleted: work.attributes.deleted,
                       responsible: responsible,
                       documents: work.attributes.documents,
@@ -349,8 +340,9 @@ const Documents = () => {
                     valueFormatter: defaultTableValueFormatter,
                     renderCell: (params: any) => (
                       <span
-                        className={`font-medium text-white leading-5 ${params.row.status === 'Assinado' ? 'bg-[#34b26e]' : 'bg-[#fec032]'
-                          } rounded-full flex w-full px-1 py-1 text-center justify-center`}
+                        className={`font-medium text-white leading-5 ${
+                          params.row.status === 'Assinado' ? 'bg-[#34b26e]' : 'bg-[#fec032]'
+                        } rounded-full flex w-full px-1 py-1 text-center justify-center`}
                       >
                         {params.row.status}
                       </span>

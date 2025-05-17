@@ -1,13 +1,10 @@
 import React, { useEffect, useState, useContext } from 'react';
 import Router, { useRouter } from 'next/router';
-import { parseCookies } from 'nookies';
-import jwt from 'jsonwebtoken';
 
 import { inactiveOffice, restoreOffice } from '@/services/offices';
 
 import { getAllOffices, getOfficeById } from '@/services/offices';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
-import { AuthContext } from '@/contexts/AuthContext';
 
 import {
   colors,
@@ -37,7 +34,7 @@ import dynamic from 'next/dynamic';
 import { Footer, Notification, DeleteModal } from '@/components';
 
 import { IOfficeProps, IOfficePropsAttributes } from '@/interfaces/IOffice';
-import { getAllAdmins } from '@/services/admins';
+import { getAllProfileAdmins } from '@/services/admins';
 import { getSession, useSession } from 'next-auth/react';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
@@ -47,19 +44,8 @@ import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatt
 
 const Offices = () => {
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
-  const { user, saveToken } = useContext(AuthContext);
   const { data: session } = useSession();
-
-  useEffect(() => {
-    if (!user.admin_id) {
-      if (session) {
-        const token = session.token;
-        if (token) {
-          saveToken(token);
-        }
-      }
-    }
-  }, []);
+  const user = session?.user;
 
   const [refetch, setRefetch] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -172,10 +158,10 @@ const Offices = () => {
 
   useEffect(() => {
     const getUserType = async () => {
-      const response = await getAllAdmins('');
+      const response = await getAllProfileAdmins('');
       const admins = response.data;
 
-      const admin = admins.find((admin: any) => admin.attributes.email == user.email);
+      const admin = admins.find((admin: any) => admin.attributes.email == user?.email);
 
       if (admin?.attributes?.role == 'counter') {
         setUserType('counter');
@@ -210,8 +196,8 @@ const Offices = () => {
   };
 
   const validateAdmin = () => {
-    const isAllowed = profilesAdminsOfOffice.includes(user.admin_id);
-    setAllowedToRemove(isAllowed);
+    const isAllowed = user && profilesAdminsOfOffice.includes(user.id);
+    setAllowedToRemove(Boolean(isAllowed));
   };
 
   useEffect(() => {
@@ -320,7 +306,7 @@ const Offices = () => {
                 </MenuItem>
 
                 {rowItem.responsible_lawyer &&
-                Number(user.admin_id) === Number(rowItem.responsible_lawyer) &&
+                Number(user?.admin?.id) === Number(rowItem.responsible_lawyer) &&
                 allowedToRemove === false ? null : (
                   <>
                     <MenuItem

@@ -5,13 +5,10 @@ import { getAllWorks } from '@/services/works';
 import { IWorksListProps } from '@/interfaces/IWork';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { WorkContext } from '@/contexts/WorkContext';
-import { getAllAdmins } from '@/services/admins';
+import { getAllProfileAdmins } from '@/services/admins';
 
 import { inactiveWork, restoreWork } from '@/services/works';
-import {
-  getAllCustomers,
-  getAllProfileCustomer,
-} from '@/services/customers';
+import { getAllCustomers, getAllProfileCustomer } from '@/services/customers';
 
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
@@ -45,7 +42,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Footer, Notification, DeleteModal } from '@/components';
 import dynamic from 'next/dynamic';
 import Router from 'next/router';
-import { IAdminProps } from '@/interfaces/IAdmin';
+import { IProfileAdmin } from '@/interfaces/IAdmin';
 import { WorkStatusModal } from '@/components';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 import { translateCustomerType } from '@/utils/translateCustomerType';
@@ -82,8 +79,6 @@ const Works = () => {
   const [workStatus, setWorkStatus] = useState<string>('');
 
   const [profileCustomersList, setProfileCustomersList] = useState<ICustomerProps[]>([]);
-
-
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -217,8 +212,8 @@ const Works = () => {
 
   const getAdmins = async () => {
     const response: {
-      data: IAdminProps[];
-    } = await getAllAdmins('');
+      data: IProfileAdmin[];
+    } = await getAllProfileAdmins('');
     SetAllLawyers(response.data);
   };
 
@@ -601,21 +596,17 @@ const Works = () => {
                       ? mapProcedureName(work.attributes.procedure)
                       : work.attributes.procedures.map(mapProcedureName);
 
-                    const clients_names = work.attributes.profile_customers.map(
-                      (customer: any) => {
+                    const clients_names = work.attributes.profile_customers.map((customer: any) => {
+                      const profileCustomer = profileCustomersList.find(
+                        (profileCustomer: any) => Number(profileCustomer.id) === customer.id,
+                      );
 
-                        const profileCustomer = profileCustomersList.find(
-                          (profileCustomer: any) =>
-                            Number(profileCustomer.id) === customer.id,
-                        );
+                      const customerName = profileCustomer
+                        ? `${profileCustomer.attributes.name} ${profileCustomer.attributes.last_name}`
+                        : customer.name;
 
-                        const customerName = profileCustomer
-                          ? `${profileCustomer.attributes.name} ${profileCustomer.attributes.last_name}`
-                          : customer.name;
-
-                        return customerName;
-                      },
-                    );
+                      return customerName;
+                    });
 
                     const subject = work.attributes.subject
                       ? mapSubjectName(work.attributes.subject)
@@ -623,8 +614,7 @@ const Works = () => {
 
                     return {
                       id: Number(work.id),
-                      client:
-                        clients_names.map((name: string) => name.split(', ')).join(', '),
+                      client: clients_names.map((name: string) => name.split(', ')).join(', '),
                       procedure: procedures,
                       deleted: work.attributes.deleted,
                       subject: subject,

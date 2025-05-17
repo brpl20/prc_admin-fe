@@ -1,31 +1,36 @@
-import { IAdminPropsAttributes } from '@/interfaces/IAdmin';
+import { IAdmin, IProfileAdmin } from '@/interfaces/IAdmin';
 
-interface IUser {
-  admin_id: string;
-  name?: string;
-  email?: string;
-}
-
-interface ISignInData {
+export interface ILogin {
   email: string;
   password: string;
 }
 
-interface IAuthContextType {
-  isAuthenticated: boolean;
-  user: IUser;
-  userData: IAdminPropsAttributes | null;
-  handleLogout: () => void;
-  saveToken: (token: string) => void;
-  fetchUserData: (adminId: string) => Promise<IAdminPropsAttributes | null>;
+export interface ILoginResponse {
+  token: string;
+  role: string;
 }
 
-interface ISignInRequestData {
+export interface IJwtPayload {
+  admin_id?: string;
+}
+
+export interface IUser {
+  id: string;
   email: string;
-  password: string;
+  token: string;
+  role: string;
+  userData: IAdmin;
+  userProfileData: IProfileAdmin;
 }
 
-interface IGoogleProps {
+export interface IToken {
+  token?: string;
+  role?: string;
+  userData?: IAdmin;
+  userProfileData?: IProfileAdmin;
+}
+
+export interface IGoogleProps {
   provider: string;
   accessToken: string;
   expires: string;
@@ -35,5 +40,3 @@ interface IGoogleProps {
     name: string;
   };
 }
-
-export type { IUser, ISignInData, IAuthContextType, ISignInRequestData, IGoogleProps };
