@@ -1,8 +1,5 @@
-import { IJwtPayload } from '@/interfaces/IAuth';
-import authService from '@/services/auth';
 import NextAuth, { type NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import jwt from 'jsonwebtoken';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -18,18 +15,29 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const { token, role } = await authService.login(credentials);
-          const { admin_id: userId } = jwt.decode(token) as IJwtPayload;
-          if (!userId) throw new Error(`Invalid token`);
+          const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/login`, {
+            method: 'POST',
+            body: JSON.stringify({
+              auth: {
+                email: credentials.email,
+                password: credentials.password,
+              },
+            }),
+            headers: { 'Content-Type': 'application/json' },
+          });
+
+          if (!res.ok) throw new Error(await res.text());
+
+          const { token, role } = await res.json();
 
           return {
-            id: userId,
+            id: token,
             email: credentials.email,
             token,
             role,
           };
         } catch (error) {
-          console.error('Auth error:', error);
+          console.error('Erro na autenticação:', error);
           return null;
         }
       },
@@ -37,35 +45,18 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: any) {
       if (user) {
         token.token = user.token;
         token.role = user.role;
-
-        try {
-          const adminData = await authService.getAdminById(user.id, user.token);
-          const profileAdminId = adminData.data.relationships.profile_admin.data.id;
-          const profileData = await authService.getProfileAdminById(profileAdminId, user.token);
-
-          token.admin = adminData.data;
-          token.profile = profileData.data;
-        } catch (error) {
-          console.error('Failed to fetch user data by JWT:', error);
-        }
       }
       return token;
     },
 
-    session: ({ session, token }) => {
-      if (token.token) {
+    session: ({ session, token }: any) => {
+      if (token) {
         session.token = token.token;
         session.role = token.role;
-        session.user = {
-          ...session.user,
-          id: token.admin?.id || token.sub || '',
-          admin: token.admin,
-          profile: token.profile,
-        };
       }
       return session;
     },
