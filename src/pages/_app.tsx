@@ -14,6 +14,7 @@ import { CacheProvider, EmotionCache } from '@emotion/react';
 import createEmotionCache from '../utils/createEmotionCache';
 import { SessionProvider } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 const clientSideEmotionCache = createEmotionCache();
 
@@ -46,13 +47,15 @@ const StudioApp = (props: StudioAppProps) => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <SessionProvider>
-          <CustomerProvider>
-            <PageTitleProvider>
-              <WorkProvider>
-                <Component {...pageProps} />
-              </WorkProvider>
-            </PageTitleProvider>
-          </CustomerProvider>
+          <AuthProvider>
+            <CustomerProvider>
+              <PageTitleProvider>
+                <WorkProvider>
+                  <Component {...pageProps} />
+                </WorkProvider>
+              </PageTitleProvider>
+            </CustomerProvider>
+          </AuthProvider>
         </SessionProvider>
       </ThemeProvider>
     </CacheProvider>
