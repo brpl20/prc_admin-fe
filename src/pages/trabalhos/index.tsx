@@ -537,9 +537,9 @@ const Works = () => {
                       onClick={() => setSearchFor('requestProcess')}
                       variant={searchFor === 'requestProcess' ? 'contained' : 'outlined'}
                       sx={{
-                        height: '36px',
                         textTransform: 'none',
                       }}
+                      className="h-[36px] text-nowrap"
                     >
                       {'Requerimento/Processo'}
                     </Button>
