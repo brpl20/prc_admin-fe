@@ -34,10 +34,11 @@ import Image from 'next/image';
 import { CloseDropdown, Container, Flex, MenuItem, TitleWrapper } from './styles';
 
 import { SelectContainer, SelectItem, SelectItemsContainer } from '@/components/SelectContainer';
-import { signOut, useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { TbLoader2 } from 'react-icons/tb';
 import Logo from '../../assets/logo-white.png';
 import Profile from '../../assets/Profile.png';
+import { useAuth } from '@/contexts/AuthContext';
 
 const drawerWidth = 224;
 
@@ -116,6 +117,7 @@ const Layout = ({ children }: ILayoutProps) => {
   const theme = useTheme();
   const { asPath, route } = useRouter();
   const { data: session } = useSession();
+  const { user, logout } = useAuth();
 
   const { showTitle, pageTitle } = useContext(PageTitleContext);
 
@@ -123,16 +125,16 @@ const Layout = ({ children }: ILayoutProps) => {
     route === '/clientes'
       ? 'Clientes'
       : route === '/trabalhos'
-      ? 'Trabalhos'
-      : route === '/documentos'
-      ? 'Documentos'
-      : route === '/tarefas'
-      ? 'Tarefas'
-      : route === '/usuarios'
-      ? 'Usuários'
-      : route === '/escritorios'
-      ? 'Escritórios'
-      : pageTitle;
+        ? 'Trabalhos'
+        : route === '/documentos'
+          ? 'Documentos'
+          : route === '/tarefas'
+            ? 'Tarefas'
+            : route === '/usuarios'
+              ? 'Usuários'
+              : route === '/escritorios'
+                ? 'Escritórios'
+                : pageTitle;
 
   const supportsLocalStorage = typeof window !== 'undefined' && window.localStorage;
   const storedOpenSidebar = supportsLocalStorage ? localStorage.getItem('openSidebar') : null;
@@ -196,12 +198,10 @@ const Layout = ({ children }: ILayoutProps) => {
             <Image width={28} height={28} src={Profile} alt="Logo" priority />
             <Flex className="min-w-0">
               <Flex className="overflow-hidden select-none">
-                {session?.user.profile ? (
+                {user?.profile ? (
                   <Typography fontSize="md" color={colors.white} className="px-4 truncate">
                     {formatUserName(
-                      session.user.profile.attributes.name +
-                        ' ' +
-                        session.user.profile.attributes.last_name,
+                      user.profile.attributes.name + ' ' + user.profile.attributes.last_name,
                     )}
                   </Typography>
                 ) : (
@@ -220,12 +220,12 @@ const Layout = ({ children }: ILayoutProps) => {
             </Flex>
             {openUserMenu && (
               <SelectItemsContainer>
-                <SelectItem href={`/alterar?type=usuario&id=${session?.user.profile?.id}`}>
+                <SelectItem href={`/alterar?type=usuario&id=${user?.profile?.id}`}>
                   <AiOutlineUser size={20} />
                   <span className="text-sm font-medium">Conta</span>
                 </SelectItem>
 
-                <SelectItem href="/" onClick={() => signOut()}>
+                <SelectItem href="/" onClick={logout}>
                   <IoExitOutline size={20} />
                   <span className="text-sm font-medium">Sair</span>
                 </SelectItem>
