@@ -323,8 +323,6 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
     }
   }, [isLegalPerson]);
 
-  useEffect(() => {}, [isLegalPerson]);
-
   useEffect(() => {
     const handleDraftWork = () => {
       const draftWork = workForm.draftWork;
