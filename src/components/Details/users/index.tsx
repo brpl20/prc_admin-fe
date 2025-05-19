@@ -16,6 +16,7 @@ import {
 import { GoPlusCircle } from 'react-icons/go';
 
 import { phoneMask } from '@/utils/masks';
+import { IProfileAdmin } from '@/interfaces/IAdmin';
 
 interface UserDetailsProps {
   id: string | string[];
@@ -32,44 +33,36 @@ interface IUserDetails {
   status: string;
   email: string;
   origin: string;
-  office_id: number;
+  office_id: number | null;
   oab: string;
   mother_name: string;
   nationality: string;
   gender: string;
 
-  addresses: [
-    {
-      zip_code: string;
-      neighborhood: string;
-      state: string;
-      street: string;
-      number: string;
-      city: string;
-    },
-  ];
+  addresses: Array<{
+    zip_code: string;
+    neighborhood: string;
+    state: string;
+    street: string;
+    number: string;
+    city: string;
+  }>;
 
-  bank_accounts: [
-    {
-      bank_name: string;
-      agency: string;
-      account: string;
-      type_account: string;
-      pix: string;
-      operation: string;
-    },
-  ];
+  bank_accounts: Array<{
+    bank_name: string;
+    agency: string;
+    account: string;
+    type_account: string;
+    pix: string;
+    operation: string;
+  }>;
 
-  emails: [
-    {
-      email: string;
-    },
-  ];
-  phones: [
-    {
-      phone_number: string;
-    },
-  ];
+  emails: Array<{
+    email: string;
+  }>;
+  phones: Array<{
+    phone_number: string;
+  }>;
 }
 
 export default function UserDetails({ id }: UserDetailsProps) {
@@ -103,57 +96,70 @@ export default function UserDetails({ id }: UserDetailsProps) {
     }
   };
 
+  const profileAdminToUserDetails = ({
+    attributes: profileAdminAttributes,
+  }: IProfileAdmin): IUserDetails => {
+    const addresses =
+      profileAdminAttributes.addresses?.map((address: any) => ({
+        zip_code: address.zip_code ?? '',
+        neighborhood: address.neighborhood ?? '',
+        state: address.state ?? '',
+        street: address.street ?? '',
+        number: address.number?.toString() ?? '',
+        city: address.city ?? '',
+      })) ?? [];
+
+    const bankAccounts =
+      profileAdminAttributes.bank_accounts?.map((account: any) => ({
+        bank_name: account.bank_name ?? '',
+        agency: account.agency ?? '',
+        account: account.account ?? '',
+        type_account: account.type_account ?? '',
+        pix: account.pix ?? '',
+        operation: account.operation ?? '',
+      })) ?? [];
+
+    const emails =
+      profileAdminAttributes.emails?.map((email: any) => ({
+        email: email.email ?? '',
+      })) ?? [];
+
+    const phones =
+      profileAdminAttributes.phones?.map((phone: any) => ({
+        phone_number: phone.phone_number ?? '',
+      })) ?? [];
+
+    return {
+      name: profileAdminAttributes.name ?? '',
+      last_name: profileAdminAttributes.last_name ?? '',
+      birth: profileAdminAttributes.birth ?? '',
+      civil_status: profileAdminAttributes.civil_status ?? '',
+      cpf: profileAdminAttributes.cpf ?? '',
+      rg: profileAdminAttributes.rg ?? '',
+      role: profileAdminAttributes.role ?? '',
+      status: profileAdminAttributes.status ?? '',
+      email: profileAdminAttributes.email ?? '',
+      origin: profileAdminAttributes.origin ?? '',
+      office_id: profileAdminAttributes.office_id,
+      oab: profileAdminAttributes.oab ?? '',
+      mother_name: profileAdminAttributes.mother_name ?? '',
+      nationality: profileAdminAttributes.nationality ?? '',
+      gender: profileAdminAttributes.gender ?? '',
+      addresses,
+      bank_accounts: bankAccounts,
+      emails,
+      phones,
+    };
+  };
+
   const fetchData = async () => {
     try {
       setLoading(true);
       const { data } = await getProfileAdminById(id as string);
 
       if (data) {
-        const addresses = data.data.attributes.addresses.map((address: any) => {
-          return {
-            zip_code: address.zip_code ? address.zip_code : '',
-            neighborhood: address.neighborhood ? address.neighborhood : '',
-            state: address.state ? address.state : '',
-            street: address.street ? address.street : '',
-            number: address.number ? address.number : '',
-            city: address.city ? address.city : '',
-          };
-        });
-
-        const bankAccounts = data.data.attributes.bank_accounts.map((bankAccount: any) => {
-          return {
-            bank_name: bankAccount.bank_name ? bankAccount.bank_name : '',
-            agency: bankAccount.agency ? bankAccount.agency : '',
-            account: bankAccount.account ? bankAccount.account : '',
-            type_account: bankAccount.type_account ? bankAccount.type_account : '',
-            pix: bankAccount.pix ? bankAccount.pix : '',
-            operation: bankAccount.operation ? bankAccount.operation : '',
-          };
-        });
-
-        const newData = {
-          name: data.data.attributes.name ? data.data.attributes.name : '',
-          last_name: data.data.attributes.last_name ? data.data.attributes.last_name : '',
-          birth: data.data.attributes.birth ? data.data.attributes.birth : '',
-          civil_status: data.data.attributes.civil_status ? data.data.attributes.civil_status : '',
-          cpf: data.data.attributes.cpf ? data.data.attributes.cpf : '',
-          rg: data.data.attributes.rg ? data.data.attributes.rg : '',
-          role: data.data.attributes.role ? data.data.attributes.role : '',
-          status: data.data.attributes.status ? data.data.attributes.status : '',
-          email: data.data.attributes.email ? data.data.attributes.email : '',
-          emails: data.data.attributes.emails ? data.data.attributes.emails : '',
-          phones: data.data.attributes.phones ? data.data.attributes.phones : '',
-          addresses: addresses ? addresses : '',
-          bank_accounts: bankAccounts ? bankAccounts : '',
-          gender: data.data.attributes.gender ? data.data.attributes.gender : '',
-          mother_name: data.data.attributes.mother_name ? data.data.attributes.mother_name : '',
-          nationality: data.data.attributes.nationality ? data.data.attributes.nationality : '',
-          office_id: data.data.attributes.office_id ? data.data.attributes.office_id : '',
-          origin: data.data.attributes.origin ? data.data.attributes.origin : '',
-          oab: data.data.attributes.oab ? data.data.attributes.oab : '',
-        };
-
-        setUserData(newData);
+        const loadedUser = profileAdminToUserDetails(data);
+        setUserData(loadedUser);
       }
     } catch (error) {
     } finally {

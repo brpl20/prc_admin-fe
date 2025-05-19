@@ -27,7 +27,7 @@ api.interceptors.request.use(
   },
   error => {
     if (error.response.status === 401) {
-      if (window) {
+      if (typeof window !== 'undefined') {
         window.location.href = '/';
       }
       signOut();
