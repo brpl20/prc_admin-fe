@@ -1,23 +1,60 @@
-export interface IProfileAdminAttributes {
-  id: string;
-  admin_id: number;
-  office_id: number;
-  birth: string;
-  civil_status: string;
-  cpf: string;
+export interface IAddress {
+  id: number;
+  description: string;
+  zip_code: string;
+  street: string;
+  number: number;
+  neighborhood: string;
+  city: string;
+  state: string;
   created_at: string;
-  gender: string;
-  last_name: string;
-  mother_name: string;
+  updated_at: string;
+}
+
+export interface IPhone {
+  id: number;
+  phone_number: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IEmail {
+  id: number;
+  email: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// TODO: This should be typed asap.
+export type IBankAccount = any;
+
+export interface IProfileAdminAttributes {
+  role: string;
   name: string;
-  nationality: string;
+  last_name: string;
+  email: string;
+  status: string;
+  admin_id: number;
+  office_id: number | null;
+  gender: string;
   oab: string;
   rg: string;
-  role: string;
-  status: string;
-  email: string;
-  updated_at: string;
+  cpf: string;
+  nationality: string;
+  origin: string | null;
+  civil_status: string;
+  birth: string;
+  mother_name: string;
+  addresses: IAddress[];
+  phones: IPhone[];
+  emails: IEmail[];
+  bank_accounts: IBankAccount[];
   deleted: boolean;
+
+  // These are optional if they might exist at root level
+  created_at?: string;
+  updated_at?: string;
+  id: string;
 }
 
 export interface IProfileAdmin {
