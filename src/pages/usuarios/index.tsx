@@ -39,10 +39,12 @@ import { IProfileAdmin, IProfileAdminAttributes } from '@/interfaces/IAdmin';
 import dynamic from 'next/dynamic';
 import { getSession, useSession } from 'next-auth/react';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
+import { useAuth } from '@/contexts/AuthContext';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Admins = () => {
   const { data: session } = useSession();
+  const { user, isLoading: isUserLoading } = useAuth();
 
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
 
@@ -271,7 +273,7 @@ const Admins = () => {
                   <label className="font-medium	cursor-pointer">Alterar</label>
                 </MenuItem>
 
-                {Number(session?.user.admin?.id) === Number(rowItem.id) ? null : (
+                {Number(user?.admin?.id) === Number(rowItem.id) ? null : (
                   <>
                     <MenuItem
                       className="flex gap-2 w-full"

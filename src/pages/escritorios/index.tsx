@@ -41,11 +41,12 @@ const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Offices = () => {
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
   const { data: session } = useSession();
-  const user = session?.user;
+  const { user, isLoading: isUserLoading } = useAuth();
 
   const [refetch, setRefetch] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -161,7 +162,9 @@ const Offices = () => {
       const response = await getAllProfileAdmins('');
       const admins = response.data;
 
-      const admin = admins.find((admin: any) => admin.attributes.email == user?.email);
+      const admin = admins.find(
+        (admin: any) => admin.attributes.email == user?.admin?.attributes.email,
+      );
 
       if (admin?.attributes?.role == 'counter') {
         setUserType('counter');
@@ -196,7 +199,7 @@ const Offices = () => {
   };
 
   const validateAdmin = () => {
-    const isAllowed = user && profilesAdminsOfOffice.includes(user.id);
+    const isAllowed = user?.profile && profilesAdminsOfOffice.includes(user.profile?.id);
     setAllowedToRemove(Boolean(isAllowed));
   };
 
