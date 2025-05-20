@@ -32,7 +32,6 @@ export interface IProfileAdminAttributes {
   role: string;
   name: string;
   last_name: string;
-  email: string;
   status: string;
   admin_id: number;
   office_id: number | null;
@@ -50,6 +49,10 @@ export interface IProfileAdminAttributes {
   emails: IEmail[];
   bank_accounts: IBankAccount[];
   deleted: boolean;
+
+  // TODO: remove email once every endpoint has migrated to access_email
+  email: string;
+  acccess_email: string;
 
   // These are optional if they might exist at root level
   created_at?: string;
