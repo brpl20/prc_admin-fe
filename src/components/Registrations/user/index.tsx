@@ -400,13 +400,15 @@ const User = ({ dataToEdit }: props) => {
 
         // Only attempt email update if it was actually changed
         // TODO: migrate to access_email once backend is ready
-        if (formData.userEmail !== dataToEdit.data.attributes.access_email) {
+        const attributes: IProfileAdminAttributes = dataToEdit.data.attributes;
+
+        if (formData.userEmail !== attributes.access_email) {
           const adminEmailData = {
             admin: {
               email: formData.userEmail,
             },
           };
-          await updateAdmin(id, adminEmailData);
+          await updateAdmin(String(attributes.admin_id), adminEmailData);
         }
 
         Router.push('/usuarios');
