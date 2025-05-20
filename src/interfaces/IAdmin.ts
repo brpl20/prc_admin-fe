@@ -52,7 +52,7 @@ export interface IProfileAdminAttributes {
 
   // TODO: remove email once every endpoint has migrated to access_email
   email: string;
-  acccess_email: string;
+  access_email: string;
 
   // These are optional if they might exist at root level
   created_at?: string;
