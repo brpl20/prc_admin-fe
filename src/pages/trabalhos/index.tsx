@@ -14,7 +14,7 @@ import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 
-import { ICustomerProps } from '@/interfaces/ICustomer';
+import { IProfileCustomer } from '@/interfaces/ICustomer';
 
 import {
   colors,
@@ -83,7 +83,7 @@ const Works = () => {
   const [workId, setWorkId] = useState<string>('');
   const [workStatus, setWorkStatus] = useState<string>('');
 
-  const [profileCustomersList, setProfileCustomersList] = useState<ICustomerProps[]>([]);
+  const [profileCustomersList, setProfileCustomersList] = useState<IProfileCustomer[]>([]);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -288,13 +288,15 @@ const Works = () => {
     const allProfileCustomer = await getAllProfileCustomer('active');
     const allCustomer = await getAllCustomers();
 
-    const translatedCustomers = allProfileCustomer.data.map((profileCustomer: ICustomerProps) => ({
-      ...profileCustomer,
-      attributes: {
-        ...profileCustomer.attributes,
-        customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
-      },
-    }));
+    const translatedCustomers = allProfileCustomer.data.map(
+      (profileCustomer: IProfileCustomer) => ({
+        ...profileCustomer,
+        attributes: {
+          ...profileCustomer.attributes,
+          customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
+        },
+      }),
+    );
 
     translatedCustomers.forEach((translatedCustomer: TranslatedCustomer) => {
       const matchingCustomer = allCustomer.data.find(
@@ -303,7 +305,7 @@ const Works = () => {
       );
 
       if (matchingCustomer) {
-        translatedCustomer.attributes.customer_email = matchingCustomer.attributes.email;
+        translatedCustomer.attributes.access_email = matchingCustomer.attributes.email;
       }
     });
 

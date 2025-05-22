@@ -26,7 +26,7 @@ import { getAllProfileCustomer } from '@/services/customers';
 import { createTask, getTaskById, updateTask } from '@/services/tasks';
 
 import { Content, Input, DeadlineContainer } from './styles';
-import { ICustomerProps } from '@/interfaces/ICustomer';
+import { IProfileCustomer } from '@/interfaces/ICustomer';
 import { colors, Flex } from '@/styles/globals';
 import Notification from '../../OfficeModals/Notification';
 import { MdClose } from 'react-icons/md';
@@ -75,7 +75,7 @@ const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps
   const [type, setType] = useState<'success' | 'error'>('success');
 
   const [worksByCustomer, setworksByCustomer] = useState<any[]>([]);
-  const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
+  const [customersList, setCustomersList] = useState<IProfileCustomer[]>([]);
   const [responsibleList, setResponsibleList] = useState<any[]>([]);
   const handleSelectChange = (field: string, value: any) => {
     setFormData(prevData => ({
@@ -201,21 +201,22 @@ const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps
         const data = works.data;
         const idsArray = data.map(
           (item: any) =>
-            `${item.id} - ${item.attributes.number ? item.attributes.number : 'Sem Número'} - ${item.attributes.subject === 'administrative_subject'
-              ? 'Administrativo'
-              : item.attributes.subject === 'civel'
-                ? 'Cível'
-                : item.attributes.subject === 'criminal'
-                  ? 'Criminal'
-                  : item.attributes.subject === 'laborite'
-                    ? 'Trabalhista'
-                    : item.attributes.subject === 'social_security'
-                      ? 'Previdenciário'
-                      : item.attributes.subject === 'tributary'
-                        ? 'Tributário'
-                        : item.attributes.subject === 'tributary_pis'
-                          ? 'Tributário Pis/Cofins insumos'
-                          : 'Outros'
+            `${item.id} - ${item.attributes.number ? item.attributes.number : 'Sem Número'} - ${
+              item.attributes.subject === 'administrative_subject'
+                ? 'Administrativo'
+                : item.attributes.subject === 'civel'
+                  ? 'Cível'
+                  : item.attributes.subject === 'criminal'
+                    ? 'Criminal'
+                    : item.attributes.subject === 'laborite'
+                      ? 'Trabalhista'
+                      : item.attributes.subject === 'social_security'
+                        ? 'Previdenciário'
+                        : item.attributes.subject === 'tributary'
+                          ? 'Tributário'
+                          : item.attributes.subject === 'tributary_pis'
+                            ? 'Tributário Pis/Cofins insumos'
+                            : 'Outros'
             }`,
         );
         setworksByCustomer(idsArray);
@@ -255,22 +256,24 @@ const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps
 
           handleSelectChange(
             'work_id',
-            `${taskAttributes.work.id} - ${workAttributes.number ? workAttributes.number : 'Sem Número'
-            } - ${workAttributes.subject === 'administrative_subject'
-              ? 'Administrativo'
-              : workAttributes.subject === 'civel'
-                ? 'Cível'
-                : workAttributes.subject === 'criminal'
-                  ? 'Criminal'
-                  : workAttributes.subject === 'laborite'
-                    ? 'Trabalhista'
-                    : workAttributes.subject === 'social_security'
-                      ? 'Previdenciário'
-                      : workAttributes.subject === 'tributary'
-                        ? 'Tributário'
-                        : workAttributes.subject === 'tributary_pis'
-                          ? 'Tributário Pis/Cofins insumos'
-                          : 'Outros'
+            `${taskAttributes.work.id} - ${
+              workAttributes.number ? workAttributes.number : 'Sem Número'
+            } - ${
+              workAttributes.subject === 'administrative_subject'
+                ? 'Administrativo'
+                : workAttributes.subject === 'civel'
+                  ? 'Cível'
+                  : workAttributes.subject === 'criminal'
+                    ? 'Criminal'
+                    : workAttributes.subject === 'laborite'
+                      ? 'Trabalhista'
+                      : workAttributes.subject === 'social_security'
+                        ? 'Previdenciário'
+                        : workAttributes.subject === 'tributary'
+                          ? 'Tributário'
+                          : workAttributes.subject === 'tributary_pis'
+                            ? 'Tributário Pis/Cofins insumos'
+                            : 'Outros'
             }`,
           );
         } else {
@@ -366,9 +369,9 @@ const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps
                       value={
                         formData.profile_customer_id
                           ? customersList.find(
-                            (customer: any) =>
-                              customer.id.toString() === formData.profile_customer_id,
-                          ) || null
+                              (customer: any) =>
+                                customer.id.toString() === formData.profile_customer_id,
+                            ) || null
                           : null
                       }
                       options={customersList}
@@ -428,8 +431,8 @@ const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps
                       value={
                         formData.profile_admin_id
                           ? responsibleList.find(
-                            (admin: any) => admin.id.toString() === formData.profile_admin_id,
-                          ) || null
+                              (admin: any) => admin.id.toString() === formData.profile_admin_id,
+                            ) || null
                           : null
                       }
                       options={responsibleList}

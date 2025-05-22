@@ -53,7 +53,7 @@ import dynamic from 'next/dynamic';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
-import { ICustomerProps } from '@/interfaces/ICustomer';
+import { IProfileCustomer } from '@/interfaces/ICustomer';
 import { cpfMask, phoneMask } from '@/utils/masks';
 
 import { CustomerContext } from '@/contexts/CustomerContext';
@@ -111,14 +111,14 @@ const Customers = () => {
     return params.row.type === 'Pessoa Física'
       ? styles.physicalPerson
       : params.row.type === 'Pessoa Jurídica'
-      ? styles.legalPerson
-      : params.row.type === 'Contador'
-      ? styles.counter
-      : styles.representative;
+        ? styles.legalPerson
+        : params.row.type === 'Contador'
+          ? styles.counter
+          : styles.representative;
   };
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [rowItem, setRowItem] = useState<ICustomerProps>({} as ICustomerProps);
+  const [rowItem, setRowItem] = useState<IProfileCustomer>({} as IProfileCustomer);
   const open = Boolean(anchorEl);
   const [openRemoveModal, setOpenRemoveModal] = useState<boolean>(false);
 
@@ -128,7 +128,7 @@ const Customers = () => {
 
   const handleCloseMenu = () => {
     setAnchorEl(null);
-    setRowItem({} as ICustomerProps);
+    setRowItem({} as IProfileCustomer);
   };
 
   const [loadingEmailChange, setLoadingEmailChange] = useState<boolean>(false);
@@ -145,14 +145,14 @@ const Customers = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [openCreationMenu, setOpenCreationMenu] = useState<boolean>(false);
   const [searchFor, setSearchFor] = useState<string>('name');
-  const [profileCustomersList, setProfileCustomersList] = useState<ICustomerProps[]>([]);
-  const [customerList, setCustomerList] = useState<ICustomerProps[]>([]);
+  const [profileCustomersList, setProfileCustomersList] = useState<IProfileCustomer[]>([]);
+  const [customerList, setCustomerList] = useState<IProfileCustomer[]>([]);
   const [profileCustomersListFiltered, setProfileCustomersListFiltered] = useState<
-    ICustomerProps[]
+    IProfileCustomer[]
   >([]);
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [customerToChange, setCustomerToChange] = useState<CustomersProps>();
-  const [customerToInactivate, setCustomerToInactivate] = useState<ICustomerProps>();
+  const [customerToInactivate, setCustomerToInactivate] = useState<IProfileCustomer>();
 
   const inactivationModal = useModal();
 
@@ -167,19 +167,19 @@ const Customers = () => {
 
     switch (searchFor) {
       case 'name':
-        filteredList = profileCustomersList.filter((profileCustomer: ICustomerProps) =>
+        filteredList = profileCustomersList.filter((profileCustomer: IProfileCustomer) =>
           regex.test(profileCustomer.attributes.name),
         );
         break;
 
       case 'type':
-        filteredList = profileCustomersList.filter((profileCustomer: ICustomerProps) =>
+        filteredList = profileCustomersList.filter((profileCustomer: IProfileCustomer) =>
           regex.test(profileCustomer.attributes.customer_type),
         );
         break;
 
       case 'identification':
-        filteredList = profileCustomersList.filter((profileCustomer: ICustomerProps) =>
+        filteredList = profileCustomersList.filter((profileCustomer: IProfileCustomer) =>
           regex.test(profileCustomer.attributes.cpf),
         );
         break;
@@ -192,16 +192,16 @@ const Customers = () => {
     setProfileCustomersListFiltered(filteredList);
   };
 
-  const handleEdit = (profileCustomer: ICustomerProps) => {
+  const handleEdit = (profileCustomer: IProfileCustomer) => {
     const customerTypeUnformatted = profileCustomer.type;
     const profileCustomerType =
       customerTypeUnformatted == 'Pessoa Física'
         ? 'physical_person'
         : customerTypeUnformatted == 'Pessoa Jurídica'
-        ? 'legal_person'
-        : customerTypeUnformatted == 'Contador'
-        ? 'counter'
-        : 'representative';
+          ? 'legal_person'
+          : customerTypeUnformatted == 'Contador'
+            ? 'counter'
+            : 'representative';
 
     switch (profileCustomerType) {
       case 'physical_person':
@@ -221,16 +221,16 @@ const Customers = () => {
     }
   };
 
-  const handleDetails = (profileCustomer: ICustomerProps) => {
+  const handleDetails = (profileCustomer: IProfileCustomer) => {
     const customerTypeUnformatted = profileCustomer.type;
     const profileCustomerType =
       customerTypeUnformatted == 'Pessoa Física'
         ? 'physical_person'
         : customerTypeUnformatted == 'Pessoa Jurídica'
-        ? 'legal_person'
-        : customerTypeUnformatted == 'Contador'
-        ? 'counter'
-        : 'representative';
+          ? 'legal_person'
+          : customerTypeUnformatted == 'Contador'
+            ? 'counter'
+            : 'representative';
 
     switch (profileCustomerType) {
       case 'physical_person':
@@ -250,7 +250,7 @@ const Customers = () => {
     }
   };
 
-  const handleRestore = async (profileCustomer: ICustomerProps) => {
+  const handleRestore = async (profileCustomer: IProfileCustomer) => {
     try {
       await restoreProfileCustomer(profileCustomer.id);
       setMessage('Cliente restaurado com sucesso!');
@@ -264,7 +264,7 @@ const Customers = () => {
     }
   };
 
-  const handleInactive = async (profileCustomer: ICustomerProps) => {
+  const handleInactive = async (profileCustomer: IProfileCustomer) => {
     try {
       await inactiveCustomer(profileCustomer.id);
       setMessage('Cliente inativado com sucesso!');
@@ -278,7 +278,7 @@ const Customers = () => {
     }
   };
 
-  const handleDelete = async (profileCustomer: ICustomerProps) => {
+  const handleDelete = async (profileCustomer: IProfileCustomer) => {
     setRowItem(profileCustomer);
     setOpenRemoveModal(true);
   };
@@ -291,13 +291,15 @@ const Customers = () => {
 
     setCustomerList(allCustomer.data);
 
-    const translatedCustomers = allProfileCustomer.data.map((profileCustomer: ICustomerProps) => ({
-      ...profileCustomer,
-      attributes: {
-        ...profileCustomer.attributes,
-        customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
-      },
-    }));
+    const translatedCustomers = allProfileCustomer.data.map(
+      (profileCustomer: IProfileCustomer) => ({
+        ...profileCustomer,
+        attributes: {
+          ...profileCustomer.attributes,
+          customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
+        },
+      }),
+    );
 
     translatedCustomers.forEach((translatedCustomer: TranslatedCustomer) => {
       const matchingCustomer = allCustomer.data.find(
@@ -306,7 +308,7 @@ const Customers = () => {
       );
 
       if (matchingCustomer) {
-        translatedCustomer.attributes.customer_email = matchingCustomer.attributes.email;
+        translatedCustomer.attributes.access_email = matchingCustomer.attributes.email;
       }
     });
 
@@ -345,14 +347,14 @@ const Customers = () => {
       customer => customer.attributes.profile_customer_id === Number(updatedRow.id),
     );
 
-    if (oldRow.customer_email === updatedRow.customer_email) {
+    if (oldRow.access_email === updatedRow.access_email) {
       return updatedRow;
     }
 
     if (customerId && customerId.id) {
       setCustomerToChange({
         id: customerId.id,
-        email: updatedRow.customer_email,
+        email: updatedRow.access_email,
       });
       setOpenModal(true);
     }
@@ -395,25 +397,25 @@ const Customers = () => {
     switch (id) {
       case 1:
         filteredList = profileCustomersList.filter(
-          (profileCustomer: ICustomerProps) =>
+          (profileCustomer: IProfileCustomer) =>
             profileCustomer.attributes.customer_type === 'Pessoa Jurídica',
         );
         break;
       case 2:
         filteredList = profileCustomersList.filter(
-          (profileCustomer: ICustomerProps) =>
+          (profileCustomer: IProfileCustomer) =>
             profileCustomer.attributes.customer_type === 'Pessoa Física',
         );
         break;
       case 3:
         filteredList = profileCustomersList.filter(
-          (profileCustomer: ICustomerProps) =>
+          (profileCustomer: IProfileCustomer) =>
             profileCustomer.attributes.customer_type === 'Contador',
         );
         break;
       case 4:
         filteredList = profileCustomersList.filter(
-          (profileCustomer: ICustomerProps) =>
+          (profileCustomer: IProfileCustomer) =>
             profileCustomer.attributes.customer_type === 'Representante Legal',
         );
         break;
@@ -425,7 +427,7 @@ const Customers = () => {
     setProfileCustomersListFiltered(filteredList);
   };
 
-  function getProfileCustomerCpfOrCpnj(profileCustomer: ICustomerProps): string {
+  function getProfileCustomerCpfOrCpnj(profileCustomer: IProfileCustomer): string {
     const { cpf, cnpj, customer_type } = profileCustomer.attributes;
 
     if (cnpj && customer_type === 'Pessoa Jurídica') {
@@ -836,14 +838,14 @@ const Customers = () => {
                 }}
                 rows={
                   profileCustomersListFiltered &&
-                  profileCustomersListFiltered.map((profileCustomer: ICustomerProps) => ({
+                  profileCustomersListFiltered.map((profileCustomer: IProfileCustomer) => ({
                     id: Number(profileCustomer.id),
                     name:
                       profileCustomer.attributes.name + ' ' + profileCustomer.attributes.last_name,
                     deleted: profileCustomer.attributes.deleted,
                     type: profileCustomer.attributes.customer_type,
                     cpfOrCnpj: getProfileCustomerCpfOrCpnj(profileCustomer),
-                    customer_email: profileCustomer.attributes.customer_email,
+                    access_email: profileCustomer.attributes.access_email,
                     city: profileCustomer.attributes.city,
                     contact: profileCustomer.attributes.default_phone
                       ? phoneMask(profileCustomer.attributes.default_phone)
@@ -932,7 +934,7 @@ const Customers = () => {
                     flex: 1,
                     minWidth: 210,
                     editable: true,
-                    field: 'customer_email',
+                    field: 'access_email',
                     headerName: 'E-mail de Acesso',
                     align: 'left',
                     cellClassName: 'font-medium text-black',

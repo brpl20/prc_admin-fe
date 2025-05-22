@@ -23,7 +23,7 @@ import { MdOutlineInfo, MdDelete } from 'react-icons/md';
 import { WorkContext } from '@/contexts/WorkContext';
 import { Notification } from '@/components';
 
-import { ICustomerProps } from '@/interfaces/ICustomer';
+import { IProfileCustomer } from '@/interfaces/ICustomer';
 import { getAllProfileCustomer } from '@/services/customers';
 
 import {
@@ -93,7 +93,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   const [type, setType] = useState<'success' | 'error'>('success');
   const [openFileSnackbar, setOpenFileSnackbar] = useState(false);
 
-  const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
+  const [customersList, setCustomersList] = useState<IProfileCustomer[]>([]);
   const [draftWorksList, setDraftWorksList] = useState<any[]>([]);
   const [processNumber, setProcessNumber] = useState<string>('');
   const [selectedProcedures, setSelectedProcedures] = useState<string[]>([]);
@@ -105,7 +105,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   const [hasALawsuit, setHasALawsuit] = useState('');
   const [gainProjection, setGainProjection] = useState<number>();
   const [otherDescription, setOtherDescription] = useState<string>('');
-  const [customerSelectedList, setCustomerSelectedList] = useState<ICustomerProps[]>([]);
+  const [customerSelectedList, setCustomerSelectedList] = useState<IProfileCustomer[]>([]);
   const [selectedDraftWork, setSelectedDraftWork] = useState<any>(null);
 
   const { setLoading } = useLoadingCounter(setFormLoading);
@@ -634,7 +634,9 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                 id="multiple-limit-tags"
                 options={customersList}
                 getOptionLabel={option =>
-                  option && option.attributes && `${option.id} - ${option.attributes.name} ${option.attributes.last_name}`
+                  option &&
+                  option.attributes &&
+                  `${option.id} - ${option.attributes.name} ${option.attributes.last_name}`
                 }
                 renderInput={params => (
                   <TextField
@@ -816,11 +818,11 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                     style={{
                       color:
                         selectedProcedures.length <= 0 &&
-                          selectedArea === '' &&
-                          selectedSubject !== 'others' &&
-                          selectedSubject !== 'administrative_subject' &&
-                          selectedSubject !== 'criminal' &&
-                          selectedSubject !== 'tributary_pis'
+                        selectedArea === '' &&
+                        selectedSubject !== 'others' &&
+                        selectedSubject !== 'administrative_subject' &&
+                        selectedSubject !== 'criminal' &&
+                        selectedSubject !== 'tributary_pis'
                           ? '#FF0000'
                           : 'black',
                     }}
@@ -1051,11 +1053,11 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                     style={{
                       color:
                         selectedProcedures.length <= 0 &&
-                          selectedArea === '' &&
-                          selectedSubject !== 'others' &&
-                          selectedSubject !== 'administrative_subject' &&
-                          selectedSubject !== 'criminal' &&
-                          selectedSubject !== 'tributary_pis'
+                        selectedArea === '' &&
+                        selectedSubject !== 'others' &&
+                        selectedSubject !== 'administrative_subject' &&
+                        selectedSubject !== 'criminal' &&
+                        selectedSubject !== 'tributary_pis'
                           ? '#FF0000'
                           : 'black',
                     }}

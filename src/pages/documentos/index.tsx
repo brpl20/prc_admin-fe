@@ -26,7 +26,7 @@ import GenericModal from '@/components/Modals/GenericModal';
 import dayjs from 'dayjs';
 
 import { getAllCustomers, getAllProfileCustomer } from '@/services/customers';
-import { ICustomerProps } from '@/interfaces/ICustomer';
+import { IProfileCustomer } from '@/interfaces/ICustomer';
 import { translateCustomerType } from '@/utils/translateCustomerType';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
@@ -55,7 +55,7 @@ const Documents = () => {
   const [responsibleLawyers, setResponsibleLawyers] = useState<any>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [profileCustomersList, setProfileCustomersList] = useState<ICustomerProps[]>([]);
+  const [profileCustomersList, setProfileCustomersList] = useState<IProfileCustomer[]>([]);
 
   const invalidRequestModal = useModal();
 
@@ -158,13 +158,15 @@ const Documents = () => {
     const allProfileCustomer = await getAllProfileCustomer('active');
     const allCustomer = await getAllCustomers();
 
-    const translatedCustomers = allProfileCustomer.data.map((profileCustomer: ICustomerProps) => ({
-      ...profileCustomer,
-      attributes: {
-        ...profileCustomer.attributes,
-        customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
-      },
-    }));
+    const translatedCustomers = allProfileCustomer.data.map(
+      (profileCustomer: IProfileCustomer) => ({
+        ...profileCustomer,
+        attributes: {
+          ...profileCustomer.attributes,
+          customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
+        },
+      }),
+    );
 
     translatedCustomers.forEach((translatedCustomer: TranslatedCustomer) => {
       const matchingCustomer = allCustomer.data.find(
@@ -173,7 +175,7 @@ const Documents = () => {
       );
 
       if (matchingCustomer) {
-        translatedCustomer.attributes.customer_email = matchingCustomer.attributes.email;
+        translatedCustomer.attributes.access_email = matchingCustomer.attributes.email;
       }
     });
 

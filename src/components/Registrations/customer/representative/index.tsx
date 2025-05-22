@@ -20,7 +20,7 @@ import {
 import { animateScroll as scroll } from 'react-scroll';
 import Router, { useRouter } from 'next/router';
 import { z } from 'zod';
-import { ICustomerProps } from '@/interfaces/ICustomer';
+import { IProfileCustomer } from '@/interfaces/ICustomer';
 import {
   isDateBeforeToday,
   isValidCEP,
@@ -107,7 +107,7 @@ const Representative = ({ pageTitle }: Props) => {
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
+  const [customersList, setCustomersList] = useState<IProfileCustomer[]>([]);
 
   const { customerForm } = useContext(CustomerContext);
   const { setShowTitle, setPageTitle } = useContext(PageTitleContext);

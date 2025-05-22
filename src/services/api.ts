@@ -27,9 +27,7 @@ api.interceptors.request.use(
   },
   error => {
     if (error.response.status === 401) {
-      if (typeof window !== 'undefined') {
-        window.location.href = '/';
-      }
+      window.location.href = '/';
       signOut();
     } else {
       return Promise.reject(error);
@@ -43,9 +41,7 @@ api.interceptors.response.use(
   },
   error => {
     if (error.response.status === 401) {
-      if (window) {
-        window.location.href = '/';
-      }
+      window.location.href = '/';
     } else {
       return Promise.reject(error);
     }
