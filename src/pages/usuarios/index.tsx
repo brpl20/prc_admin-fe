@@ -455,7 +455,7 @@ const Admins = () => {
                     deleted: admin.attributes.deleted,
                     role: admin.attributes.role,
                     name: `${admin.attributes.name} ${admin.attributes.last_name}`,
-                    email: admin.attributes.email,
+                    email: admin.attributes.access_email,
                   }))
                 }
                 columns={[

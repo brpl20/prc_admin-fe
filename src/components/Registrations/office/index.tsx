@@ -116,7 +116,7 @@ const Office = ({ dataToEdit }: props) => {
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [adminsList, setAdminsList] = useState<IProfileAdminAttributes[]>([]);
+  const [adminsList, setAdminsList] = useState<IProfileAdmin[]>([]);
   const [officeTypes, setOfficeTypes] = useState<any[]>([]);
   const [selectedOfficeType, setSelectedOfficeType] = useState<any>({});
   const [selectedSocialType, setSelectedSocialType] = useState<any>({});

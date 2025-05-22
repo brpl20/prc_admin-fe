@@ -19,7 +19,9 @@ export const updateAdmin = async (id: string, data: any) => {
   }
 };
 
-export const getAllProfileAdmins = async (typeOfParams: string) => {
+export const getAllProfileAdmins = async (
+  typeOfParams: string,
+): Promise<{ data: IProfileAdmin[] }> => {
   const url = typeOfParams !== '' ? `/profile_admins?deleted=${typeOfParams}` : '/profile_admins';
 
   try {
