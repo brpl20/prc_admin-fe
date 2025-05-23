@@ -38,7 +38,7 @@ import WorkStepFour, { IRefWorkStepFourProps } from './work/four';
 import WorkStepFive, { IRefWorkStepFiveProps } from './work/five';
 import WorkStepSix, { IRefWorkStepSixProps } from './work/six';
 import { ConfirmDownloadDocument } from '@/components';
-import useLoadingCounter from '@/utils/useLoadingCounter';
+import { ICustomer } from '@/interfaces/ICustomer';
 
 interface IRegistrationProps {
   registrationType: string;
@@ -132,7 +132,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
     }
   };
 
-  const createCustomer = async (data: any) => {
+  const createCustomer = async (data: any): Promise<{ data: ICustomer }> => {
     const response = await createCustomerApi(data);
     return response;
   };
@@ -147,7 +147,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
 
           const lastCustomerFile =
             customerForm.data.attributes.customer_files[
-            customerForm.data.attributes.customer_files.length - 1
+              customerForm.data.attributes.customer_files.length - 1
             ];
 
           const prof_aux = {
@@ -195,12 +195,12 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
 
         const customer = await createCustomer(customerData);
 
-        if (!customer.data.attributes.email) {
+        if (!customer.data.attributes.access_email) {
           throw new Error('E-mail já está em uso !');
         }
 
         customerForm.customer_id = customer.data.id ? customer.data.id : createdCustomerId;
-        setCreatedCustomerId(customer.data.id);
+        setCreatedCustomerId(Number(customer.data.id));
 
         const prof_aux = {
           ...customerForm,
@@ -228,8 +228,15 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
 
         return;
       } catch (error: any) {
-        const message = error.request.response ? JSON.parse(error.request.response).errors[0] : '';
-        setMessage(message.code);
+        let message = 'Ocorreu um erro inesperado.';
+        if (error?.request?.response) {
+          const parsed = JSON.parse(error.request.response);
+          if (parsed.errors && parsed.errors[0] && parsed.errors[0].code) {
+            message = parsed.errors[0].code;
+          }
+        }
+        console.log(error);
+        setMessage(message);
         setTypeMessage('error');
         setOpenSnackbar(true);
       }

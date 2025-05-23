@@ -1,68 +1,67 @@
 import styles from './style.module.css';
 
-import React, { useEffect, useState, useContext } from 'react';
-import Router from 'next/router';
 import Link from 'next/link';
+import Router from 'next/router';
+import React, { useContext, useEffect, useState } from 'react';
 
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import {
   getAllCustomers,
   getAllProfileCustomer,
-  updateCustomer,
   inactiveCustomer,
   restoreProfileCustomer,
+  updateCustomer,
 } from '@/services/customers';
 
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 
 import {
-  colors,
-  PageTitle,
-  Input,
-  Flex,
   CloseDropdown,
-  ContentContainer,
+  colors,
   Container,
+  ContentContainer,
+  Flex,
+  Input,
+  PageTitle,
   SelectContainer,
 } from '@/styles/globals';
 
+import { BsFilterCircle } from 'react-icons/bs';
 import {
-  MdSearch,
-  MdMoreHoriz,
+  MdCheck,
+  MdContentCopy,
+  MdDeleteOutline,
   MdKeyboardArrowDown,
   MdKeyboardArrowRight,
-  MdOutlineVisibility,
-  MdOutlineCreate,
+  MdMoreHoriz,
   MdOutlineArchive,
-  MdDeleteOutline,
+  MdOutlineCreate,
   MdOutlineUnarchive,
-  MdContentCopy,
-  MdCheck,
+  MdOutlineVisibility,
+  MdSearch,
 } from 'react-icons/md';
-import { BsFilterCircle } from 'react-icons/bs';
 
-import { Box, Button, Typography, LinearProgress } from '@mui/material';
+import { Box, Button, LinearProgress, Typography } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
 import IconButton from '@mui/material/IconButton';
 
-import { Footer, Notification, Spinner, DeleteModal } from '@/components';
+import { DeleteModal, Footer, Notification, Spinner } from '@/components';
 
 import dynamic from 'next/dynamic';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
-import { IProfileCustomer } from '@/interfaces/ICustomer';
+import { ICustomer, IProfileCustomer } from '@/interfaces/ICustomer';
 import { cpfMask, phoneMask } from '@/utils/masks';
 
+import GenericModal from '@/components/Modals/GenericModal';
 import { CustomerContext } from '@/contexts/CustomerContext';
-import { getSession, useSession } from 'next-auth/react';
-import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 import { copyToClipboard } from '@/utils/copyToClipboard';
 import { translateCustomerType } from '@/utils/translateCustomerType';
 import { useModal } from '@/utils/useModal';
-import GenericModal from '@/components/Modals/GenericModal';
+import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 
 export type CustomersProps = {
   id: string;
@@ -146,7 +145,7 @@ const Customers = () => {
   const [openCreationMenu, setOpenCreationMenu] = useState<boolean>(false);
   const [searchFor, setSearchFor] = useState<string>('name');
   const [profileCustomersList, setProfileCustomersList] = useState<IProfileCustomer[]>([]);
-  const [customerList, setCustomerList] = useState<IProfileCustomer[]>([]);
+  const [customerList, setCustomerList] = useState<ICustomer[]>([]);
   const [profileCustomersListFiltered, setProfileCustomersListFiltered] = useState<
     IProfileCustomer[]
   >([]);
@@ -286,12 +285,12 @@ const Customers = () => {
   const getProfileCustomers = async () => {
     const requestParams = getForStatus === 'active' ? '' : getForStatus;
 
-    const allProfileCustomer = await getAllProfileCustomer(requestParams);
-    const allCustomer = await getAllCustomers();
+    const allProfileCustomers = await getAllProfileCustomer(requestParams);
+    const allCustomers = await getAllCustomers();
 
-    setCustomerList(allCustomer.data);
+    setCustomerList(allCustomers.data);
 
-    const translatedCustomers = allProfileCustomer.data.map(
+    const translatedCustomers = allProfileCustomers.data.map(
       (profileCustomer: IProfileCustomer) => ({
         ...profileCustomer,
         attributes: {
@@ -302,13 +301,14 @@ const Customers = () => {
     );
 
     translatedCustomers.forEach((translatedCustomer: TranslatedCustomer) => {
-      const matchingCustomer = allCustomer.data.find(
-        (customer: AllCustomer) =>
-          customer.attributes.profile_customer_id === Number(translatedCustomer.id),
+      const matchingCustomer = allCustomers.data.find(
+        (customer: ICustomer) =>
+          customer.attributes.profile_customer_id &&
+          customer.attributes.profile_customer_id === translatedCustomer.id,
       );
 
       if (matchingCustomer) {
-        translatedCustomer.attributes.access_email = matchingCustomer.attributes.email;
+        translatedCustomer.attributes.access_email = matchingCustomer.attributes.access_email;
       }
     });
 
@@ -344,7 +344,7 @@ const Customers = () => {
     const updatedRow = { ...oldRow, ...newRow };
 
     const customerId = customerList.find(
-      customer => customer.attributes.profile_customer_id === Number(updatedRow.id),
+      customer => customer.attributes.profile_customer_id === updatedRow.id,
     );
 
     if (oldRow.access_email === updatedRow.access_email) {
@@ -435,6 +435,17 @@ const Customers = () => {
     }
 
     return cpf ? cpfMask(cpf) : '';
+  }
+
+  function getProfileCustomerFullName(profileCustomer: IProfileCustomer): string {
+    const { name, last_name } = profileCustomer.attributes;
+
+    let fullName = name;
+    if (last_name) {
+      fullName += ` ${last_name}`;
+    }
+
+    return fullName;
   }
 
   return (
@@ -840,8 +851,7 @@ const Customers = () => {
                   profileCustomersListFiltered &&
                   profileCustomersListFiltered.map((profileCustomer: IProfileCustomer) => ({
                     id: Number(profileCustomer.id),
-                    name:
-                      profileCustomer.attributes.name + ' ' + profileCustomer.attributes.last_name,
+                    name: getProfileCustomerFullName(profileCustomer),
                     deleted: profileCustomer.attributes.deleted,
                     type: profileCustomer.attributes.customer_type,
                     cpfOrCnpj: getProfileCustomerCpfOrCpnj(profileCustomer),
@@ -1004,11 +1014,3 @@ const Customers = () => {
 };
 
 export default Customers;
-
-export const getServerSideProps = async (ctx: any) => {
-  await getSession(ctx);
-
-  return {
-    props: {},
-  };
-};

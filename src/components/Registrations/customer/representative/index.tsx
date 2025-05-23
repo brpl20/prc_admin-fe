@@ -205,7 +205,7 @@ const Representative = ({ pageTitle }: Props) => {
       const data_customer = { customer: { email: data.emails_attributes[0].email } };
       const customer_data = await createCustomerApi(data_customer);
 
-      if (!customer_data.data.attributes.email) throw new Error('E-mail já está em uso !');
+      if (!customer_data.data.attributes.access_email) throw new Error('E-mail já está em uso !');
 
       const customer_id = customer_data.data.id;
       const newData = { ...data, customer_id: Number(customer_id) };

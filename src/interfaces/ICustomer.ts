@@ -48,13 +48,13 @@ interface IPhone {
   data: IPhoneData[];
 }
 
-interface IProfileCustomerAttributes {
+export interface IProfileCustomerAttributes {
   id?: any;
   name: string;
   customer_type: string;
   status: number;
   customer_id: number;
-  last_name: string;
+  last_name: string | null;
   cpf: string;
   rg: string;
   birth: string;
@@ -95,7 +95,7 @@ interface IProfileCustomerRelationships {
   phones: IPhone[];
 }
 
-interface IProfileCustomer {
+export interface IProfileCustomer {
   id: string;
   type: string;
   name: string;
@@ -104,8 +104,17 @@ interface IProfileCustomer {
   relationships: IProfileCustomerRelationships;
 }
 
-interface IMenu {
-  isOpen: boolean;
+export interface ICustomerAttributes {
+  access_email: string;
+  created_by_id: string | null;
+  confirmed_at: string | null;
+  profile_customer_id: string | null;
+  confirmed: boolean;
+  deleted: boolean;
 }
 
-export type { IProfileCustomer, IProfileCustomerAttributes, IMenu };
+export interface ICustomer {
+  id: string;
+  type: string;
+  attributes: ICustomerAttributes;
+}
