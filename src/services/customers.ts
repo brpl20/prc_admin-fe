@@ -1,4 +1,4 @@
-import { ICustomer } from '@/interfaces/ICustomer';
+import { ICustomer, IProfileCustomer } from '@/interfaces/ICustomer';
 import api from './api';
 import { CustomersProps } from '@/pages/clientes';
 

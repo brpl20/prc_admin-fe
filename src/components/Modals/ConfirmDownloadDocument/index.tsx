@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { getCustomerById } from '@/services/customers';
 import { downloadS3FileByUrl } from '@/utils/files';
 import { Notification } from '@/components';
+import { getProfileCustomerFullName } from '@/utils/profileCustomerUtils';
 
 interface IConfirmDownloadDocumentProps {
   isOpen: boolean;
@@ -46,9 +47,11 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
     setDocumentsPerCustomer(documentsPerCustomer);
   }, [documents]);
 
-  const getCustomerName = async (customerId: string) => {
-    const customer = await getCustomerById(customerId);
-    return customer?.data?.attributes?.name;
+  const getCustomerName = async (customerId: string): Promise<string> => {
+    const response = await getCustomerById(customerId);
+
+    const fullName = getProfileCustomerFullName(response.data);
+    return fullName ? fullName : '';
   };
 
   useEffect(() => {
@@ -157,10 +160,10 @@ const ConfirmDownloadDocument = ({ isOpen, onClose, documents }: IConfirmDownloa
                             ? document.document_type === 'procuration'
                               ? 'Procuração'
                               : document.document_type === 'waiver'
-                              ? 'Termo de Renúncia'
-                              : document.document_type === 'deficiency_statement'
-                              ? 'Declaração de Carência'
-                              : 'Contrato'
+                                ? 'Termo de Renúncia'
+                                : document.document_type === 'deficiency_statement'
+                                  ? 'Declaração de Carência'
+                                  : 'Contrato'
                             : 'Procuração Simples'}
                         </Typography>
                       </div>
