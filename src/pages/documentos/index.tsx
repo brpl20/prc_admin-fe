@@ -26,7 +26,7 @@ import GenericModal from '@/components/Modals/GenericModal';
 import dayjs from 'dayjs';
 
 import { getAllCustomers, getAllProfileCustomer } from '@/services/customers';
-import { IProfileCustomer } from '@/interfaces/ICustomer';
+import { ICustomer, IProfileCustomer } from '@/interfaces/ICustomer';
 import { translateCustomerType } from '@/utils/translateCustomerType';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
@@ -170,12 +170,13 @@ const Documents = () => {
 
     translatedCustomers.forEach((translatedCustomer: TranslatedCustomer) => {
       const matchingCustomer = allCustomer.data.find(
-        (customer: AllCustomer) =>
-          customer.attributes.profile_customer_id === Number(translatedCustomer.id),
+        (customer: ICustomer) =>
+          customer.attributes.profile_customer_id &&
+          customer.attributes.profile_customer_id === translatedCustomer.id,
       );
 
       if (matchingCustomer) {
-        translatedCustomer.attributes.access_email = matchingCustomer.attributes.email;
+        translatedCustomer.attributes.access_email = matchingCustomer.attributes.access_email;
       }
     });
 

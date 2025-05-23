@@ -14,7 +14,7 @@ import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 
-import { IProfileCustomer } from '@/interfaces/ICustomer';
+import { ICustomer, IProfileCustomer } from '@/interfaces/ICustomer';
 
 import {
   colors,
@@ -300,12 +300,13 @@ const Works = () => {
 
     translatedCustomers.forEach((translatedCustomer: TranslatedCustomer) => {
       const matchingCustomer = allCustomer.data.find(
-        (customer: AllCustomer) =>
-          customer.attributes.profile_customer_id === Number(translatedCustomer.id),
+        (customer: ICustomer) =>
+          customer.attributes.profile_customer_id &&
+          customer.attributes.profile_customer_id === translatedCustomer.id,
       );
 
       if (matchingCustomer) {
-        translatedCustomer.attributes.access_email = matchingCustomer.attributes.email;
+        translatedCustomer.attributes.access_email = matchingCustomer.attributes.access_email;
       }
     });
 
