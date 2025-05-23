@@ -62,6 +62,10 @@ import { copyToClipboard } from '@/utils/copyToClipboard';
 import { translateCustomerType } from '@/utils/translateCustomerType';
 import { useModal } from '@/utils/useModal';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
+import {
+  getProfileCustomerCpfOrCpnj,
+  getProfileCustomerFullName,
+} from '@/utils/profileCustomerUtils';
 
 export type CustomersProps = {
   id: string;
@@ -426,27 +430,6 @@ const Customers = () => {
 
     setProfileCustomersListFiltered(filteredList);
   };
-
-  function getProfileCustomerCpfOrCpnj(profileCustomer: IProfileCustomer): string {
-    const { cpf, cnpj, customer_type } = profileCustomer.attributes;
-
-    if (cnpj && customer_type === 'Pessoa Jurídica') {
-      return cnpj;
-    }
-
-    return cpf ? cpfMask(cpf) : '';
-  }
-
-  function getProfileCustomerFullName(profileCustomer: IProfileCustomer): string {
-    const { name, last_name } = profileCustomer.attributes;
-
-    let fullName = name;
-    if (last_name) {
-      fullName += ` ${last_name}`;
-    }
-
-    return fullName;
-  }
 
   return (
     <>
