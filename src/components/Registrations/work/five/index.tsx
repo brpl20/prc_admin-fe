@@ -24,6 +24,7 @@ import { Notification } from '@/components';
 import { useRouter } from 'next/router';
 import useLoadingCounter from '@/utils/useLoadingCounter';
 import { doesSectionFormatHaveLeadingZeros } from '@mui/x-date-pickers/internals/hooks/useField/useField.utils';
+import { getProfileCustomerFullName } from '@/utils/profileCustomerUtils';
 
 export interface IRefWorkStepFiveProps {
   handleSubmitForm: () => void;
@@ -311,7 +312,11 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
             <Autocomplete
               limitTags={1}
               options={customersList}
-              getOptionLabel={option => option.attributes.name + ' ' + option.attributes.last_name}
+              getOptionLabel={option =>
+                option &&
+                option.attributes &&
+                `${option.id} - ${getProfileCustomerFullName(option)}`
+              }
               renderInput={params => (
                 <TextField placeholder="Selecione um Cliente" {...params} size="small" />
               )}

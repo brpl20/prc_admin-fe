@@ -32,6 +32,7 @@ import Notification from '../../OfficeModals/Notification';
 import { MdClose } from 'react-icons/md';
 import { getAdmins } from '@/services/admins';
 import { useRouter } from 'next/router';
+import { getProfileCustomerFullName } from '@/utils/profileCustomerUtils';
 
 interface FormData {
   description: string;
@@ -375,10 +376,10 @@ const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps
                           : null
                       }
                       options={customersList}
-                      getOptionLabel={(option: any) =>
-                        option && option.attributes
-                          ? `${option.id} - ${option.attributes.name} ${option.attributes.last_name}`
-                          : ''
+                      getOptionLabel={option =>
+                        option &&
+                        option.attributes &&
+                        `${option.id} - ${getProfileCustomerFullName(option)}`
                       }
                       isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
                       onChange={(event, value) => handleSelectChange('profile_customer_id', value)}

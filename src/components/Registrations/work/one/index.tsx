@@ -51,6 +51,7 @@ import { getAllDraftWorks } from '@/services/works';
 import { useSession } from 'next-auth/react';
 import roleSubjectAccess from './roleSubjectAccess';
 import useLoadingCounter from '@/utils/useLoadingCounter';
+import { getProfileCustomerFullName } from '@/utils/profileCustomerUtils';
 
 interface Option {
   value: string;
@@ -636,7 +637,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                 getOptionLabel={option =>
                   option &&
                   option.attributes &&
-                  `${option.id} - ${option.attributes.name} ${option.attributes.last_name}`
+                  `${option.id} - ${getProfileCustomerFullName(option)}`
                 }
                 renderInput={params => (
                   <TextField

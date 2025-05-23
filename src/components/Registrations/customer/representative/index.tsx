@@ -33,6 +33,7 @@ import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
 import CustomDateField from '@/components/FormInputFields/CustomDateField';
 import { ZodFormError, ZodFormErrors } from '@/types/zod';
+import { getProfileCustomerFullName } from '@/utils/profileCustomerUtils';
 
 interface FormData {
   represent_id?: string;
@@ -397,7 +398,17 @@ const Representative = ({ pageTitle }: Props) => {
   useEffect(() => {
     const getAdmins = async () => {
       const response = await getAllProfileCustomer('');
-      if (response) setCustomersList(response.data);
+      if (response) {
+        // Sort customersList by full name
+        const sortedList = response.data.sort((a: IProfileCustomer, b: IProfileCustomer) => {
+          const nameA = getProfileCustomerFullName(a).toLowerCase();
+          const nameB = getProfileCustomerFullName(b).toLowerCase();
+          if (nameA < nameB) return -1;
+          if (nameA > nameB) return 1;
+          return 0;
+        });
+        setCustomersList(sortedList);
+      }
     };
     getAdmins();
   }, []);
@@ -473,7 +484,11 @@ const Representative = ({ pageTitle }: Props) => {
                       disablePortal
                       autoComplete
                       options={customersList}
-                      getOptionLabel={option => option?.attributes?.name ?? ''}
+                      getOptionLabel={option =>
+                        option &&
+                        option.attributes &&
+                        `${option.id} - ${getProfileCustomerFullName(option)}`
+                      }
                       onChange={(event, value) =>
                         handleCustomerChange('represent_id', value?.id || '')
                       }
