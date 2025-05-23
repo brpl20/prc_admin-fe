@@ -165,13 +165,15 @@ const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps
 
   const getData = async () => {
     try {
-      const works = await getAllWorks('');
-
-      const customers = await getAllProfileCustomer('');
-      const dataCustomers = customers.data;
-
-      if (dataCustomers) {
-        setCustomersList(dataCustomers);
+      const response = await getAllProfileCustomer('');
+      if (response) {
+        // Sort customersList by full name
+        const sortedList = response.data.sort((a: IProfileCustomer, b: IProfileCustomer) => {
+          const nameA = getProfileCustomerFullName(a).toLowerCase();
+          const nameB = getProfileCustomerFullName(b).toLowerCase();
+          return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'variant' });
+        });
+        setCustomersList(sortedList);
       }
 
       const tasksResponsible = await getAdmins();

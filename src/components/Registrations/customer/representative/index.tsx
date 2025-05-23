@@ -403,9 +403,7 @@ const Representative = ({ pageTitle }: Props) => {
         const sortedList = response.data.sort((a: IProfileCustomer, b: IProfileCustomer) => {
           const nameA = getProfileCustomerFullName(a).toLowerCase();
           const nameB = getProfileCustomerFullName(b).toLowerCase();
-          if (nameA < nameB) return -1;
-          if (nameA > nameB) return 1;
-          return 0;
+          return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'variant' });
         });
         setCustomersList(sortedList);
       }

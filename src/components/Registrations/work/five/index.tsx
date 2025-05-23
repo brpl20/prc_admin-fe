@@ -75,7 +75,15 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
       try {
         setLoading(true);
         const response = await getAllProfileCustomer('');
-        setCustomersList(response.data);
+        if (response) {
+          // Sort customersList by full name
+          const sortedList = response.data.sort((a: IProfileCustomer, b: IProfileCustomer) => {
+            const nameA = getProfileCustomerFullName(a).toLowerCase();
+            const nameB = getProfileCustomerFullName(b).toLowerCase();
+            return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'variant' });
+          });
+          setCustomersList(sortedList);
+        }
       } finally {
         setLoading(false);
       }
