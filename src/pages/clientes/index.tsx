@@ -167,7 +167,7 @@ const Customers = () => {
     switch (searchFor) {
       case 'name':
         filteredList = profileCustomersList.filter((profileCustomer: IProfileCustomer) =>
-          regex.test(profileCustomer.attributes.name),
+          regex.test(getProfileCustomerFullName(profileCustomer)),
         );
         break;
 
