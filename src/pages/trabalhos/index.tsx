@@ -46,6 +46,8 @@ import { IProfileAdmin } from '@/interfaces/IAdmin';
 import { WorkStatusModal } from '@/components';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 import { translateCustomerType } from '@/utils/translateCustomerType';
+import GenericModal from '@/components/Modals/GenericModal';
+import { useModal } from '@/utils/useModal';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 type TranslatedCustomer = {
@@ -65,6 +67,9 @@ type AllCustomer = {
 const Works = () => {
   const { setWorkForm } = useContext(WorkContext);
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
+
+  const inactivationModal = useModal();
+  const [workToInactivate, setWorkToInactivate] = useState<IWorksListProps>();
 
   const [refetch, setRefetch] = useState<boolean>(false);
 
@@ -308,6 +313,19 @@ const Works = () => {
 
   return (
     <>
+      {/* Inactivation Modal */}
+      <GenericModal
+        isOpen={inactivationModal.isOpen}
+        onClose={inactivationModal.close}
+        onConfirm={async () => {
+          handleInactive(workToInactivate!);
+          inactivationModal.close();
+        }}
+        content={'Tem certeza de que deseja inativar esse trabalho?'}
+        confirmButtonText="Sim, Inativar"
+        showConfirmButton
+      />
+
       {openSnackbar && (
         <Notification
           open={openSnackbar}
@@ -409,7 +427,8 @@ const Works = () => {
                   className="flex gap-2 w-full"
                   onClick={() => {
                     handleCloseMenu();
-                    handleInactive(rowItem);
+                    setWorkToInactivate(rowItem);
+                    inactivationModal.open();
                   }}
                 >
                   <MdOutlineArchive size={22} color={colors.icons} cursor={'pointer'} />

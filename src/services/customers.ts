@@ -63,13 +63,10 @@ const getAllCustomers = async () => {
   }
 };
 
-const getCustomerById = async (id: string) => {
-  try {
-    const response = await api.get(`/profile_customers/${id}`);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+const getCustomerById = async (id: string, includeDeleted: boolean = false) => {
+  const url = `/profile_customers/${id}${includeDeleted ? '?include_deleted=true' : ''}`;
+  const response = await api.get(url);
+  return response.data;
 };
 
 const inactiveCustomer = async (id: string) => {

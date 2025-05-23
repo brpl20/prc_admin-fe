@@ -41,6 +41,7 @@ import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import CustomDateField from '@/components/FormInputFields/CustomDateField';
 import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
 import { isAxiosError } from 'axios';
+import { IProfileAdminAttributes } from '@/interfaces/IAdmin';
 
 interface FormData {
   officeId: string;
@@ -51,7 +52,6 @@ interface FormData {
   gender: string;
   mother_name: string;
   nationality: string;
-  professional_record: string;
   role: string;
   civil_status: string;
   birth: string;
@@ -164,7 +164,6 @@ const User = ({ dataToEdit }: props) => {
     gender: '',
     mother_name: '',
     nationality: '',
-    professional_record: '',
     role: '',
     civil_status: '',
     oab: '',
@@ -202,7 +201,6 @@ const User = ({ dataToEdit }: props) => {
       gender: '',
       mother_name: '',
       nationality: '',
-      professional_record: '',
       role: '',
       civil_status: '',
       oab: '',
@@ -401,13 +399,16 @@ const User = ({ dataToEdit }: props) => {
         await updateProfileAdmin(id, editData);
 
         // Only attempt email update if it was actually changed
-        if (formData.userEmail !== dataToEdit.data.attributes.email) {
+        // TODO: migrate to access_email once backend is ready
+        const attributes: IProfileAdminAttributes = dataToEdit.data.attributes;
+
+        if (formData.userEmail !== attributes.access_email) {
           const adminEmailData = {
             admin: {
               email: formData.userEmail,
             },
           };
-          await updateAdmin(id, adminEmailData);
+          await updateAdmin(String(attributes.admin_id), adminEmailData);
         }
 
         Router.push('/usuarios');
@@ -674,7 +675,7 @@ const User = ({ dataToEdit }: props) => {
 
   useEffect(() => {
     const handleDataForm = () => {
-      const attributes = dataToEdit.data.attributes;
+      const attributes: IProfileAdminAttributes = dataToEdit.data.attributes;
 
       if (attributes) {
         const addresses = attributes.addresses[0]
@@ -702,13 +703,13 @@ const User = ({ dataToEdit }: props) => {
         handleBankChange(bankAccounts.bank_name);
 
         setFormData({
-          officeId: attributes.office_id ? attributes.office_id : '',
+          officeId: attributes.office_id ? String(attributes.office_id) : '',
           name: attributes.name ? attributes.name : '',
           last_name: attributes.last_name ? attributes.last_name : '',
           cpf: attributes.cpf ? attributes.cpf : '',
           rg: attributes.rg ? attributes.rg : '',
           address: addresses.street ? addresses.street : '',
-          number: addresses.number ? addresses.number : '',
+          number: addresses.number ? String(addresses.number) : '',
           description: addresses.description ? addresses.description : '',
           neighborhood: addresses.neighborhood ? addresses.neighborhood : '',
           city: addresses.city ? addresses.city : '',
@@ -719,21 +720,25 @@ const User = ({ dataToEdit }: props) => {
           op: bankAccounts.type_account ? bankAccounts.type_account : '',
           account: bankAccounts.account ? bankAccounts.account : '',
           pix: bankAccounts.pix ? bankAccounts.pix : '',
-          userEmail: attributes.email ? attributes.email : '',
+          // TODO: migrate to access_email once backend is ready
+          userEmail: attributes.access_email
+            ? attributes.access_email
+            : attributes.email
+              ? attributes.email
+              : '',
           password: '',
           street: addresses.street ? addresses.street : '',
           confirmPassword: '',
           gender: attributes.gender ? attributes.gender : '',
           mother_name: attributes.mother_name ? attributes.mother_name : '',
           nationality: attributes.nationality ? attributes.nationality : '',
-          professional_record: attributes.professional_record ? attributes.professional_record : '',
           role: attributes.role ? attributes.role : '',
           civil_status: attributes.civil_status ? attributes.civil_status : '',
           birth: attributes.birth ? attributes.birth : '',
           oab: attributes.oab ? attributes.oab : '',
         });
 
-        const office = officesList.find(office => office.id == attributes.office_id);
+        const office = officesList.find(office => office.id == String(attributes.office_id));
 
         setSelectedOffice(office as IOfficeProps);
 

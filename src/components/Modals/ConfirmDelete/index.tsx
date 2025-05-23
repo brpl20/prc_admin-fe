@@ -39,7 +39,7 @@ const ModalOfRemove = ({
   const textConfirmation = `${model}/${entityName}`;
 
   const deleteCustomerFull = async (id: string) => {
-    const customerId = (await getCustomerById(id)).data.attributes.customer_id;
+    const customerId = (await getCustomerById(id, true)).data.attributes.customer_id;
 
     await deleteProfileCustomer(id);
     await deleteCustomer(customerId);
