@@ -1,68 +1,67 @@
 import styles from './style.module.css';
 
-import React, { useEffect, useState, useContext } from 'react';
-import Router from 'next/router';
 import Link from 'next/link';
+import Router from 'next/router';
+import React, { useContext, useEffect, useState } from 'react';
 
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import {
   getAllCustomers,
   getAllProfileCustomer,
-  updateCustomer,
   inactiveCustomer,
   restoreProfileCustomer,
+  updateCustomer,
 } from '@/services/customers';
 
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 
 import {
-  colors,
-  PageTitle,
-  Input,
-  Flex,
   CloseDropdown,
-  ContentContainer,
+  colors,
   Container,
+  ContentContainer,
+  Flex,
+  Input,
+  PageTitle,
   SelectContainer,
 } from '@/styles/globals';
 
+import { BsFilterCircle } from 'react-icons/bs';
 import {
-  MdSearch,
-  MdMoreHoriz,
+  MdCheck,
+  MdContentCopy,
+  MdDeleteOutline,
   MdKeyboardArrowDown,
   MdKeyboardArrowRight,
-  MdOutlineVisibility,
-  MdOutlineCreate,
+  MdMoreHoriz,
   MdOutlineArchive,
-  MdDeleteOutline,
+  MdOutlineCreate,
   MdOutlineUnarchive,
-  MdContentCopy,
-  MdCheck,
+  MdOutlineVisibility,
+  MdSearch,
 } from 'react-icons/md';
-import { BsFilterCircle } from 'react-icons/bs';
 
-import { Box, Button, Typography, LinearProgress } from '@mui/material';
+import { Box, Button, LinearProgress, Typography } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
 import IconButton from '@mui/material/IconButton';
 
-import { Footer, Notification, Spinner, DeleteModal } from '@/components';
+import { DeleteModal, Footer, Notification, Spinner } from '@/components';
 
 import dynamic from 'next/dynamic';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
-import { ICustomerProps } from '@/interfaces/ICustomer';
+import { ICustomer, IProfileCustomer } from '@/interfaces/ICustomer';
 import { cpfMask, phoneMask } from '@/utils/masks';
 
+import GenericModal from '@/components/Modals/GenericModal';
 import { CustomerContext } from '@/contexts/CustomerContext';
-import { getSession, useSession } from 'next-auth/react';
-import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 import { copyToClipboard } from '@/utils/copyToClipboard';
 import { translateCustomerType } from '@/utils/translateCustomerType';
 import { useModal } from '@/utils/useModal';
-import GenericModal from '@/components/Modals/GenericModal';
+import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
 
 export type CustomersProps = {
   id: string;
@@ -111,14 +110,14 @@ const Customers = () => {
     return params.row.type === 'Pessoa Física'
       ? styles.physicalPerson
       : params.row.type === 'Pessoa Jurídica'
-      ? styles.legalPerson
-      : params.row.type === 'Contador'
-      ? styles.counter
-      : styles.representative;
+        ? styles.legalPerson
+        : params.row.type === 'Contador'
+          ? styles.counter
+          : styles.representative;
   };
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [rowItem, setRowItem] = useState<ICustomerProps>({} as ICustomerProps);
+  const [rowItem, setRowItem] = useState<IProfileCustomer>({} as IProfileCustomer);
   const open = Boolean(anchorEl);
   const [openRemoveModal, setOpenRemoveModal] = useState<boolean>(false);
 
@@ -128,7 +127,7 @@ const Customers = () => {
 
   const handleCloseMenu = () => {
     setAnchorEl(null);
-    setRowItem({} as ICustomerProps);
+    setRowItem({} as IProfileCustomer);
   };
 
   const [loadingEmailChange, setLoadingEmailChange] = useState<boolean>(false);
@@ -145,14 +144,14 @@ const Customers = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [openCreationMenu, setOpenCreationMenu] = useState<boolean>(false);
   const [searchFor, setSearchFor] = useState<string>('name');
-  const [profileCustomersList, setProfileCustomersList] = useState<ICustomerProps[]>([]);
-  const [customerList, setCustomerList] = useState<ICustomerProps[]>([]);
+  const [profileCustomersList, setProfileCustomersList] = useState<IProfileCustomer[]>([]);
+  const [customerList, setCustomerList] = useState<ICustomer[]>([]);
   const [profileCustomersListFiltered, setProfileCustomersListFiltered] = useState<
-    ICustomerProps[]
+    IProfileCustomer[]
   >([]);
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [customerToChange, setCustomerToChange] = useState<CustomersProps>();
-  const [customerToInactivate, setCustomerToInactivate] = useState<ICustomerProps>();
+  const [customerToInactivate, setCustomerToInactivate] = useState<IProfileCustomer>();
 
   const inactivationModal = useModal();
 
@@ -167,19 +166,19 @@ const Customers = () => {
 
     switch (searchFor) {
       case 'name':
-        filteredList = profileCustomersList.filter((profileCustomer: ICustomerProps) =>
+        filteredList = profileCustomersList.filter((profileCustomer: IProfileCustomer) =>
           regex.test(profileCustomer.attributes.name),
         );
         break;
 
       case 'type':
-        filteredList = profileCustomersList.filter((profileCustomer: ICustomerProps) =>
+        filteredList = profileCustomersList.filter((profileCustomer: IProfileCustomer) =>
           regex.test(profileCustomer.attributes.customer_type),
         );
         break;
 
       case 'identification':
-        filteredList = profileCustomersList.filter((profileCustomer: ICustomerProps) =>
+        filteredList = profileCustomersList.filter((profileCustomer: IProfileCustomer) =>
           regex.test(profileCustomer.attributes.cpf),
         );
         break;
@@ -192,16 +191,16 @@ const Customers = () => {
     setProfileCustomersListFiltered(filteredList);
   };
 
-  const handleEdit = (profileCustomer: ICustomerProps) => {
+  const handleEdit = (profileCustomer: IProfileCustomer) => {
     const customerTypeUnformatted = profileCustomer.type;
     const profileCustomerType =
       customerTypeUnformatted == 'Pessoa Física'
         ? 'physical_person'
         : customerTypeUnformatted == 'Pessoa Jurídica'
-        ? 'legal_person'
-        : customerTypeUnformatted == 'Contador'
-        ? 'counter'
-        : 'representative';
+          ? 'legal_person'
+          : customerTypeUnformatted == 'Contador'
+            ? 'counter'
+            : 'representative';
 
     switch (profileCustomerType) {
       case 'physical_person':
@@ -221,16 +220,16 @@ const Customers = () => {
     }
   };
 
-  const handleDetails = (profileCustomer: ICustomerProps) => {
+  const handleDetails = (profileCustomer: IProfileCustomer) => {
     const customerTypeUnformatted = profileCustomer.type;
     const profileCustomerType =
       customerTypeUnformatted == 'Pessoa Física'
         ? 'physical_person'
         : customerTypeUnformatted == 'Pessoa Jurídica'
-        ? 'legal_person'
-        : customerTypeUnformatted == 'Contador'
-        ? 'counter'
-        : 'representative';
+          ? 'legal_person'
+          : customerTypeUnformatted == 'Contador'
+            ? 'counter'
+            : 'representative';
 
     switch (profileCustomerType) {
       case 'physical_person':
@@ -250,7 +249,7 @@ const Customers = () => {
     }
   };
 
-  const handleRestore = async (profileCustomer: ICustomerProps) => {
+  const handleRestore = async (profileCustomer: IProfileCustomer) => {
     try {
       await restoreProfileCustomer(profileCustomer.id);
       setMessage('Cliente restaurado com sucesso!');
@@ -264,7 +263,7 @@ const Customers = () => {
     }
   };
 
-  const handleInactive = async (profileCustomer: ICustomerProps) => {
+  const handleInactive = async (profileCustomer: IProfileCustomer) => {
     try {
       await inactiveCustomer(profileCustomer.id);
       setMessage('Cliente inativado com sucesso!');
@@ -278,7 +277,7 @@ const Customers = () => {
     }
   };
 
-  const handleDelete = async (profileCustomer: ICustomerProps) => {
+  const handleDelete = async (profileCustomer: IProfileCustomer) => {
     setRowItem(profileCustomer);
     setOpenRemoveModal(true);
   };
@@ -286,27 +285,30 @@ const Customers = () => {
   const getProfileCustomers = async () => {
     const requestParams = getForStatus === 'active' ? '' : getForStatus;
 
-    const allProfileCustomer = await getAllProfileCustomer(requestParams);
-    const allCustomer = await getAllCustomers();
+    const allProfileCustomers = await getAllProfileCustomer(requestParams);
+    const allCustomers = await getAllCustomers();
 
-    setCustomerList(allCustomer.data);
+    setCustomerList(allCustomers.data);
 
-    const translatedCustomers = allProfileCustomer.data.map((profileCustomer: ICustomerProps) => ({
-      ...profileCustomer,
-      attributes: {
-        ...profileCustomer.attributes,
-        customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
-      },
-    }));
+    const translatedCustomers = allProfileCustomers.data.map(
+      (profileCustomer: IProfileCustomer) => ({
+        ...profileCustomer,
+        attributes: {
+          ...profileCustomer.attributes,
+          customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
+        },
+      }),
+    );
 
     translatedCustomers.forEach((translatedCustomer: TranslatedCustomer) => {
-      const matchingCustomer = allCustomer.data.find(
-        (customer: AllCustomer) =>
-          customer.attributes.profile_customer_id === Number(translatedCustomer.id),
+      const matchingCustomer = allCustomers.data.find(
+        (customer: ICustomer) =>
+          customer.attributes.profile_customer_id &&
+          customer.attributes.profile_customer_id === translatedCustomer.id,
       );
 
       if (matchingCustomer) {
-        translatedCustomer.attributes.customer_email = matchingCustomer.attributes.email;
+        translatedCustomer.attributes.access_email = matchingCustomer.attributes.access_email;
       }
     });
 
@@ -342,17 +344,17 @@ const Customers = () => {
     const updatedRow = { ...oldRow, ...newRow };
 
     const customerId = customerList.find(
-      customer => customer.attributes.profile_customer_id === Number(updatedRow.id),
+      customer => customer.attributes.profile_customer_id === updatedRow.id,
     );
 
-    if (oldRow.customer_email === updatedRow.customer_email) {
+    if (oldRow.access_email === updatedRow.access_email) {
       return updatedRow;
     }
 
     if (customerId && customerId.id) {
       setCustomerToChange({
         id: customerId.id,
-        email: updatedRow.customer_email,
+        email: updatedRow.access_email,
       });
       setOpenModal(true);
     }
@@ -395,25 +397,25 @@ const Customers = () => {
     switch (id) {
       case 1:
         filteredList = profileCustomersList.filter(
-          (profileCustomer: ICustomerProps) =>
+          (profileCustomer: IProfileCustomer) =>
             profileCustomer.attributes.customer_type === 'Pessoa Jurídica',
         );
         break;
       case 2:
         filteredList = profileCustomersList.filter(
-          (profileCustomer: ICustomerProps) =>
+          (profileCustomer: IProfileCustomer) =>
             profileCustomer.attributes.customer_type === 'Pessoa Física',
         );
         break;
       case 3:
         filteredList = profileCustomersList.filter(
-          (profileCustomer: ICustomerProps) =>
+          (profileCustomer: IProfileCustomer) =>
             profileCustomer.attributes.customer_type === 'Contador',
         );
         break;
       case 4:
         filteredList = profileCustomersList.filter(
-          (profileCustomer: ICustomerProps) =>
+          (profileCustomer: IProfileCustomer) =>
             profileCustomer.attributes.customer_type === 'Representante Legal',
         );
         break;
@@ -425,7 +427,7 @@ const Customers = () => {
     setProfileCustomersListFiltered(filteredList);
   };
 
-  function getProfileCustomerCpfOrCpnj(profileCustomer: ICustomerProps): string {
+  function getProfileCustomerCpfOrCpnj(profileCustomer: IProfileCustomer): string {
     const { cpf, cnpj, customer_type } = profileCustomer.attributes;
 
     if (cnpj && customer_type === 'Pessoa Jurídica') {
@@ -433,6 +435,17 @@ const Customers = () => {
     }
 
     return cpf ? cpfMask(cpf) : '';
+  }
+
+  function getProfileCustomerFullName(profileCustomer: IProfileCustomer): string {
+    const { name, last_name } = profileCustomer.attributes;
+
+    let fullName = name;
+    if (last_name) {
+      fullName += ` ${last_name}`;
+    }
+
+    return fullName;
   }
 
   return (
@@ -836,14 +849,13 @@ const Customers = () => {
                 }}
                 rows={
                   profileCustomersListFiltered &&
-                  profileCustomersListFiltered.map((profileCustomer: ICustomerProps) => ({
+                  profileCustomersListFiltered.map((profileCustomer: IProfileCustomer) => ({
                     id: Number(profileCustomer.id),
-                    name:
-                      profileCustomer.attributes.name + ' ' + profileCustomer.attributes.last_name,
+                    name: getProfileCustomerFullName(profileCustomer),
                     deleted: profileCustomer.attributes.deleted,
                     type: profileCustomer.attributes.customer_type,
                     cpfOrCnpj: getProfileCustomerCpfOrCpnj(profileCustomer),
-                    customer_email: profileCustomer.attributes.customer_email,
+                    access_email: profileCustomer.attributes.access_email,
                     city: profileCustomer.attributes.city,
                     contact: profileCustomer.attributes.default_phone
                       ? phoneMask(profileCustomer.attributes.default_phone)
@@ -932,7 +944,7 @@ const Customers = () => {
                     flex: 1,
                     minWidth: 210,
                     editable: true,
-                    field: 'customer_email',
+                    field: 'access_email',
                     headerName: 'E-mail de Acesso',
                     align: 'left',
                     cellClassName: 'font-medium text-black',
@@ -1002,11 +1014,3 @@ const Customers = () => {
 };
 
 export default Customers;
-
-export const getServerSideProps = async (ctx: any) => {
-  await getSession(ctx);
-
-  return {
-    props: {},
-  };
-};

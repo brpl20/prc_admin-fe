@@ -1,4 +1,4 @@
-interface IAddressDataProps {
+interface IAddressData {
   id: string;
   type: string;
   description: string;
@@ -10,11 +10,11 @@ interface IAddressDataProps {
   state: string;
 }
 
-interface IAddressProps {
-  data: IAddressDataProps[];
+interface IAddress {
+  data: IAddressData[];
 }
 
-interface IBankDataProps {
+interface IBankData {
   id: string;
   type: string;
   bank: string;
@@ -24,37 +24,37 @@ interface IBankDataProps {
   operation?: any;
 }
 
-interface IBankAccountProps {
-  data: IBankDataProps[];
+interface IBankAccount {
+  data: IBankData[];
 }
 
-interface IEmailDataProps {
+interface IEmailData {
   id: string;
   type: string;
   email: string;
 }
 
-interface IEmailProps {
-  data: IEmailDataProps[];
+interface IEmail {
+  data: IEmailData[];
 }
 
-interface IPhoneDataProps {
+interface IPhoneData {
   id: string;
   type: string;
   phone: string;
 }
 
-interface IPhoneProps {
-  data: IPhoneDataProps[];
+interface IPhone {
+  data: IPhoneData[];
 }
 
-interface IAttributesProps {
+export interface IProfileCustomerAttributes {
   id?: any;
   name: string;
   customer_type: string;
   status: number;
   customer_id: number;
-  last_name: string;
+  last_name: string | null;
   cpf: string;
   rg: string;
   birth: string;
@@ -70,11 +70,10 @@ interface IAttributesProps {
   mother_name: string;
   default_phone: string;
   default_email: string;
-  emails_attributes: any;
   data: any;
   representor?: any;
   issue_documents?: boolean;
-  customer_email: string;
+  access_email: string;
 
   cep?: any;
   street?: any;
@@ -89,24 +88,33 @@ interface IAttributesProps {
   deleted: boolean;
 }
 
-interface IRelationshipsProps {
-  addresses: IAddressProps[];
-  bank_accounts: IBankAccountProps[];
-  emails: IEmailProps[];
-  phones: IPhoneProps[];
+interface IProfileCustomerRelationships {
+  addresses: IAddress[];
+  bank_accounts: IBankAccount[];
+  emails: IEmail[];
+  phones: IPhone[];
 }
 
-interface ICustomerProps {
+export interface IProfileCustomer {
   id: string;
   type: string;
   name: string;
   deleted: boolean;
-  attributes: IAttributesProps;
-  relationships: IRelationshipsProps;
+  attributes: IProfileCustomerAttributes;
+  relationships: IProfileCustomerRelationships;
 }
 
-interface IMenuProps {
-  isOpen: boolean;
+export interface ICustomerAttributes {
+  access_email: string;
+  created_by_id: string | null;
+  confirmed_at: string | null;
+  profile_customer_id: string | null;
+  confirmed: boolean;
+  deleted: boolean;
 }
 
-export type { ICustomerProps, IAttributesProps, IMenuProps };
+export interface ICustomer {
+  id: string;
+  type: string;
+  attributes: ICustomerAttributes;
+}

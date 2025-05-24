@@ -127,7 +127,7 @@ const Counter = ({ pageTitle }: Props) => {
       const data_customer = { customer: { email: data.emails_attributes[0].email } };
       const customer_data = await createCustomer(data_customer);
 
-      if (!customer_data.data.attributes.email) {
+      if (!customer_data.data.attributes.access_email) {
         setMessage('E-mail já está em uso!');
         setType('error');
         setOpenSnackbar(true);

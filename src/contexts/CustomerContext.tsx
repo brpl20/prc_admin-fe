@@ -1,11 +1,10 @@
 import React, { createContext, useState, ReactNode } from 'react';
-import { IAttributesProps } from '@/interfaces/ICustomer';
 
 interface IContextValue {
-  customerForm: IAttributesProps;
+  customerForm: any;
   setCustomerForm: (data: any) => void;
 
-  newCustomerForm: IAttributesProps;
+  newCustomerForm: any;
   setNewCustomerForm: (data: any) => void;
 
   clearCustomerForm: () => void;
@@ -18,12 +17,12 @@ interface IProps {
 export const CustomerContext = createContext<IContextValue>({} as IContextValue);
 
 const CustomerProvider = ({ children }: IProps) => {
-  const [customerForm, setCustomerForm] = useState<IAttributesProps>({} as IAttributesProps);
+  const [customerForm, setCustomerForm] = useState<any>({} as any);
 
-  const [newCustomerForm, setNewCustomerForm] = useState<IAttributesProps>({} as IAttributesProps);
+  const [newCustomerForm, setNewCustomerForm] = useState<any>({} as any);
 
   const clearCustomerForm = () => {
-    setCustomerForm({} as IAttributesProps);
+    setCustomerForm({} as any);
   };
 
   return (

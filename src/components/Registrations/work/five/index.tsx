@@ -14,7 +14,7 @@ import { Container, Input } from './styles';
 import { Box, Typography, TextField, Autocomplete } from '@mui/material';
 import { MdOutlineInfo } from 'react-icons/md';
 
-import { ICustomerProps } from '@/interfaces/ICustomer';
+import { IProfileCustomer } from '@/interfaces/ICustomer';
 import { getAllProfileCustomer } from '@/services/customers';
 
 import CustomTooltip from '@/components/Tooltip';
@@ -47,11 +47,11 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
   const [type, setType] = useState<'success' | 'error'>('success');
 
   const { workForm, setWorkForm, updateWorkForm, setUdateWorkForm } = useContext(WorkContext);
-  const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
+  const [customersList, setCustomersList] = useState<IProfileCustomer[]>([]);
 
   const [percentage, setPercentage] = useState<string>();
   const [commission, setCommission] = useState<string>();
-  const [selectedCustomer, setSelectedCustomer] = useState<ICustomerProps>();
+  const [selectedCustomer, setSelectedCustomer] = useState<IProfileCustomer>();
 
   const { setLoading } = useLoadingCounter(setFormLoading);
 
@@ -83,7 +83,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
     getCustomers();
   }, []);
 
-  const handleSelectedCustomer = (customer: ICustomerProps) => {
+  const handleSelectedCustomer = (customer: IProfileCustomer) => {
     if (customer) {
       setSelectedCustomer(customer);
     } else {
@@ -317,7 +317,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
               )}
               sx={{ backgroundColor: 'white', zIndex: 1 }}
               noOptionsText="Nenhum Cliente Encontrado"
-              onChange={(event, value) => handleSelectedCustomer(value as ICustomerProps)}
+              onChange={(event, value) => handleSelectedCustomer(value as IProfileCustomer)}
               value={selectedCustomer || null}
             />
           </Flex>
