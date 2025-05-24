@@ -399,7 +399,6 @@ const User = ({ dataToEdit }: props) => {
         await updateProfileAdmin(id, editData);
 
         // Only attempt email update if it was actually changed
-        // TODO: migrate to access_email once backend is ready
         const attributes: IProfileAdminAttributes = dataToEdit.data.attributes;
 
         if (formData.userEmail !== attributes.access_email) {
@@ -720,12 +719,7 @@ const User = ({ dataToEdit }: props) => {
           op: bankAccounts.type_account ? bankAccounts.type_account : '',
           account: bankAccounts.account ? bankAccounts.account : '',
           pix: bankAccounts.pix ? bankAccounts.pix : '',
-          // TODO: migrate to access_email once backend is ready
-          userEmail: attributes.access_email
-            ? attributes.access_email
-            : attributes.email
-              ? attributes.email
-              : '',
+          userEmail: attributes.access_email,
           password: '',
           street: addresses.street ? addresses.street : '',
           confirmPassword: '',

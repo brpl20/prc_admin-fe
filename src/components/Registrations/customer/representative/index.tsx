@@ -20,7 +20,7 @@ import {
 import { animateScroll as scroll } from 'react-scroll';
 import Router, { useRouter } from 'next/router';
 import { z } from 'zod';
-import { ICustomerProps } from '@/interfaces/ICustomer';
+import { IProfileCustomer } from '@/interfaces/ICustomer';
 import {
   isDateBeforeToday,
   isValidCEP,
@@ -33,6 +33,7 @@ import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
 import CustomDateField from '@/components/FormInputFields/CustomDateField';
 import { ZodFormError, ZodFormErrors } from '@/types/zod';
+import { getProfileCustomerFullName } from '@/utils/profileCustomerUtils';
 
 interface FormData {
   represent_id?: string;
@@ -107,7 +108,7 @@ const Representative = ({ pageTitle }: Props) => {
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
+  const [customersList, setCustomersList] = useState<IProfileCustomer[]>([]);
 
   const { customerForm } = useContext(CustomerContext);
   const { setShowTitle, setPageTitle } = useContext(PageTitleContext);
@@ -205,7 +206,7 @@ const Representative = ({ pageTitle }: Props) => {
       const data_customer = { customer: { email: data.emails_attributes[0].email } };
       const customer_data = await createCustomerApi(data_customer);
 
-      if (!customer_data.data.attributes.email) throw new Error('E-mail já está em uso !');
+      if (!customer_data.data.attributes.access_email) throw new Error('E-mail já está em uso !');
 
       const customer_id = customer_data.data.id;
       const newData = { ...data, customer_id: Number(customer_id) };
@@ -397,7 +398,15 @@ const Representative = ({ pageTitle }: Props) => {
   useEffect(() => {
     const getAdmins = async () => {
       const response = await getAllProfileCustomer('');
-      if (response) setCustomersList(response.data);
+      if (response) {
+        // Sort customersList by full name
+        const sortedList = response.data.sort((a: IProfileCustomer, b: IProfileCustomer) => {
+          const nameA = getProfileCustomerFullName(a).toLowerCase();
+          const nameB = getProfileCustomerFullName(b).toLowerCase();
+          return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'variant' });
+        });
+        setCustomersList(sortedList);
+      }
     };
     getAdmins();
   }, []);
@@ -473,7 +482,11 @@ const Representative = ({ pageTitle }: Props) => {
                       disablePortal
                       autoComplete
                       options={customersList}
-                      getOptionLabel={option => option?.attributes?.name ?? ''}
+                      getOptionLabel={option =>
+                        option &&
+                        option.attributes &&
+                        `${option.id} - ${getProfileCustomerFullName(option)}`
+                      }
                       onChange={(event, value) =>
                         handleCustomerChange('represent_id', value?.id || '')
                       }

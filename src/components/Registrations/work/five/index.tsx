@@ -14,7 +14,7 @@ import { Container, Input } from './styles';
 import { Box, Typography, TextField, Autocomplete } from '@mui/material';
 import { MdOutlineInfo } from 'react-icons/md';
 
-import { ICustomerProps } from '@/interfaces/ICustomer';
+import { IProfileCustomer } from '@/interfaces/ICustomer';
 import { getAllProfileCustomer } from '@/services/customers';
 
 import CustomTooltip from '@/components/Tooltip';
@@ -24,6 +24,7 @@ import { Notification } from '@/components';
 import { useRouter } from 'next/router';
 import useLoadingCounter from '@/utils/useLoadingCounter';
 import { doesSectionFormatHaveLeadingZeros } from '@mui/x-date-pickers/internals/hooks/useField/useField.utils';
+import { getProfileCustomerFullName } from '@/utils/profileCustomerUtils';
 
 export interface IRefWorkStepFiveProps {
   handleSubmitForm: () => void;
@@ -47,11 +48,11 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
   const [type, setType] = useState<'success' | 'error'>('success');
 
   const { workForm, setWorkForm, updateWorkForm, setUdateWorkForm } = useContext(WorkContext);
-  const [customersList, setCustomersList] = useState<ICustomerProps[]>([]);
+  const [customersList, setCustomersList] = useState<IProfileCustomer[]>([]);
 
   const [percentage, setPercentage] = useState<string>();
   const [commission, setCommission] = useState<string>();
-  const [selectedCustomer, setSelectedCustomer] = useState<ICustomerProps>();
+  const [selectedCustomer, setSelectedCustomer] = useState<IProfileCustomer>();
 
   const { setLoading } = useLoadingCounter(setFormLoading);
 
@@ -74,7 +75,15 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
       try {
         setLoading(true);
         const response = await getAllProfileCustomer('');
-        setCustomersList(response.data);
+        if (response) {
+          // Sort customersList by full name
+          const sortedList = response.data.sort((a: IProfileCustomer, b: IProfileCustomer) => {
+            const nameA = getProfileCustomerFullName(a).toLowerCase();
+            const nameB = getProfileCustomerFullName(b).toLowerCase();
+            return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'variant' });
+          });
+          setCustomersList(sortedList);
+        }
       } finally {
         setLoading(false);
       }
@@ -83,7 +92,7 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
     getCustomers();
   }, []);
 
-  const handleSelectedCustomer = (customer: ICustomerProps) => {
+  const handleSelectedCustomer = (customer: IProfileCustomer) => {
     if (customer) {
       setSelectedCustomer(customer);
     } else {
@@ -311,13 +320,17 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
             <Autocomplete
               limitTags={1}
               options={customersList}
-              getOptionLabel={option => option.attributes.name + ' ' + option.attributes.last_name}
+              getOptionLabel={option =>
+                option &&
+                option.attributes &&
+                `${option.id} - ${getProfileCustomerFullName(option)}`
+              }
               renderInput={params => (
                 <TextField placeholder="Selecione um Cliente" {...params} size="small" />
               )}
               sx={{ backgroundColor: 'white', zIndex: 1 }}
               noOptionsText="Nenhum Cliente Encontrado"
-              onChange={(event, value) => handleSelectedCustomer(value as ICustomerProps)}
+              onChange={(event, value) => handleSelectedCustomer(value as IProfileCustomer)}
               value={selectedCustomer || null}
             />
           </Flex>

@@ -1,3 +1,4 @@
+import { ICustomer, IProfileCustomer } from '@/interfaces/ICustomer';
 import api from './api';
 import { CustomersProps } from '@/pages/clientes';
 
@@ -10,7 +11,7 @@ const createProfileCustomer = async (data: any) => {
   }
 };
 
-const createCustomer = async (data: any) => {
+const createCustomer = async (data: any): Promise<{ data: ICustomer }> => {
   try {
     const response = await api.post('/customers', data);
     return response.data;
@@ -54,7 +55,7 @@ const getAllProfileCustomer = async (typeOfParams: string) => {
   }
 };
 
-const getAllCustomers = async () => {
+const getAllCustomers = async (): Promise<{ data: ICustomer[] }> => {
   try {
     const response = await api.get('/customers');
     return response.data;
