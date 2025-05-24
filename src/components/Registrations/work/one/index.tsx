@@ -51,6 +51,7 @@ import { getAllDraftWorks } from '@/services/works';
 import { useSession } from 'next-auth/react';
 import roleSubjectAccess from './roleSubjectAccess';
 import useLoadingCounter from '@/utils/useLoadingCounter';
+import { getProfileCustomerFullName } from '@/utils/profileCustomerUtils';
 
 interface Option {
   value: string;
@@ -454,7 +455,15 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
     const getCustomers = async () => {
       setLoading(true);
       const response = await getAllProfileCustomer('');
-      setCustomersList(response.data);
+      if (response) {
+        // Sort customersList by full name
+        const sortedList = response.data.sort((a: IProfileCustomer, b: IProfileCustomer) => {
+          const nameA = getProfileCustomerFullName(a).toLowerCase();
+          const nameB = getProfileCustomerFullName(b).toLowerCase();
+          return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'variant' });
+        });
+        setCustomersList(sortedList);
+      }
       setLoading(false);
     };
 
@@ -636,7 +645,7 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
                 getOptionLabel={option =>
                   option &&
                   option.attributes &&
-                  `${option.id} - ${option.attributes.name} ${option.attributes.last_name}`
+                  `${option.id} - ${getProfileCustomerFullName(option)}`
                 }
                 renderInput={params => (
                   <TextField
