@@ -107,14 +107,54 @@ const Works = () => {
 
     let filteredWorks = worksList;
 
+    console.log('search', search);
+
     if (search) {
       switch (searchFor) {
         case 'profile_customers':
+          const allCustomers = profileCustomersList.map((customer: IProfileCustomer) => ({
+            id: customer.id,
+            name: customer.attributes.name,
+            last_name: customer.attributes.last_name,
+            email: customer.attributes.access_email,
+          }));
           filteredWorks = worksList.filter((work: any) => {
-            const clients_names = work.attributes.profile_customers.map(
-              (customer: any) => customer.name,
-            );
-            return clients_names.some((name: string) => regex.test(name));
+            const clients = work.attributes.profile_customers.map((client: any) => {
+              const profileCustomer = profileCustomersList.find(
+                (profileCustomer: any) => Number(profileCustomer.id) === client.id,
+              );
+
+              if (profileCustomer) {
+                return {
+                  id: profileCustomer.id,
+                  name: profileCustomer.attributes.name,
+                  last_name: profileCustomer.attributes.last_name,
+                  email: profileCustomer.attributes.access_email,
+                };
+              }
+
+              const customer = allCustomers.find((customer: any) => customer.id === client.id);
+
+              return customer || { name: '', last_name: '', email: '' };
+            });
+
+            return clients.some((customer: any) => {
+              const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+              const pattern = escapeRegExp(search)
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/a/gi, '[aáàâãä]')
+                .replace(/e/gi, '[eéèêë]')
+                .replace(/i/gi, '[iíìîï]')
+                .replace(/o/gi, '[oóòôõö]')
+                .replace(/u/gi, '[uúùûü]')
+                .replace(/c/gi, '[cç]');
+
+              const regex = new RegExp(pattern, 'i');
+
+              return regex.test(customer.name) || regex.test(customer.last_name);
+            });
           });
           break;
 
@@ -624,7 +664,7 @@ const Works = () => {
                       );
 
                       const customerName = profileCustomer
-                        ? `${profileCustomer.attributes.name} ${profileCustomer.attributes.last_name}`
+                        ? `${profileCustomer.attributes.name ?? ''} ${profileCustomer.attributes.last_name ?? ''}`
                         : customer.name;
 
                       return customerName;

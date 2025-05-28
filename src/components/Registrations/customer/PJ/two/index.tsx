@@ -1,32 +1,30 @@
 import React, {
   useState,
   useEffect,
-  ChangeEvent,
   useContext,
   forwardRef,
-  ForwardRefRenderFunction,
+  useCallback,
+  useMemo,
   useImperativeHandle,
 } from 'react';
-
-import { DescriptionText, colors } from '@/styles/globals';
-import { IoAddCircleOutline } from 'react-icons/io5';
-import { IoMdTrash } from 'react-icons/io';
-import { phoneMask } from '@/utils/masks';
-
-import { Container, ColumnContainer } from '../styles';
+import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { MdOutlineAddCircle } from 'react-icons/md';
 import { animateScroll as scroll } from 'react-scroll';
 import { z } from 'zod';
+import Select from 'react-select';
 
-import { CustomerContext } from '@/contexts/CustomerContext';
-import { TextField, Box, Autocomplete, Typography, Button } from '@mui/material';
-import { Notification } from '@/components';
-import { IProfileAdmin } from '@/interfaces/IAdmin';
-import { getAllProfileCustomer } from '@/services/customers';
-import RepresentativeModal from '../../representative/representativeModal';
-import { MdOutlineAddCircle } from 'react-icons/md';
+import { DescriptionText, colors } from '@/styles/globals';
+import { phoneMask } from '@/utils/masks';
 import { isValidEmail, isValidPhoneNumber } from '@/utils/validator';
-import { ZodFormError, ZodFormErrors } from '@/types/zod';
+import { getAllProfileCustomer } from '@/services/customers';
+import { CustomerContext } from '@/contexts/CustomerContext';
+import { Notification } from '@/components';
+import RepresentativeModal from '../../representative/representativeModal';
 import CustomTextField from '@/components/FormInputFields/CustomTextField';
+import { LoadingOverlay } from '@/components/Registrations/work/one/styles';
+import { Container } from '../styles';
+import { IoMdTrash } from 'react-icons/io';
+import { IoAddCircleOutline } from 'react-icons/io5';
 
 export interface IRefPJCustomerStepTwoProps {
   handleSubmitForm: () => void;
@@ -35,6 +33,26 @@ export interface IRefPJCustomerStepTwoProps {
 interface IStepTwoProps {
   nextStep: () => void;
   editMode: boolean;
+}
+
+interface ContactData {
+  phones_attributes: Array<{ phone_number: string }>;
+  emails_attributes: Array<{ email: string }>;
+}
+
+interface FormData extends ContactData {
+  represent_attributes?: {
+    representor_id: number;
+  };
+}
+
+interface ProfileAdmin {
+  id: string;
+  attributes: {
+    name: string;
+    last_name: string;
+    customer_type: string;
+  };
 }
 
 const stepTwoSchema = z.object({
@@ -57,524 +75,461 @@ const stepTwoSchema = z.object({
     .nonempty('Pelo menos um e-mail é necessário.'),
 });
 
-const PJCustomerStepTwo: ForwardRefRenderFunction<IRefPJCustomerStepTwoProps, IStepTwoProps> = (
-  { nextStep, editMode },
-  ref,
-) => {
-  const [isModalRegisterRepresentativeOpen, setIsModalRegisterRepresentativeOpen] = useState(false);
-
-  const [errors, setErrors] = useState({} as any);
-  const [message, setMessage] = useState('');
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [type, setType] = useState<'success' | 'error'>('success');
-  const { customerForm, setCustomerForm, newCustomerForm, setNewCustomerForm } =
-    useContext(CustomerContext);
-  const [customersList, setCustomersList] = useState<any[]>([]);
-  const [profileAdmin, setProfileAdmin] = useState('' as any);
-
-  const [formData, setFormData] = useState({
-    phones_attributes: [{ phone_number: '' }],
-    emails_attributes: [{ email: '' }],
-  });
-
-  const handleInputChange = (
-    index: number,
-    value: string,
-    inputArrayName: keyof typeof formData,
-  ) => {
-    setFormData(prevData => {
-      const newInputFields = [...prevData[inputArrayName]];
-
-      if (inputArrayName === 'phones_attributes') {
-        if (newInputFields[index]) {
-          newInputFields[index] = {
-            ...newInputFields[index],
-            phone_number: phoneMask(value),
-          };
-        } else {
-          newInputFields.push({ phone_number: value });
-        }
-      } else if (inputArrayName === 'emails_attributes') {
-        if (newInputFields[index]) {
-          newInputFields[index] = {
-            ...newInputFields[index],
-            email: value,
-          };
-        } else {
-          newInputFields.push({ email: value });
-        }
-      }
-
-      return {
-        ...prevData,
-        [inputArrayName]: newInputFields,
-      };
+const PJCustomerStepTwo = forwardRef<IRefPJCustomerStepTwoProps, IStepTwoProps>(
+  ({ nextStep, editMode }, ref) => {
+    const [loading, setLoading] = useState(true);
+    const [notification, setNotification] = useState({
+      open: false,
+      message: '',
+      type: 'success' as 'success' | 'error',
     });
-  };
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [profileAdmin, setProfileAdmin] = useState<ProfileAdmin | null>(null);
+    const [customersList, setCustomersList] = useState<ProfileAdmin[]>([]);
+    const [errors, setErrors] = useState<Record<string, any>>({});
 
-  const handleAddInput = (inputArrayName: keyof typeof formData) => {
-    setFormData(prevData => {
-      const newInputFields = [...prevData[inputArrayName]] as any;
-      newInputFields.push({
-        [inputArrayName === 'phones_attributes' ? 'phone_number' : 'email']: '',
+    const { customerForm, setCustomerForm, newCustomerForm, setNewCustomerForm } =
+      useContext(CustomerContext);
+
+    const initialFormData: ContactData = useMemo(
+      () => ({
+        phones_attributes: [{ phone_number: '' }],
+        emails_attributes: [{ email: '' }],
+      }),
+      [],
+    );
+
+    const [formData, setFormData] = useState<ContactData>(initialFormData);
+
+    const getCustomers = useCallback(async (newId?: string) => {
+      try {
+        const response = await getAllProfileCustomer('');
+        const representors = response.data.filter(
+          (customer: ProfileAdmin) => customer.attributes.customer_type === 'representative',
+        );
+
+        setCustomersList(representors);
+
+        if (newId) {
+          const newRepresentative = representors.find((customer: any) => customer.id === newId);
+          if (newRepresentative) {
+            setProfileAdmin(newRepresentative);
+          }
+        }
+      } catch (error) {
+        showNotification('Erro ao carregar representantes', 'error');
+      }
+    }, []);
+
+    useEffect(() => {
+      getCustomers();
+    }, []);
+
+    useEffect(() => {
+      if (customersList.length === 0) return;
+
+      const localData = localStorage.getItem('PJ/Two');
+      if (localData) {
+        const parsedData: FormData = JSON.parse(localData);
+        updateFormData(parsedData);
+      } else if (customerForm?.data?.attributes) {
+        updateFormDataFromCustomer();
+      }
+
+      setLoading(false);
+    }, [customersList]);
+
+    const updateFormData = useCallback(
+      (data: FormData) => {
+        console.log('Updating form data:', data);
+        if (data.represent_attributes?.representor_id) {
+          const admin = customersList.find(
+            c => c.id == String(data.represent_attributes?.representor_id),
+          );
+          setProfileAdmin(admin || null);
+        }
+
+        setFormData({
+          phones_attributes: data.phones_attributes || initialFormData.phones_attributes,
+          emails_attributes: data.emails_attributes || initialFormData.emails_attributes,
+        });
+      },
+      [customersList, initialFormData],
+    );
+
+    const updateFormDataFromCustomer = useCallback(() => {
+      const { attributes } = customerForm.data;
+      const admin = customersList.find(c => c.id == String(attributes.represent?.representor_id));
+
+      setProfileAdmin(admin || null);
+      setFormData({
+        phones_attributes: attributes.phones?.length
+          ? attributes.phones
+          : initialFormData.phones_attributes,
+        emails_attributes: attributes.emails?.length
+          ? attributes.emails
+          : initialFormData.emails_attributes,
       });
+    }, [customerForm, customersList, initialFormData]);
 
-      return {
-        ...prevData,
-        [inputArrayName]: newInputFields,
-      };
-    });
-  };
+    const showNotification = useCallback((message: string, type: 'success' | 'error') => {
+      setNotification({ open: true, message, type });
+    }, []);
 
-  const verifyDataLocalStorage = () => {
-    const data = localStorage.getItem('PJ/Two');
+    const handleFormError = useCallback(
+      (error: unknown) => {
+        showNotification('Corrija os erros no formulário.', 'error');
 
-    if (data) {
-      const parsedData = JSON.parse(data);
+        if (error instanceof z.ZodError) {
+          const newErrors: Record<string, any> = {};
+          error.issues.forEach(err => {
+            const [field, index] = err.path;
+            if (!newErrors[field]) {
+              newErrors[field] = [];
+            }
+            newErrors[field][index || 0] = err.message;
+          });
+          setErrors(newErrors);
+        }
 
-      const customer = customersList.find(
-        customer => customer.id == parsedData.represent_attributes.representor_id,
-      );
+        scroll.scrollToTop({ duration: 500, smooth: 'easeInOutQuart' });
+      },
+      [showNotification],
+    );
 
-      if (customer) {
-        setProfileAdmin(customer);
-      }
+    const saveDataLocalStorage = useCallback((data: FormData) => {
+      localStorage.setItem('PJ/Two', JSON.stringify(data));
+    }, []);
 
-      if (parsedData.phones_attributes) {
-        setFormData(prevData => ({
-          ...prevData,
-          phones_attributes: parsedData.phones_attributes,
-        }));
-      }
+    const handleInputChange = useCallback(
+      (index: number, value: string, field: 'phones_attributes' | 'emails_attributes') => {
+        setFormData(prev => {
+          const newFields = [...prev[field]];
+          const key = field === 'phones_attributes' ? 'phone_number' : 'email';
 
-      if (parsedData.emails_attributes) {
-        setFormData(prevData => ({
-          ...prevData,
-          emails_attributes: parsedData.emails_attributes,
-        }));
-      }
-    }
-  };
+          if (newFields[index]) {
+            newFields[index] = {
+              ...newFields[index],
+              [key]: field === 'phones_attributes' ? phoneMask(value) : value,
+            };
+          } else {
+            newFields[index] =
+              field === 'phones_attributes' ? { phone_number: phoneMask(value) } : { email: value };
+          }
 
-  const saveDataLocalStorage = (data: any) => {
-    localStorage.setItem('PJ/Two', JSON.stringify(data));
-  };
-
-  const handleSubmitForm = () => {
-    try {
-      stepTwoSchema.parse({
-        profile_admin: profileAdmin?.id || '',
-        phone_numbers: formData.phones_attributes.map(field => field.phone_number),
-        emails: formData.emails_attributes.map(field => field.email),
-      });
-
-      if (editMode) {
-        const data = {
-          represent_attributes: {
-            representor_id: Number(profileAdmin?.id),
-          },
-          phones_attributes: formData.phones_attributes,
-          emails_attributes: formData.emails_attributes,
-        };
-
-        customerForm.data.attributes.represent_attributes = {
-          ...customerForm.data.attributes.represent,
-          representor_id: Number(profileAdmin?.id),
-        };
-
-        customerForm.data.attributes.default_phone = formData.phones_attributes[0].phone_number;
-        customerForm.data.attributes.phones_attributes = formData.phones_attributes;
-        customerForm.data.attributes.emails_attributes = formData.emails_attributes;
-
-        saveDataLocalStorage(data);
-        setCustomerForm(customerForm);
-
-        setNewCustomerForm({
-          ...newCustomerForm,
-          ...data,
+          return { ...prev, [field]: newFields };
         });
 
-        nextStep();
-        return;
-      }
+        const errorField = field === 'phones_attributes' ? 'phone_numbers' : 'emails';
+        if (errors[errorField]?.[index]) {
+          const newErrors = { ...errors };
+          delete newErrors[errorField][index];
+          if (Object.keys(newErrors[errorField]).length === 0) {
+            delete newErrors[errorField];
+          }
+          setErrors(newErrors);
+        }
+      },
+      [errors],
+    );
 
-      const data = {
-        ...customerForm,
+    const handleAddInput = useCallback((field: 'phones_attributes' | 'emails_attributes') => {
+      setFormData(prev => {
+        const newFields = [...prev[field]];
+        if (field === 'phones_attributes') {
+          newFields.push({ phone_number: '' });
+        } else {
+          newFields.push({ email: '' });
+        }
+        return { ...prev, [field]: newFields };
+      });
+    }, []);
+
+    const handleRemoveContact = useCallback(
+      (index: number, field: 'phones_attributes' | 'emails_attributes') => {
+        if (formData[field].length <= 1) return;
+
+        setFormData(prev => {
+          const newFields = [...prev[field]];
+          newFields.splice(index, 1);
+          return { ...prev, [field]: newFields };
+        });
+      },
+      [formData],
+    );
+
+    const handleSelectedCustomer = useCallback(
+      (admin: ProfileAdmin | null) => {
+        if (errors.profile_admin) {
+          const newErrors = { ...errors };
+          delete newErrors.profile_admin;
+          setErrors(newErrors);
+        }
+        setProfileAdmin(admin);
+      },
+      [errors],
+    );
+
+    const prepareFormData = useCallback((): FormData => {
+      return {
         represent_attributes: {
           representor_id: Number(profileAdmin?.id),
         },
         phones_attributes: formData.phones_attributes,
         emails_attributes: formData.emails_attributes,
       };
+    }, [formData, profileAdmin]);
 
-      saveDataLocalStorage(data);
-      setCustomerForm(data);
-      nextStep();
-    } catch (error: any) {
-      handleFormError(error);
-      scroll.scrollToTop({
-        duration: 500,
-        smooth: 'easeInOutQuart',
-      });
-    }
-  };
+    const handleSubmitForm = useCallback(() => {
+      try {
+        stepTwoSchema.parse({
+          profile_admin: profileAdmin?.id || '',
+          phone_numbers: formData.phones_attributes.map(p => p.phone_number),
+          emails: formData.emails_attributes.map(e => e.email),
+        });
 
-  const handleFormError = (error: { issues: ZodFormError[] }) => {
-    const newErrors = error.issues ?? [];
-    setMessage('Corrija os erros no formulário.');
-    setType('error');
-    setOpenSnackbar(true);
-    const result: ZodFormErrors = {};
+        const data = prepareFormData();
+        saveDataLocalStorage(data);
 
-    // Loop through the errors and process them
-    newErrors.forEach(err => {
-      let [field, index] = err.path;
-
-      index = index || 0;
-
-      if (!result[field]) {
-        result[field] = []; // Initialize array for the field if not present
-      }
-
-      // If there's no error for this index, add it
-      if (!result[field][index as number]) {
-        result[field][index as number] = err.message; // Store only the first error for this index
-      }
-    });
-
-    setErrors(result);
-  };
-
-  const getErrorMessage = (index: number, field: string) => {
-    if (errors[field] && errors[field][index]) {
-      const error = errors[field][index];
-      return error;
-    }
-    return null;
-  };
-
-  const handleSelectedCustomer = (admin: IProfileAdmin) => {
-    if (errors.profile_admin) {
-      delete errors.profile_admin;
-      setErrors(errors);
-    }
-
-    if (admin) {
-      setProfileAdmin(admin);
-    } else {
-      setProfileAdmin('');
-    }
-  };
-
-  useImperativeHandle(ref, () => ({
-    handleSubmitForm,
-  }));
-
-  const getCustomers = async (newId?: number) => {
-    const allProfileCustomers = await getAllProfileCustomer('');
-    const response = allProfileCustomers.data;
-
-    const representors = response.filter(
-      (customer: any) => customer.attributes.customer_type === 'representative',
-    );
-
-    setCustomersList(representors);
-
-    if (newId) {
-      const newRepresentative = representors.find((customer: any) => customer.id == newId);
-      handleSelectedCustomer(newRepresentative);
-    }
-  };
-
-  useEffect(() => {
-    getCustomers();
-  }, []);
-
-  useEffect(() => {
-    const handleDataForm = () => {
-      const attributes = customerForm.data.attributes;
-
-      if (attributes) {
-        if (attributes.represent) {
-          const customer = customersList.find(
-            customer => customer.id == attributes.represent.representor_id,
-          );
-
-          if (customer) {
-            setProfileAdmin(customer);
+        if (editMode) {
+          const updatedCustomer = { ...customerForm };
+          if (updatedCustomer.data?.attributes) {
+            updatedCustomer.data.attributes = {
+              ...updatedCustomer.data.attributes,
+              represent_attributes: {
+                ...updatedCustomer.data.attributes.represent,
+                representor_id: Number(profileAdmin?.id),
+              },
+              default_phone: formData.phones_attributes[0]?.phone_number,
+              phones_attributes: formData.phones_attributes,
+              emails_attributes: formData.emails_attributes,
+            };
           }
+
+          setCustomerForm(updatedCustomer);
+          setNewCustomerForm({ ...newCustomerForm, ...data });
+        } else {
+          setCustomerForm({ ...customerForm, ...data });
         }
 
-        setFormData(prevData => ({
-          ...prevData,
-          phones_attributes:
-            attributes.phones && attributes.phones.length > 0
-              ? attributes.phones
-              : [{ phone_number: '' }],
-          emails_attributes:
-            attributes.emails && attributes.emails.length > 0 ? attributes.emails : [{ email: '' }],
-        }));
+        nextStep();
+      } catch (error) {
+        handleFormError(error);
       }
-    };
+    }, [
+      formData,
+      profileAdmin,
+      editMode,
+      customerForm,
+      newCustomerForm,
+      prepareFormData,
+      saveDataLocalStorage,
+      setCustomerForm,
+      setNewCustomerForm,
+      nextStep,
+      handleFormError,
+    ]);
 
-    if (customerForm.data) {
-      handleDataForm();
-    }
-  }, [customerForm, customersList]);
+    useImperativeHandle(ref, () => ({
+      handleSubmitForm,
+    }));
 
-  useEffect(() => {
-    verifyDataLocalStorage();
-  }, [customersList]);
+    const getErrorMessage = useCallback(
+      (index: number, field: string) => {
+        return errors[field]?.[index] || null;
+      },
+      [errors],
+    );
 
-  const handleRemoveContact = (removeIndex: number, inputArrayName: keyof typeof formData) => {
-    if (inputArrayName === 'phones_attributes') {
-      if (formData.phones_attributes.length === 1) return;
-
-      const updatedEducationals = [...formData.phones_attributes];
-      updatedEducationals.splice(removeIndex, 1);
-      setFormData(prevData => ({
-        ...prevData,
-        phones_attributes: updatedEducationals,
-      }));
-    }
-
-    if (inputArrayName === 'emails_attributes') {
-      if (formData.emails_attributes.length === 1) return;
-
-      const updatedEducationals = [...formData.emails_attributes];
-      updatedEducationals.splice(removeIndex, 1);
-      setFormData(prevData => ({
-        ...prevData,
-        emails_attributes: updatedEducationals,
-      }));
-    }
-  };
-
-  return (
-    <>
-      {openSnackbar && (
+    return (
+      <>
         <Notification
-          open={openSnackbar}
-          message={message}
-          severity={type}
-          onClose={() => setOpenSnackbar(false)}
+          open={notification.open}
+          message={notification.message}
+          severity={notification.type}
+          onClose={() => setNotification(prev => ({ ...prev, open: false }))}
         />
-      )}
 
-      {isModalRegisterRepresentativeOpen && (
         <RepresentativeModal
           pageTitle="Cadastro de Representante"
-          isOpen={isModalRegisterRepresentativeOpen}
-          handleClose={() => setIsModalRegisterRepresentativeOpen(false)}
-          handleRegistrationFinished={getCustomers}
+          isOpen={isModalOpen}
+          handleClose={() => setIsModalOpen(false)}
+          handleRegistrationFinished={newId =>
+            getCustomers(newId !== undefined ? String(newId) : undefined)
+          }
         />
-      )}
-      <Container>
-        <Box maxWidth={'600px'}>
-          <div
-            style={{
-              display: 'flex',
-              gap: '16px',
-              marginBottom: '16px',
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, maxWidth: '292px' }}>
-              <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                {'Representante'}
-              </Typography>
-              <Autocomplete
-                limitTags={1}
-                className="bg-white z-1"
-                options={customersList}
-                id="multiple-limit-tags"
-                getOptionLabel={(option: any) => {
-                  const name = option?.attributes?.name ?? '';
-                  const lastName = option?.attributes?.last_name ?? '';
-                  const fullName = `${name} ${lastName}`.trim();
 
-                  const maxLength = 35;
-                  return fullName.length > maxLength
-                    ? fullName.slice(0, maxLength) + '...'
-                    : fullName;
-                }}
-                renderInput={params => (
-                  <TextField
-                    variant="outlined"
-                    error={!!getErrorMessage(0, 'profile_admin')}
-                    type="text"
-                    {...params}
-                    size="small"
-                    placeholder={`Selecione um Representante`}
-                    helperText={getErrorMessage(0, 'profile_admin')}
-                    FormHelperTextProps={{ className: 'ml-2' }}
-                  />
-                )}
-                noOptionsText="Não Encontrado"
-                onChange={(event, value) => handleSelectedCustomer(value as IProfileAdmin)}
-                value={profileAdmin || null}
-              />
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingTop: '38px',
-              }}
-            >
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => setIsModalRegisterRepresentativeOpen(true)}
-                sx={{
-                  backgroundColor: colors.quartiary,
-                  color: colors.white,
-                  width: '292px',
-                  '&:hover': {
-                    backgroundColor: colors.quartiaryHover,
-                  },
-                }}
-              >
-                <DescriptionText style={{ cursor: 'pointer' }} className="ml-8">
-                  {'Adicionar Representante'}
-                </DescriptionText>
-                <MdOutlineAddCircle size={20} />
-              </Button>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <ColumnContainer>
-              <Box>
-                <Typography style={{ marginBottom: '8px' }} variant="h6">
-                  {'Telefone'}
+        <Container>
+          {loading && (
+            <LoadingOverlay>
+              <CircularProgress size={30} style={{ color: '#01013D' }} />
+            </LoadingOverlay>
+          )}
+
+          <div>
+            <div className="flex gap-[16px]">
+              <div>
+                <Typography variant="h6" mb={1}>
+                  Representante
                 </Typography>
 
-                {formData.phones_attributes.map((inputValue, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      marginBottom: '8px',
-                      gap: '6px',
-                    }}
-                  >
-                    <div className="flex flex-row gap-1">
+                <Select
+                  options={customersList.map(customer => ({
+                    label: `${customer.attributes.name} ${customer.attributes.last_name}`,
+                    value: customer.id,
+                  }))}
+                  value={
+                    profileAdmin
+                      ? {
+                          label: `${profileAdmin.attributes.name} ${profileAdmin.attributes.last_name}`,
+                          value: profileAdmin.id,
+                        }
+                      : null
+                  }
+                  onChange={(option: { label: string; value: string } | null) =>
+                    handleSelectedCustomer(customersList.find(c => c.id === option?.value) || null)
+                  }
+                  placeholder="Selecione um representante"
+                  styles={{
+                    control: (base: React.CSSProperties) => ({
+                      ...base,
+                      borderColor: errors.profile_admin ? 'red' : base.borderColor,
+                      width: '394px',
+                    }),
+                  }}
+                  isClearable
+                  isSearchable
+                  noOptionsMessage={() => 'Nenhum representante encontrado'}
+                />
+
+                <Box sx={{ minHeight: '20px', mt: 0.5 }}>
+                  {errors.profile_admin && (
+                    <Typography variant="caption" color="error">
+                      {errors.profile_admin}
+                    </Typography>
+                  )}
+                </Box>
+              </div>
+
+              <div className="mt-[40px]">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => setIsModalOpen(true)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    backgroundColor: colors.quartiary,
+                    color: colors.white,
+                    width: 394,
+                    '&:hover': { backgroundColor: colors.quartiaryHover },
+                    height: 38,
+                  }}
+                >
+                  <DescriptionText style={{ cursor: 'pointer' }}>
+                    Adicionar Representante
+                  </DescriptionText>
+                  <MdOutlineAddCircle size={20} />
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex gap-[16px]">
+              <div>
+                <Typography variant="h6" mb={1}>
+                  Telefone
+                </Typography>
+                {formData.phones_attributes.map((phone, index) => (
+                  <Box key={index} display="flex" flexDirection="column" mb={1} gap={0.75}>
+                    <Box display="flex" gap={0.5}>
                       <CustomTextField
-                        formData={formData}
-                        customValue={inputValue.phone_number}
+                        formData={formData as any}
+                        customValue={phone.phone_number}
                         name="phone_number"
                         placeholder="Informe o Telefone"
-                        handleInputChange={(e: any) => {
-                          handleInputChange(index, e.target.value, 'phones_attributes');
-                        }}
+                        handleInputChange={e =>
+                          handleInputChange(index, e.target.value, 'phones_attributes')
+                        }
                         errorMessage={getErrorMessage(index, 'phone_numbers')}
+                        sx={{ width: '394px' }}
                       />
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleRemoveContact(index, 'phones_attributes');
-                        }}
-                      >
-                        <div
-                          className={`flex  ${
-                            formData.phones_attributes.length > 1 ? '' : 'hidden'
-                          }`}
+                      {formData.phones_attributes.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveContact(index, 'phones_attributes')}
                         >
                           <IoMdTrash size={20} color="#a50000" />
-                        </div>
-                      </button>
-                    </div>
-
+                        </button>
+                      )}
+                    </Box>
                     {index === formData.phones_attributes.length - 1 && (
                       <button
-                        id="add-phone"
                         type="button"
                         className="flex items-center w-fit self-end"
                         onClick={() => handleAddInput('phones_attributes')}
                       >
                         <IoAddCircleOutline
-                          className={`cursor-pointer ml-auto ${
-                            formData.phones_attributes.length > 1 ? 'mr-6' : ''
-                          }`}
+                          className={`cursor-pointer ${formData.phones_attributes.length > 1 ? 'mr-6' : ''}`}
                           color={colors.quartiary}
                           size={20}
                         />
                       </button>
                     )}
-                  </div>
+                  </Box>
                 ))}
-              </Box>
-            </ColumnContainer>
-            <ColumnContainer>
-              <Box>
-                <Typography style={{ marginBottom: '8px' }} variant="h6">
-                  {'E-mail'}
+              </div>
+
+              <div>
+                <Typography variant="h6" mb={1}>
+                  E-mail
                 </Typography>
-                {formData.emails_attributes.map((inputValue, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      marginBottom: '8px',
-                      gap: '6px',
-                    }}
-                  >
-                    <div className="flex flex-row gap-1">
+                {formData.emails_attributes.map((email, index) => (
+                  <Box key={index} display="flex" flexDirection="column" mb={1} gap={0.75}>
+                    <Box display="flex" gap={0.5}>
                       <CustomTextField
-                        formData={formData}
-                        customValue={inputValue.email}
+                        formData={formData as any}
+                        customValue={email.email}
                         name="email"
                         placeholder="Informe o Email"
-                        handleInputChange={(e: any) => {
-                          handleInputChange(index, e.target.value, 'emails_attributes');
-                        }}
+                        handleInputChange={e =>
+                          handleInputChange(index, e.target.value, 'emails_attributes')
+                        }
                         errorMessage={getErrorMessage(index, 'emails')}
+                        sx={{ width: '394px' }}
                       />
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleRemoveContact(index, 'emails_attributes');
-                        }}
-                      >
-                        <div
-                          className={`flex  ${
-                            formData.emails_attributes.length > 1 ? '' : 'hidden'
-                          }`}
+                      {formData.emails_attributes.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveContact(index, 'emails_attributes')}
                         >
                           <IoMdTrash size={20} color="#a50000" />
-                        </div>
-                      </button>
-                    </div>
-
+                        </button>
+                      )}
+                    </Box>
                     {index === formData.emails_attributes.length - 1 && (
                       <button
-                        id="add-email"
                         type="button"
                         className="flex items-center w-fit self-end"
                         onClick={() => handleAddInput('emails_attributes')}
                       >
                         <IoAddCircleOutline
-                          className={`cursor-pointer ml-auto ${
-                            formData.emails_attributes.length > 1 ? 'mr-6' : ''
-                          }`}
+                          className={`cursor-pointer ${formData.emails_attributes.length > 1 ? 'mr-6' : ''}`}
                           color={colors.quartiary}
                           size={20}
                         />
                       </button>
                     )}
-                  </div>
+                  </Box>
                 ))}
-              </Box>
-            </ColumnContainer>
+              </div>
+            </div>
           </div>
-        </Box>
-      </Container>
-    </>
-  );
-};
+        </Container>
+      </>
+    );
+  },
+);
 
-export default forwardRef(PJCustomerStepTwo);
+PJCustomerStepTwo.displayName = 'PJCustomerStepTwo';
+export default PJCustomerStepTwo;

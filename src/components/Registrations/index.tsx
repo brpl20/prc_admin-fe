@@ -26,7 +26,7 @@ import PFCustomerStepFour, { IRefPFCustomerStepFourProps } from './customer/PF/f
 import PFCustomerStepFive, { IRefPFCustomerStepFiveProps } from './customer/PF/five';
 import PFCustomerStepSix, { IRefPFCustomerStepSixProps } from './customer/PF/six';
 
-import PJCustomerStepOne, { IRefPJCustomerStepOneProps } from './customer/PJ/one';
+import PJCustomerStepOne from './customer/PJ/one';
 import PJCustomerStepTwo, { IRefPJCustomerStepTwoProps } from './customer/PJ/two';
 import PJCustomerStepThree, { IRefPJCustomerStepThreeProps } from './customer/PJ/three';
 import PJCustomerStepFour, { IRefPJCustomerStepFourProps } from './customer/PJ/four';
@@ -53,7 +53,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
   const PFcustomerStepFiveRef = useRef<IRefPFCustomerStepFiveProps>(null);
   const PFcustomerStepSixRef = useRef<IRefPFCustomerStepSixProps>(null);
 
-  const PJcustomerStepOneRef = useRef<IRefPJCustomerStepOneProps>(null);
+  const PJcustomerStepOneRef = useRef(null);
   const PJcustomerStepTwoRef = useRef<IRefPJCustomerStepTwoProps>(null);
   const PJcustomerStepThreeRef = useRef<IRefPJCustomerStepThreeProps>(null);
   const PJcustomerStepFourRef = useRef<IRefPJCustomerStepFourProps>(null);
