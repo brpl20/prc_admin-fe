@@ -9,7 +9,7 @@ interface IAttributesProps {
   number: number;
   subject: string;
   civel_area: string;
-  social_security_area: string;
+  social_security_areas: string;
   retirement_by_time: string;
   retirement_by_age: string;
   retirement_by_rural: string;
@@ -20,9 +20,9 @@ interface IAttributesProps {
   partner_lawyer: number;
   created_by_id: number;
 
-  laborite_area: string;
+  laborite_areas: string;
   labor_claim: string;
-  tributary_area: string;
+  tributary_areas: string;
   asphalt: string;
   license: string;
   others_tributary: string;

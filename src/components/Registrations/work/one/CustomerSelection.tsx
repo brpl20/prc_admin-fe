@@ -18,7 +18,7 @@ export const CustomerSelection = ({
 }: CustomerSelectionProps) => {
   return (
     <Flex style={{ flexDirection: 'column' }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+      <Typography variant="h6" sx={{ marginBottom: '8px', marginTop: '16px' }}>
         Cliente
       </Typography>
       <Autocomplete

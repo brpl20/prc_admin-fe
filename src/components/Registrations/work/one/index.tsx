@@ -6,8 +6,6 @@ import {
   forwardRef,
   ForwardRefRenderFunction,
   useImperativeHandle,
-  Dispatch,
-  SetStateAction,
 } from 'react';
 
 import { z } from 'zod';
@@ -19,19 +17,19 @@ import { Notification } from '@/components';
 import { IProfileCustomer } from '@/interfaces/ICustomer';
 import { getAllProfileCustomer } from '@/services/customers';
 
-import { Container } from './styles';
+import { Container, LoadingOverlay } from './styles';
 
-import { Box } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 import { useRouter } from 'next/router';
 import { getAllDraftWorks } from '@/services/works';
 import { useSession } from 'next-auth/react';
-import useLoadingCounter from '@/utils/useLoadingCounter';
 import { getProfileCustomerFullName } from '@/utils/profileCustomerUtils';
 import { CustomerSelection } from './CustomerSelection';
 import { ProcessNumberInput } from './ProcessNumberInput';
 import { DraftWorkSelection } from './DraftWorkSelection';
 import { ProcedureSelection } from './ProcedureSelection';
 import { SubjectSelection } from './SubjectSelection';
+import { moneyMask } from '@/utils/masks';
 
 export interface IRefWorkStepOneProps {
   handleSubmitForm: () => void;
@@ -39,7 +37,6 @@ export interface IRefWorkStepOneProps {
 
 interface IStepOneProps {
   nextStep: () => void;
-  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 const stepOneSchema = z.object({
@@ -49,14 +46,14 @@ const stepOneSchema = z.object({
 });
 
 const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps> = (
-  { nextStep, setFormLoading },
+  { nextStep },
   ref,
 ) => {
+  const [loading, setLoading] = useState(true);
   const { data: session } = useSession();
   const route = useRouter();
   const { workForm, setWorkForm, setUdateWorkForm } = useContext(WorkContext);
   const { setPageTitle } = useContext(PageTitleContext);
-  const { setLoading } = useLoadingCounter(setFormLoading);
 
   const [formState, setFormState] = useState({
     selectedSubject: '',
@@ -82,6 +79,10 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   const [selectedProcedures, setSelectedProcedures] = useState<string[]>([]);
   const [customerSelectedList, setCustomerSelectedList] = useState<IProfileCustomer[]>([]);
   const [selectedDraftWork, setSelectedDraftWork] = useState<any>(null);
+
+  const normalizeSubject = (subject: string) => {
+    return subject === 'civil' ? 'civel' : subject;
+  };
 
   const handleCustomersSelected = (customers: any) => {
     const customerIds = customers.map((customer: any) => customer.id.toString());
@@ -110,17 +111,6 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
     setFormState(prev => ({ ...prev, selectedArea: value }));
   };
 
-  const handleGainProjection = (value: number) => {
-    const input = document.getElementById('gainProjection') as HTMLInputElement;
-    if (value && input) {
-      input.value = `R$ ${value}`;
-    }
-    setFormState(prev => ({
-      ...prev,
-      gainProjection: value ? value.toString() : '',
-    }));
-  };
-
   const handleSubmitForm = () => {
     try {
       stepOneSchema.parse({
@@ -142,13 +132,13 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
           data.civel_area = formState.selectedArea;
           break;
         case 'social_security':
-          data.social_security_area = formState.selectedArea;
+          data.social_security_areas = formState.selectedArea;
           break;
         case 'laborite':
-          data.laborite_area = formState.selectedArea;
+          data.laborite_areas = formState.selectedArea;
           break;
         case 'tributary':
-          data.tributary_area = formState.selectedArea;
+          data.tributary_areas = formState.selectedArea;
           break;
         case 'tributary_pis':
           Object.assign(data, {
@@ -197,34 +187,41 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
 
   const verifyDataLocalStorage = async () => {
     setLoading(true);
-    const data = localStorage.getItem('WORK/One');
-    if (data) {
-      const parsed = JSON.parse(data);
-      setSelectedDraftWork(parsed.draftWork ?? null);
-      setProcessNumber(parsed.number ?? '');
-      setSelectedProcedures(parsed.procedures ?? []);
-      handleSubject(parsed.subject ?? '');
+    try {
+      const data = localStorage.getItem('WORK/One');
+      if (data) {
+        const parsed = JSON.parse(data);
+        setSelectedDraftWork(parsed.draftWork ?? null);
+        setProcessNumber(parsed.number ?? '');
+        setSelectedProcedures(parsed.procedures ?? []);
+        const normalizedSubject = normalizeSubject(parsed.subject ?? '');
+        handleSubject(normalizedSubject);
 
-      setFormState(prev => ({
-        ...prev,
-        selectedSubject: parsed.subject ?? '',
-        selectedArea: parsed[`${parsed.subject}_area`] ?? '',
-        compensationsLastYears: parsed.compensations_five_years ?? '',
-        officialCompensation: parsed.compensations_service ?? '',
-        hasALawsuit: parsed.lawsuit ?? '',
-        gainProjection: parsed.gain_projection ?? undefined,
-        selectedFile: parsed.tributary_files ?? null,
-        otherDescription: parsed.other_description ?? '',
-      }));
+        setFormState(prev => ({
+          ...prev,
+          selectedSubject: normalizedSubject,
+          selectedArea:
+            parsed[`${normalizedSubject}_areas`] || parsed[`${normalizedSubject}_area`] || '',
+          compensationsLastYears: parsed.compensations_five_years ?? '',
+          officialCompensation: parsed.compensations_service ?? '',
+          hasALawsuit: parsed.lawsuit ?? '',
+          gainProjection: parsed.gain_projection ?? '',
+          selectedFile: parsed.tributary_files ?? null,
+          otherDescription: parsed.other_description ?? '',
+        }));
 
-      if (parsed.profile_customer_ids && customersList.length > 0) {
-        const selectedCustomers = customersList.filter(customer =>
-          parsed.profile_customer_ids.includes(customer.id.toString()),
-        );
-        setCustomerSelectedList(selectedCustomers);
+        if (parsed.profile_customer_ids && customersList.length > 0) {
+          const selectedCustomers = customersList.filter(customer =>
+            parsed.profile_customer_ids.includes(customer.id.toString()),
+          );
+          setCustomerSelectedList(selectedCustomers);
+        }
       }
+    } catch (error) {
+      handleFormError(error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useImperativeHandle(ref, () => ({
@@ -269,14 +266,28 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
     }
 
     setProcessNumber(attributes.number ?? '');
-    handleSubject(attributes.subject ?? '');
+
+    const normalizedSubject = normalizeSubject(attributes.subject ?? '');
+    handleSubject(normalizedSubject);
+
     setFormState(prev => ({
       ...prev,
-      selectedSubject: attributes.subject ?? '',
-      selectedArea: attributes[`${attributes.subject}_area`] ?? '',
-      compensationsLastYears: attributes.compensations_five_years,
-      officialCompensation: attributes.compensations_service,
-      hasALawsuit: attributes.lawsuit,
+      selectedSubject: normalizedSubject,
+      selectedArea:
+        attributes[`${normalizedSubject}_area`] || attributes[`${normalizedSubject}_areas`] || '',
+      compensationsLastYears:
+        attributes.compensations_five_years === true
+          ? 'yes'
+          : attributes.compensations_five_years === false
+            ? 'no'
+            : '',
+      officialCompensation:
+        attributes.compensations_service === true
+          ? 'yes'
+          : attributes.compensations_service === false
+            ? 'no'
+            : '',
+      hasALawsuit: attributes.lawsuit === true ? 'yes' : attributes.lawsuit === false ? 'no' : '',
       gainProjection: attributes.gain_projection ?? '',
       selectedFile: attributes.tributary_files ?? null,
       otherDescription: attributes.other_description ?? '',
@@ -302,7 +313,13 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
         />
       )}
 
-      <Container>
+      <Container loading={loading}>
+        {loading && (
+          <LoadingOverlay>
+            <CircularProgress size={30} style={{ color: '#01013D' }} />
+          </LoadingOverlay>
+        )}
+
         <Box sx={{ width: '100%' }}>
           <CustomerSelection
             customersList={customersList}
@@ -350,9 +367,14 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
             setHasALawsuit={(value: string) =>
               setFormState(prev => ({ ...prev, hasALawsuit: value }))
             }
-            gainProjection={formState.gainProjection}
+            gainProjection={
+              formState.gainProjection ? `R$ ${moneyMask(formState.gainProjection)}` : null
+            }
             handleGainProjection={(value: string | null) =>
-              handleGainProjection(value ? Number(value) : 0)
+              setFormState(prev => ({
+                ...prev,
+                gainProjection: moneyMask(`R$ ${value}`) || '',
+              }))
             }
             selectedFile={formState.selectedFile}
             setSelectedFile={files => {

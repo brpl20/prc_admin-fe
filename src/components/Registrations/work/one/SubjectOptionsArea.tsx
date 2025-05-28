@@ -207,20 +207,15 @@ export const SubjectArea: React.FC<SubjectAreaProps> = ({
             <Typography variant="h6">{'Projeção de ganho'}</Typography>
             <Box sx={{ width: '174px' }}>
               <Input
-                placeholder="00"
-                min="0"
-                id="gainProjection"
-                onInput={(e: any) => {
-                  e.target.value = e.target.value.replace(/[^0-9.,]/g, '');
-                }}
-                onBlur={(e: any) => {
-                  const inputValue = e.target.value;
-                  const numericValue = parseFloat(inputValue.replace(',', '.'));
-                  if (!isNaN(numericValue)) {
-                    handleGainProjection(numericValue.toString());
-                  } else {
-                    handleGainProjection('');
-                  }
+                type="text"
+                value={gainProjection}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  handleGainProjection(e.target.value)
+                }
+                placeholder="R$ 0,00"
+                onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                  const value = e.target.value.replace(/[^0-9,]/g, '').replace(',', '.');
+                  handleGainProjection(value);
                 }}
               />
             </Box>

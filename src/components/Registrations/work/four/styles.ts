@@ -1,4 +1,10 @@
+import { ReactNode } from 'react';
 import styled from 'styled-components';
+
+interface ContainerProps {
+  loading: boolean;
+  children?: ReactNode;
+}
 
 export const Container = styled.div<any>`
   width: 100%;

@@ -50,7 +50,6 @@ export const SubjectSelection = ({
   otherDescription,
   setOtherDescription,
 }: SubjectSelectionProps) => {
-  console.log('role:', role);
   const subjectOptions =
     role !== 'counter'
       ? [
@@ -101,8 +100,8 @@ export const SubjectSelection = ({
           setOfficialCompensation={setOfficialCompensation}
           hasALawsuit={hasALawsuit}
           setHasALawsuit={setHasALawsuit}
-          gainProjection={gainProjection ?? undefined}
-          handleGainProjection={value => handleGainProjection(value === '' ? null : value)}
+          gainProjection={gainProjection ?? ''}
+          handleGainProjection={value => handleGainProjection(value)}
           selectedFile={selectedFile}
           setSelectedFile={setSelectedFile}
           openFileSnackbar={openFileSnackbar}
