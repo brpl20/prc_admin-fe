@@ -39,6 +39,7 @@ import dynamic from 'next/dynamic';
 import { getSession } from 'next-auth/react';
 import { ptBR } from 'date-fns/locale';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
+import { filterTasksBySearch } from '@/utils/searchUtils';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Tasks = () => {
@@ -143,28 +144,11 @@ const Tasks = () => {
   };
 
   const handleSearch = (search: string) => {
-    const regex = new RegExp(search, 'i');
-
-    let filteredList = [];
-
-    switch (searchFor) {
-      case 'description':
-        filteredList = tasksList.filter(task => regex.test(task.attributes.description));
-        break;
-
-      case 'customer':
-        filteredList = tasksList.filter((task: any) => regex.test(task.attributes.customer));
-        break;
-
-      case 'work':
-        filteredList = tasksList.filter((task: any) => regex.test(task.attributes.work_number));
-        break;
-
-      default:
-        filteredList = [...tasksList];
-        break;
-    }
-
+    const filteredList = filterTasksBySearch(
+      tasksList,
+      search,
+      searchFor as 'description' | 'customer' | 'work',
+    );
     setFilteredTasksList(filteredList);
   };
 
@@ -493,8 +477,8 @@ const Tasks = () => {
                           task.attributes.status === 'pending'
                             ? 'Pendente'
                             : task.attributes.status === 'late'
-                            ? 'Atrasado'
-                            : 'Finalizado',
+                              ? 'Atrasado'
+                              : 'Finalizado',
                       }))
                     : []
                 }
@@ -542,8 +526,8 @@ const Tasks = () => {
                           params.value === 'Pendente'
                             ? 'pending'
                             : params.value === 'Atrasado'
-                            ? 'late'
-                            : 'completed'
+                              ? 'late'
+                              : 'completed'
                         }`}
                       >
                         {params.value}

@@ -1,8 +1,15 @@
 import styled from 'styled-components';
 import { colors } from '@/styles/globals';
+import { ReactNode } from 'react';
 
-export const Container = styled.div<any>`
-  min-height: 348px;
+interface ContainerProps {
+  loading: boolean;
+  children?: ReactNode;
+}
+
+export const Container = styled.div<ContainerProps>`
+  margin-top: 16px;
+  min-height: 350px;
 
   .MuiInputBase-root {
     height: 40px;
@@ -15,7 +22,7 @@ export const Container = styled.div<any>`
 `;
 
 export const Input = styled.input<any>`
-  width: 314px;
+  width: 300px;
   height: 40px;
   padding-left: 8px;
 

@@ -28,6 +28,7 @@ import dayjs from 'dayjs';
 import { getAllCustomers, getAllProfileCustomer } from '@/services/customers';
 import { ICustomer, IProfileCustomer } from '@/interfaces/ICustomer';
 import { translateCustomerType } from '@/utils/translateCustomerType';
+import { searchWorks } from '@/utils/searchUtils';
 
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
@@ -118,19 +119,13 @@ const Documents = () => {
   };
 
   const handleSearch = (search: string) => {
-    const searchTerms = search.split(',').map(term => term.trim());
-    let filteredWorks = works;
-
-    if (search) {
-      filteredWorks = filteredWorks.filter((work: IWorksListProps) => {
-        const clientsNames = work.attributes.profile_customers.map(
-          (customer: any) => customer.name,
-        );
-        return searchTerms.every(term =>
-          clientsNames.some((name: string) => new RegExp(term, 'i').test(name)),
-        );
-      });
-    }
+    const filteredWorks = searchWorks(
+      works,
+      profileCustomersList,
+      search,
+      'profile_customers',
+      (procedure: any) => procedure.attributes.name || procedure.name || '',
+    );
 
     setFilteredWorks(filteredWorks);
   };
@@ -260,7 +255,7 @@ const Documents = () => {
                       );
 
                       const customerName = profileCustomer
-                        ? `${profileCustomer.attributes.name} ${profileCustomer.attributes.last_name}`
+                        ? `${profileCustomer.attributes.name ?? ''} ${profileCustomer.attributes.last_name ?? ''}`
                         : customer.name;
 
                       return customerName;

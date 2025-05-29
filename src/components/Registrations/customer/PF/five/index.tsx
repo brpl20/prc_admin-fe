@@ -213,13 +213,16 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
               formData={formData}
               name="profession"
               label="Profissão"
+              placeholder="Informe a Profissão"
               errorMessage={errors.profession}
               handleInputChange={handleInputChange}
+              required
             />
             <CustomTextField
               formData={formData}
               name="company"
               label="Empresa Atual"
+              placeholder="Informe a Empresa Atual"
               errorMessage={errors.company}
               handleInputChange={handleInputChange}
             />
@@ -230,6 +233,7 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
               formData={formData}
               name="number_benefit"
               label="Número de Benefício"
+              placeholder="Informe o Número de Benefício"
               errorMessage={errors.number_benefit}
               handleInputChange={handleInputChange}
             />
@@ -238,6 +242,7 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
               formData={formData}
               name="nit"
               label="NIT"
+              placeholder="Informe o NIT"
               length={30}
               errorMessage={errors.nit}
               handleInputChange={handleInputChange}
@@ -249,14 +254,17 @@ const PFCustomerStepFive: ForwardRefRenderFunction<IRefPFCustomerStepFiveProps, 
               formData={formData}
               name="mother_name"
               label="Nome da Mãe"
+              placeholder="Informe o Nome da Mãe"
               errorMessage={errors.mother_name}
               handleInputChange={handleInputChange}
+              required
             />
 
             <CustomTextField
               formData={formData}
               name="inss_password"
               label="Senha do meu INSS"
+              placeholder="Informe a Senha do meu INSS"
               errorMessage={errors.inss_password}
               handleInputChange={handleInputChange}
             />

@@ -1,30 +1,17 @@
-import {
+// components/WorkStepFour.tsx
+import React, {
   useState,
   useContext,
   useEffect,
   forwardRef,
-  ForwardRefRenderFunction,
+  useCallback,
+  useMemo,
   useImperativeHandle,
-  Dispatch,
-  SetStateAction,
 } from 'react';
 import { useRouter } from 'next/router';
-
-import { getAllProfileAdmins } from '@/services/admins';
-import { getOfficeById, getOfficesWithLaws } from '@/services/offices';
-
-import { WorkContext } from '@/contexts/WorkContext';
-import { IOfficeProps } from '@/interfaces/IOffice';
-import { IProfileAdmin, IProfileAdminAttributes } from '@/interfaces/IAdmin';
-
-import { Container } from './styles';
-import { Flex } from '@/styles/globals';
-import Checkbox from '@mui/material/Checkbox';
-import { Box, Typography, Autocomplete, TextField, Radio } from '@mui/material';
-
 import {
-  Collapse,
-  IconButton,
+  Box,
+  Typography,
   Table,
   TableBody,
   TableCell,
@@ -32,54 +19,60 @@ import {
   TableHead,
   TableRow,
   Paper,
+  CircularProgress,
 } from '@mui/material';
-
-import { MdOutlineInfo, MdOutlineArrowDropUp, MdOutlineArrowDropDown } from 'react-icons/md';
-
-import CustomTooltip from '@/components/Tooltip';
+import { WorkContext } from '@/contexts/WorkContext';
+import { getAllProfileAdmins } from '@/services/admins';
+import { getOfficeById, getOfficesWithLaws } from '@/services/offices';
 import { Notification } from '@/components';
-import useLoadingCounter from '@/utils/useLoadingCounter';
-
-export interface IRefWorkStepFourProps {
-  handleSubmitForm: () => void;
-}
-interface IStepFourProps {
-  nextStep: () => void;
-  setFormLoading: Dispatch<SetStateAction<boolean>>;
-}
+import { z } from 'zod';
+import { Container } from './styles';
+import { LawyerRadioGroup } from './LawyerRadioGroup';
+import { OfficeSelection } from './OfficeSelection';
+import { LawyerSubTable } from './LawyerSubTable';
+import { LawyerSelect } from './LawyerAutocomplete';
+import { LoadingOverlay } from '../one/styles';
 
 interface FormData {
-  lawyers: any;
+  lawyers: any[];
   initial_atendee: string;
   intern: string;
   bachelor: string;
   partner_lawyer: string;
   responsible_lawyer: string;
   physical_lawyer: string;
+  physical_lawyer_type: 'legal' | 'physical';
 }
 
-const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourProps> = (
-  { nextStep, setFormLoading },
-  ref,
-) => {
-  const [openSubTable, setOpenSubTable] = useState(true);
-  const route = useRouter();
+const stepFourSchema = z.object({
+  profile_admin_ids: z.array(z.number()).nonempty(),
+  office_ids: z.array(z.number()).nonempty(),
+});
 
+interface IRefWorkStepFourProps {
+  handleSubmitForm: () => void;
+}
+
+interface IStepFourProps {
+  nextStep: () => void;
+}
+
+const WorkStepFour = forwardRef<IRefWorkStepFourProps, IStepFourProps>(({ nextStep }, ref) => {
+  const router = useRouter();
   const { workForm, setWorkForm, updateWorkForm, setUdateWorkForm } = useContext(WorkContext);
-  const [allLawyers, SetAllLawyers] = useState<any>([]);
-  const [offices, setOffices] = useState<IOfficeProps[]>([]);
-  const [officesSelected, setOfficesSelected] = useState<any>([]);
-  const [selectedLawyers, setSelectedLawyers] = useState<any[]>([]);
-  const [trainee, SetTrainee] = useState<IProfileAdminAttributes[]>([]);
-  const [paralegal, SetParalegal] = useState<IProfileAdminAttributes[]>([]);
-  const [lawyers, SetLawyers] = useState<IProfileAdminAttributes[]>([]);
+
+  const [loading, setLoading] = useState(true);
+  const [openSubTable, setOpenSubTable] = useState(true);
   const [isLegalPerson, setIsLegalPerson] = useState(true);
-
   const [legalPersonError, setLegalPersonError] = useState(false);
-
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
+
+  const [allLawyers, setAllLawyers] = useState<any[]>([]);
+  const [offices, setOffices] = useState<any[]>([]);
+  const [officesSelected, setOfficesSelected] = useState<any[]>([]);
+  const [selectedLawyers, setSelectedLawyers] = useState<number[]>([]);
 
   const [formData, setFormData] = useState<FormData>({
     lawyers: [],
@@ -89,683 +82,365 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
     partner_lawyer: '',
     responsible_lawyer: '',
     physical_lawyer: '',
+    physical_lawyer_type: 'legal',
   });
 
-  const { setLoading } = useLoadingCounter(setFormLoading);
+  const trainees = useMemo(
+    () => allLawyers.filter(lawyer => lawyer.attributes?.role === 'trainee'),
+    [allLawyers],
+  );
 
-  const handleSelectedOffice = (offices: any) => {
-    setOfficesSelected(offices);
-  };
+  const paralegals = useMemo(
+    () => allLawyers.filter(lawyer => lawyer.attributes?.role === 'paralegal'),
+    [allLawyers],
+  );
 
-  const handleSubmitForm = async () => {
+  const lawyers = useMemo(
+    () => allLawyers.filter(lawyer => lawyer.attributes?.role === 'lawyer'),
+    [allLawyers],
+  );
+
+  const handleSelectedOffice = useCallback(
+    (newOffices: any[]) => {
+      const officesChanged =
+        newOffices.length !== officesSelected.length ||
+        newOffices.some((office, i) => office.id !== officesSelected[i]?.id);
+
+      if (officesChanged) {
+        setSelectedLawyers([]);
+      }
+
+      setOfficesSelected(newOffices);
+    },
+    [officesSelected],
+  );
+
+  const handleSelectChange = useCallback((field: keyof FormData, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value ? value.id : '',
+    }));
+  }, []);
+
+  const handleFormError = useCallback((error: any, customMessage?: string) => {
+    console.error('Form Error:', error);
+    setMessage(customMessage || error.message || 'Preencha todos os campos obrigatórios.');
+    setType('error');
+    setOpenSnackbar(true);
+  }, []);
+
+  const handleSubmitForm = useCallback(async () => {
     try {
-      const updatedFormData = { ...formData };
-      updatedFormData.lawyers = selectedLawyers;
-      const officesIDs = officesSelected.map((office: any) => office.id);
+      if (isLegalPerson) {
+        if (officesSelected.length === 0) {
+          setLegalPersonError(true);
+          handleFormError(new Error('Selecione ao menos um escritório.'));
+          return;
+        }
 
-      if (isLegalPerson && officesIDs.length <= 0) {
-        setLegalPersonError(true);
-        setMessage('Selecione ao menos um escritório.');
-        setType('error');
-        setOpenSnackbar(true);
-        return;
-      }
-
-      if (!isLegalPerson && selectedLawyers.length <= 0) {
-        setLegalPersonError(true);
-        setMessage('Selecione um advogado.');
-        setType('error');
-        setOpenSnackbar(true);
-        return;
-      }
-
-      const data = {
-        profile_admin_ids: selectedLawyers.map((lawyer: any) => Number(lawyer)),
-        office_ids: officesIDs,
-
-        physical_lawyer: updatedFormData.physical_lawyer,
-        initial_atendee: updatedFormData.initial_atendee,
-        intern: updatedFormData.intern,
-        bachelor: updatedFormData.bachelor,
-        partner_lawyer: updatedFormData.partner_lawyer,
-        responsible_lawyer: updatedFormData.responsible_lawyer,
-      };
-
-      if (data.profile_admin_ids.length === 0) {
-        for (const office_id of data.office_ids) {
-          const office = await getOfficeById(String(office_id));
-          const officeRepresentativeId = office.data.attributes.responsible_lawyer_id;
-
-          if (officeRepresentativeId === 0) {
-            throw new Error(
-              'Não foi possível encontrar um representante para o escritório, selecione um advogado do escritório acima.',
-            );
-          }
-
-          officeRepresentativeId && data.profile_admin_ids.push(officeRepresentativeId);
+        if (selectedLawyers.length === 0) {
+          setLegalPersonError(true);
+          handleFormError(
+            new Error('Selecione ao menos um advogado dos escritórios selecionados.'),
+          );
+          return;
+        }
+      } else {
+        if (selectedLawyers.length !== 1) {
+          setLegalPersonError(true);
+          handleFormError(new Error('Selecione exatamente um advogado pessoa física.'));
+          return;
         }
       }
 
-      if (route.pathname == '/alterar') {
-        const dataAux = {
-          ...updateWorkForm,
-          ...data,
-        };
-
-        setUdateWorkForm(dataAux);
-        saveDataLocalStorage(dataAux);
+      if (!formData.responsible_lawyer) {
+        handleFormError(new Error('Selecione um advogado responsável.'));
+        return;
       }
 
-      const dataAux = {
-        ...workForm,
-        ...data,
+      const formDataToSave = {
+        ...formData,
+        lawyers: selectedLawyers,
+        profile_admin_ids: selectedLawyers,
+        office_ids: isLegalPerson ? officesSelected.map(office => office.id) : [],
+        physical_lawyer_type: isLegalPerson ? 'legal' : 'physical',
       };
 
-      if (route.pathname !== '/alterar') {
-        saveDataLocalStorage(dataAux);
+      if (router.pathname === '/alterar') {
+        const updatedData = { ...updateWorkForm, ...formDataToSave };
+        setUdateWorkForm(updatedData);
+        saveDataLocalStorage(updatedData);
+      } else {
+        const updatedData = { ...workForm, ...formDataToSave };
+        setWorkForm(updatedData);
+        saveDataLocalStorage(updatedData);
       }
 
-      setWorkForm(dataAux);
       nextStep();
     } catch (err: any) {
       handleFormError(err, err.message);
     }
-  };
+  }, [
+    formData,
+    isLegalPerson,
+    nextStep,
+    officesSelected,
+    router.pathname,
+    selectedLawyers,
+    setUdateWorkForm,
+    setWorkForm,
+    updateWorkForm,
+    workForm,
+  ]);
 
-  const handleFormError = (error: any, message?: string) => {
-    const newErrors = error?.formErrors?.fieldErrors ?? {};
-    const errorObject: { [key: string]: string } = {};
-    setMessage(error.message || 'Preencha todos os campos obrigatórios.');
-    setType('error');
-    setOpenSnackbar(true);
-
-    for (const field in newErrors) {
-      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
-        errorObject[field] = newErrors[field][0] as string;
-      }
-    }
-  };
-
-  const saveDataLocalStorage = (data: any) => {
+  const saveDataLocalStorage = useCallback((data: any) => {
     localStorage.setItem('WORK/Four', JSON.stringify(data));
-  };
+  }, []);
 
-  const verifyDataLocalStorage = async () => {
-    setLoading(true);
-    const data = localStorage.getItem('WORK/Four');
+  const loadInitialData = useCallback(async () => {
+    try {
+      const [officesResponse, adminsResponse] = await Promise.all([
+        getOfficesWithLaws(),
+        getAllProfileAdmins(''),
+      ]);
+      return {
+        offices: officesResponse.data,
+        lawyers: adminsResponse.data,
+      };
+    } catch (error) {
+      handleFormError(error, 'Erro ao carregar dados.');
+      return { offices: [], lawyers: [] };
+    }
+  }, []);
 
-    if (data) {
+  const loadFromLocalStorage = useCallback(
+    async (initialData: { offices: any[]; lawyers: any[] }) => {
+      const data = localStorage.getItem('WORK/Four');
+      if (!data) return null;
+
       const parsedData = JSON.parse(data);
+      const result: any = { formData: {}, officesSelected: [], selectedLawyers: [] };
+
+      if (parsedData.physical_lawyer_type) {
+        setIsLegalPerson(parsedData.physical_lawyer_type === 'legal');
+      }
 
       if (parsedData.office_ids) {
-        const offices = await getOfficesWithLaws();
-
-        const officesSelected = offices.data.filter((office: any) =>
+        result.officesSelected = initialData.offices.filter(office =>
           parsedData.office_ids.includes(office.id),
         );
-
-        if (officesSelected.length > 0) {
-          setIsLegalPerson(true);
-        } else {
-          setIsLegalPerson(false);
-        }
-
-        if (officesSelected) {
-          setOfficesSelected(officesSelected);
-        }
       }
 
       if (parsedData.profile_admin_ids) {
         setSelectedLawyers(parsedData.profile_admin_ids);
       }
 
-      if (parsedData.initial_atendee) {
-        setFormData(prevData => ({
-          ...prevData,
-          initial_atendee: parsedData.initial_atendee,
-        }));
+      const formFields: (keyof FormData)[] = [
+        'initial_atendee',
+        'intern',
+        'bachelor',
+        'partner_lawyer',
+        'responsible_lawyer',
+        'physical_lawyer',
+        'physical_lawyer_type',
+      ];
+
+      formFields.forEach(field => {
+        if (parsedData[field]) {
+          result.formData[field] = String(parsedData[field]);
+        }
+      });
+
+      return result;
+    },
+    [],
+  );
+
+  const loadFromWorkForm = useCallback(
+    (initialData: { offices: any[]; lawyers: any[] }) => {
+      const source = workForm.data?.attributes || workForm.draftWork?.attributes;
+      if (!source) return null;
+
+      const result: any = { formData: {}, officesSelected: [], selectedLawyers: [] };
+
+      if (source.offices) {
+        result.officesSelected = initialData.offices;
+
+        setIsLegalPerson(true);
       }
 
-      if (parsedData.intern) {
-        setFormData(prevData => ({
-          ...prevData,
-          intern: parsedData.intern,
-        }));
+      if (source.profile_admins) {
+        result.selectedLawyers = source.profile_admins.map((admin: any) => admin.id);
       }
 
-      if (parsedData.bachelor) {
-        setFormData(prevData => ({
-          ...prevData,
-          bachelor: parsedData.bachelor,
-        }));
-      }
+      const formFields: (keyof FormData)[] = [
+        'initial_atendee',
+        'intern',
+        'bachelor',
+        'partner_lawyer',
+        'responsible_lawyer',
+        'physical_lawyer',
+        'physical_lawyer_type',
+      ];
 
-      if (parsedData.partner_lawyer) {
-        setFormData(prevData => ({
-          ...prevData,
-          partner_lawyer: parsedData.partner_lawyer,
-        }));
-      }
+      formFields.forEach(field => {
+        if (source[field]) {
+          result.formData[field] = String(source[field]);
+        }
+      });
 
-      if (parsedData.responsible_lawyer) {
-        setFormData(prevData => ({
-          ...prevData,
-          responsible_lawyer: parsedData.responsible_lawyer,
-        }));
+      return result;
+    },
+    [workForm],
+  );
+
+  useEffect(() => {
+    const initializeData = async () => {
+      setLoading(true);
+
+      try {
+        const initialData = await loadInitialData();
+        setOffices(initialData.offices);
+        setAllLawyers(initialData.lawyers);
+
+        let loadedData = await loadFromLocalStorage(initialData);
+
+        if (!loadedData) {
+          loadedData = loadFromWorkForm(initialData);
+        }
+
+        if (loadedData) {
+          if (loadedData.officesSelected.length > 0) {
+            setOfficesSelected(loadedData.officesSelected);
+            setIsLegalPerson(true);
+          }
+
+          if (loadedData.selectedLawyers.length > 0) {
+            setSelectedLawyers(loadedData.selectedLawyers);
+          }
+
+          setFormData(prev => ({
+            ...prev,
+            ...loadedData.formData,
+          }));
+        }
+      } catch (error) {
+        handleFormError(error, 'Erro ao inicializar dados.');
+      } finally {
+        setLoading(false);
       }
+    };
+
+    initializeData();
+  }, [loadInitialData, loadFromLocalStorage, loadFromWorkForm, router.pathname]);
+
+  useEffect(() => {
+    if (isLegalPerson) {
+      setSelectedLawyers([]);
+    } else {
+      setOfficesSelected([]);
     }
-    setLoading(false);
-  };
+    setLegalPersonError(false);
+  }, [isLegalPerson]);
 
   useImperativeHandle(ref, () => ({
     handleSubmitForm,
   }));
 
-  const getOffices = async () => {
-    setLoading(true);
-    try {
-      const response = await getOfficesWithLaws();
-      setOffices(response.data);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getAdmins = async () => {
-    setLoading(true);
-    try {
-      const response: {
-        data: IProfileAdmin[];
-      } = await getAllProfileAdmins('');
-      SetAllLawyers(response.data);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (allLawyers) {
-      const trainees = allLawyers.filter((lawyer: any) => lawyer.attributes.role == 'trainee');
-      SetTrainee(trainees);
-
-      const paralegals = allLawyers.filter((lawyer: any) => lawyer.attributes.role == 'paralegal');
-      SetParalegal(paralegals);
-
-      const lawyerlList = allLawyers.filter((lawyer: any) => lawyer.attributes.role == 'lawyer');
-      SetLawyers(lawyerlList);
-    }
-  }, [allLawyers]);
-
-  useEffect(() => {
-    getOffices();
-    getAdmins();
-  }, []);
-
-  const handleSelectChange = (field: string, value: any) => {
-    setFormData(prevData => ({
-      ...prevData,
-      [field as string]: value ? value.id : '',
-    }));
-  };
-
-  useEffect(() => {
-    if (isLegalPerson && officesSelected.length > 0) {
-      setLegalPersonError(false);
-    }
-
-    if (!isLegalPerson) {
-      setOfficesSelected([]);
-      setSelectedLawyers([]);
-    }
-
-    if (isLegalPerson) {
-      setSelectedLawyers([]);
-    }
-  }, [isLegalPerson]);
-
-  useEffect(() => {
-    const handleDraftWork = () => {
-      const draftWork = workForm.draftWork;
-
-      if (draftWork.id) {
-        if (draftWork.attributes) {
-          const attributes = draftWork.attributes;
-
-          const office_ids = attributes.offices.map((item: any) => item.id);
-
-          const officesSelected = offices.filter((office: any) => office_ids == office.id);
-
-          setOfficesSelected(officesSelected);
-
-          const lawyers = attributes.profile_admins.map((item: any) => item.id);
-
-          setSelectedLawyers(lawyers);
-        }
-      }
-    };
-
-    const handleDataForm = () => {
-      const attributes = workForm.data.attributes;
-
-      if (attributes) {
-        const office_ids = attributes.offices.map((item: any) => item.id);
-
-        const officesSelected = offices.filter((office: any) => office_ids == office.id.toString());
-
-        if (officesSelected.length > 0) {
-          setIsLegalPerson(true);
-        } else {
-          setIsLegalPerson(false);
-        }
-
-        setOfficesSelected(officesSelected);
-
-        const lawyers = attributes.profile_admins.map((item: any) => item.id);
-
-        setSelectedLawyers(lawyers);
-
-        const physical_lawyer = attributes.physical_lawyer;
-        const initial_atendee = attributes.initial_atendee;
-        const intern = attributes.intern;
-        const bachelor = attributes.bachelor;
-        const partner_lawyer = attributes.partner_lawyer;
-        const responsible_lawyer = attributes.responsible_lawyer;
-
-        setFormData(prevData => ({
-          ...prevData,
-          physical_lawyer: physical_lawyer ? physical_lawyer : '',
-          initial_atendee: initial_atendee ? initial_atendee : '',
-          intern: intern ? intern : '',
-          bachelor: bachelor ? bachelor : '',
-          partner_lawyer: partner_lawyer ? partner_lawyer : '',
-          responsible_lawyer: responsible_lawyer ? responsible_lawyer : '',
-        }));
-      }
-    };
-
-    if (workForm.data) {
-      handleDataForm();
-    }
-
-    if (workForm.draftWork && workForm.draftWork.id) {
-      handleDraftWork();
-    }
-  }, [workForm, offices]);
-
-  useEffect(() => {
-    verifyDataLocalStorage();
-  }, [allLawyers]);
-
-  const customTitleWithInfo = (title: string, tooltipText: string) => (
-    <Flex style={{ alignItems: 'center' }}>
-      <Typography display={'flex'} alignItems={'center'} variant="h6" style={{ height: '40px' }}>
-        {title}
-      </Typography>
-      <CustomTooltip title={tooltipText} placement="right">
-        <span style={{ display: 'flex' }}>
-          <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
-        </span>
-      </CustomTooltip>
-    </Flex>
-  );
-
-  const SubTable = (data: any) => {
-    const { row } = data;
-    const lawyers = row.attributes.lawyers;
-
-    const handleSelectedLawyers = (lawyer: any) => {
-      const lawyerId = lawyer.id;
-      let updatedSelectedLawyers = [...selectedLawyers];
-
-      if (updatedSelectedLawyers.includes(lawyerId)) {
-        updatedSelectedLawyers = updatedSelectedLawyers.filter(id => id !== lawyerId);
-      } else {
-        updatedSelectedLawyers.push(lawyerId);
-      }
-
-      setSelectedLawyers(updatedSelectedLawyers);
-    };
-
-    return (
-      <>
-        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
-          <TableCell>
-            <IconButton
-              aria-label="expand row"
-              size="small"
-              onClick={() => setOpenSubTable(!openSubTable)}
-            >
-              {openSubTable ? <MdOutlineArrowDropUp /> : <MdOutlineArrowDropDown />}
-            </IconButton>
-          </TableCell>
-          <TableCell component="th" scope="row">
-            {row.attributes.name}
-          </TableCell>
-          <TableCell />
-          <TableCell />
-          <TableCell />
-        </TableRow>
-
-        <TableRow>
-          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8}>
-            <Collapse in={openSubTable} timeout="auto" unmountOnExit>
-              <Box sx={{ margin: 1 }}>
-                <Table size="small" aria-label="purchases">
-                  <TableBody>
-                    {lawyers && lawyers.length > 0
-                      ? lawyers.map((lawyer: any) => (
-                          <TableRow key={lawyer.name}>
-                            <TableCell padding="checkbox">
-                              <Box display={'flex'}>
-                                <Checkbox
-                                  color="primary"
-                                  checked={selectedLawyers.includes(lawyer.id)}
-                                  onChange={() => handleSelectedLawyers(lawyer)}
-                                  inputProps={{
-                                    'aria-label': 'select all desserts',
-                                  }}
-                                />
-                              </Box>
-                            </TableCell>
-                            <TableCell component="th" scope="row">
-                              {lawyer.name}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      : []}
-                  </TableBody>
-                </Table>
-              </Box>
-            </Collapse>
-          </TableCell>
-        </TableRow>
-      </>
-    );
-  };
-
   return (
     <>
-      {openSnackbar && (
-        <Notification
-          open={openSnackbar}
-          message={message}
-          severity={type}
-          onClose={() => setOpenSnackbar(false)}
-        />
-      )}
+      <Notification
+        open={openSnackbar}
+        message={message}
+        severity={type}
+        onClose={() => setOpenSnackbar(false)}
+      />
 
-      <Container>
+      <Container loading={loading}>
+        {loading && (
+          <LoadingOverlay>
+            <CircularProgress size={30} style={{ color: '#01013D' }} />
+          </LoadingOverlay>
+        )}
         <Box mr={'16px'}>
-          <Box>
-            <Typography display={'flex'} alignItems={'center'} variant="h6" marginTop={'16px'}>
-              {'Atuar como:'}
-            </Typography>
-
-            <Flex
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '20px',
-                justifyContent: 'start',
-              }}
-            >
-              <Flex
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <Radio
-                  checked={isLegalPerson}
-                  onChange={() => setIsLegalPerson(true)}
-                  inputProps={{ 'aria-label': 'primary checkbox' }}
-                  size="small"
-                  style={{
-                    width: '20px',
-                    marginRight: '8px',
-                  }}
-                />
-                <Typography
-                  variant="subtitle1"
-                  onClick={() => setIsLegalPerson(true)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {'Pessoa Jurídica'}
-                </Typography>
-              </Flex>
-              <Flex
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <Radio
-                  checked={!isLegalPerson}
-                  onChange={() => setIsLegalPerson(false)}
-                  inputProps={{ 'aria-label': 'primary checkbox' }}
-                  size="small"
-                  style={{
-                    width: '20px',
-                    marginRight: '8px',
-                  }}
-                />
-                <Typography
-                  variant="subtitle1"
-                  onClick={() => setIsLegalPerson(false)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {'Pessoa Física'}
-                </Typography>
-              </Flex>
-            </Flex>
-          </Box>
+          <LawyerRadioGroup isLegalPerson={isLegalPerson} setIsLegalPerson={setIsLegalPerson} />
 
           {isLegalPerson ? (
-            <Flex className="inputContainer">
-              <Flex
-                style={{
-                  alignItems: 'center',
-                }}
-              >
-                <Typography
-                  display={'flex'}
-                  alignItems={'center'}
-                  variant="h6"
-                  style={{ height: '40px' }}
-                >
-                  {'Escritório'}
-                </Typography>
-                <CustomTooltip
-                  title="Advogado ou Advogados atuando dentro de uma pessoa jurídica."
-                  placement="right"
-                >
-                  <span
-                    style={{
-                      display: 'flex',
-                    }}
-                  >
-                    <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
-                  </span>
-                </CustomTooltip>
-              </Flex>
-
-              <Autocomplete
-                multiple
-                limitTags={1}
-                id="multiple-limit-tags"
-                options={offices}
-                getOptionLabel={option => option.attributes.name}
-                renderInput={params => (
-                  <TextField
-                    placeholder="Selecione um Escritório"
-                    {...params}
-                    size="small"
-                    error={legalPersonError}
-                  />
-                )}
-                sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
-                noOptionsText="Não Encontrado"
-                onChange={(event, value) => {
-                  handleSelectedOffice(value);
-                }}
-                value={officesSelected}
-              />
-              <Typography variant="caption" sx={{ marginTop: '4px' }} gutterBottom>
-                {'* Indique ao menos um advogado para cada escritório selecionado.'}
-              </Typography>
-            </Flex>
+            <OfficeSelection
+              offices={offices}
+              officesSelected={officesSelected}
+              handleSelectedOffice={handleSelectedOffice}
+              legalPersonError={legalPersonError}
+            />
           ) : (
-            <Flex className="inputContainer">
-              {customTitleWithInfo(
-                'Advogado Pessoa Física',
-                'Selecione quando a atuação for pela pessoa física.',
-              )}
-
-              <Autocomplete
-                limitTags={1}
-                id="multiple-limit-tags"
-                value={
-                  selectedLawyers.length > 0
-                    ? allLawyers.find(
-                        (lawyer: IProfileAdminAttributes) =>
-                          lawyer.id.toString() == selectedLawyers[0].toString(),
-                      )
-                    : ''
-                }
-                options={allLawyers}
-                getOptionLabel={(option: any) =>
-                  option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
-                }
-                onChange={(event, value) => {
-                  setSelectedLawyers([value.id]);
-                }}
-                renderInput={params => (
-                  <TextField
-                    {...params}
-                    placeholder={'Informe o Advogado'}
-                    size="small"
-                    error={legalPersonError}
-                  />
-                )}
-                noOptionsText={`Não Encontrado`}
-              />
-            </Flex>
+            <LawyerSelect
+              title="Advogado Pessoa Física"
+              tooltip="Selecione quando a atuação for pela pessoa física."
+              value={selectedLawyers[0] || null}
+              options={allLawyers}
+              onChange={value => setSelectedLawyers(value ? [value.id] : [])}
+              error={legalPersonError}
+            />
           )}
 
-          <Flex className="inputContainer">
-            {customTitleWithInfo(
-              'Advogado Responsável',
-              'Advogado responsável internamente pelas movimentações, monitoramento e andamento do caso e também para assumir a responsabilidade civil do processo caso for o caso, assinando por toda a sociedade ou individualmente.',
-            )}
+          <LawyerSelect
+            title="Advogado Responsável"
+            tooltip="Advogado responsável internamente pelas movimentações..."
+            value={formData.responsible_lawyer}
+            options={lawyers}
+            onChange={value => handleSelectChange('responsible_lawyer', value)}
+            placeholder="Selecione um Advogado Responsável"
+          />
 
-            <Autocomplete
-              limitTags={1}
-              id="multiple-limit-tags"
-              value={
-                formData.responsible_lawyer
-                  ? lawyers.find(
-                      (lawyer: IProfileAdminAttributes) =>
-                        lawyer.id.toString() == formData.responsible_lawyer,
-                    )
-                  : ''
-              }
+          <LawyerSelect
+            title="Atendimento Inicial"
+            tooltip="Responsável pelo primeiro atendimento do cliente."
+            value={formData.initial_atendee}
+            options={allLawyers}
+            onChange={value => handleSelectChange('initial_atendee', value)}
+            placeholder="Informe o Responsável"
+          />
+
+          <LawyerSelect
+            title="Estagiários da Procuração"
+            tooltip="Em alguns serviços administrativos, é possível adicionar os estagiários para executar trabalhos mais simples."
+            value={formData.intern}
+            options={trainees}
+            onChange={value => handleSelectChange('intern', value)}
+            placeholder="Selecione um Estagiário"
+          />
+
+          <LawyerSelect
+            title="Bacharéis/Paralegais da Procuração"
+            tooltip="Em alguns serviços administrativos, é possível adicionar os bacharéis/paralegais para executar trabalhos mais simples."
+            value={formData.bachelor}
+            options={paralegals}
+            onChange={value => handleSelectChange('bachelor', value)}
+            placeholder="Selecione um Paralegal"
+          />
+
+          {formData.partner_lawyer && (
+            <LawyerSelect
+              title="Sócio Responsável"
+              tooltip="Sócio responsável pelo caso."
+              value={formData.partner_lawyer}
               options={lawyers}
-              getOptionLabel={(option: any) =>
-                option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
-              }
-              onChange={(event, value) => handleSelectChange('responsible_lawyer', value)}
-              renderInput={params => (
-                <TextField {...params} placeholder={'Informe o Responsável'} size="small" />
-              )}
-              noOptionsText={`Não Encontrado`}
+              onChange={value => handleSelectChange('partner_lawyer', value)}
             />
-          </Flex>
+          )}
 
-          <Flex className="inputContainer">
-            {customTitleWithInfo(
-              'Atendimento Inicial',
-              'Responsável pelo primeiro atendimento do cliente.',
-            )}
-
-            <Autocomplete
-              limitTags={1}
-              id="multiple-limit-tags"
-              value={
-                formData.initial_atendee
-                  ? allLawyers.find(
-                      (lawyer: IProfileAdminAttributes) =>
-                        lawyer.id.toString() == formData.initial_atendee,
-                    )
-                  : ''
-              }
-              options={allLawyers}
-              getOptionLabel={(option: any) =>
-                option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
-              }
-              onChange={(event, value) => handleSelectChange('initial_atendee', value)}
-              renderInput={params => (
-                <TextField {...params} placeholder={'Informe o Responsavel'} size="small" />
-              )}
-              noOptionsText={`Não Encontrado`}
+          {formData.physical_lawyer && (
+            <LawyerSelect
+              title="Advogado Físico"
+              tooltip="Advogado que irá assinar fisicamente os documentos."
+              value={formData.physical_lawyer}
+              options={lawyers}
+              onChange={value => handleSelectChange('physical_lawyer', value)}
             />
-          </Flex>
-
-          <Flex className="inputContainer">
-            {customTitleWithInfo(
-              'Estagiários da Procuração',
-              'Em alguns serviços administrativos, é possível adicionar os estagiários para executar trabalhos mais simples.',
-            )}
-
-            <Autocomplete
-              limitTags={1}
-              id="multiple-limit-tags"
-              value={
-                formData.intern
-                  ? allLawyers.find(
-                      (lawyer: IProfileAdminAttributes) => lawyer.id.toString() == formData.intern,
-                    )
-                  : ''
-              }
-              options={trainee}
-              getOptionLabel={(option: any) =>
-                option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
-              }
-              onChange={(event, value) => handleSelectChange('intern', value)}
-              renderInput={params => (
-                <TextField {...params} placeholder={'Selecione um Estagiário'} size="small" />
-              )}
-              noOptionsText={`Não Encontrado`}
-            />
-          </Flex>
-
-          <Flex className="inputContainer">
-            {customTitleWithInfo(
-              'Bacharéis/Paralegais da Procuração',
-              'Em alguns serviços administrativos, é possível adicionar os bacharéis/paralegais para executar trabalhos mais simples.',
-            )}
-
-            <Autocomplete
-              limitTags={1}
-              id="multiple-limit-tags"
-              value={
-                formData.bachelor
-                  ? allLawyers.find((lawyer: any) => lawyer.id == formData.bachelor)
-                  : ''
-              }
-              options={paralegal}
-              getOptionLabel={(option: any) =>
-                option && option.attributes ? `${option.id} - ${option.attributes.name}` : ''
-              }
-              onChange={(event, value) => handleSelectChange('bachelor', value)}
-              renderInput={params => (
-                <TextField {...params} placeholder={'Selecione um Paralegal'} size="small" />
-              )}
-              noOptionsText={`Não Encontrado`}
-            />
-          </Flex>
+          )}
         </Box>
 
-        {isLegalPerson && (
+        {isLegalPerson && officesSelected.length > 0 && (
           <Box mt={'16px'}>
             <Typography
               display={'flex'}
@@ -785,25 +460,26 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
                     <TableRow>
                       <TableCell />
                       <TableCell>
-                        <Typography
-                          display={'flex'}
-                          alignItems={'center'}
-                          variant="subtitle1"
-                          style={{ height: '30px', position: 'relative' }}
-                        >
+                        <Typography variant="subtitle1" style={{ height: '30px' }}>
                           {officesSelected.length > 0
                             ? 'Informe os Advogados'
                             : 'Nenhum Escritório selecionado'}
                         </Typography>
                       </TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
+                      <TableCell colSpan={3} />
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {officesSelected.length > 0 &&
-                      officesSelected.map((data: any) => <SubTable key={data.id} row={data} />)}
+                    {officesSelected.map(data => (
+                      <LawyerSubTable
+                        key={data.id}
+                        row={data}
+                        openSubTable={openSubTable}
+                        setOpenSubTable={setOpenSubTable}
+                        selectedLawyers={selectedLawyers}
+                        setSelectedLawyers={setSelectedLawyers}
+                      />
+                    ))}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -813,6 +489,6 @@ const WorkStepFour: ForwardRefRenderFunction<IRefWorkStepFourProps, IStepFourPro
       </Container>
     </>
   );
-};
+});
 
-export default forwardRef(WorkStepFour);
+export default WorkStepFour;

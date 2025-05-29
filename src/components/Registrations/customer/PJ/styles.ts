@@ -1,7 +1,13 @@
 import { colors } from '@/styles/globals';
+import { ReactNode } from 'react';
 import styled from 'styled-components';
 
-export const Container = styled.div<any>`
+interface ContainerProps {
+  loading?: boolean;
+  children?: ReactNode;
+}
+
+export const Container = styled.div<ContainerProps>`
   width: 100%;
   min-height: 348px;
   margin-top: 16px;

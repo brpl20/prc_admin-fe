@@ -1,44 +1,27 @@
-import React, {
+import {
   useState,
   useContext,
   forwardRef,
   ForwardRefRenderFunction,
   useImperativeHandle,
   useEffect,
-  Dispatch,
-  SetStateAction,
 } from 'react';
 
-import { colors } from '@/styles/globals';
 import { Notification } from '@/components';
-import { Container, Input, OptionsArea } from './styles';
+import { Container } from './styles';
 
-import { animateScroll as scroll } from 'react-scroll';
-
-import CustomTooltip from '@/components/Tooltip';
-import { MdOutlineInfo } from 'react-icons/md';
 import { WorkContext } from '@/contexts/WorkContext';
 
-import { FormControlLabel, Typography, Radio, Select, MenuItem } from '@mui/material';
-import { moneyMask, percentMask } from '@/utils/masks';
+import { CircularProgress } from '@mui/material';
 import { useRouter } from 'next/router';
 import { z } from 'zod';
-import useLoadingCounter from '@/utils/useLoadingCounter';
-
-const instalmentOptions = [
-  '1x',
-  '2x',
-  '3x',
-  '4x',
-  '5x',
-  '6x',
-  '7x',
-  '8x',
-  '9x',
-  '10x',
-  '11x',
-  '12x',
-];
+import { HonoraryTypeSelection } from './HonoraryTypeSelection';
+import { FixedHonoraryInput } from './FixedHonoraryInput';
+import { ParcelingSection } from './ParcelingSection';
+import { PercentHonoraryInput } from './PercentHonoraryInput';
+import { SocialSecurityInput } from './SocialSecurityInput';
+import { ParcelingInput } from './ParcelingInput';
+import { LoadingOverlay } from '../one/styles';
 
 export interface IRefWorkStepTwoProps {
   handleSubmitForm: () => void;
@@ -46,7 +29,6 @@ export interface IRefWorkStepTwoProps {
 
 interface IStepTwoProps {
   nextStep: () => void;
-  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 const stepTwoSchema = z.object({
@@ -54,205 +36,172 @@ const stepTwoSchema = z.object({
 });
 
 const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps> = (
-  { nextStep, setFormLoading },
+  { nextStep },
   ref,
 ) => {
-  const [isVisibleOptionsArea, setIsVisibleOptionsArea] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { workForm, setWorkForm, updateWorkForm, setUdateWorkForm } = useContext(WorkContext);
-  const [errors, setErrors] = useState({} as any);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
 
   const [honoraryType, setHonoraryType] = useState('');
-  const [valueOfFixed, setValueOfFixed] = useState<string>();
+  const [valueOfFixed, setValueOfFixed] = useState('');
   const [workPrev, setWorkPrev] = useState<number | null>(null);
-  const [valueOfPercent, setValueOfPercent] = useState<string>();
-
+  const [valueOfPercent, setValueOfPercent] = useState('');
   const [parcelling, setParcelling] = useState(false);
   const [numberOfInstallments, setNumberOfInstallments] = useState('');
+
   const route = useRouter();
-
-  const { setLoading } = useLoadingCounter(setFormLoading);
-
-  const handleCategorySelection = (value: string) => {
-    const newValue = honoraryType != value ? value : '';
-    setHonoraryType(newValue);
-
-    if (newValue === 'work') {
-      setValueOfPercent('');
-      setIsVisibleOptionsArea(true);
-    }
-
-    if (newValue === 'success') {
-      setValueOfFixed('');
-      setParcelling(false);
-      setNumberOfInstallments('');
-      setIsVisibleOptionsArea(true);
-    }
-
-    newValue.search('bonus') < 0 ? setIsVisibleOptionsArea(true) : setIsVisibleOptionsArea(false);
-  };
+  const isSocialSecurity = workForm.subject === 'social_security';
+  const showFixedInput = ['work', 'both'].includes(honoraryType);
+  const showPercentInput = ['success', 'both'].includes(honoraryType);
+  const showParceling = ['work', 'both'].includes(honoraryType) && parcelling;
 
   const handleSubmitForm = () => {
     try {
-      stepTwoSchema.parse({
-        honoraryType: honoraryType,
-      });
-
-      if (honoraryType === 'success' && valueOfPercent === '') {
-        throw new Error('Preencha todos os campos obrigatórios.');
-      }
-
-      if (honoraryType === 'work' && !workPrev && workForm.subject === 'social_security') {
-        throw new Error('Preencha todos os campos obrigatórios.');
-      }
-
-      if (honoraryType === 'work' && valueOfFixed === '') {
-        throw new Error('Preencha todos os campos obrigatórios.');
-      }
-
-      if (
-        (honoraryType === 'both' && valueOfFixed === '') ||
-        (honoraryType === 'both' && valueOfPercent === '') ||
-        (honoraryType === 'both' && !workPrev && workForm.subject === 'social_security')
-      ) {
-        throw new Error('Preencha todos os campos obrigatórios.');
-      }
-
-      if (parcelling && numberOfInstallments === '') {
-        throw new Error('Preencha todos os campos obrigatórios.');
-      }
-
-      let honorary_attributes = {} as any;
-
-      if (route.asPath.includes('alterar')) {
-        honorary_attributes = {
-          id:
-            workForm.data.attributes.honorary && workForm.data.attributes.honorary.id
-              ? workForm.data.attributes.honorary.id
-              : '',
-          fixed_honorary_value: valueOfFixed?.replace('R$ ', '').replace('.', '').replace(',', '.'),
-          percent_honorary_value: valueOfPercent?.toString(),
-          work_prev: workPrev,
-          parcelling: parcelling,
-          parcelling_value: numberOfInstallments.replace('x', ''),
-          honorary_type: honoraryType,
-        };
-      }
-
-      if (!route.asPath.includes('alterar')) {
-        honorary_attributes = {
-          fixed_honorary_value: valueOfFixed?.replace('R$ ', '').replace('.', '').replace(',', '.'),
-          percent_honorary_value: valueOfPercent?.toString(),
-          parcelling: parcelling,
-          work_prev: workPrev,
-          parcelling_value: numberOfInstallments.replace('x', ''),
-          honorary_type: honoraryType,
-        };
-      }
-
-      if (route.pathname == '/alterar') {
-        const dataAux = {
-          ...updateWorkForm,
-          honorary_attributes: honorary_attributes,
-        };
-
-        setUdateWorkForm(dataAux);
-        saveDataLocalStorage(dataAux);
-      }
-
-      const data = {
-        ...workForm,
-        honorary_attributes: honorary_attributes,
-      } as any;
-
-      if (route.pathname !== '/alterar') {
-        saveDataLocalStorage(data);
-      }
-
-      setWorkForm(data);
+      validateForm();
+      const honoraryAttributes = buildHonoraryAttributes();
+      updateWorkData(honoraryAttributes);
       nextStep();
     } catch (error: any) {
       handleFormError(error);
     }
-
-    scroll.scrollToTop({
-      duration: 500,
-      smooth: 'easeInOutQuart',
-    });
   };
-  const handleFormError = (error: any) => {
-    const newErrors = error?.formErrors?.fieldErrors ?? {};
-    const errorObject: { [key: string]: string } = {};
-    setMessage('Preencha todos os campos obrigatórios.');
-    setType('error');
-    setOpenSnackbar(true);
 
-    for (const field in newErrors) {
-      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
-        errorObject[field] = newErrors[field][0] as string;
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+
+      const localStorageData = localStorage.getItem('WORK/Two');
+      if (localStorageData) {
+        const parsedData = JSON.parse(localStorageData);
+        applyData(parsedData);
+        return;
       }
+
+      if (workForm.data) {
+        handleDataForm();
+      } else if (workForm.draftWork && workForm.draftWork.id) {
+        handleDraftWork();
+      }
+    } finally {
+      setLoading(false);
     }
-    setErrors(errorObject);
   };
 
-  const verifyDataLocalStorage = async () => {
-    setLoading(true);
-    const data = localStorage.getItem('WORK/Two');
+  const applyData = (data: any) => {
+    if (data.honorary_attributes) {
+      const honorary = data.honorary_attributes;
+      setHonoraryType(honorary.honorary_type);
 
-    if (data) {
-      const parsedData = JSON.parse(data);
-      setHonoraryType(parsedData.honorary_attributes.honorary_type);
-      setValueOfFixed(parsedData.honorary_attributes.fixed_honorary_value);
-      setValueOfPercent(parsedData.honorary_attributes.percent_honorary_value);
-      setWorkPrev(parsedData.honorary_attributes.work_prev);
-
-      if (
-        parsedData.honorary_attributes.parcelling_value &&
-        Number(parsedData.honorary_attributes.parcelling_value) > 0
-      ) {
-        setParcelling(true);
-      } else {
-        setParcelling(false);
-        setNumberOfInstallments('');
-      }
-      setNumberOfInstallments(
-        parsedData.honorary_attributes.parcelling_value
-          ? `${parsedData.honorary_attributes.parcelling_value}x`
-          : '',
-      );
-
-      if (parsedData.honorary_attributes.parcelling) {
-        setParcelling(true);
-      }
-
-      if (parsedData.honorary_attributes.honorary_type.search('work') >= 0) {
-        setIsVisibleOptionsArea(true);
-      }
-
-      if (parsedData.honorary_attributes.honorary_type.search('success') >= 0) {
-        setIsVisibleOptionsArea(true);
-      }
-
-      if (parsedData.honorary_attributes.honorary_type.search('both') >= 0) {
-        setIsVisibleOptionsArea(true);
-      }
-
-      if (parsedData.honorary_attributes.honorary_type.search('bonus') >= 0) {
-        setIsVisibleOptionsArea(false);
-      }
-
-      if (parsedData.honorary_attributes.fixed_honorary_value) {
+      if (honorary.fixed_honorary_value) {
         setValueOfFixed(
-          `R$ ${parseFloat(parsedData.honorary_attributes.fixed_honorary_value)
+          `R$ ${parseFloat(honorary.fixed_honorary_value)
             .toFixed(2)
             .replace('.', ',')
             .replace(/\d(?=(\d{3})+,)/g, '$&.')}`,
         );
       }
+
+      setValueOfPercent(honorary.percent_honorary_value || '');
+      setWorkPrev(honorary.work_prev || null);
+      setParcelling(honorary.parcelling || false);
+
+      if (honorary.parcelling_value) {
+        setNumberOfInstallments(`${honorary.parcelling_value}x`);
+      }
     }
-    setLoading(false);
+  };
+
+  const handleDataForm = () => {
+    const attributes = workForm.data.attributes;
+    if (attributes.honorary) {
+      applyData({ honorary_attributes: attributes.honorary });
+    }
+  };
+
+  const handleDraftWork = () => {
+    const draftWork = workForm.draftWork;
+    if (draftWork.attributes?.honorary) {
+      applyData({ honorary_attributes: draftWork.attributes.honorary });
+    }
+  };
+
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const validateForm = () => {
+    stepTwoSchema.parse({ honoraryType });
+
+    if (honoraryType === 'success' && !valueOfPercent) {
+      throw new Error('Preencha o valor percentual');
+    }
+
+    if (honoraryType === 'work' && !valueOfFixed) {
+      throw new Error('Preencha o valor fixo');
+    }
+
+    if (honoraryType === 'both' && (!valueOfFixed || !valueOfPercent)) {
+      throw new Error('Preencha ambos os valores');
+    }
+
+    if (isSocialSecurity && ['work', 'both'].includes(honoraryType) && workPrev === null) {
+      throw new Error('Preencha o valor previdenciário');
+    }
+
+    if (parcelling && !numberOfInstallments) {
+      throw new Error('Selecione o número de parcelas');
+    }
+  };
+
+  const buildHonoraryAttributes = () => {
+    const baseAttributes = {
+      honorary_type: honoraryType,
+      fixed_honorary_value: valueOfFixed ? parseFloat(valueOfFixed.replace(/\D/g, '')) / 100 : null,
+      percent_honorary_value: valueOfPercent || null,
+      work_prev: workPrev,
+      parcelling,
+      parcelling_value: numberOfInstallments
+        ? parseInt(numberOfInstallments.replace('x', ''))
+        : null,
+    };
+
+    if (route.asPath.includes('alterar') && workForm.data?.attributes?.honorary?.id) {
+      return { ...baseAttributes, id: workForm.data.attributes.honorary.id };
+    }
+
+    return baseAttributes;
+  };
+
+  const updateWorkData = (honoraryAttributes: any) => {
+    const data = { honorary_attributes: honoraryAttributes };
+
+    if (route.pathname === '/alterar') {
+      const dataAux = { ...updateWorkForm, ...data };
+      setUdateWorkForm(dataAux);
+      saveDataLocalStorage(dataAux);
+    } else {
+      const mergedData = { ...workForm, ...data };
+      saveDataLocalStorage(mergedData);
+      setWorkForm(mergedData);
+    }
+  };
+
+  const handleFormError = (error: any) => {
+    const newErrors = error?.formErrors?.fieldErrors ?? {};
+    const errorObject: Record<string, string> = {};
+
+    setMessage(error.message || 'Preencha todos os campos obrigatórios.');
+    setType('error');
+    setOpenSnackbar(true);
+
+    for (const field in newErrors) {
+      errorObject[field] = newErrors[field][0];
+    }
+    setErrors(errorObject);
   };
 
   const saveDataLocalStorage = (data: any) => {
@@ -264,616 +213,89 @@ const WorkStepTwo: ForwardRefRenderFunction<IRefWorkStepTwoProps, IStepTwoProps>
   }));
 
   useEffect(() => {
-    const handleDraftWork = () => {
-      const draftWork = workForm.draftWork;
-
-      if (draftWork.id) {
-        if (draftWork.attributes) {
-          const attributes = draftWork.attributes;
-          if (attributes.honorary) {
-            if (attributes.honorary.honorary_type) {
-              setHonoraryType(attributes.honorary.honorary_type);
-            }
-
-            if (attributes.honorary.fixed_honorary_value) {
-              setValueOfFixed(
-                `R$ ${parseFloat(attributes.honorary.fixed_honorary_value)
-                  .toFixed(2)
-                  .replace('.', ',')
-                  .replace(/\d(?=(\d{3})+,)/g, '$&.')}`,
-              );
-            }
-
-            if (attributes.honorary.percent_honorary_value) {
-              setValueOfPercent(attributes.honorary.percent_honorary_value);
-            }
-
-            if (attributes.honorary.parcelling) {
-              setParcelling(attributes.honorary.parcelling);
-            }
-
-            if (attributes.honorary.work_prev) {
-              setWorkPrev(attributes.honorary.work_prev);
-            }
-
-            if (attributes.honorary.parcelling_value) {
-              setNumberOfInstallments(`${attributes.honorary.parcelling_value}x`);
-            }
-
-            if (attributes.honorary.parcelling === true) {
-              setParcelling(true);
-            }
-
-            if (attributes.honorary.honorary_type.search('work') >= 0) {
-              setIsVisibleOptionsArea(true);
-            }
-
-            if (attributes.honorary.honorary_type.search('success') >= 0) {
-              setIsVisibleOptionsArea(true);
-            }
-
-            if (attributes.honorary.honorary_type.search('both') >= 0) {
-              setIsVisibleOptionsArea(true);
-            }
-
-            if (attributes.honorary.honorary_type.search('bonus') >= 0) {
-              setIsVisibleOptionsArea(false);
-            }
-          }
-        }
-      }
-    };
-
-    const handleDataForm = () => {
-      const attributes = workForm.data.attributes;
-
-      if (attributes.honorary) {
-        setHonoraryType(attributes.honorary.honorary_type);
-        setValueOfFixed(
-          `R$ ${parseFloat(attributes.honorary.fixed_honorary_value)
-            .toFixed(2)
-            .replace('.', ',')
-            .replace(/\d(?=(\d{3})+,)/g, '$&.')}`,
-        );
-        setValueOfPercent(attributes.honorary.percent_honorary_value);
-        setParcelling(attributes.honorary.parcelling);
-        setWorkPrev(attributes.honorary.work_prev);
-        setNumberOfInstallments(
-          attributes.honorary.parcelling_value ? `${attributes.honorary.parcelling_value}x` : '',
-        );
-
-        if (attributes.honorary.parcelling === true) {
-          setParcelling(true);
-        }
-
-        if (attributes.honorary.honorary_type.search('work') >= 0) {
-          setIsVisibleOptionsArea(true);
-        }
-
-        if (attributes.honorary.honorary_type.search('success') >= 0) {
-          setIsVisibleOptionsArea(true);
-        }
-
-        if (attributes.honorary.honorary_type.search('both') >= 0) {
-          setIsVisibleOptionsArea(true);
-        }
-
-        if (attributes.honorary.honorary_type.search('bonus') >= 0) {
-          setIsVisibleOptionsArea(false);
-        }
-      }
-    };
-
-    if (workForm.data) {
-      handleDataForm();
+    if (honoraryType === 'success') {
+      setValueOfFixed('');
+      setWorkPrev(null);
+    } else if (honoraryType === 'work') {
+      setValueOfPercent('');
+      setWorkPrev(null);
+    } else if (honoraryType === 'both') {
+      setWorkPrev(null);
     }
-
-    if (workForm.draftWork && workForm.draftWork.id) {
-      handleDraftWork();
-    }
-  }, [workForm]);
-
-  useEffect(() => {
-    verifyDataLocalStorage();
-  }, []);
+  }, [honoraryType]);
 
   return (
     <>
-      {openSnackbar && (
-        <Notification
-          open={openSnackbar}
-          message={message}
-          severity={type}
-          onClose={() => setOpenSnackbar(false)}
-        />
-      )}
+      <Notification
+        open={openSnackbar}
+        message={message}
+        severity={type}
+        onClose={() => setOpenSnackbar(false)}
+      />
 
-      <Container>
-        <div className="flex flex-row mt-4 min-h-[348px]">
-          <div className="flex flex-col w-[400px]">
-            <div className="flex">
-              <Typography
-                variant="h6"
-                sx={{ marginBottom: '8px', fontSize: '1.1rem' }}
-                style={{
-                  color: honoraryType === '' ? '#FF0000' : 'black',
-                }}
-              >
-                {'Honorários de Trabalho ou Êxito'}
-              </Typography>
-              {errors.honoraryType && honoraryType === '' && (
-                <label className="flagError">{'*'}</label>
-              )}
-            </div>
+      <Container loading={loading}>
+        {loading && (
+          <LoadingOverlay>
+            <CircularProgress size={30} style={{ color: '#01013D' }} />
+          </LoadingOverlay>
+        )}
 
-            <div>
-              <div className="flex items-center">
-                <FormControlLabel
-                  sx={{ width: '200px' }}
-                  control={
-                    <Radio
-                      size="small"
-                      value="work"
-                      checked={honoraryType === 'work'}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleCategorySelection(e.target.value)
-                      }
-                    />
-                  }
-                  label="Trabalho"
-                />
-                <CustomTooltip
-                  title="Geralmente para procedimentos por valor fixo e diligências."
-                  placement="right"
-                >
-                  <span
-                    style={{
-                      display: 'flex',
-                    }}
-                  >
-                    <MdOutlineInfo style={{ marginLeft: '-8px' }} size={20} />
-                  </span>
-                </CustomTooltip>
-              </div>
-            </div>
+        <div className="flex gap-[16px]">
+          <div className="min-w-fit flex flex-col gap-[24px]">
+            <HonoraryTypeSelection
+              honoraryType={honoraryType}
+              onChange={setHonoraryType}
+              error={errors.honoraryType}
+            />
 
-            <div>
-              <div className="flex items-center">
-                <FormControlLabel
-                  sx={{ width: '200px' }}
-                  control={
-                    <Radio
-                      size="small"
-                      value="success"
-                      checked={honoraryType === 'success'}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleCategorySelection(e.target.value)
-                      }
-                    />
-                  }
-                  label="Êxito"
-                />
-                <CustomTooltip
-                  title="Contrato de risco pago de acordo com os benefícios recebidos pelo cliente em %."
-                  placement="right"
-                >
-                  <span
-                    style={{
-                      display: 'flex',
-                    }}
-                  >
-                    <MdOutlineInfo style={{ marginLeft: '-8px' }} size={20} />
-                  </span>
-                </CustomTooltip>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center">
-                <FormControlLabel
-                  sx={{ width: '200px' }}
-                  control={
-                    <Radio
-                      size="small"
-                      value="both"
-                      checked={honoraryType === 'both'}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleCategorySelection(e.target.value)
-                      }
-                    />
-                  }
-                  label="Ambos"
-                />
-                <CustomTooltip
-                  title="Combinação entre honorários fixos e percentuais."
-                  placement="right"
-                >
-                  <span
-                    style={{
-                      display: 'flex',
-                    }}
-                  >
-                    <MdOutlineInfo style={{ marginLeft: '-8px' }} size={20} />
-                  </span>
-                </CustomTooltip>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center">
-                <FormControlLabel
-                  sx={{ width: '200px' }}
-                  control={
-                    <Radio
-                      size="small"
-                      value="bonus"
-                      checked={honoraryType === 'bonus'}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleCategorySelection(e.target.value)
-                      }
-                    />
-                  }
-                  label="Pro-bono"
-                />
-                <CustomTooltip
-                  title="Atuação Pro Bono, ou seja, sem cobrança de honorários."
-                  placement="right"
-                >
-                  <span
-                    style={{
-                      display: 'flex',
-                    }}
-                  >
-                    <MdOutlineInfo style={{ marginLeft: '-8px' }} size={20} />
-                  </span>
-                </CustomTooltip>
-              </div>
-            </div>
-
-            {honoraryType.search('work') >= 0 || honoraryType.search('both') >= 0 ? (
-              <div className="mt-4">
-                <div className="flex items-center">
-                  <Typography
-                    display={'flex'}
-                    alignItems={'center'}
-                    variant="h6"
-                    style={{ height: '40px' }}
-                  >
-                    {'Parcelamento'}
-                  </Typography>
-                  <CustomTooltip
-                    title="No caso dos honorários fixos, especifique se você trabalhou com parcelamento dos valores."
-                    placement="right"
-                  >
-                    <span
-                      style={{
-                        display: 'flex',
-                      }}
-                    >
-                      <MdOutlineInfo style={{ marginLeft: '11px' }} size={20} />
-                    </span>
-                  </CustomTooltip>
-                </div>
-
-                <div>
-                  <FormControlLabel
-                    control={
-                      <Radio
-                        size="small"
-                        value={true}
-                        checked={parcelling}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          const isTrue = e.target.value === 'true';
-                          setParcelling(isTrue);
-                        }}
-                      />
-                    }
-                    label="Sim"
-                  />
-                </div>
-
-                <div>
-                  <FormControlLabel
-                    control={
-                      <Radio
-                        size="small"
-                        value={false}
-                        checked={!parcelling}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          const isFalse = e.target.value === 'false';
-                          setParcelling(!isFalse);
-                          setNumberOfInstallments('');
-                        }}
-                      />
-                    }
-                    label="Não"
-                  />
-                </div>
-              </div>
-            ) : null}
+            {showFixedInput && (
+              <ParcelingSection
+                parcelling={parcelling}
+                onParcellingChange={setParcelling}
+                onInstallmentsChange={setNumberOfInstallments}
+              />
+            )}
           </div>
 
-          {isVisibleOptionsArea ? (
-            <OptionsArea>
-              {honoraryType == 'work' && (
-                <div>
-                  <div>
-                    <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                      {'Valor de Honorários Fixos'}
-                    </Typography>
+          <div
+            className={`rounded-[2px] w-full p-[10px] min-h-full flex flex-col gap-[16px]  ${
+              showFixedInput || showParceling || showPercentInput
+                ? 'border border-solid border-[#01013D]'
+                : 'border-0'
+            }`}
+          >
+            {showFixedInput && (
+              <FixedHonoraryInput
+                value={valueOfFixed}
+                onChange={setValueOfFixed}
+                error={!valueOfFixed}
+              />
+            )}
 
-                    <div className="flex flex-col">
-                      <div>
-                        <Input
-                          style={{
-                            borderColor: valueOfFixed === '' ? '#FF0000' : 'black',
-                          }}
-                          id="honoraryValue"
-                          placeholder="R$"
-                          value={valueOfFixed}
-                          onChange={(e: any) => {
-                            const inputValue = e.target.value;
-                            if (inputValue.length === 0) {
-                              setValueOfFixed('');
-                              return;
-                            }
-                            setValueOfFixed(`R$ ${moneyMask(inputValue)}`);
-                          }}
-                          min="0"
-                        />
-                      </div>
-                    </div>
-                  </div>
+            {showParceling && (
+              <ParcelingInput
+                instalmentOptions={Array.from({ length: 12 }, (_, i) => `${i + 1}x`)}
+                numberOfInstallments={numberOfInstallments}
+                onInstallmentsChange={setNumberOfInstallments}
+              />
+            )}
 
-                  {workForm.subject === 'social_security' ? (
-                    <div className="flex flex-col mt-4">
-                      <Typography variant="h6" mb={'8px'}>
-                        {'Valor de Honorários Previdenciários (Parcelas de Benefícios)'}
-                      </Typography>
+            {showPercentInput && (
+              <PercentHonoraryInput
+                value={valueOfPercent}
+                onChange={setValueOfPercent}
+                error={!valueOfPercent && honoraryType === 'success'}
+              />
+            )}
 
-                      <div>
-                        <Input
-                          style={{
-                            borderColor: !workPrev ? '#FF0000' : 'black',
-                          }}
-                          id="honoraryValue"
-                          placeholder="0"
-                          value={workPrev}
-                          onChange={(e: any) => {
-                            const inputValue = Number(e.target.value);
-
-                            if (inputValue === 0) {
-                              setWorkPrev(null);
-                              return;
-                            }
-                            if (inputValue <= 99) {
-                              setWorkPrev(inputValue);
-                            }
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {honoraryType.search('work') >= 0 ? (
-                    <>
-                      {parcelling ? (
-                        <div className="mt-4">
-                          <Typography
-                            variant="h6"
-                            sx={{ marginBottom: '8px' }}
-                            style={{
-                              color:
-                                parcelling && numberOfInstallments === '' ? '#FF0000' : 'black',
-                            }}
-                          >
-                            {'Parcelamento'}
-                          </Typography>
-
-                          <div className="flex flex-col w-[314px]">
-                            <Select
-                              displayEmpty
-                              value={numberOfInstallments}
-                              inputProps={{
-                                style: {
-                                  height: '100%',
-                                  color: colors.icons,
-                                },
-                              }}
-                              MenuProps={{
-                                PaperProps: {
-                                  style: {
-                                    maxHeight: 32 * 4.5 + 8,
-                                  },
-                                },
-                              }}
-                              onChange={(e: any) => setNumberOfInstallments(e.target.value)}
-                            >
-                              <MenuItem disabled value="">
-                                <>{'Número de Parcelas'}</>
-                              </MenuItem>
-                              {instalmentOptions.map((value: string) => (
-                                <MenuItem key={value} value={value}>
-                                  {value}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </div>
-                        </div>
-                      ) : null}
-                    </>
-                  ) : null}
-                </div>
-              )}
-
-              {honoraryType == 'success' && (
-                <div>
-                  <div>
-                    <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                      {'Valor de Honorários Percentuais'}
-                    </Typography>
-                    <div className="flex flex-col">
-                      <div className="w-[314px]">
-                        <Input
-                          style={{
-                            borderColor:
-                              honoraryType === 'success' && valueOfPercent === ''
-                                ? '#FF0000'
-                                : 'black',
-                          }}
-                          id="PercentageHonoraryValue"
-                          placeholder="%"
-                          min="0"
-                          value={valueOfPercent}
-                          onChange={(e: any) => {
-                            const value = e.target.value ? e.target.value : '';
-                            setValueOfPercent(percentMask(value));
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {honoraryType == 'both' && (
-                <div>
-                  <div className="flex flex-col">
-                    <Typography variant="h6" mb={'8px'}>
-                      {'Valor de Honorários Fixos'}
-                    </Typography>
-
-                    <div>
-                      <Input
-                        style={{
-                          borderColor: valueOfFixed === '' ? '#FF0000' : 'black',
-                        }}
-                        id="honoraryValue"
-                        placeholder="R$"
-                        min="0"
-                        value={valueOfFixed}
-                        onChange={(e: any) => {
-                          const inputValue = e.target.value;
-                          if (inputValue.length === 0) {
-                            setValueOfFixed('');
-                            return;
-                          }
-                          setValueOfFixed(`R$ ${moneyMask(inputValue)}`);
-                        }}
-                        onInput={(e: any) => {
-                          const inputValue = e.target.value;
-                          if (inputValue.length === 0) {
-                            setValueOfFixed('');
-                            return;
-                          }
-                          setValueOfFixed(`R$ ${moneyMask(inputValue)}`);
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col">
-                    <div className="mt-4">
-                      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                        {'Valor de Honorários Percentuais'}
-                      </Typography>
-                      <div className="flex flex-col">
-                        <div className="w-[314px]">
-                          <Input
-                            style={{
-                              borderColor: valueOfPercent === '' ? '#FF0000' : 'black',
-                            }}
-                            id="PercentageHonoraryValue"
-                            placeholder="%"
-                            min="0"
-                            value={valueOfPercent}
-                            onChange={(e: any) => {
-                              const value = e.target.value ? e.target.value : '';
-                              setValueOfPercent(percentMask(value));
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {workForm.subject === 'social_security' ? (
-                    <div className="flex flex-col mt-4">
-                      <Typography variant="h6" mb={'8px'}>
-                        {'Valor de Honorários Previdenciários (Parcelas de Benefícios)'}
-                      </Typography>
-
-                      <div>
-                        <Input
-                          style={{
-                            borderColor: !workPrev ? '#FF0000' : 'black',
-                          }}
-                          id="honoraryValue"
-                          placeholder="0"
-                          value={workPrev}
-                          onChange={(e: any) => {
-                            const inputValue = Number(e.target.value);
-
-                            if (inputValue === 0) {
-                              setWorkPrev(null);
-                              return;
-                            }
-                            if (inputValue <= 99) {
-                              setWorkPrev(inputValue);
-                            }
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {honoraryType.search('both') >= 0 ? (
-                    <>
-                      {parcelling ? (
-                        <div className="mt-4">
-                          <Typography
-                            variant="h6"
-                            sx={{ marginBottom: '8px' }}
-                            style={{
-                              color:
-                                parcelling && numberOfInstallments === '' ? '#FF0000' : 'black',
-                            }}
-                          >
-                            {'Parcelamento'}
-                          </Typography>
-                          <div className="flex flex-col">
-                            <div className="flex flex-col w-[314px]">
-                              <Select
-                                displayEmpty
-                                value={numberOfInstallments}
-                                MenuProps={{
-                                  PaperProps: {
-                                    style: {
-                                      maxHeight: 32 * 4.5 + 8,
-                                    },
-                                  },
-                                }}
-                                onChange={(e: any) => setNumberOfInstallments(e.target.value)}
-                              >
-                                <MenuItem disabled value="">
-                                  <>{'Número de Parcelas'}</>
-                                </MenuItem>
-                                {instalmentOptions.map((value: string) => (
-                                  <MenuItem key={value} value={value}>
-                                    {value}
-                                  </MenuItem>
-                                ))}
-                              </Select>
-                            </div>
-                          </div>
-                        </div>
-                      ) : null}
-                    </>
-                  ) : null}
-                </div>
-              )}
-            </OptionsArea>
-          ) : null}
+            {isSocialSecurity && showFixedInput && (
+              <SocialSecurityInput
+                value={workPrev}
+                onChange={setWorkPrev}
+                error={workPrev === null}
+              />
+            )}
+          </div>
         </div>
       </Container>
     </>

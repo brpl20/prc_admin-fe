@@ -6,17 +6,10 @@ import React, {
   ForwardRefRenderFunction,
   useImperativeHandle,
   useEffect,
-  Dispatch,
-  SetStateAction,
+  useCallback,
 } from 'react';
-
-import { Flex } from '@/styles/globals';
+import { useRouter } from 'next/router';
 import { MdOutlineInfo } from 'react-icons/md';
-import { WorkContext } from '@/contexts/WorkContext';
-
-import { Container, InputContainer } from './styles';
-import { Notification } from '@/components';
-
 import {
   Box,
   FormControlLabel,
@@ -24,10 +17,15 @@ import {
   Checkbox,
   TextField,
   TextareaAutosize,
+  CircularProgress,
 } from '@mui/material';
+
+import { Flex } from '@/styles/globals';
+import { WorkContext } from '@/contexts/WorkContext';
+import { Notification } from '@/components';
+import { Container, InputContainer } from './styles';
 import CustomTooltip from '@/components/Tooltip';
-import { useRouter } from 'next/router';
-import useLoadingCounter from '@/utils/useLoadingCounter';
+import { LoadingOverlay } from '../one/styles';
 
 export interface IRefWorkStepSixProps {
   handleSubmitForm: () => void;
@@ -35,122 +33,178 @@ export interface IRefWorkStepSixProps {
 
 interface IStepSixProps {
   confirmation: () => void;
-  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
-const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps> = (
-  { confirmation, setFormLoading },
+type DocumentType = 'procuration' | 'waiver' | 'deficiency_statement' | 'honorary';
+
+interface Document {
+  id?: number;
+  document_type: string;
+  profile_customer_id?: number;
+  url?: string;
+}
+
+const DOCUMENT_TYPES: Record<DocumentType, string> = {
+  procuration: 'procuração',
+  waiver: 'Termo de renúncia',
+  deficiency_statement: 'declaração de carência',
+  honorary: 'contrato',
+};
+
+const WorkStepSixComponent: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps> = (
+  { confirmation },
   ref,
 ) => {
   const router = useRouter();
-
   const isEdit = router.asPath.includes('alterar');
-
   const { workForm, setWorkForm, updateWorkForm, setUdateWorkForm } = useContext(WorkContext);
 
-  const [errors, setErrors] = useState({} as any);
+  const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    type: 'success' as 'success' | 'error',
+  });
 
-  const [message, setMessage] = useState('');
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [type, setType] = useState<'success' | 'error'>('success');
+  const [formData, setFormData] = useState({
+    documentsProduced: [] as Document[],
+    documentsToRegenerate: [] as Document[],
+    pendingDocuments: [] as Document[],
+    otherDocuments: '',
+    folder: '',
+    gradesInGeneral: '',
+  });
 
-  const [documentsProduced, setDocumentsProduced] = useState<string[]>([]);
-  const [documentsToRegenerate, setDocumentsToRegenerate] = useState<string[]>([]);
-  const [pendingDocuments, setPendingDocuments] = useState([] as any);
-  const [gradesInGeneral, setGradesInGeneral] = useState<string>('');
-  const [otherDocuments, setOtherDocuments] = useState<string>('');
-  const [folder, setFolder] = useState('');
+  useEffect(() => {
+    const loadAllData = async () => {
+      try {
+        setLoading(true);
 
-  const { setLoading } = useLoadingCounter(setFormLoading);
+        if (workForm.data?.attributes) {
+          const { attributes } = workForm.data;
+          const newFormData = {
+            documentsProduced: attributes.documents || [],
+            documentsToRegenerate: attributes.documents || [],
+            pendingDocuments: attributes.pending_documents || [],
+            otherDocuments: attributes.extra_pending_document || '',
+            folder: attributes.folder || '',
+            gradesInGeneral: attributes.note || '',
+          };
+          setFormData(newFormData);
+        }
+
+        const localStorageData = localStorage.getItem('WORK/Six');
+        if (localStorageData) {
+          const parsedData = JSON.parse(localStorageData);
+          setFormData(prev => ({
+            ...prev,
+            documentsProduced: parsedData.documents_attributes || prev.documentsProduced,
+            documentsToRegenerate: parsedData.documents_attributes || prev.documentsToRegenerate,
+            otherDocuments: parsedData.extra_pending_document || prev.otherDocuments,
+            folder: parsedData.folder || prev.folder,
+            gradesInGeneral: parsedData.note || prev.gradesInGeneral,
+          }));
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAllData();
+  }, [workForm]);
 
   const handleDocumentsProducedSelection = (event: ChangeEvent<HTMLInputElement>) => {
-    const { value, checked } = event.target;
+    const { value, checked } = event.target as { value: DocumentType; checked: boolean };
 
-    if (checked) {
-      setDocumentsProduced(prevSelected => [...prevSelected, value]);
-    } else {
-      setDocumentsProduced(prevSelected => prevSelected.filter(document => document !== value));
-    }
+    setFormData(prev => {
+      const newDocuments = checked
+        ? [...prev.documentsProduced, { document_type: value }]
+        : prev.documentsProduced.filter(doc => doc.document_type !== value);
+
+      return { ...prev, documentsProduced: newDocuments };
+    });
   };
 
-  const createDocumentsProducedArray = () => {
-    let documentsProducedArray: any[] = [];
+  const handleNotificationClose = () => {
+    setNotification(prev => ({ ...prev, open: false }));
+  };
 
-    workForm.profile_customer_ids.forEach((profile: any) => {
-      documentsProducedArray = documentsProducedArray.concat(
-        documentsProduced.map((document: any) => ({
-          document_type: document.document_type ? document.document_type : document,
-          profile_customer_id: Number(profile),
+  const handleFormError = useCallback((error: Error) => {
+    setNotification({
+      open: true,
+      message: error.message,
+      type: 'error',
+    });
+  }, []);
+
+  const createDocumentsProducedArray = useCallback((): Document[] => {
+    return (workForm.profile_customer_ids as (number | string)[])
+      .map(Number)
+      .flatMap((profile: number) =>
+        formData.documentsProduced.map(document => ({
+          document_type: document.document_type,
+          profile_customer_id: profile,
         })),
       );
-    });
+  }, [workForm.profile_customer_ids, formData.documentsProduced]);
 
-    return documentsProducedArray;
-  };
+  const createNewProducedDocumentsArray = useCallback((): Document[] => {
+    const newDocuments: Document[] = [];
+    const documentTypes = new Set(formData.documentsProduced.map(doc => doc.document_type));
 
-  const createNewProducedDocumentsArray = () => {
-    const newProducedDocumentsArray: any[] = [];
-    const documentTypesSet = new Set();
-
-    documentsProduced.forEach((document: any) => {
-      if (document.document_type) {
-        documentTypesSet.add(document.document_type);
-      }
-    });
-
-    const customersWithoutDocument = workForm.profile_customer_ids.filter((profile: any) => {
-      return !documentsProduced.some((document: any) => document.profile_customer_id == profile);
-    });
-
-    documentsProduced.forEach((document: any) => {
-      if (!document.id) {
-        workForm.profile_customer_ids.forEach((profile: any) => {
-          newProducedDocumentsArray.push({
-            document_type: document.document_type ? document.document_type : document,
-            profile_customer_id: Number(profile),
-          });
-        });
-      }
-
+    formData.documentsProduced.forEach(document => {
       if (document.id) {
-        newProducedDocumentsArray.push({
-          id: document.id,
-          document_type: document.document_type ? document.document_type : document,
-          profile_customer_id: Number(document.profile_customer_id),
-          url: document.url,
-        });
+        newDocuments.push(document);
       }
     });
 
-    customersWithoutDocument.forEach((profile: any) => {
-      documentTypesSet.forEach((document: any) => {
-        newProducedDocumentsArray.push({
-          document_type: document.document_type ? document.document_type : document,
-          profile_customer_id: Number(profile),
-        });
+    workForm.data.attributes.profile_customers.forEach((profile: any) => {
+      documentTypes.forEach(type => {
+        if (
+          !formData.documentsProduced.some(
+            doc => doc.document_type === type && doc.profile_customer_id === Number(profile.id),
+          )
+        ) {
+          newDocuments.push({
+            document_type: type,
+            profile_customer_id: Number(profile.id),
+          });
+        }
       });
     });
 
-    return newProducedDocumentsArray;
-  };
+    return newDocuments;
+  }, [formData.documentsProduced, workForm.profile_customer_ids]);
 
-  const createWorkData = () => {
-    const documentsAttributes = isEdit
-      ? createNewProducedDocumentsArray()
-      : createDocumentsProducedArray();
+  const createWorkData = useCallback(
+    () => ({
+      documents_attributes: isEdit
+        ? createNewProducedDocumentsArray()
+        : createDocumentsProducedArray(),
+      pending_documents_attributes: formData.pendingDocuments,
+      extra_pending_document: formData.otherDocuments,
+      folder: formData.folder,
+      note: formData.gradesInGeneral,
+    }),
+    [
+      isEdit,
+      createNewProducedDocumentsArray,
+      createDocumentsProducedArray,
+      formData.pendingDocuments,
+      formData.otherDocuments,
+      formData.folder,
+      formData.gradesInGeneral,
+    ],
+  );
 
-    return {
-      documents_attributes: documentsAttributes,
-      pending_documents_attributes: pendingDocuments,
-      extra_pending_document: otherDocuments,
-      folder: folder,
-      note: gradesInGeneral,
-    };
-  };
+  const saveDataLocalStorage = useCallback((data: any) => {
+    localStorage.setItem('WORK/Six', JSON.stringify(data));
+  }, []);
 
-  const handleSubmitForm = () => {
+  const handleSubmitForm = useCallback(() => {
     try {
-      if (documentsProduced.length <= 0) {
+      if (formData.documentsProduced.length <= 0) {
         setErrors({ ...errors, documents_attributes: true });
         throw new Error('Selecione pelo menos um documento a ser produzido');
       }
@@ -158,376 +212,153 @@ const WorkStepSix: ForwardRefRenderFunction<IRefWorkStepSixProps, IStepSixProps>
       const workData = createWorkData();
 
       if (isEdit) {
-        const updatedWorkForm = {
-          ...updateWorkForm,
-          ...workData,
-        };
-
+        const updatedWorkForm = { ...updateWorkForm, ...workData };
         setUdateWorkForm(updatedWorkForm);
         saveDataLocalStorage(updatedWorkForm);
       } else {
-        const newWorkForm = {
-          ...workForm,
-          ...workData,
-        };
-
+        const newWorkForm = { ...workForm, ...workData };
         saveDataLocalStorage(newWorkForm);
         setWorkForm(newWorkForm);
       }
 
       confirmation();
     } catch (err) {
-      handleFormError(err);
+      handleFormError(err as Error);
     }
-  };
-
-  const handleFormError = (error: any) => {
-    setMessage(error.message);
-    setType('error');
-    setOpenSnackbar(true);
-  };
-
-  const saveDataLocalStorage = (data: any) => {
-    localStorage.setItem('WORK/Six', JSON.stringify(data));
-  };
+  }, [
+    formData.documentsProduced,
+    errors,
+    createWorkData,
+    isEdit,
+    updateWorkForm,
+    setUdateWorkForm,
+    saveDataLocalStorage,
+    workForm,
+    setWorkForm,
+    confirmation,
+    handleFormError,
+  ]);
 
   useImperativeHandle(ref, () => ({
     handleSubmitForm,
   }));
 
-  useEffect(() => {
-    const handleDataForm = () => {
-      const attributes = workForm.data.attributes;
+  const renderDocumentCheckbox = (type: DocumentType) => {
+    const isSelected = formData.documentsProduced.some(doc => doc.document_type === type);
+    const isRegenerating = formData.documentsToRegenerate.some(doc => doc.document_type === type);
+    const labelPrefix = isEdit && isRegenerating ? 'Reemitir' : 'Emitir';
 
-      if (attributes) {
-        if (attributes.documents) {
-          const documents_types = attributes.documents.map((document: any) => document);
-
-          setDocumentsProduced(documents_types);
-          setDocumentsToRegenerate(documents_types);
+    return (
+      <FormControlLabel
+        control={
+          <Checkbox value={type} checked={isSelected} onChange={handleDocumentsProducedSelection} />
         }
-
-        if (attributes.extra_pending_document) {
-          setOtherDocuments(attributes.extra_pending_document);
-        }
-
-        if (attributes.folder) {
-          setFolder(attributes.folder);
-        }
-
-        if (attributes.note) {
-          setGradesInGeneral(attributes.note);
-        }
-
-        if (attributes.pending_documents) {
-          const pending_documents = attributes.pending_documents.map((document: any) => document);
-
-          setPendingDocuments(pending_documents);
-        }
-      }
-    };
-
-    if (workForm.data) {
-      handleDataForm();
-    }
-  }, [workForm]);
-
-  useEffect(() => {
-    const verifyDataLocalStorage = async () => {
-      setLoading(true);
-      const data = localStorage.getItem('WORK/Six');
-
-      if (data) {
-        const parsedData = JSON.parse(data);
-
-        if (parsedData.documents_attributes) {
-          setDocumentsProduced(parsedData.documents_attributes);
-          setDocumentsToRegenerate(parsedData.documents_attributes);
-        }
-
-        if (parsedData.extra_pending_document) {
-          setOtherDocuments(parsedData.extra_pending_document);
-        }
-
-        if (parsedData.folder) {
-          setFolder(parsedData.folder);
-        }
-
-        if (parsedData.note) {
-          setGradesInGeneral(parsedData.note);
-        }
-
-        if (parsedData.extra_pending_document) {
-          setOtherDocuments(parsedData.extra_pending_document);
-        }
-      }
-      setLoading(false);
-    };
-
-    verifyDataLocalStorage();
-  }, []);
+        label={`${labelPrefix} ${DOCUMENT_TYPES[type]}`}
+      />
+    );
+  };
 
   return (
-    <Container>
-      {openSnackbar && (
-        <Notification
-          open={openSnackbar}
-          message={message}
-          severity={type}
-          onClose={() => setOpenSnackbar(false)}
-        />
+    <Container loading={loading}>
+      {loading && (
+        <LoadingOverlay>
+          <CircularProgress size={30} style={{ color: '#01013D' }} />
+        </LoadingOverlay>
       )}
-      <>
-        <Flex
-          style={{
-            marginTop: '16px',
-            flexDirection: 'column',
-          }}
-        >
-          <Flex>
-            {/* Documents Produced */}
-            <Box mr={'32px'}>
-              <Flex
-                style={{
-                  marginBottom: '8px',
-                  alignItems: 'center',
-                }}
-              >
-                <Flex
-                  style={{
-                    alignItems: 'center',
-                  }}
-                >
-                  <Typography
-                    display={'flex'}
-                    alignItems={'center'}
-                    variant="h6"
-                    style={{ height: '40px' }}
-                  >
-                    {'Documentos a Serem Produzidos'}
-                  </Typography>
-                  <CustomTooltip
-                    title="Documentos que o ProcStudio irá gerar para você."
-                    placement="right"
-                  >
-                    <span
-                      style={{
-                        display: 'flex',
-                      }}
-                    >
-                      <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
-                    </span>
-                  </CustomTooltip>
-                  {errors.documents_attributes && documentsProduced.length <= 0 && (
-                    <label className="flagError">{'*'}</label>
-                  )}
-                </Flex>
-              </Flex>
 
-              <Flex
-                style={{
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      value="procuration"
-                      checked={
-                        documentsProduced.includes('procuration') ||
-                        documentsProduced
-                          .map((document: any) => document.document_type)
-                          .includes('procuration')
-                      }
-                      onChange={handleDocumentsProducedSelection}
-                    />
-                  }
-                  label={
-                    (isEdit && documentsToRegenerate.includes('procuration')) ||
-                    documentsToRegenerate
-                      .map((document: any) => document.document_type)
-                      .includes('procuration')
-                      ? 'Reemitir procuração'
-                      : 'Emitir procuração'
-                  }
-                />
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.type}
+        onClose={handleNotificationClose}
+      />
 
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      value="waiver"
-                      checked={
-                        documentsProduced.includes('waiver') ||
-                        documentsProduced
-                          .map((document: any) => document.document_type)
-                          .includes('waiver')
-                      }
-                      onChange={handleDocumentsProducedSelection}
-                    />
-                  }
-                  label={
-                    (isEdit && documentsToRegenerate.includes('waiver')) ||
-                    documentsToRegenerate
-                      .map((document: any) => document.document_type)
-                      .includes('waiver')
-                      ? 'Reemitir Termo de renúncia'
-                      : 'Emitir Termo de renúncia'
-                  }
-                />
+      <Box>
+        <Box display="flex" alignItems="center" gap="19px" mt="16px">
+          <Typography variant="h6" display="flex" alignItems="center" height="40px">
+            Documentos a Serem Produzidos
+          </Typography>
+          <CustomTooltip title="Documentos que o ProcStudio irá gerar para você." placement="right">
+            <MdOutlineInfo size={20} />
+          </CustomTooltip>
+          {errors.documents_attributes && formData.documentsProduced.length <= 0 && (
+            <Typography color="error">*</Typography>
+          )}
+        </Box>
 
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      value="deficiency_statement"
-                      checked={
-                        documentsProduced.includes('deficiency_statement') ||
-                        documentsProduced
-                          .map((document: any) => document.document_type)
-                          .includes('deficiency_statement')
-                      }
-                      onChange={handleDocumentsProducedSelection}
-                    />
-                  }
-                  label={
-                    (isEdit && documentsToRegenerate.includes('deficiency_statement')) ||
-                    documentsToRegenerate
-                      .map((document: any) => document.document_type)
-                      .includes('deficiency_statement')
-                      ? 'Reemitir declaração  de carência'
-                      : 'Emitir declaração  de carência'
-                  }
-                  style={{
-                    marginRight: '0px',
-                  }}
-                />
+        <Box display="flex" flexDirection="column">
+          {Object.keys(DOCUMENT_TYPES).map(type => renderDocumentCheckbox(type as DocumentType))}
+        </Box>
 
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      value="honorary"
-                      checked={
-                        documentsProduced.includes('honorary') ||
-                        documentsProduced
-                          .map((document: any) => document.document_type)
-                          .includes('honorary')
-                      }
-                      onChange={handleDocumentsProducedSelection}
-                    />
-                  }
-                  label={
-                    (isEdit && documentsToRegenerate.includes('honorary')) ||
-                    documentsToRegenerate
-                      .map((document: any) => document.document_type)
-                      .includes('honorary')
-                      ? 'Reemitir contrato'
-                      : 'Emitir contrato'
-                  }
+        <Box display="flex" gap="32px" width="100%" mt="16px">
+          <Box width="100%" display="flex" flexDirection="column" gap="16px">
+            <Box display="flex" flexDirection="column" gap="8px">
+              <Typography variant="h6">Outros Documentos Pendentes ou Pendências</Typography>
+              <InputContainer>
+                <TextField
+                  label="Documento ou Pendência"
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                  value={formData.otherDocuments}
+                  onChange={e => setFormData(prev => ({ ...prev, otherDocuments: e.target.value }))}
                 />
-              </Flex>
+              </InputContainer>
             </Box>
-          </Flex>
-        </Flex>
-      </>
-      {/* Other Documents */}
-      <Box mt={'16px'} display={'flex'} justifyContent={'space-between'} gap={'16px'}>
-        <Box flexDirection={'column'} flex={1}>
-          <Box flexDirection={'column'}>
-            <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-              {'Outros Documentos Pendentes ou Pendências'}
-            </Typography>
-            <InputContainer>
-              <TextField
-                label="Documento ou Pendência"
-                id="outlined-basic"
-                autoComplete="off"
-                variant="outlined"
-                size="small"
-                style={{ width: '100%' }}
-                onChange={e => setOtherDocuments(e.target.value)}
-                value={otherDocuments}
-              />
-            </InputContainer>
+
+            <Box>
+              <Box display="flex" alignItems="center" gap="8px">
+                <Typography variant="h6" display="flex" alignItems="center" height="40px">
+                  Pasta
+                </Typography>
+                <CustomTooltip title="Pasta do Cliente." placement="right">
+                  <MdOutlineInfo size={20} />
+                </CustomTooltip>
+              </Box>
+
+              <InputContainer>
+                <TextField
+                  label="Nome da Pasta"
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                  value={formData.folder}
+                  onChange={e => setFormData(prev => ({ ...prev, folder: e.target.value }))}
+                />
+              </InputContainer>
+            </Box>
           </Box>
 
-          <Flex style={{ marginTop: '16px', flexDirection: 'column' }}>
-            <Flex
-              style={{
-                alignItems: 'center',
-              }}
-            >
-              <Typography
-                display={'flex'}
-                alignItems={'center'}
-                variant="h6"
-                style={{ height: '40px' }}
-              >
-                {'Pasta'}
+          <Box width="100%">
+            <Flex alignItems="center">
+              <Typography variant="h6" display="flex" alignItems="center" height="40px">
+                Notas em Geral Sobre o Caso
               </Typography>
-              <CustomTooltip title="Pasta do Cliente." placement="right">
-                <span
-                  style={{
-                    display: 'flex',
-                  }}
-                >
-                  <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
-                </span>
+              <CustomTooltip
+                title="Notas, entrevista com o cliente e informações úteis para o desenvolvimento do caso para a equipe."
+                placement="right"
+              >
+                <MdOutlineInfo size={20} />
               </CustomTooltip>
             </Flex>
 
-            <InputContainer>
-              <TextField
-                label="Nome da Pasta"
-                id="outlined-basic"
-                autoComplete="off"
-                variant="outlined"
-                size="small"
-                style={{ width: '100%' }}
-                onChange={e => setFolder(e.target.value)}
-                value={folder}
-              />
-            </InputContainer>
-          </Flex>
-        </Box>
-
-        <Box flex={1}>
-          <Flex
-            style={{
-              alignItems: 'center',
-            }}
-          >
-            <Typography display={'flex'} alignItems={'center'} variant="h6" className="h-[40px]">
-              {'Notas em Geral Sobre o Caso'}
-            </Typography>
-            <CustomTooltip
-              title="Notas, entrevista com o cliente e informações úteis para o desenvolvimento do caso para a equipe."
-              placement="right"
-            >
-              <span
-                style={{
-                  display: 'flex',
-                }}
-              >
-                <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
-              </span>
-            </CustomTooltip>
-          </Flex>
-
-          <TextareaAutosize
-            style={{
-              height: '130px',
-              border: '1px solid #D1D5DB',
-              borderRadius: '4px',
-            }}
-            name="gradesInGeneral"
-            value={gradesInGeneral}
-            onChange={e => setGradesInGeneral(e.target.value)}
-            className="comment-input w-full resize-none p-1"
-          />
+            <TextareaAutosize
+              style={{
+                height: '130px',
+                border: '1px solid #D1D5DB',
+                borderRadius: '4px',
+                width: '100%',
+                resize: 'none',
+                padding: '8px',
+              }}
+              value={formData.gradesInGeneral}
+              onChange={e => setFormData(prev => ({ ...prev, gradesInGeneral: e.target.value }))}
+            />
+          </Box>
         </Box>
       </Box>
     </Container>
   );
 };
 
-export default forwardRef(WorkStepSix);
+export default forwardRef(WorkStepSixComponent);

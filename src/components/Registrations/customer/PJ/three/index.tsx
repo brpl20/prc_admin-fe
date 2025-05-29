@@ -1,38 +1,22 @@
-import React, {
+import { animateScroll as scroll } from 'react-scroll';
+import {
   useState,
   useEffect,
   useContext,
   forwardRef,
-  ForwardRefRenderFunction,
   useImperativeHandle,
   ChangeEvent,
+  useCallback,
 } from 'react';
-
+import { CircularProgress } from '@mui/material';
 import { Container } from '../styles';
-import { animateScroll as scroll } from 'react-scroll';
-import { CustomerContext } from '@/contexts/CustomerContext';
-
-import { getAllBanks } from '@/services/brasilAPI';
-import { Box, TextField, Typography, Autocomplete } from '@mui/material';
 import { Notification } from '@/components';
+import { LoadingOverlay } from '@/components/Registrations/work/one/styles';
+import { CustomerContext } from '@/contexts/CustomerContext';
+import { getAllBanks } from '@/services/brasilAPI';
 import { z } from 'zod';
-
-export interface IRefPJCustomerStepThreeProps {
-  handleSubmitForm: () => void;
-}
-
-interface IStepThreeProps {
-  nextStep: () => void;
-  editMode: boolean;
-}
-
-interface FormData {
-  bank: string;
-  agency: string;
-  op: string;
-  account: string;
-  pix: string;
-}
+import BankAutocomplete from './BankAutocomplete';
+import BankFormInputs from './BankFormInputs';
 
 const stepThreeSchema = z.object({
   bank: z.string(),
@@ -42,96 +26,93 @@ const stepThreeSchema = z.object({
   pix: z.string(),
 });
 
-const PJCustomerStepThree: ForwardRefRenderFunction<
-  IRefPJCustomerStepThreeProps,
-  IStepThreeProps
-> = ({ nextStep, editMode }, ref) => {
-  const [errors, setErrors] = useState({} as any);
-  const [bankList, setBankList] = useState([] as any[]);
-  const [selectedBank, setSelectedBank] = useState(null);
-  const [message, setMessage] = useState('');
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [type, setType] = useState<'success' | 'error'>('success');
-
-  const { customerForm, setCustomerForm, newCustomerForm, setNewCustomerForm } =
-    useContext(CustomerContext);
-  const [formData, setFormData] = useState<FormData>({
+const PJCustomerStepThree = forwardRef(({ nextStep, editMode }: any, ref) => {
+  const [loading, setLoading] = useState(true);
+  const [bankList, setBankList] = useState<any[]>([]);
+  const [selectedBank, setSelectedBank] = useState<any>(null);
+  const [formData, setFormData] = useState({
     bank: '',
     agency: '',
     op: '',
     account: '',
     pix: '',
   });
+  const [errors, setErrors] = useState<any>({});
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    type: 'success' as 'success' | 'error',
+  });
 
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
+  const showNotification = useCallback((message: string, type: 'success' | 'error') => {
+    setNotification({ open: true, message, type });
+  }, []);
 
-    if (name === 'agency' || name === 'account' || name === 'op') {
-      setFormData(prevData => ({
-        ...prevData,
-        [name]: value.replace(/\D/g, ''),
-      }));
-      return;
-    }
+  const handleFormError = useCallback(
+    (error: unknown) => {
+      showNotification('Corrija os erros no formulário.', 'error');
 
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: value,
-    }));
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, any> = {};
+        error.issues.forEach(err => {
+          const [field, index] = err.path;
+          if (!newErrors[field]) {
+            newErrors[field] = [];
+          }
+          newErrors[field][index || 0] = err.message;
+        });
+        setErrors(newErrors);
+      }
+
+      scroll.scrollToTop({ duration: 500, smooth: 'easeInOutQuart' });
+    },
+    [showNotification],
+  );
+
+  const { customerForm, setCustomerForm, newCustomerForm, setNewCustomerForm } =
+    useContext(CustomerContext);
+
+  useImperativeHandle(ref, () => ({
+    handleSubmitForm,
+  }));
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const newValue = ['agency', 'account', 'op'].includes(name) ? value.replace(/\D/g, '') : value;
+    setFormData(prev => ({ ...prev, [name]: newValue }));
   };
 
   const handleBankChange = (event: any, value: any) => {
     if (value) {
-      setFormData(prevData => ({
-        ...prevData,
-        bank: value.name,
-      }));
+      setFormData(prev => ({ ...prev, bank: value.name }));
+      setSelectedBank(value);
+      setErrors((prev: any) => ({ ...prev, bank: '' }));
     } else {
-      setFormData(prevData => ({
-        ...prevData,
-        bank: '',
-      }));
+      setFormData(prev => ({ ...prev, bank: '' }));
+      setSelectedBank(null);
+      setErrors((prev: any) => ({ ...prev, bank: 'Banco é obrigatório.' }));
     }
   };
 
-  const verifyDataLocalStorage = () => {
-    const data = localStorage.getItem('PJ/Three');
-
-    if (data) {
-      const parsedData = JSON.parse(data);
-      setFormData(prevData => ({
-        ...prevData,
-        bank: parsedData.bank_accounts_attributes[0].bank_name,
-        agency: parsedData.bank_accounts_attributes[0].agency,
-        op: parsedData.bank_accounts_attributes[0].operation,
-        account: parsedData.bank_accounts_attributes[0].account,
-        pix: parsedData.bank_accounts_attributes[0].pix,
-      }));
+  const showError = (err: any) => {
+    const fieldErrors = err?.formErrors?.fieldErrors ?? {};
+    const errorMap: any = {};
+    for (const key in fieldErrors) {
+      errorMap[key] = fieldErrors[key][0];
     }
+    setErrors(errorMap);
+    setNotification({
+      open: true,
+      message: 'Preencha todos os campos obrigatórios.',
+      type: 'error',
+    });
   };
 
-  useEffect(() => {
-    verifyDataLocalStorage();
-  }, []);
-
-  const saveDataLocalStorage = (data: any) => {
+  const persistLocalStorage = (data: any) => {
     localStorage.setItem('PJ/Three', JSON.stringify(data));
   };
 
   const handleSubmitForm = () => {
-    saveDataLocalStorage({
-      ...customerForm,
-      bank_accounts_attributes: [
-        {
-          bank_name: formData.bank,
-          agency: formData.agency,
-          operation: formData.op,
-          account: formData.account,
-          pix: formData.pix,
-        },
-      ],
-    });
-
     try {
       stepThreeSchema.parse({
         bank: formData.bank,
@@ -141,209 +122,123 @@ const PJCustomerStepThree: ForwardRefRenderFunction<
         pix: formData.pix,
       });
 
-      if (editMode) {
-        const bankAccount = customerForm.data.attributes.bank_accounts;
-
-        if (bankAccount[0]) {
-          bankAccount[0].bank_name = formData.bank;
-          bankAccount[0].agency = formData.agency;
-          bankAccount[0].operation = formData.op;
-          bankAccount[0].account = formData.account;
-          bankAccount[0].pix = formData.pix;
-        } else {
-          customerForm.data.attributes.bank_accounts_attributes = [
-            {
-              bank_name: formData.bank,
-              agency: formData.agency,
-              operation: formData.op,
-              account: formData.account,
-              pix: formData.pix,
-            },
-          ];
-        }
-
-        setCustomerForm(customerForm);
-
-        setNewCustomerForm({
-          ...newCustomerForm,
-          bank_accounts_attributes: [
-            {
-              bank_name: formData.bank,
-              agency: formData.agency,
-              operation: formData.op,
-              account: formData.account,
-              pix: formData.pix,
-            },
-          ],
-        });
-
-        nextStep();
-        return;
-      }
-
-      const data = {
-        ...customerForm,
-        bank_accounts_attributes: [
-          {
-            bank_name: formData.bank,
-            agency: formData.agency,
-            operation: formData.op,
-            account: formData.account,
-            pix: formData.pix,
-          },
-        ],
+      const bankData = {
+        bank_name: formData.bank,
+        agency: formData.agency,
+        operation: formData.op,
+        account: formData.account,
+        pix: formData.pix,
       };
 
-      setCustomerForm(data);
+      const updatedData = { ...customerForm, bank_accounts_attributes: [bankData] };
+      persistLocalStorage(updatedData);
+
+      if (editMode) {
+        const existing = customerForm.data.attributes.bank_accounts;
+        if (existing[0]) {
+          Object.assign(existing[0], bankData);
+        } else {
+          customerForm.data.attributes.bank_accounts_attributes = [bankData];
+        }
+        setCustomerForm(customerForm);
+        setNewCustomerForm({ ...newCustomerForm, bank_accounts_attributes: [bankData] });
+      } else {
+        setCustomerForm(updatedData);
+      }
+
+      setNotification({
+        open: true,
+        message: 'Dados bancários salvos com sucesso.',
+        type: 'success',
+      });
+
       nextStep();
     } catch (err) {
-      handleFormError(err);
-    }
-  };
-
-  const handleFormError = (error: any) => {
-    const newErrors = error?.formErrors?.fieldErrors ?? {};
-    const errorObject: { [key: string]: string } = {};
-    setMessage('Preencha todos os campos obrigatórios.');
-    setType('error');
-    setOpenSnackbar(true);
-
-    for (const field in newErrors) {
-      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
-        errorObject[field] = newErrors[field][0] as string;
+      if (err instanceof z.ZodError) {
+        handleFormError(err);
+      } else {
+        console.error('Erro ao submeter o formulário:', err);
+        showError(err);
       }
     }
-    setErrors(errorObject);
   };
 
-  const renderInputField = (
-    label: string,
-    name: keyof FormData,
-    placeholderValue: string,
-    widthValue: string,
-    error?: boolean,
-  ) => (
-    <div style={{ display: 'flex', flexDirection: 'column', width: `${widthValue}` }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {label}
-      </Typography>
-      <TextField
-        id="outlined-basic"
-        variant="outlined"
-        fullWidth
-        name={name}
-        size="small"
-        sx={{ flex: 1 }}
-        value={formData[name]}
-        autoComplete="off"
-        placeholder={`${placeholderValue}`}
-        onChange={handleInputChange}
-        error={error && !formData[name]}
-      />
-    </div>
-  );
-
-  useImperativeHandle(ref, () => ({
-    handleSubmitForm,
-  }));
-
   useEffect(() => {
-    const getBanks = async () => {
+    const init = async () => {
       try {
-        const response = await getAllBanks(true);
-        setBankList(response);
-      } catch (error: any) {
-        console.error(error);
+        const [banks] = await Promise.all([getAllBanks(true)]);
+        setBankList(banks);
+
+        const formFromContext = customerForm?.data?.attributes?.bank_accounts?.[0];
+        const formFromStorage = JSON.parse(localStorage.getItem('PJ/Three') || 'null');
+
+        let account = null;
+
+        if (formFromContext) {
+          account = formFromContext;
+        } else if (formFromStorage?.bank_accounts_attributes?.[0]) {
+          account = formFromStorage.bank_accounts_attributes[0];
+        }
+
+        if (account) {
+          setFormData({
+            bank: account.bank_name || '',
+            agency: account.agency || '',
+            op: account.operation || '',
+            account: account.account || '',
+            pix: account.pix || '',
+          });
+        }
+      } catch (err) {
+        showNotification('Erro ao carregar os dados bancários.', 'error');
+      } finally {
+        setLoading(false);
       }
     };
 
-    getBanks();
+    init();
   }, []);
 
   useEffect(() => {
-    const handleDataForm = () => {
-      const attributes = customerForm.data.attributes.bank_accounts[0];
-
-      if (attributes) {
-        setFormData(prevData => ({
-          ...prevData,
-          bank: attributes.bank_name,
-          agency: attributes.agency,
-          op: attributes.operation,
-          account: attributes.account,
-          pix: attributes.pix,
-        }));
-      }
-    };
-
-    if (customerForm.data) {
-      handleDataForm();
-    }
-  }, [customerForm]);
+    getAllBanks(true).then(setBankList).catch(console.error);
+  }, []);
 
   useEffect(() => {
-    if (formData.bank !== '' && bankList.length > 0) {
-      const bank = bankList.find(bank => bank.name === formData.bank);
-      setSelectedBank(bank);
+    if (formData.bank && bankList.length > 0) {
+      const found = bankList.find(b => b.name === formData.bank);
+      setSelectedBank(found);
     }
   }, [formData.bank, bankList]);
 
   return (
     <>
-      {openSnackbar && (
-        <Notification
-          open={openSnackbar}
-          message={message}
-          severity={type}
-          onClose={() => setOpenSnackbar(false)}
-        />
-      )}
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.type}
+        onClose={() => setNotification(prev => ({ ...prev, open: false }))}
+      />
 
-      <Container
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-          maxWidth: '600px',
-        }}
-      >
-        <Box>
-          <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-            {'Banco'}
-          </Typography>
+      <Container loading={loading}>
+        {loading && (
+          <LoadingOverlay>
+            <CircularProgress size={30} style={{ color: '#01013D' }} />
+          </LoadingOverlay>
+        )}
 
-          <Autocomplete
-            limitTags={1}
-            id="multiple-limit-tags"
-            value={selectedBank}
-            options={bankList}
-            getOptionLabel={option => option?.name ?? ''}
+        <div className="max-w-[600px] flex flex-col gap-[16px]">
+          <BankAutocomplete
+            bankList={bankList}
+            selectedBank={selectedBank}
             onChange={handleBankChange}
-            renderInput={params => (
-              <TextField
-                placeholder="Selecione um Banco"
-                {...params}
-                size="small"
-                error={!!errors.bank}
-              />
-            )}
-            sx={{ backgroundColor: 'white', zIndex: 1 }}
-            noOptionsText="Nenhum Banco Encontrado"
+            error={!!errors.bank}
           />
-        </Box>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          {renderInputField('Agência', 'agency', 'Número da agencia', '100%', !!errors.agency)}
-          {renderInputField('Operação', 'op', 'Op.', '100px', !!errors.operation)}
-          {renderInputField('Conta', 'account', 'Número da conta', '100%', !!errors.account)}
+          <BankFormInputs formData={formData} onChange={handleInputChange} errors={errors} />
         </div>
-
-        <Box>
-          {renderInputField('Cadastrar Chave Pix', 'pix', 'Informe a chave', '100%', !!errors.pix)}
-        </Box>
       </Container>
     </>
   );
-};
+});
 
-export default forwardRef(PJCustomerStepThree);
+export default PJCustomerStepThree;

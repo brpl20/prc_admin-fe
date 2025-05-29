@@ -3,22 +3,13 @@ import {
   useEffect,
   useContext,
   ChangeEvent,
-  DragEvent,
   forwardRef,
   ForwardRefRenderFunction,
   useImperativeHandle,
-  Dispatch,
-  SetStateAction,
-  useRef,
 } from 'react';
 
-import Dropzone from 'react-dropzone';
-
 import { z } from 'zod';
-import CustomTooltip from '@/components/Tooltip';
-import { colors, Flex } from '@/styles/globals';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
-import { MdOutlineInfo, MdDelete } from 'react-icons/md';
 
 import { WorkContext } from '@/contexts/WorkContext';
 import { Notification } from '@/components';
@@ -26,43 +17,19 @@ import { Notification } from '@/components';
 import { IProfileCustomer } from '@/interfaces/ICustomer';
 import { getAllProfileCustomer } from '@/services/customers';
 
-import {
-  Container,
-  InputContainer,
-  SubjectOptionsArea,
-  Input,
-  DropContainer,
-  FileList,
-} from './styles';
+import { Container, LoadingOverlay } from './styles';
 
-import {
-  Box,
-  FormControl,
-  FormControlLabel,
-  Typography,
-  Checkbox,
-  Radio,
-  TextField,
-  TextareaAutosize,
-  Autocomplete,
-} from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 import { useRouter } from 'next/router';
 import { getAllDraftWorks } from '@/services/works';
 import { useSession } from 'next-auth/react';
-import roleSubjectAccess from './roleSubjectAccess';
-import useLoadingCounter from '@/utils/useLoadingCounter';
 import { getProfileCustomerFullName } from '@/utils/profileCustomerUtils';
-
-interface Option {
-  value: string;
-  label: string;
-}
-
-interface RadioOptionsProps {
-  options: Option[];
-  selectedValue: string;
-  onChange: (value: string) => void;
-}
+import { CustomerSelection } from './CustomerSelection';
+import { ProcessNumberInput } from './ProcessNumberInput';
+import { DraftWorkSelection } from './DraftWorkSelection';
+import { ProcedureSelection } from './ProcedureSelection';
+import { SubjectSelection } from './SubjectSelection';
+import { moneyMask } from '@/utils/masks';
 
 export interface IRefWorkStepOneProps {
   handleSubmitForm: () => void;
@@ -70,7 +37,6 @@ export interface IRefWorkStepOneProps {
 
 interface IStepOneProps {
   nextStep: () => void;
-  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 const stepOneSchema = z.object({
@@ -80,14 +46,27 @@ const stepOneSchema = z.object({
 });
 
 const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps> = (
-  { nextStep, setFormLoading },
+  { nextStep },
   ref,
 ) => {
+  const [loading, setLoading] = useState(true);
   const { data: session } = useSession();
-
   const route = useRouter();
-  const [isVisibleOptionsArea, setIsVisibleOptionsArea] = useState(false);
   const { workForm, setWorkForm, setUdateWorkForm } = useContext(WorkContext);
+  const { setPageTitle } = useContext(PageTitleContext);
+
+  const [formState, setFormState] = useState({
+    selectedSubject: '',
+    selectedArea: '',
+    compensationsLastYears: '',
+    officialCompensation: '',
+    hasALawsuit: '',
+    gainProjection: '',
+    selectedFile: null as File[] | null,
+    otherDescription: '',
+  });
+
+  const [isVisibleOptionsArea, setIsVisibleOptionsArea] = useState(false);
   const [errors, setErrors] = useState({} as any);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -98,54 +77,11 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
   const [draftWorksList, setDraftWorksList] = useState<any[]>([]);
   const [processNumber, setProcessNumber] = useState<string>('');
   const [selectedProcedures, setSelectedProcedures] = useState<string[]>([]);
-  const [selectedSubject, setSelectedSubject] = useState<string>('');
-  const [selectedArea, setSelectedArea] = useState<string>('');
-  const [selectedFile, setSelectedFile] = useState<File[] | null>(null);
-  const [compensationsLastYears, setCompensationsLastYears] = useState('');
-  const [officialCompensation, setOfficialCompensation] = useState('');
-  const [hasALawsuit, setHasALawsuit] = useState('');
-  const [gainProjection, setGainProjection] = useState<number>();
-  const [otherDescription, setOtherDescription] = useState<string>('');
   const [customerSelectedList, setCustomerSelectedList] = useState<IProfileCustomer[]>([]);
   const [selectedDraftWork, setSelectedDraftWork] = useState<any>(null);
 
-  const { setLoading } = useLoadingCounter(setFormLoading);
-
-  const renderDragMessage = (isDragActive: boolean) => {
-    if (!isDragActive) {
-      return <p>Arraste arquivos aqui...</p>;
-    }
-    return <p>Solte os arquivos aqui</p>;
-  };
-
-  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const droppedFiles = event.dataTransfer.files;
-
-    for (let i = 0; i < droppedFiles.length; i++) {
-      const droppedFile = droppedFiles[i];
-      if (droppedFiles[i]) {
-        const fileName = droppedFile.name;
-        const fileExtension = fileName.split('.').pop()?.toLowerCase();
-        const allowedExtensions = ['jpeg', 'jpg', 'png', 'pdf'];
-
-        if (fileExtension && allowedExtensions.includes(fileExtension)) {
-          setSelectedFile(prevSelected => [...(prevSelected || []), droppedFile]);
-        } else {
-          setOpenFileSnackbar(true);
-        }
-      }
-    }
-  };
-
-  const handleDeleteFile = (fileToDelete: File) => {
-    setSelectedFile((prevSelected: any) =>
-      prevSelected.filter((file: any) => file !== fileToDelete),
-    );
-  };
-
-  const handleDragOver = (event: ChangeEvent<HTMLInputElement>) => {
-    event.preventDefault();
+  const normalizeSubject = (subject: string) => {
+    return subject === 'civil' ? 'civel' : subject;
   };
 
   const handleCustomersSelected = (customers: any) => {
@@ -160,129 +96,73 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
 
   const handleProcedureSelection = (event: ChangeEvent<HTMLInputElement>) => {
     const { value, checked } = event.target;
-
-    const procedure = value;
-
-    if (checked) {
-      setSelectedProcedures([...selectedProcedures, procedure]);
-    } else {
-      setSelectedProcedures(selectedProcedures.filter(item => item !== procedure));
-    }
+    setSelectedProcedures(prev =>
+      checked ? [...prev, value] : prev.filter(item => item !== value),
+    );
   };
 
   const handleSubject = (value: string) => {
-    if (value === 'civil') {
-      value = 'civel';
-    }
-
-    setSelectedSubject(value);
-
-    value.search('min') < 0 ? setIsVisibleOptionsArea(true) : setIsVisibleOptionsArea(false);
+    const newValue = value === 'civil' ? 'civel' : value;
+    setFormState(prev => ({ ...prev, selectedSubject: newValue }));
+    setIsVisibleOptionsArea(!newValue.includes('min'));
   };
 
   const handleSelectArea = (value: string) => {
-    setSelectedArea(value);
+    setFormState(prev => ({ ...prev, selectedArea: value }));
   };
-
-  useEffect(() => {
-    if (route.pathname == '/cadastrar') {
-      setWorkForm({});
-    }
-  }, [route]);
-
-  const { setPageTitle } = useContext(PageTitleContext);
-
-  useEffect(() => {
-    setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastrar' : 'Alterar'} Trabalho`);
-  }, [route, setPageTitle]);
 
   const handleSubmitForm = () => {
     try {
       stepOneSchema.parse({
         profile_customer_ids: customerSelectedList.map(customer => customer.id),
         procedures: selectedProcedures,
-        subject: selectedSubject,
+        subject: formState.selectedSubject,
       });
 
       let data: any = {
         profile_customer_ids: customerSelectedList.map(customer => customer.id),
         number: processNumber,
         procedures: selectedProcedures,
-        subject: selectedSubject,
+        subject: formState.selectedSubject,
         draftWork: selectedDraftWork,
       };
 
-      switch (selectedSubject) {
-        case 'civel': {
-          data = {
-            ...data,
-            civel_area: selectedArea,
-          };
+      switch (formState.selectedSubject) {
+        case 'civel':
+          data.civel_area = formState.selectedArea;
           break;
-        }
-        case 'social_security': {
-          data = {
-            ...data,
-            social_security_areas: selectedArea,
-          };
+        case 'social_security':
+          data.social_security_areas = formState.selectedArea;
           break;
-        }
-
-        case 'laborite': {
-          data = {
-            ...data,
-            laborite_areas: selectedArea,
-          };
+        case 'laborite':
+          data.laborite_areas = formState.selectedArea;
           break;
-        }
-
-        case 'tributary': {
-          data = {
-            ...data,
-            tributary_areas: selectedArea,
-          };
+        case 'tributary':
+          data.tributary_areas = formState.selectedArea;
           break;
-        }
-
-        case 'tributary_pis': {
-          data = {
-            ...data,
-            compensations_five_years: compensationsLastYears,
-            compensations_service: officialCompensation,
-            lawsuit: hasALawsuit,
-            gain_projection: gainProjection,
-            tributary_files: selectedFile,
-          };
+        case 'tributary_pis':
+          Object.assign(data, {
+            compensations_five_years: formState.compensationsLastYears,
+            compensations_service: formState.officialCompensation,
+            lawsuit: formState.hasALawsuit,
+            gain_projection: formState.gainProjection,
+            tributary_files: formState.selectedFile,
+          });
           break;
-        }
-
-        case 'others': {
-          data = {
-            ...data,
-            other_description: otherDescription,
-          };
-          break;
-        }
-
-        default:
+        case 'others':
+          data.other_description = formState.otherDescription;
           break;
       }
 
-      if (route.pathname == '/alterar') {
+      if (route.pathname === '/alterar') {
         setUdateWorkForm(data);
         saveDataLocalStorage(data);
+      } else {
+        const mergedData = { ...workForm, ...data };
+        saveDataLocalStorage(mergedData);
+        setWorkForm(mergedData);
       }
 
-      const dataAux = {
-        ...workForm,
-        ...data,
-      };
-
-      if (route.pathname !== '/alterar') {
-        saveDataLocalStorage(dataAux);
-      }
-
-      setWorkForm(dataAux);
       nextStep();
     } catch (err) {
       handleFormError(err);
@@ -295,133 +175,52 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
     setMessage('Preencha todos os campos obrigatórios.');
     setType('error');
     setOpenSnackbar(true);
-
     for (const field in newErrors) {
-      if (Object.prototype.hasOwnProperty.call(newErrors, field)) {
-        errorObject[field] = newErrors[field][0] as string;
-      }
+      errorObject[field] = newErrors[field][0] as string;
     }
     setErrors(errorObject);
-  };
-
-  const verifyDataLocalStorage = async () => {
-    setLoading(true);
-    const data = localStorage.getItem('WORK/One');
-
-    if (data) {
-      const parsedData = JSON.parse(data);
-
-      if (parsedData.draftWork) {
-        setSelectedDraftWork(parsedData.draftWork);
-      }
-
-      if (parsedData.profile_customer_ids) {
-        handleCustomersSelected([
-          ...customersList.filter((customer: any) =>
-            parsedData.profile_customer_ids.includes(customer.id),
-          ),
-        ]);
-      }
-
-      if (parsedData.number) {
-        setProcessNumber(parsedData.number);
-      }
-
-      if (parsedData.procedure) {
-        setSelectedProcedures(parsedData.procedure);
-      }
-
-      if (parsedData.procedures) {
-        setSelectedProcedures(parsedData.procedures);
-      }
-
-      if (parsedData.subject) {
-        handleSubject(parsedData.subject);
-      }
-
-      switch (parsedData.subject) {
-        case 'civel': {
-          if (parsedData.civel_area) {
-            setSelectedArea(parsedData.civel_area);
-          }
-          break;
-        }
-        case 'social_security': {
-          if (parsedData.social_security_areas) {
-            setSelectedArea(parsedData.social_security_areas);
-          }
-          break;
-        }
-
-        case 'laborite': {
-          if (parsedData.laborite_areas) {
-            setSelectedArea(parsedData.laborite_areas);
-          }
-          break;
-        }
-
-        case 'tributary': {
-          if (parsedData.tributary_areas) {
-            setSelectedArea(parsedData.tributary_areas);
-          }
-          break;
-        }
-
-        case 'tributary_pis': {
-          if (parsedData.compensations_five_years) {
-            setCompensationsLastYears(parsedData.compensations_five_years);
-          }
-
-          if (parsedData.compensations_service) {
-            setOfficialCompensation(parsedData.compensations_service);
-          }
-
-          if (parsedData.lawsuit) {
-            setHasALawsuit(parsedData.lawsuit);
-          }
-
-          if (parsedData.gain_projection) {
-            setGainProjection(parsedData.gain_projection);
-          }
-
-          if (parsedData.tributary_files) {
-            setSelectedFile(parsedData.tributary_files);
-          }
-          break;
-        }
-
-        case 'others': {
-          if (parsedData.other_description) {
-            setOtherDescription(parsedData.other_description);
-          }
-          break;
-        }
-
-        default:
-          break;
-      }
-
-      if (parsedData.profile_customer_ids) {
-        handleCustomersSelected([
-          ...customersList.filter((customer: any) =>
-            parsedData.profile_customer_ids.includes(customer.id),
-          ),
-        ]);
-      }
-    }
-    setLoading(false);
   };
 
   const saveDataLocalStorage = (data: any) => {
     localStorage.setItem('WORK/One', JSON.stringify(data));
   };
 
-  const handleGainProjection = (value: number) => {
-    const input = document.getElementById('gainProjection') as HTMLInputElement;
+  const verifyDataLocalStorage = async () => {
+    setLoading(true);
+    try {
+      const data = localStorage.getItem('WORK/One');
+      if (data) {
+        const parsed = JSON.parse(data);
+        setSelectedDraftWork(parsed.draftWork ?? null);
+        setProcessNumber(parsed.number ?? '');
+        setSelectedProcedures(parsed.procedures ?? []);
+        const normalizedSubject = normalizeSubject(parsed.subject ?? '');
+        handleSubject(normalizedSubject);
 
-    if (value && input) {
-      input.value = `R$ ${value}`;
-      setGainProjection(value);
+        setFormState(prev => ({
+          ...prev,
+          selectedSubject: normalizedSubject,
+          selectedArea:
+            parsed[`${normalizedSubject}_areas`] || parsed[`${normalizedSubject}_area`] || '',
+          compensationsLastYears: parsed.compensations_five_years ?? '',
+          officialCompensation: parsed.compensations_service ?? '',
+          hasALawsuit: parsed.lawsuit ?? '',
+          gainProjection: parsed.gain_projection ?? '',
+          selectedFile: parsed.tributary_files ?? null,
+          otherDescription: parsed.other_description ?? '',
+        }));
+
+        if (parsed.profile_customer_ids && customersList.length > 0) {
+          const selectedCustomers = customersList.filter(customer =>
+            parsed.profile_customer_ids.includes(customer.id.toString()),
+          );
+          setCustomerSelectedList(selectedCustomers);
+        }
+      }
+    } catch (error) {
+      handleFormError(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -429,193 +228,78 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
     handleSubmitForm,
   }));
 
-  function RadioOptions({ options, selectedValue, onChange }: RadioOptionsProps) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {options.map(option => (
-          <div key={option.value}>
-            <FormControlLabel
-              control={
-                <Radio
-                  size="small"
-                  value={option.value}
-                  checked={selectedValue === option.value}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
-                />
-              }
-              label={option.label}
-            />
-          </div>
-        ))}
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (route.pathname === '/cadastrar') {
+      setWorkForm({});
+    }
+    setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastrar' : 'Alterar'} Trabalho`);
+  }, [route, setPageTitle, setWorkForm]);
 
   useEffect(() => {
-    const getCustomers = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      const response = await getAllProfileCustomer('');
-      if (response) {
-        // Sort customersList by full name
-        const sortedList = response.data.sort((a: IProfileCustomer, b: IProfileCustomer) => {
-          const nameA = getProfileCustomerFullName(a).toLowerCase();
-          const nameB = getProfileCustomerFullName(b).toLowerCase();
-          return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'variant' });
-        });
-        setCustomersList(sortedList);
+      const [customersResp, draftsResp] = await Promise.all([
+        getAllProfileCustomer(''),
+        getAllDraftWorks(),
+      ]);
+      if (customersResp) {
+        const sorted = customersResp.data.sort((a: IProfileCustomer, b: IProfileCustomer) =>
+          getProfileCustomerFullName(a).localeCompare(getProfileCustomerFullName(b), 'pt-BR'),
+        );
+        setCustomersList(sorted);
       }
+      setDraftWorksList(draftsResp.data);
       setLoading(false);
     };
-
-    const getDraftWorks = async () => {
-      setLoading(true);
-      const response = await getAllDraftWorks();
-      setDraftWorksList(response.data);
-      setLoading(false);
-    };
-
-    getCustomers();
-    getDraftWorks();
+    fetchData();
   }, []);
 
   useEffect(() => {
-    if (selectedSubject !== workForm.subject) {
-      setSelectedArea('');
+    if (!workForm?.data?.attributes || customersList.length === 0) return;
+
+    const attributes = workForm.data.attributes;
+    setLoading(true);
+
+    if (attributes.procedures) setSelectedProcedures(attributes.procedures);
+    if (attributes.profile_customers?.length) {
+      handleCustomersSelected(attributes.profile_customers);
     }
-  }, [selectedSubject, workForm.subject]);
 
-  useEffect(() => {
-    const handleDataForm = async () => {
-      setLoading(true);
-      const attributes = workForm.data.attributes;
+    setProcessNumber(attributes.number ?? '');
 
-      if (attributes) {
-        if (attributes.procedure) {
-          const procedure = attributes.procedure;
+    const normalizedSubject = normalizeSubject(attributes.subject ?? '');
+    handleSubject(normalizedSubject);
 
-          const procedure_array = procedure.split(',');
+    setFormState(prev => ({
+      ...prev,
+      selectedSubject: normalizedSubject,
+      selectedArea:
+        attributes[`${normalizedSubject}_area`] || attributes[`${normalizedSubject}_areas`] || '',
+      compensationsLastYears:
+        attributes.compensations_five_years === true
+          ? 'yes'
+          : attributes.compensations_five_years === false
+            ? 'no'
+            : '',
+      officialCompensation:
+        attributes.compensations_service === true
+          ? 'yes'
+          : attributes.compensations_service === false
+            ? 'no'
+            : '',
+      hasALawsuit: attributes.lawsuit === true ? 'yes' : attributes.lawsuit === false ? 'no' : '',
+      gainProjection: attributes.gain_projection ?? '',
+      selectedFile: attributes.tributary_files ?? null,
+      otherDescription: attributes.other_description ?? '',
+    }));
 
-          setSelectedProcedures(procedure_array);
-        }
-
-        if (attributes.procedures) {
-          setSelectedProcedures(attributes.procedures);
-        }
-
-        if (attributes.profile_customers.length > 0) {
-          handleCustomersSelected(attributes.profile_customers);
-        }
-
-        if (attributes.number) {
-          setProcessNumber(attributes.number);
-        }
-
-        if (attributes.subject) {
-          handleSubject(attributes.subject);
-        }
-
-        if (attributes.compensations_five_years) {
-          setCompensationsLastYears(attributes.compensations_five_years);
-        }
-
-        if (attributes.compensations_service) {
-          setOfficialCompensation(attributes.compensations_service);
-        }
-
-        if (attributes.lawsuit) {
-          setHasALawsuit(attributes.lawsuit);
-        }
-
-        if (attributes.gain_projection) {
-          handleGainProjection(attributes.gain_projection);
-        }
-
-        switch (attributes.subject) {
-          case 'civel': {
-            if (attributes.civel_area) {
-              setSelectedArea(attributes.civel_area);
-            }
-            break;
-          }
-          case 'civil': {
-            if (attributes.civel_area) {
-              setSelectedArea(attributes.civel_area);
-            }
-            break;
-          }
-          case 'social_security': {
-            if (attributes.social_security_areas) {
-              setSelectedArea(attributes.social_security_areas);
-            }
-            break;
-          }
-
-          case 'laborite': {
-            if (attributes.laborite_areas) {
-              setSelectedArea(attributes.laborite_areas);
-            }
-            break;
-          }
-
-          case 'tributary': {
-            if (attributes.tributary_areas) {
-              setSelectedArea(attributes.tributary_areas);
-            }
-            break;
-          }
-
-          case 'tributary_pis': {
-            if (
-              attributes.compensations_five_years &&
-              attributes.compensations_five_years === true
-            ) {
-              setCompensationsLastYears('yes');
-            } else {
-              setCompensationsLastYears('no');
-            }
-
-            if (attributes.compensations_service) {
-              attributes.compensations_service === true
-                ? setOfficialCompensation('yes')
-                : setOfficialCompensation('no');
-            }
-
-            if (attributes.lawsuit) {
-              attributes.lawsuit === true ? setHasALawsuit('yes') : setHasALawsuit('no');
-            }
-
-            if (attributes.gain_projection) {
-              setGainProjection(attributes.gain_projection);
-            }
-
-            if (attributes.tributary_files) {
-              setSelectedFile(attributes.tributary_files);
-            }
-            break;
-          }
-
-          case 'others': {
-            if (attributes.other_description) {
-              setOtherDescription(attributes.other_description);
-            }
-            break;
-          }
-
-          default:
-            break;
-        }
-      }
-
-      setLoading(false);
-    };
-
-    if (workForm.data) {
-      handleDataForm();
-    }
+    setLoading(false);
   }, [workForm, customersList]);
 
   useEffect(() => {
-    verifyDataLocalStorage();
+    if (customersList.length > 0) {
+      verifyDataLocalStorage();
+    }
   }, [customersList]);
 
   return (
@@ -628,690 +312,91 @@ const WorkStepOne: ForwardRefRenderFunction<IRefWorkStepOneProps, IStepOneProps>
           onClose={() => setOpenSnackbar(false)}
         />
       )}
-      <Container>
+
+      <Container loading={loading}>
+        {loading && (
+          <LoadingOverlay>
+            <CircularProgress size={30} style={{ color: '#01013D' }} />
+          </LoadingOverlay>
+        )}
+
         <Box sx={{ width: '100%' }}>
-          {/* customers, Application or Process Number and Pre-Sets */}
-          <span>
-            <Flex style={{ flexDirection: 'column' }}>
-              <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                {'Cliente'}
-              </Typography>
+          <CustomerSelection
+            customersList={customersList}
+            customerSelectedList={customerSelectedList}
+            handleCustomersSelected={handleCustomersSelected}
+            error={errors.profile_customer_ids}
+          />
 
-              <Autocomplete
-                multiple
-                limitTags={1}
-                id="multiple-limit-tags"
-                options={customersList}
-                getOptionLabel={option =>
-                  option &&
-                  option.attributes &&
-                  `${option.id} - ${getProfileCustomerFullName(option)}`
-                }
-                renderInput={params => (
-                  <TextField
-                    placeholder="Selecione um Cliente"
-                    {...params}
-                    size="small"
-                    error={!!errors.profile_customer_ids}
-                    helperText={errors.profile_customer_ids}
-                    FormHelperTextProps={{ className: 'ml-2' }}
-                  />
-                )}
-                sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
-                noOptionsText="Nenhum Cliente Encontrado"
-                onChange={(event, customers) => handleCustomersSelected(customers)}
-                value={customerSelectedList}
-              />
-            </Flex>
+          <ProcessNumberInput
+            processNumber={processNumber}
+            setProcessNumber={setProcessNumber}
+            error={errors.number}
+          />
 
-            <Flex style={{ marginTop: '16px', flexDirection: 'column' }}>
-              <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                {'Número do Requerimento ou Processo'}
-              </Typography>
-              <InputContainer>
-                <TextField
-                  id="outlined-basic"
-                  variant="outlined"
-                  size="small"
-                  value={processNumber}
-                  autoComplete="off"
-                  placeholder="Informe o Número"
-                  onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                    setProcessNumber(event.target.value)
-                  }
-                  error={!!errors.number}
-                />
-              </InputContainer>
-              <Typography variant="caption" sx={{ marginTop: '4px' }} gutterBottom>
-                {'* Apenas para casos em que já existe o processo.'}
-              </Typography>
-            </Flex>
+          <DraftWorkSelection
+            draftWorksList={draftWorksList}
+            selectedDraftWork={selectedDraftWork}
+            setSelectedDraftWork={setSelectedDraftWork}
+            disabled={route.pathname === '/alterar'}
+          />
 
-            <Flex style={{ flexDirection: 'column' }}>
-              <Flex
-                style={{
-                  flexDirection: 'row',
-                  marginBottom: '8px',
-                  alignItems: 'center',
-                  marginTop: '16px',
-                }}
-              >
-                <Typography variant="h6">{'Pré-Definição'}</Typography>
-                <CustomTooltip
-                  title="Selecione uma opção para preencher automaticamente o formulário com dados anteriores, simplificando o processo de cadastro."
-                  placement="right"
-                >
-                  <span
-                    aria-label="Pré-Definição"
-                    style={{
-                      display: 'flex',
-                    }}
-                  >
-                    <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
-                  </span>
-                </CustomTooltip>
-                {errors.procedure && selectedProcedures.length <= 0 && (
-                  <label className="flagError">{'*'}</label>
-                )}
-              </Flex>
+          <ProcedureSelection
+            selectedProcedures={selectedProcedures}
+            handleProcedureSelection={handleProcedureSelection}
+            errors={errors}
+          />
 
-              <Autocomplete
-                limitTags={1}
-                id="multiple-limit-tags"
-                options={draftWorksList}
-                getOptionLabel={option => option && option.attributes && option.attributes.name}
-                renderInput={params => (
-                  <TextField placeholder="Selecione uma Pré-definição" {...params} size="small" />
-                )}
-                sx={{ width: '398px', backgroundColor: 'white', zIndex: 1 }}
-                noOptionsText="Não Encontrado"
-                onChange={(event, draftWork) => {
-                  setSelectedDraftWork(draftWork);
-                }}
-                value={selectedDraftWork}
-                disabled={route.pathname == '/cadastrar' ? false : true}
-              />
-            </Flex>
-          </span>
-
-          {/* Procedure - title */}
-          <Flex
-            style={{
-              flexDirection: 'row',
-              marginBottom: '8px',
-              alignItems: 'center',
-              marginTop: '16px',
+          <SubjectSelection
+            role={session?.role || ''}
+            selectedSubject={formState.selectedSubject}
+            errors={errors}
+            handleSubject={handleSubject}
+            isVisibleOptionsArea={isVisibleOptionsArea}
+            selectedArea={formState.selectedArea}
+            handleSelectArea={handleSelectArea}
+            compensationsLastYears={formState.compensationsLastYears}
+            setCompensationsLastYears={(value: string) =>
+              setFormState(prev => ({ ...prev, compensationsLastYears: value }))
+            }
+            officialCompensation={formState.officialCompensation}
+            setOfficialCompensation={(value: string) =>
+              setFormState(prev => ({ ...prev, officialCompensation: value }))
+            }
+            hasALawsuit={formState.hasALawsuit}
+            setHasALawsuit={(value: string) =>
+              setFormState(prev => ({ ...prev, hasALawsuit: value }))
+            }
+            gainProjection={
+              formState.gainProjection ? `R$ ${moneyMask(formState.gainProjection)}` : null
+            }
+            handleGainProjection={(value: string | null) =>
+              setFormState(prev => ({
+                ...prev,
+                gainProjection: moneyMask(`R$ ${value}`) || '',
+              }))
+            }
+            selectedFile={formState.selectedFile}
+            setSelectedFile={files => {
+              if (typeof files === 'function') {
+                setFormState(prev => ({
+                  ...prev,
+                  selectedFile: files(prev.selectedFile),
+                }));
+              } else {
+                setFormState(prev => ({
+                  ...prev,
+                  selectedFile: files,
+                }));
+              }
             }}
-          >
-            <Typography
-              variant="h6"
-              style={{
-                color: selectedProcedures.length <= 0 ? '#FF0000' : 'black',
-              }}
-            >
-              {'Procedimento'}
-            </Typography>
-            <CustomTooltip title="Selecione um tipo de procedimento." placement="right">
-              <span
-                aria-label="Procedimento"
-                style={{
-                  display: 'flex',
-                }}
-              >
-                <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
-              </span>
-            </CustomTooltip>
-            {errors.procedure && selectedProcedures.length <= 0 && (
-              <label className="flagError">{'*'}</label>
-            )}
-          </Flex>
-          <Flex
-            style={{
-              width: '398px',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-            }}
-          >
-            <FormControlLabel
-              control={
-                <Checkbox
-                  value="administrative"
-                  checked={selectedProcedures.some(
-                    (procedure: any) => procedure === 'administrative',
-                  )}
-                  onChange={handleProcedureSelection}
-                />
-              }
-              label="Administrativo"
-            />
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  value="judicial"
-                  checked={selectedProcedures.some((procedure: any) => procedure === 'judicial')}
-                  onChange={handleProcedureSelection}
-                />
-              }
-              label="Judicial"
-            />
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  value="extrajudicial"
-                  checked={selectedProcedures.some(
-                    (procedure: any) => procedure === 'extrajudicial',
-                  )}
-                  onChange={handleProcedureSelection}
-                />
-              }
-              label="Extrajudicial"
-              style={{
-                marginRight: '0px',
-              }}
-            />
-          </Flex>
-          {errors.procedures && (
-            <span className="text-[#cd0d15] ml-2 text-xs">Selecione ao menos um procedimento.</span>
-          )}
-
-          {/* Subject */}
-          {session?.role != 'counter' ? (
-            <Flex style={{ flexDirection: 'row', marginTop: '16px', flex: 1 }}>
-              <Box width={'400px'}>
-                <Flex>
-                  <Typography
-                    variant="h6"
-                    sx={{ marginBottom: '8px' }}
-                    style={{
-                      color:
-                        selectedProcedures.length <= 0 &&
-                        selectedArea === '' &&
-                        selectedSubject !== 'others' &&
-                        selectedSubject !== 'administrative_subject' &&
-                        selectedSubject !== 'criminal' &&
-                        selectedSubject !== 'tributary_pis'
-                          ? '#FF0000'
-                          : 'black',
-                    }}
-                  >
-                    {'Assunto'}
-                  </Typography>
-                  {errors.subject && selectedSubject === '' && (
-                    <label className="flagError">{'*'}</label>
-                  )}
-                </Flex>
-
-                {/* administrative_subject */}
-                <Box>
-                  <RadioOptions
-                    options={[
-                      {
-                        value: 'administrative_subject',
-                        label: 'Administrativo',
-                      },
-                    ]}
-                    selectedValue={selectedSubject}
-                    onChange={handleSubject}
-                  />
-                </Box>
-
-                {/* civel */}
-                <Box>
-                  <RadioOptions
-                    options={[
-                      {
-                        value: 'civel',
-                        label: 'Cível',
-                      },
-                    ]}
-                    selectedValue={selectedSubject}
-                    onChange={handleSubject}
-                  />
-                </Box>
-
-                {/* criminal */}
-                <Box>
-                  <RadioOptions
-                    options={[
-                      {
-                        value: 'criminal',
-                        label: 'Criminal',
-                      },
-                    ]}
-                    selectedValue={selectedSubject}
-                    onChange={handleSubject}
-                  />
-                </Box>
-
-                {/* social_security */}
-                <Box>
-                  <RadioOptions
-                    options={[
-                      {
-                        value: 'social_security',
-                        label: 'Previdenciário',
-                      },
-                    ]}
-                    selectedValue={selectedSubject}
-                    onChange={handleSubject}
-                  />
-                </Box>
-
-                {/* laborite */}
-                <Box>
-                  <RadioOptions
-                    options={[
-                      {
-                        value: 'laborite',
-                        label: 'Trabalhista',
-                      },
-                    ]}
-                    selectedValue={selectedSubject}
-                    onChange={handleSubject}
-                  />
-                </Box>
-
-                {/* tributary */}
-                <Box>
-                  <RadioOptions
-                    options={[
-                      {
-                        value: 'tributary',
-                        label: 'Tributário',
-                      },
-                    ]}
-                    selectedValue={selectedSubject}
-                    onChange={handleSubject}
-                  />
-                </Box>
-
-                {/* tributary_pis */}
-                <Box>
-                  <RadioOptions
-                    options={[
-                      {
-                        value: 'tributary_pis',
-                        label: 'Tributário Pis/Cofins insumos',
-                      },
-                    ]}
-                    selectedValue={selectedSubject}
-                    onChange={handleSubject}
-                  />
-                </Box>
-
-                {/* others */}
-                <Box
-                  style={{
-                    marginTop: '8px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }}
-                >
-                  <RadioOptions
-                    options={[
-                      {
-                        value: 'others',
-                        label: 'Outros',
-                      },
-                    ]}
-                    selectedValue={selectedSubject}
-                    onChange={handleSubject}
-                  />
-
-                  <Typography variant="caption" sx={{ marginTop: '4px' }} gutterBottom>
-                    {'* Escolha a área e depois a subárea de atuação.'}
-                  </Typography>
-                </Box>
-              </Box>
-
-              {isVisibleOptionsArea && roleSubjectAccess['default'].includes(selectedSubject) && (
-                <SubjectOptionsArea>
-                  {selectedSubject === 'civel' && (
-                    <FormControl>
-                      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                        {'Cível-Área'}
-                      </Typography>
-                      <RadioOptions
-                        options={[
-                          { value: 'family', label: 'Família' },
-                          { value: 'consumer', label: 'Consumidor' },
-                          {
-                            value: 'moral_damages',
-                            label: 'Reparação Cível - Danos Materiais - Danos Morais',
-                          },
-                        ]}
-                        selectedValue={selectedArea}
-                        onChange={value => handleSelectArea(value)}
-                      />
-                    </FormControl>
-                  )}
-
-                  {selectedSubject === 'social_security' && (
-                    <FormControl>
-                      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                        {'Previdenciário-Áreas'}
-                      </Typography>
-                      <RadioOptions
-                        options={[
-                          {
-                            value: 'retirement_by_age',
-                            label: 'Aposentadoria Por Tempo de Contribuição',
-                          },
-                          { value: 'retirement_by_time', label: 'Aposentadoria Por Idade' },
-                          { value: 'retirement_by_rural', label: 'Aposentadoria Rural' },
-                          {
-                            value: 'disablement',
-                            label:
-                              'Benefícios Por Incapacidade - Auxílio Doença ou Acidente - Inválidez - LOAS',
-                          },
-                          {
-                            value: 'benefit_review',
-                            label: 'Revisão de Benefício Previdednciário',
-                          },
-                          {
-                            value: 'administrative_services',
-                            label: 'Reconhecimento de Tempo, Averbação, Serviços Administrativos',
-                          },
-                        ]}
-                        selectedValue={selectedArea}
-                        onChange={value => handleSelectArea(value)}
-                      />
-                    </FormControl>
-                  )}
-
-                  {selectedSubject === 'laborite' && (
-                    <FormControl>
-                      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                        {'Trabalhista-Áreas'}
-                      </Typography>
-                      <RadioOptions
-                        options={[
-                          {
-                            value: 'labor_claim',
-                            label: 'Reclamatória Trabalhista',
-                          },
-                        ]}
-                        selectedValue={selectedArea}
-                        onChange={value => handleSelectArea(value)}
-                      />
-                    </FormControl>
-                  )}
-
-                  {selectedSubject == 'others' && (
-                    <FormControl sx={{ width: '100%', height: '100%' }}>
-                      <Typography variant="h6">{'Descreva a área:'}</Typography>
-                      <TextareaAutosize
-                        value={otherDescription}
-                        onChange={e => setOtherDescription(e.target.value)}
-                        className="comment-input"
-                      />
-                    </FormControl>
-                  )}
-                </SubjectOptionsArea>
-              )}
-            </Flex>
-          ) : (
-            <Flex style={{ flexDirection: 'row', marginTop: '16px', flex: 1 }}>
-              <Box width={'400px'}>
-                <Flex>
-                  <Typography
-                    variant="h6"
-                    sx={{ marginBottom: '8px' }}
-                    style={{
-                      color:
-                        selectedProcedures.length <= 0 &&
-                        selectedArea === '' &&
-                        selectedSubject !== 'others' &&
-                        selectedSubject !== 'administrative_subject' &&
-                        selectedSubject !== 'criminal' &&
-                        selectedSubject !== 'tributary_pis'
-                          ? '#FF0000'
-                          : 'black',
-                    }}
-                  >
-                    {'Assunto'}
-                  </Typography>
-                  {errors.subject && selectedSubject === '' && (
-                    <label className="flagError">{'*'}</label>
-                  )}
-                </Flex>
-
-                <Box>
-                  <RadioOptions
-                    options={[
-                      {
-                        value: 'tributary',
-                        label: 'Tributário',
-                      },
-                    ]}
-                    selectedValue={selectedSubject}
-                    onChange={handleSubject}
-                  />
-                </Box>
-
-                {/* tributary_pis */}
-                <Box>
-                  <RadioOptions
-                    options={[
-                      {
-                        value: 'tributary_pis',
-                        label: 'Tributário Pis/Cofins insumos',
-                      },
-                    ]}
-                    selectedValue={selectedSubject}
-                    onChange={handleSubject}
-                  />
-                </Box>
-              </Box>
-
-              {isVisibleOptionsArea &&
-                roleSubjectAccess['accountant'].includes(selectedSubject) && (
-                  <SubjectOptionsArea>
-                    {selectedSubject === 'tributary' && (
-                      <FormControl>
-                        <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                          {'Tributário-Áreas'}
-                        </Typography>
-                        <RadioOptions
-                          options={[
-                            {
-                              value: 'asphalt',
-                              label: 'Asfalto',
-                            },
-                          ]}
-                          selectedValue={selectedArea}
-                          onChange={value => handleSelectArea(value)}
-                        />
-                      </FormControl>
-                    )}
-
-                    {selectedSubject === 'tributary_pis' && (
-                      <Box style={{ width: '100%' }}>
-                        <Flex style={{ alignItems: 'center', width: '100%' }}>
-                          <Typography variant="h6" sx={{ marginRight: '16px' }}>
-                            {'Compensações realizadas nos últimos 5 anos:'}
-                          </Typography>
-                          <Box>
-                            <RadioOptions
-                              options={[
-                                {
-                                  value: 'yes',
-                                  label: 'Sim',
-                                },
-                              ]}
-                              selectedValue={compensationsLastYears}
-                              onChange={setCompensationsLastYears}
-                            />
-                          </Box>
-                          <Box>
-                            <RadioOptions
-                              options={[
-                                {
-                                  value: 'no',
-                                  label: 'Não',
-                                },
-                              ]}
-                              selectedValue={compensationsLastYears}
-                              onChange={setCompensationsLastYears}
-                            />
-                          </Box>
-                        </Flex>
-
-                        <Flex style={{ alignItems: 'center' }}>
-                          <Typography variant="h6" sx={{ marginRight: '16px' }}>
-                            {'Compensações de ofício:'}
-                          </Typography>
-                          <Box>
-                            <RadioOptions
-                              options={[
-                                {
-                                  value: 'yes',
-                                  label: 'Sim',
-                                },
-                              ]}
-                              selectedValue={officialCompensation}
-                              onChange={setOfficialCompensation}
-                            />
-                          </Box>
-                          <Box>
-                            <RadioOptions
-                              options={[
-                                {
-                                  value: 'no',
-                                  label: 'Não',
-                                },
-                              ]}
-                              selectedValue={officialCompensation}
-                              onChange={setOfficialCompensation}
-                            />
-                          </Box>
-                        </Flex>
-
-                        <Flex style={{ alignItems: 'center' }}>
-                          <Typography variant="h6" sx={{ marginRight: '16px' }}>
-                            {'Possui ação judicial:'}
-                          </Typography>
-                          <Box>
-                            <RadioOptions
-                              options={[
-                                {
-                                  value: 'yes',
-                                  label: 'Sim',
-                                },
-                              ]}
-                              selectedValue={hasALawsuit}
-                              onChange={setHasALawsuit}
-                            />
-                          </Box>
-                          <Box>
-                            <RadioOptions
-                              options={[
-                                {
-                                  value: 'no',
-                                  label: 'Não',
-                                },
-                              ]}
-                              selectedValue={hasALawsuit}
-                              onChange={setHasALawsuit}
-                            />
-                          </Box>
-                        </Flex>
-
-                        <Flex style={{ flexDirection: 'column', width: '100%' }}>
-                          <Typography variant="h6">{'Projeção de ganho'}</Typography>
-
-                          <Box sx={{ width: '174px' }}>
-                            <Input
-                              placeholder="00"
-                              min="0"
-                              id="gainProjection"
-                              onInput={(e: any) => {
-                                e.target.value = e.target.value.replace(/[^0-9.,]/g, '');
-                              }}
-                              onBlur={(e: any) => {
-                                const inputValue = e.target.value;
-                                const numericValue = parseFloat(inputValue.replace(',', '.'));
-
-                                if (!isNaN(numericValue)) {
-                                  handleGainProjection(numericValue);
-                                } else {
-                                  setGainProjection(undefined);
-                                }
-                              }}
-                            />
-                          </Box>
-
-                          <Flex style={{ flexDirection: 'column', marginTop: '16px' }}>
-                            <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                              {'Upload de arquivos'}
-                            </Typography>
-
-                            <Box sx={{ width: '100%', height: '100%' }}>
-                              <Flex style={{ flexDirection: 'row' }}>
-                                <Dropzone>
-                                  {({ getRootProps, getInputProps, isDragActive }) => (
-                                    <DropContainer>
-                                      <Flex
-                                        {...getRootProps()}
-                                        onDrop={handleDrop}
-                                        onDragOver={handleDragOver}
-                                      >
-                                        <input
-                                          {...getInputProps({
-                                            accept: '.jpeg, .jpg, .png, .pdf',
-                                            multiple: true,
-                                          })}
-                                        />
-                                        {renderDragMessage(isDragActive)}
-                                      </Flex>
-                                    </DropContainer>
-                                  )}
-                                </Dropzone>
-                                <FileList>
-                                  {selectedFile && selectedFile.length > 0 ? (
-                                    selectedFile.map((file, index) => (
-                                      <div className="fileName" key={index}>
-                                        <span className="name">{file.name}</span>
-                                        <MdDelete
-                                          size={20}
-                                          color={colors.icons}
-                                          style={{
-                                            cursor: 'pointer',
-                                            marginLeft: '5px',
-                                          }}
-                                          onClick={() => handleDeleteFile(file)}
-                                        />
-                                      </div>
-                                    ))
-                                  ) : (
-                                    <Typography variant="caption" sx={{ margin: 'auto' }}>
-                                      {'Nenhum arquivo selecionado'}
-                                    </Typography>
-                                  )}
-                                </FileList>
-                              </Flex>
-                              <Typography variant="caption" sx={{ marginTop: '8px' }}>
-                                {'Formatos aceitos: JPEG, PNG, e PDF.'}
-                              </Typography>
-                              {openFileSnackbar && (
-                                <Notification
-                                  open={openFileSnackbar}
-                                  message="Formato de arquivo inválido. Por favor, escolha um arquivo .jpeg, .jpg, .png ou .pdf."
-                                  severity="error"
-                                  onClose={() => setOpenFileSnackbar(false)}
-                                />
-                              )}
-                            </Box>
-                          </Flex>
-                        </Flex>
-                      </Box>
-                    )}
-                  </SubjectOptionsArea>
-                )}
-            </Flex>
-          )}
+            openFileSnackbar={openFileSnackbar}
+            setOpenFileSnackbar={setOpenFileSnackbar}
+            otherDescription={formState.otherDescription}
+            setOtherDescription={(description?: string) =>
+              setFormState(prev => ({ ...prev, otherDescription: description || '' }))
+            }
+          />
         </Box>
       </Container>
     </>

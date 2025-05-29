@@ -22,19 +22,19 @@ import { Notification, ConfirmCreation } from '@/components';
 import PFCustomerStepOne, { IRefPFCustomerStepOneProps } from './customer/PF/one';
 import PFCustomerStepTwo, { IRefPFCustomerStepTwoProps } from './customer/PF/two';
 import PFCustomerStepThree, { IRefPFCustomerStepThreeProps } from './customer/PF/three';
-import PFCustomerStepFour, { IRefPFCustomerStepFourProps } from './customer/PF/four';
+import PFCustomerStepFour from './customer/PF/four';
 import PFCustomerStepFive, { IRefPFCustomerStepFiveProps } from './customer/PF/five';
 import PFCustomerStepSix, { IRefPFCustomerStepSixProps } from './customer/PF/six';
 
-import PJCustomerStepOne, { IRefPJCustomerStepOneProps } from './customer/PJ/one';
+import PJCustomerStepOne from './customer/PJ/one';
 import PJCustomerStepTwo, { IRefPJCustomerStepTwoProps } from './customer/PJ/two';
-import PJCustomerStepThree, { IRefPJCustomerStepThreeProps } from './customer/PJ/three';
+import PJCustomerStepThree from './customer/PJ/three';
 import PJCustomerStepFour, { IRefPJCustomerStepFourProps } from './customer/PJ/four';
 
 import WorkStepOne, { IRefWorkStepOneProps } from './work/one';
 import WorkStepTwo, { IRefWorkStepTwoProps } from './work/two';
 import WorkStepThree, { IRefWorkStepThreeProps } from './work/three';
-import WorkStepFour, { IRefWorkStepFourProps } from './work/four';
+import WorkStepFour from './work/four';
 import WorkStepFive, { IRefWorkStepFiveProps } from './work/five';
 import WorkStepSix, { IRefWorkStepSixProps } from './work/six';
 import { ConfirmDownloadDocument } from '@/components';
@@ -49,19 +49,19 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
   const PFcustomerStepOneRef = useRef<IRefPFCustomerStepOneProps>(null);
   const PFcustomerStepTwoRef = useRef<IRefPFCustomerStepTwoProps>(null);
   const PFcustomerStepThreeRef = useRef<IRefPFCustomerStepThreeProps>(null);
-  const PFcustomerStepFourRef = useRef<IRefPFCustomerStepFourProps>(null);
+  const PFcustomerStepFourRef = useRef(null);
   const PFcustomerStepFiveRef = useRef<IRefPFCustomerStepFiveProps>(null);
   const PFcustomerStepSixRef = useRef<IRefPFCustomerStepSixProps>(null);
 
-  const PJcustomerStepOneRef = useRef<IRefPJCustomerStepOneProps>(null);
+  const PJcustomerStepOneRef = useRef(null);
   const PJcustomerStepTwoRef = useRef<IRefPJCustomerStepTwoProps>(null);
-  const PJcustomerStepThreeRef = useRef<IRefPJCustomerStepThreeProps>(null);
+  const PJcustomerStepThreeRef = useRef(null);
   const PJcustomerStepFourRef = useRef<IRefPJCustomerStepFourProps>(null);
 
   const workStepOneRef = useRef<IRefWorkStepOneProps>(null);
   const workStepTwoRef = useRef<IRefWorkStepTwoProps>(null);
   const workStepThreeRef = useRef<IRefWorkStepThreeProps>(null);
-  const workStepFourRef = useRef<IRefWorkStepFourProps>(null);
+  const workStepFourRef = useRef(null);
   const workStepFiveRef = useRef<IRefWorkStepFiveProps>(null);
   const workStepSixRef = useRef<IRefWorkStepSixProps>(null);
 
@@ -81,7 +81,6 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
   const [openDownloadModal, setOpenDownloadModal] = useState(false);
   const [urlsDocuments, setUrlsDocuments] = useState([]);
   const [confirmCreationLoading, setConfirmCreationLoading] = useState(false);
-  const [formLoading, setFormLoading] = useState(registrationType === 'trabalho');
 
   const [isEditing, setIsEditing] = useState(false);
   const [createdCustomerId, setCreatedCustomerId] = useState<number>();
@@ -235,7 +234,6 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
             message = parsed.errors[0].code;
           }
         }
-        console.log(error);
         setMessage(message);
         setTypeMessage('error');
         setOpenSnackbar(true);
@@ -501,28 +499,12 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
             sx={{
               width: '100%',
               position: 'relative',
-              pointerEvents: formLoading ? 'none' : 'auto',
             }}
           >
-            {formLoading && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: '40%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  zIndex: 9999,
-                }}
-              >
-                <CircularProgress />
-              </Box>
-            )}
-
             <Box
               sx={{
                 width: '100%',
                 height: '100%',
-                filter: formLoading ? 'blur(3px)' : 'none',
               }}
             >
               <Stepper activeStep={activeStep}>
@@ -700,43 +682,23 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
                 {registrationType === 'trabalho' && (
                   <>
                     {currentStep === 0 && (
-                      <WorkStepOne
-                        ref={workStepOneRef}
-                        nextStep={handleNext}
-                        setFormLoading={setFormLoading}
-                      />
+                      <WorkStepOne ref={workStepOneRef} nextStep={handleNext} />
                     )}
 
                     {currentStep === 1 && (
-                      <WorkStepTwo
-                        ref={workStepTwoRef}
-                        nextStep={handleNext}
-                        setFormLoading={setFormLoading}
-                      />
+                      <WorkStepTwo ref={workStepTwoRef} nextStep={handleNext} />
                     )}
 
                     {currentStep === 2 && (
-                      <WorkStepThree
-                        ref={workStepThreeRef}
-                        nextStep={handleNext}
-                        setFormLoading={setFormLoading}
-                      />
+                      <WorkStepThree ref={workStepThreeRef} nextStep={handleNext} />
                     )}
 
                     {currentStep === 3 && (
-                      <WorkStepFour
-                        ref={workStepFourRef}
-                        nextStep={handleNext}
-                        setFormLoading={setFormLoading}
-                      />
+                      <WorkStepFour ref={workStepFourRef} nextStep={handleNext} />
                     )}
 
                     {currentStep === 4 && (
-                      <WorkStepFive
-                        ref={workStepFiveRef}
-                        nextStep={handleNext}
-                        setFormLoading={setFormLoading}
-                      />
+                      <WorkStepFive ref={workStepFiveRef} nextStep={handleNext} />
                     )}
 
                     {/* {session?.role != 'counter' && currentStep === 2 && (
@@ -754,7 +716,6 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
                     {currentStep === 5 && (
                       <WorkStepSix
                         ref={workStepSixRef}
-                        setFormLoading={setFormLoading}
                         confirmation={() => {
                           if (activeStep === 5) {
                             setFinished(true);

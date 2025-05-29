@@ -482,6 +482,8 @@ const Representative = ({ pageTitle }: Props) => {
                       disablePortal
                       autoComplete
                       options={customersList}
+                      loading={customersList.length === 0}
+                      loadingText="Carregando Clientes..."
                       getOptionLabel={option =>
                         option &&
                         option.attributes &&

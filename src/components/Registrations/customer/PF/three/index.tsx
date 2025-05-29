@@ -1,4 +1,4 @@
-import React, {
+import {
   useState,
   useContext,
   forwardRef,
@@ -11,12 +11,12 @@ import React, {
 import { colors } from '@/styles/globals';
 import { IoAddCircleOutline } from 'react-icons/io5';
 import { Container, ColumnContainer } from '../styles';
-import { Box, TextField, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { Notification } from '@/components';
 import { IoMdTrash } from 'react-icons/io';
 import { phoneMask } from '@/utils/masks';
-import { z, ZodError } from 'zod';
+import { z } from 'zod';
 import { isValidEmail, isValidPhoneNumber } from '@/utils/validator';
 import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import { ZodFormError, ZodFormErrors } from '@/types/zod';
@@ -304,7 +304,7 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
           <ColumnContainer>
             <Box>
               <Typography style={{ marginBottom: '8px' }} variant="h6">
-                {'Telefone'}
+                {'Telefone *'}
               </Typography>
               {formData.phoneInputFields.map((inputValue, index) => (
                 <div
@@ -326,6 +326,7 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
                       name="phone_number"
                       placeholder="Insira um número de telefone"
                       errorMessage={getErrorMessage(index, 'phone_numbers')}
+                      required
                     />
 
                     <button
@@ -364,7 +365,7 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
           <ColumnContainer>
             <Box>
               <Typography style={{ marginBottom: '8px' }} variant="h6">
-                {'E-mail'}
+                {'E-mail *'}
               </Typography>
               {formData &&
                 formData.emailInputFields.map((inputValue, index) => (
@@ -387,6 +388,7 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
                         handleInputChange={(e: ChangeEvent<HTMLInputElement>) =>
                           handleInputChange(index, e.target.value, 'emailInputFields')
                         }
+                        required
                       />
 
                       <button

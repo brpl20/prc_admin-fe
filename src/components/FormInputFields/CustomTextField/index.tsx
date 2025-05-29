@@ -1,4 +1,4 @@
-import { TextField, Typography } from '@mui/material';
+import { TextField, Typography, Box } from '@mui/material';
 import { CSSProperties } from 'react';
 
 interface CustomTextFieldProps {
@@ -11,6 +11,7 @@ interface CustomTextFieldProps {
   handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   customValue?: unknown;
   sx?: CSSProperties;
+  required?: boolean;
 }
 
 const CustomTextField: React.FC<CustomTextFieldProps> = ({
@@ -23,30 +24,41 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
   handleInputChange,
   customValue,
   sx,
-}) => (
-  <div style={{ display: 'flex', flexDirection: 'column', flex: 1, ...sx }}>
-    {label && (
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {label}
-      </Typography>
-    )}
-    <TextField
-      id={`outlined-${name}`}
-      variant="outlined"
-      error={!!errorMessage}
-      fullWidth
-      type="text"
-      name={name}
-      size="small"
-      inputProps={{ maxLength: length }}
-      value={(formData[name] as string) || customValue || ''}
-      autoComplete="off"
-      placeholder={placeholder || (label ? `Informe o ${label}` : '')}
-      onChange={handleInputChange}
-      helperText={errorMessage}
-      FormHelperTextProps={{ className: 'ml-2' }}
-    />
-  </div>
-);
+  required = false,
+}) => {
+  const value =
+    customValue !== undefined && customValue !== null
+      ? customValue
+      : (formData[name] as string) || '';
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, ...sx }}>
+      {label && (
+        <Typography variant="h6" sx={{ mb: 1 }}>
+          {label + (required ? ' *' : '')}
+        </Typography>
+      )}
+      <TextField
+        id={`outlined-${name}`}
+        variant="outlined"
+        error={!!errorMessage}
+        fullWidth
+        type="text"
+        name={name}
+        size="small"
+        inputProps={{
+          maxLength: length,
+          'data-testid': `textfield-${name}`,
+        }}
+        value={value}
+        autoComplete="off"
+        placeholder={placeholder || (label ? `Informe o ${label}` : '')}
+        onChange={handleInputChange}
+        helperText={errorMessage}
+        FormHelperTextProps={{ className: 'ml-2' }}
+      />
+    </Box>
+  );
+};
 
 export default CustomTextField;

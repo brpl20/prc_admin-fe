@@ -1,4 +1,4 @@
-import React, {
+import {
   useContext,
   useEffect,
   useState,
@@ -11,7 +11,7 @@ import React, {
 import { Flex } from '@/styles/globals';
 import { Container, Input } from './styles';
 
-import { Box, Typography, TextField, Autocomplete } from '@mui/material';
+import { Box, Typography, TextField, Autocomplete, CircularProgress } from '@mui/material';
 import { MdOutlineInfo } from 'react-icons/md';
 
 import { IProfileCustomer } from '@/interfaces/ICustomer';
@@ -22,9 +22,8 @@ import { WorkContext } from '@/contexts/WorkContext';
 import { moneyMask, percentMask } from '@/utils/masks';
 import { Notification } from '@/components';
 import { useRouter } from 'next/router';
-import useLoadingCounter from '@/utils/useLoadingCounter';
-import { doesSectionFormatHaveLeadingZeros } from '@mui/x-date-pickers/internals/hooks/useField/useField.utils';
 import { getProfileCustomerFullName } from '@/utils/profileCustomerUtils';
+import { LoadingOverlay } from '../one/styles';
 
 export interface IRefWorkStepFiveProps {
   handleSubmitForm: () => void;
@@ -32,13 +31,13 @@ export interface IRefWorkStepFiveProps {
 
 interface IStepFiveProps {
   nextStep: () => void;
-  setFormLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFiveProps> = (
-  { nextStep, setFormLoading },
+  { nextStep },
   ref,
 ) => {
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   const isEdit = router.asPath.includes('alterar');
@@ -53,8 +52,6 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
   const [percentage, setPercentage] = useState<string>();
   const [commission, setCommission] = useState<string>();
   const [selectedCustomer, setSelectedCustomer] = useState<IProfileCustomer>();
-
-  const { setLoading } = useLoadingCounter(setFormLoading);
 
   useImperativeHandle(ref, () => ({
     handleSubmitForm,
@@ -76,7 +73,6 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
         setLoading(true);
         const response = await getAllProfileCustomer('');
         if (response) {
-          // Sort customersList by full name
           const sortedList = response.data.sort((a: IProfileCustomer, b: IProfileCustomer) => {
             const nameA = getProfileCustomerFullName(a).toLowerCase();
             const nameB = getProfileCustomerFullName(b).toLowerCase();
@@ -287,7 +283,13 @@ const WorkStepFive: ForwardRefRenderFunction<IRefWorkStepFiveProps, IStepFivePro
         />
       )}
 
-      <Container>
+      <Container loading={loading}>
+        {loading && (
+          <LoadingOverlay>
+            <CircularProgress size={30} style={{ color: '#01013D' }} />
+          </LoadingOverlay>
+        )}
+
         <Box mr={'16px'}>
           <Flex className="inputContainer">
             <Flex
