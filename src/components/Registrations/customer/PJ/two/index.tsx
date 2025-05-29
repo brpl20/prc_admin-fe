@@ -141,7 +141,6 @@ const PJCustomerStepTwo = forwardRef<IRefPJCustomerStepTwoProps, IStepTwoProps>(
 
     const updateFormData = useCallback(
       (data: FormData) => {
-        console.log('Updating form data:', data);
         if (data.represent_attributes?.representor_id) {
           const admin = customersList.find(
             c => c.id == String(data.represent_attributes?.representor_id),

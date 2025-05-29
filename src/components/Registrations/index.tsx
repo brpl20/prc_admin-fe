@@ -22,13 +22,13 @@ import { Notification, ConfirmCreation } from '@/components';
 import PFCustomerStepOne, { IRefPFCustomerStepOneProps } from './customer/PF/one';
 import PFCustomerStepTwo, { IRefPFCustomerStepTwoProps } from './customer/PF/two';
 import PFCustomerStepThree, { IRefPFCustomerStepThreeProps } from './customer/PF/three';
-import PFCustomerStepFour, { IRefPFCustomerStepFourProps } from './customer/PF/four';
+import PFCustomerStepFour from './customer/PF/four';
 import PFCustomerStepFive, { IRefPFCustomerStepFiveProps } from './customer/PF/five';
 import PFCustomerStepSix, { IRefPFCustomerStepSixProps } from './customer/PF/six';
 
 import PJCustomerStepOne from './customer/PJ/one';
 import PJCustomerStepTwo, { IRefPJCustomerStepTwoProps } from './customer/PJ/two';
-import PJCustomerStepThree, { IRefPJCustomerStepThreeProps } from './customer/PJ/three';
+import PJCustomerStepThree from './customer/PJ/three';
 import PJCustomerStepFour, { IRefPJCustomerStepFourProps } from './customer/PJ/four';
 
 import WorkStepOne, { IRefWorkStepOneProps } from './work/one';
@@ -49,13 +49,13 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
   const PFcustomerStepOneRef = useRef<IRefPFCustomerStepOneProps>(null);
   const PFcustomerStepTwoRef = useRef<IRefPFCustomerStepTwoProps>(null);
   const PFcustomerStepThreeRef = useRef<IRefPFCustomerStepThreeProps>(null);
-  const PFcustomerStepFourRef = useRef<IRefPFCustomerStepFourProps>(null);
+  const PFcustomerStepFourRef = useRef(null);
   const PFcustomerStepFiveRef = useRef<IRefPFCustomerStepFiveProps>(null);
   const PFcustomerStepSixRef = useRef<IRefPFCustomerStepSixProps>(null);
 
   const PJcustomerStepOneRef = useRef(null);
   const PJcustomerStepTwoRef = useRef<IRefPJCustomerStepTwoProps>(null);
-  const PJcustomerStepThreeRef = useRef<IRefPJCustomerStepThreeProps>(null);
+  const PJcustomerStepThreeRef = useRef(null);
   const PJcustomerStepFourRef = useRef<IRefPJCustomerStepFourProps>(null);
 
   const workStepOneRef = useRef<IRefWorkStepOneProps>(null);

@@ -48,6 +48,7 @@ import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatt
 import { translateCustomerType } from '@/utils/translateCustomerType';
 import GenericModal from '@/components/Modals/GenericModal';
 import { useModal } from '@/utils/useModal';
+import { searchWorks } from '@/utils/searchUtils';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 type TranslatedCustomer = {
@@ -75,7 +76,9 @@ const Works = () => {
 
   const [getForStatus, setGetForStatus] = useState<string>('active');
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [searchFor, setSearchFor] = useState<string>('profile_customers');
+  const [searchFor, setSearchFor] = useState<'profile_customers' | 'procedure' | 'requestProcess'>(
+    'profile_customers',
+  );
   const [worksList, setWorksList] = useState<IWorksListProps[]>([]);
   const [worksListListFiltered, setWorksListFiltered] = useState<IWorksListProps[]>([]);
   const [allLawyers, SetAllLawyers] = useState<any>([]);
@@ -103,82 +106,13 @@ const Works = () => {
   };
 
   const handleSearch = (search: string) => {
-    const regex = new RegExp(search, 'i');
-
-    let filteredWorks = worksList;
-
-    console.log('search', search);
-
-    if (search) {
-      switch (searchFor) {
-        case 'profile_customers':
-          const allCustomers = profileCustomersList.map((customer: IProfileCustomer) => ({
-            id: customer.id,
-            name: customer.attributes.name,
-            last_name: customer.attributes.last_name,
-            email: customer.attributes.access_email,
-          }));
-          filteredWorks = worksList.filter((work: any) => {
-            const clients = work.attributes.profile_customers.map((client: any) => {
-              const profileCustomer = profileCustomersList.find(
-                (profileCustomer: any) => Number(profileCustomer.id) === client.id,
-              );
-
-              if (profileCustomer) {
-                return {
-                  id: profileCustomer.id,
-                  name: profileCustomer.attributes.name,
-                  last_name: profileCustomer.attributes.last_name,
-                  email: profileCustomer.attributes.access_email,
-                };
-              }
-
-              const customer = allCustomers.find((customer: any) => customer.id === client.id);
-
-              return customer || { name: '', last_name: '', email: '' };
-            });
-
-            return clients.some((customer: any) => {
-              const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-              const pattern = escapeRegExp(search)
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .replace(/a/gi, '[aáàâãä]')
-                .replace(/e/gi, '[eéèêë]')
-                .replace(/i/gi, '[iíìîï]')
-                .replace(/o/gi, '[oóòôõö]')
-                .replace(/u/gi, '[uúùûü]')
-                .replace(/c/gi, '[cç]');
-
-              const regex = new RegExp(pattern, 'i');
-
-              return regex.test(customer.name) || regex.test(customer.last_name);
-            });
-          });
-          break;
-
-        case 'procedure':
-          filteredWorks = worksList.filter((work: any) => {
-            const procedures = work.attributes.procedure
-              ? mapProcedureName(work.attributes.procedure)
-              : work.attributes.procedures.map(mapProcedureName);
-            return procedures.some((procedure: string) => regex.test(procedure));
-          });
-          break;
-
-        case 'requestProcess':
-          filteredWorks = worksList.filter(
-            (work: any) =>
-              work.attributes.number !== null && regex.test(work.attributes.number.toString()),
-          );
-          break;
-
-        default:
-          break;
-      }
-    }
-
+    const filteredWorks = searchWorks(
+      worksList,
+      profileCustomersList,
+      search,
+      searchFor,
+      mapProcedureName,
+    );
     setWorksListFiltered(filteredWorks);
   };
 

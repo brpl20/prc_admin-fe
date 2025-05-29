@@ -1,14 +1,18 @@
 import { IProfileCustomer } from '@/interfaces/ICustomer';
-import { cpfMask } from '@/utils/masks';
+import { cnpjMask, cpfMask } from '@/utils/masks';
 
 export function getProfileCustomerCpfOrCpnj(profileCustomer: IProfileCustomer): string {
-  const { cpf, cnpj, customer_type } = profileCustomer.attributes;
+  const { cpf, cnpj } = profileCustomer.attributes;
 
-  if (cnpj && customer_type === 'Pessoa Jurídica') {
-    return cnpj;
+  if (cnpj) {
+    return cpfMask(cnpj);
   }
 
-  return cpf ? cpfMask(cpf) : '';
+  if (cpf) {
+    return cnpjMask(cpf);
+  }
+
+  return '';
 }
 
 export function getProfileCustomerFullName(profileCustomer: IProfileCustomer): string {

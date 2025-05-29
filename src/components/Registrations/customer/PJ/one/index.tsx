@@ -78,7 +78,7 @@ const stepOneSchema = z.object({
 
 const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
   ({ nextStep, editMode }, ref) => {
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const route = useRouter();
     const [errors, setErrors] = useState<Record<string, string>>({});
     const { customerForm, setCustomerForm, setNewCustomerForm } = useContext(CustomerContext);
@@ -112,21 +112,6 @@ const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
         `${route.asPath.includes('cadastrar') ? 'Cadastro' : 'Alterar'} Pessoa Jurídica`,
       );
     }, [route, setPageTitle]);
-
-    const updateFormData = useCallback((data: any, address: any) => {
-      setFormData({
-        name: data.name || '',
-        cnpj: cnpjMask(data.cnpj) || '',
-        gender: data.gender || 'male',
-        zip_code: cepMask(address.zip_code) || '',
-        street: address.street || '',
-        state: address.state || '',
-        city: address.city || '',
-        number: address.number || '',
-        description: address.description || '',
-        neighborhood: address.neighborhood || '',
-      });
-    }, []);
 
     const handleInputChange = useCallback(
       (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -288,27 +273,34 @@ const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
       handleSubmitForm,
     }));
 
+    const updateFormData = useCallback((data: any, address: any) => {
+      setFormData({
+        name: data.name || '',
+        cnpj: cnpjMask(data.cnpj) || '',
+        gender: data.gender || 'male',
+        zip_code: cepMask(address.zip_code) || '',
+        street: address.street || '',
+        state: address.state || '',
+        city: address.city || '',
+        number: address.number || '',
+        description: address.description || '',
+        neighborhood: address.neighborhood || '',
+      });
+    }, []);
+
     useEffect(() => {
-      setLoading(true);
+      const localData = localStorage.getItem('PJ/One');
 
-      const loadInitialData = () => {
-        const localData = localStorage.getItem('PJ/One');
+      if (localData) {
+        const parsedData: CustomerData = JSON.parse(localData);
+        const address = parsedData.addresses_attributes?.[0] || {};
+        updateFormData(parsedData, address);
+      } else if (customerForm?.data) {
+        const address = customerForm.data.attributes?.addresses?.[0] || {};
+        updateFormData(customerForm.data.attributes, address);
+      }
 
-        if (localData) {
-          const parsedData: CustomerData = JSON.parse(localData);
-          const address = parsedData.addresses_attributes?.[0] || {};
-          updateFormData(parsedData, address);
-
-          setLoading(false);
-        } else if (customerForm?.data) {
-          const address = customerForm.data.attributes?.addresses?.[0] || {};
-          updateFormData(customerForm.data.attributes, address);
-
-          setLoading(false);
-        }
-      };
-
-      loadInitialData();
+      setLoading(false);
     }, [customerForm]);
 
     return (

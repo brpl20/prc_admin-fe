@@ -2,7 +2,7 @@ import { TextField, Typography, Box } from '@mui/material';
 import { CSSProperties } from 'react';
 
 interface CustomTextFieldProps {
-  formData: Record<string, unknown>;
+  formData: any;
   label?: string;
   name: string;
   length?: number;
@@ -11,6 +11,7 @@ interface CustomTextFieldProps {
   handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   customValue?: unknown;
   sx?: CSSProperties;
+  required?: boolean;
 }
 
 const CustomTextField: React.FC<CustomTextFieldProps> = ({
@@ -23,6 +24,7 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
   handleInputChange,
   customValue,
   sx,
+  required = false,
 }) => {
   const value =
     customValue !== undefined && customValue !== null
@@ -33,7 +35,7 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, ...sx }}>
       {label && (
         <Typography variant="h6" sx={{ mb: 1 }}>
-          {label}
+          {label + (required ? ' *' : '')}
         </Typography>
       )}
       <TextField

@@ -10,15 +10,11 @@ import React, {
 import {
   TextField,
   Box,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
   Typography,
   Autocomplete,
   Button,
-  FormHelperText,
   SelectChangeEvent,
+  CircularProgress,
 } from '@mui/material';
 
 import { Container } from '../styles';
@@ -37,18 +33,16 @@ import { CustomerContext } from '@/contexts/CustomerContext';
 
 import { cpfMask } from '@/utils/masks';
 
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { getAllProfileCustomer } from '@/services/customers';
 import CustomTooltip from '@/components/Tooltip';
 import { MdOutlineAddCircle, MdOutlineInfo } from 'react-icons/md';
 import RepresentativeModal from '../../representative/representativeModal';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { isDateBeforeToday, isValidCPF, isValidRG } from '@/utils/validator';
-import { DatePicker } from '@mui/x-date-pickers';
 import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import CustomDateField from '@/components/FormInputFields/CustomDateField';
 import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
+import { LoadingOverlay } from '@/components/Registrations/work/one/styles';
 
 export interface IRefPFCustomerStepOneProps {
   handleSubmitForm: () => void;
@@ -100,7 +94,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   ref,
 ) => {
   const [isModalRegisterRepresentativeOpen, setIsModalRegisterRepresentativeOpen] = useState(false);
-
+  const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<{ [key in keyof FormData]?: string }>({});
   const { setPageTitle } = useContext(PageTitleContext);
   const { customerForm, setCustomerForm, setNewCustomerForm } = useContext(CustomerContext);
@@ -177,6 +171,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         representor: parsedData.representor,
       });
     }
+
+    setLoading(false);
   };
 
   const saveDataLocalStorage = (data: any) => {
@@ -276,8 +272,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
           customerForm.data.attributes.capacity === 'relatively'
             ? ' - Relativamente Incapaz'
             : customerForm.data.attributes.capacity === 'unable'
-            ? ' - Absolutamente Incapaz'
-            : ''
+              ? ' - Absolutamente Incapaz'
+              : ''
         } ${
           customerForm.data.attributes.represent_attributes?.representor_id
             ? ` - ${representName}`
@@ -315,8 +311,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         customerForm.capacity === 'relatively'
           ? ' - Relativamente Incapaz'
           : customerForm.capacity === 'unable'
-          ? ' - Absolutamente Incapaz'
-          : ''
+            ? ' - Absolutamente Incapaz'
+            : ''
       } ${customerForm.represent_attributes?.representor_id ? ` - ${representName}` : ''}`;
 
       setPageTitle(customerTitle);
@@ -346,7 +342,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 
       for (const field in fieldErrors) {
         if (fieldErrors[field]) {
-          newErrors[field as keyof FormData] = fieldErrors[field]?.[0]; // Getting only the first error messsage
+          newErrors[field as keyof FormData] = fieldErrors[field]?.[0];
         }
       }
       setErrors(newErrors);
@@ -395,6 +391,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     if (customerForm.data) {
       handleDataForm();
     }
+
+    setLoading(false);
   }, [customerForm, representorsList]);
 
   useEffect(() => {
@@ -435,44 +433,54 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       )}
 
       <Container>
+        {loading && (
+          <LoadingOverlay>
+            <CircularProgress size={30} style={{ color: '#01013D' }} />
+          </LoadingOverlay>
+        )}
+
         <form>
           <Box maxWidth={'812px'} display={'flex'} flexDirection={'column'} gap={'16px'}>
             <div style={{ display: 'flex', gap: '24px' }}>
               <CustomTextField
-                formData={formData}
+                formData={formData as any}
                 label="Nome"
                 name={'name'}
                 length={99}
                 errorMessage={errors.name}
                 handleInputChange={handleInputChange}
+                required
               />
 
               <CustomTextField
-                formData={formData}
+                formData={formData as any}
                 label="Sobrenome"
                 name={'last_name'}
                 length={99}
                 errorMessage={errors.last_name}
                 handleInputChange={handleInputChange}
+                required
               />
             </div>
             <div style={{ display: 'flex', gap: '24px' }}>
               <CustomTextField
-                formData={formData}
+                formData={formData as any}
                 label="CPF"
                 name={'cpf'}
                 length={16}
                 errorMessage={errors.cpf}
                 handleInputChange={handleInputChange}
+                required
               />
 
               <CustomTextField
-                formData={formData}
+                formData={formData as any}
                 label="RG"
                 name={'rg'}
                 length={25}
                 errorMessage={errors.rg}
                 handleInputChange={handleInputChange}
+                required
               />
             </div>
             <div style={{ display: 'flex', gap: '24px' }}>
@@ -482,6 +490,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                 name="birth"
                 errorMessage={errors.birth}
                 handleInputChange={handleInputChange}
+                required
               />
 
               <CustomSelectField
@@ -491,6 +500,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
                 options={nationalityOptions}
                 errorMessage={errors.nationality}
                 handleSelectChange={handleSelectChange}
+                required
               />
             </div>
           </Box>
@@ -503,6 +513,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
               options={gendersOptions}
               errorMessage={errors.gender}
               handleSelectChange={handleSelectChange}
+              required
             />
 
             <CustomSelectField
@@ -512,6 +523,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
               options={civilStatusOptions}
               errorMessage={errors.civil_status}
               handleSelectChange={handleSelectChange}
+              required
             />
 
             <CustomSelectField
@@ -521,6 +533,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
               options={capacityOptions}
               errorMessage={errors.capacity}
               handleSelectChange={handleSelectChange}
+              required
             />
           </Box>
 

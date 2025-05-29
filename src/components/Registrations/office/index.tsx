@@ -1,30 +1,16 @@
 import { useState, ChangeEvent, useEffect, useContext } from 'react';
 import { IoAddCircleOutline } from 'react-icons/io5';
 
-import {
-  TextField,
-  Box,
-  Typography,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Autocomplete,
-  CircularProgress,
-} from '@mui/material';
+import { TextField, Box, Typography, Button, Autocomplete, CircularProgress } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
 
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { accountingType, societyType } from '@/utils/constants';
 
-import { Container, Title, DateContainer } from './styles';
+import { Container, Title } from './styles';
 import { colors, ContentContainer } from '@/styles/globals';
 
 import dayjs from 'dayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { Flex, Divider } from '@/styles/globals';
 import { IoMdTrash } from 'react-icons/io';
@@ -34,22 +20,16 @@ import { getAllBanks, getCEPDetails } from '@/services/brasilAPI';
 import { createOffice, updateOffice } from '@/services/offices';
 
 import Router, { useRouter } from 'next/router';
-import { cepMask, cnpjMask } from '@/utils/masks';
 
-import { IProfileAdmin, IProfileAdminAttributes } from '@/interfaces/IAdmin';
+import { IProfileAdmin } from '@/interfaces/IAdmin';
 import { getAllProfileAdmins } from '@/services/admins';
 import { z } from 'zod';
-import { useSession } from 'next-auth/react';
-import {
-  isDateBeforeToday,
-  isDateTodayOrBefore,
-  isValidEmail,
-  isValidPhoneNumber,
-} from '@/utils/validator';
+import { isDateTodayOrBefore, isValidEmail, isValidPhoneNumber } from '@/utils/validator';
 import { ZodFormError, ZodFormErrors } from '@/types/zod';
 import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
 import CustomDateField from '@/components/FormInputFields/CustomDateField';
+import { cepMask, cnpjMask, phoneMask } from '@/utils/masks';
 
 interface FormData {
   name: string;
@@ -489,7 +469,7 @@ const Office = ({ dataToEdit }: props) => {
 
   useEffect(() => {
     const handleDataForm = () => {
-      const form = dataToEdit.attributes;
+      const form = dataToEdit?.data?.attributes;
 
       if (form) {
         setFormData(prevData => ({
@@ -543,9 +523,7 @@ const Office = ({ dataToEdit }: props) => {
     };
 
     if (dataToEdit) {
-      if (dataToEdit.id) {
-        handleDataForm();
-      }
+      handleDataForm();
     }
   }, [dataToEdit, adminsList, officeTypes, bankList]);
 
@@ -633,22 +611,30 @@ const Office = ({ dataToEdit }: props) => {
                     <Autocomplete
                       options={officeTypes}
                       value={selectedOfficeType}
+                      loading={officeTypes.length === 0}
+                      loadingText="Carregando tipos de escritório..."
                       getOptionLabel={option =>
                         option && option.attributes ? option.attributes.description : ''
                       }
                       renderInput={params => (
                         <TextField
-                          value={
-                            selectedOfficeType && selectedOfficeType.attributes
-                              ? selectedOfficeType.attributes.description
-                              : ''
-                          }
-                          placeholder="Selecione o Tipo de Escritório"
                           {...params}
+                          placeholder="Selecione o Tipo de Escritório"
                           size="small"
                           error={!!errors.office_type}
                           helperText={errors.office_type}
                           FormHelperTextProps={{ className: 'ml-2' }}
+                          InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                              <>
+                                {officeTypes.length === 0 ? (
+                                  <CircularProgress color="inherit" size={20} />
+                                ) : null}
+                                {params.InputProps.endAdornment}
+                              </>
+                            ),
+                          }}
                         />
                       )}
                       sx={{ backgroundColor: 'white', zIndex: 1, width: '49%' }}
@@ -703,7 +689,10 @@ const Office = ({ dataToEdit }: props) => {
                       label="CNPJ"
                       name="cnpj_cpf"
                       errorMessage={getErrorMessage(0, 'cnpj_cpf')}
-                      handleInputChange={handleInputChange}
+                      handleInputChange={e => {
+                        e.target.value = cnpjMask(e.target.value);
+                        handleInputChange(e);
+                      }}
                     />
 
                     <CustomSelectField
@@ -838,7 +827,10 @@ const Office = ({ dataToEdit }: props) => {
                     label="CEP"
                     name="cep"
                     errorMessage={getErrorMessage(0, 'cep')}
-                    handleInputChange={handleInputChange}
+                    handleInputChange={e => {
+                      e.target.value = cepMask(e.target.value);
+                      handleInputChange(e);
+                    }}
                   />
                   <Flex style={{ gap: '16px' }}>
                     <CustomTextField
@@ -922,9 +914,10 @@ const Office = ({ dataToEdit }: props) => {
                           formData={formData}
                           name="phone"
                           placeholder="Informe o Telefone"
-                          handleInputChange={(e: any) =>
-                            handleContactChange(index, e.target.value, 'phoneInputFields')
-                          }
+                          handleInputChange={(e: any) => {
+                            e.target.value = phoneMask(e.target.value);
+                            handleContactChange(index, e.target.value, 'phoneInputFields');
+                          }}
                           errorMessage={getErrorMessage(index, 'phone_numbers')}
                         />
 
@@ -1063,6 +1056,8 @@ const Office = ({ dataToEdit }: props) => {
                           : ''
                       }
                       options={adminsList}
+                      loading={adminsList.length === 0}
+                      loadingText="Carregando administradores..."
                       getOptionLabel={(option: any) =>
                         option && option.attributes
                           ? `${option.attributes.name} ${option.attributes.last_name}`
@@ -1076,6 +1071,17 @@ const Office = ({ dataToEdit }: props) => {
                           {...params}
                           placeholder={'Selecione o Responsável'}
                           size="small"
+                          InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                              <>
+                                {adminsList.length === 0 ? (
+                                  <CircularProgress color="inherit" size={20} />
+                                ) : null}
+                                {params.InputProps.endAdornment}
+                              </>
+                            ),
+                          }}
                         />
                       )}
                       noOptionsText={`Nenhuma Responsável Encontrado`}
