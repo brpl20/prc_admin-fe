@@ -235,32 +235,6 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
     }
   };
 
-  const renderInputField = (
-    label: string,
-    name: keyof FormData,
-    placeholderValue: string,
-    widthValue: string,
-    error?: boolean,
-  ) => (
-    <div style={{ display: 'flex', flexDirection: 'column', width: `${widthValue}` }}>
-      <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-        {label}
-      </Typography>
-      <TextField
-        id="outlined-basic"
-        variant="outlined"
-        error={error && !formData[name]}
-        fullWidth
-        name={name}
-        size="small"
-        value={formData[name] ? formData[name] : ''}
-        autoComplete="off"
-        placeholder={`${placeholderValue}`}
-        onChange={handleInputChange}
-      />
-    </div>
-  );
-
   useEffect(() => {
     const handleDataForm = () => {
       const attributes = customerForm.data.attributes;
@@ -354,6 +328,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
             name="cep"
             errorMessage={errors.cep}
             handleInputChange={handleInputChange}
+            required
           />
 
           <div style={{ display: 'flex', gap: '16px' }}>
@@ -364,6 +339,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
               errorMessage={errors.street}
               handleInputChange={handleInputChange}
               sx={{ flex: 3 }}
+              required
             />
 
             <CustomTextField
@@ -373,6 +349,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
               placeholder="N.º"
               errorMessage={errors.number ? 'Obrigatório' : undefined}
               handleInputChange={handleInputChange}
+              required
             />
           </div>
 
@@ -390,6 +367,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
             name="neighborhood"
             errorMessage={errors.neighborhood}
             handleInputChange={handleInputChange}
+            required
           />
 
           <CustomTextField
@@ -398,6 +376,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
             name="city"
             errorMessage={errors.city}
             handleInputChange={handleInputChange}
+            required
           />
 
           <CustomTextField
@@ -406,6 +385,7 @@ const PFCustomerStepTwo: ForwardRefRenderFunction<IRefPFCustomerStepTwoProps, IS
             name="state"
             errorMessage={errors.state}
             handleInputChange={handleInputChange}
+            required
           />
         </ColumnContainer>
       </Container>

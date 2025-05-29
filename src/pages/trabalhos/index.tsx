@@ -48,6 +48,7 @@ import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatt
 import { translateCustomerType } from '@/utils/translateCustomerType';
 import GenericModal from '@/components/Modals/GenericModal';
 import { useModal } from '@/utils/useModal';
+import { searchWorks } from '@/utils/searchUtils';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 type TranslatedCustomer = {
@@ -75,7 +76,9 @@ const Works = () => {
 
   const [getForStatus, setGetForStatus] = useState<string>('active');
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [searchFor, setSearchFor] = useState<string>('profile_customers');
+  const [searchFor, setSearchFor] = useState<'profile_customers' | 'procedure' | 'requestProcess'>(
+    'profile_customers',
+  );
   const [worksList, setWorksList] = useState<IWorksListProps[]>([]);
   const [worksListListFiltered, setWorksListFiltered] = useState<IWorksListProps[]>([]);
   const [allLawyers, SetAllLawyers] = useState<any>([]);
@@ -103,42 +106,13 @@ const Works = () => {
   };
 
   const handleSearch = (search: string) => {
-    const regex = new RegExp(search, 'i');
-
-    let filteredWorks = worksList;
-
-    if (search) {
-      switch (searchFor) {
-        case 'profile_customers':
-          filteredWorks = worksList.filter((work: any) => {
-            const clients_names = work.attributes.profile_customers.map(
-              (customer: any) => customer.name,
-            );
-            return clients_names.some((name: string) => regex.test(name));
-          });
-          break;
-
-        case 'procedure':
-          filteredWorks = worksList.filter((work: any) => {
-            const procedures = work.attributes.procedure
-              ? mapProcedureName(work.attributes.procedure)
-              : work.attributes.procedures.map(mapProcedureName);
-            return procedures.some((procedure: string) => regex.test(procedure));
-          });
-          break;
-
-        case 'requestProcess':
-          filteredWorks = worksList.filter(
-            (work: any) =>
-              work.attributes.number !== null && regex.test(work.attributes.number.toString()),
-          );
-          break;
-
-        default:
-          break;
-      }
-    }
-
+    const filteredWorks = searchWorks(
+      worksList,
+      profileCustomersList,
+      search,
+      searchFor,
+      mapProcedureName,
+    );
     setWorksListFiltered(filteredWorks);
   };
 
@@ -624,7 +598,7 @@ const Works = () => {
                       );
 
                       const customerName = profileCustomer
-                        ? `${profileCustomer.attributes.name} ${profileCustomer.attributes.last_name}`
+                        ? `${profileCustomer.attributes.name ?? ''} ${profileCustomer.attributes.last_name ?? ''}`
                         : customer.name;
 
                       return customerName;
