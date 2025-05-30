@@ -15,7 +15,7 @@ import { GoPlusCircle } from 'react-icons/go';
 import { Box, Button, CircularProgress } from '@mui/material';
 import { useSession } from 'next-auth/react';
 
-import { phoneMask, cpfMask, rgMask } from '@/utils/masks';
+import { phoneMask, cpfMask, rgMask, cnpjMask, cepMask } from '@/utils/masks';
 
 interface PersonalDataProps {
   id: string | string[];
@@ -101,26 +101,26 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
         const address = data.attributes.addresses[0]
           ? data.attributes.addresses[0]
           : [
-            {
-              state: 'Não Informado',
-              city: 'Não Informado',
-              zip_code: 'Não Informado',
-              description: 'Não Informado',
-              neighborhood: 'Não Informado',
-              street: 'Não Informado',
-              number: 'Não Informado',
-            },
-          ];
+              {
+                state: 'Não Informado',
+                city: 'Não Informado',
+                zip_code: 'Não Informado',
+                description: 'Não Informado',
+                neighborhood: 'Não Informado',
+                street: 'Não Informado',
+                number: 'Não Informado',
+              },
+            ];
 
         const customerData = {
           name: data.attributes.name ? data.attributes.name : '',
           last_name: data.attributes.last_name ? data.attributes.last_name : '',
-          cpf: data.attributes.cpf ? data.attributes.cpf : 'Não Informado',
-          cnpj: data.attributes.cnpj ? data.attributes.cnpj : 'Não Informado',
-          rg: data.attributes.rg ? data.attributes.rg : 'Não Informado',
+          cpf: data.attributes.cpf ? cpfMask(data.attributes.cpf) : 'Não Informado',
+          cnpj: data.attributes.cnpj ? cnpjMask(data.attributes.cnpj) : 'Não Informado',
+          rg: data.attributes.rg ? rgMask(data.attributes.rg) : 'Não Informado',
           state: address.state ? address.state : 'Não Informado',
           city: address.city ? address.city : 'Não Informado',
-          zip_code: address.zip_code ? address.zip_code : 'Não Informado',
+          zip_code: address.zip_code ? cepMask(address.zip_code) : 'Não Informado',
           description: address.description ? address.description : 'Não Informado',
           neighborhood: address.neighborhood ? address.neighborhood : 'Não Informado',
           number: address.number ? address.number : 'Não Informado',
@@ -161,19 +161,19 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
   const emailList =
     personalData.emails && personalData.emails.length > 0
       ? personalData.emails.map((email, index) => (
-        <span key={index} style={{ display: 'block' }}>
-          {email.email}
-        </span>
-      ))
+          <span key={index} style={{ display: 'block' }}>
+            {email.email}
+          </span>
+        ))
       : 'Não Informado';
 
   const phoneNumbers =
     personalData.phones && personalData.phones.length > 0
       ? personalData.phones.map((phone, index) => (
-        <span key={index} style={{ display: 'block' }}>
-          {phoneMask(phone.phone_number)}
-        </span>
-      ))
+          <span key={index} style={{ display: 'block' }}>
+            {phoneMask(phone.phone_number)}
+          </span>
+        ))
       : 'Não Informado';
 
   useEffect(() => {
@@ -276,13 +276,16 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                       <div className="flex flex-col gap-[18px] pb-[20px]">
                         <div className="grid [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))] gap-[18px] px-8">
                           <div className="flex flex-col gap-[8px] items-start">
-                            <span className="text-[#344054] text-[20px] font-medium">Nome Completo</span>
+                            <span className="text-[#344054] text-[20px] font-medium">
+                              Nome Completo
+                            </span>
                             <span className="text-[18px] text-[#344054] font-normal">
                               {`${personalData.name ? personalData.name : ''} ${personalData.last_name ? personalData.last_name : ''}`}
                             </span>
                           </div>
 
-                          {(personalData.customer_type === 'physical_person' || personalData.customer_type === 'representative') && (
+                          {(personalData.customer_type === 'physical_person' ||
+                            personalData.customer_type === 'representative') && (
                             <div className="flex flex-col gap-[8px] items-start">
                               <span className="text-[#344054] text-[20px] font-medium">CPF</span>
                               <span className="text-[18px] text-[#344054] font-normal">
@@ -300,7 +303,8 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             </div>
                           )}
 
-                          {(personalData.customer_type === 'physical_person' || personalData.customer_type === 'representative') && (
+                          {(personalData.customer_type === 'physical_person' ||
+                            personalData.customer_type === 'representative') && (
                             <div className="flex flex-col gap-[8px] items-start">
                               <span className="text-[#344054] text-[20px] font-medium">RG</span>
                               <span className="text-[18px] text-[#344054] font-normal">
@@ -309,11 +313,16 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             </div>
                           )}
 
-                          {(personalData.customer_type === 'representative' || personalData.customer_type === 'physical_person') && (
+                          {(personalData.customer_type === 'representative' ||
+                            personalData.customer_type === 'physical_person') && (
                             <div className="flex flex-col gap-[8px] items-start">
-                              <span className="text-[#344054] text-[20px] font-medium">Data de Nascimento</span>
+                              <span className="text-[#344054] text-[20px] font-medium">
+                                Data de Nascimento
+                              </span>
                               <span className="text-[18px] text-[#344054]">
-                                {personalData.birth ? personalData.birth.split('-').reverse().join('/') : 'Não Informado'}
+                                {personalData.birth
+                                  ? personalData.birth.split('-').reverse().join('/')
+                                  : 'Não Informado'}
                               </span>
                             </div>
                           )}
@@ -322,17 +331,24 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         </div>
 
                         <div className="grid [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))] gap-[18px] px-8">
-                          {(personalData.customer_type === 'representative' || personalData.customer_type === 'physical_person') && (
+                          {(personalData.customer_type === 'representative' ||
+                            personalData.customer_type === 'physical_person') && (
                             <div className="flex flex-col gap-[8px] items-start">
-                              <span className="text-[#344054] text-[20px] font-medium">Nome da Mãe</span>
+                              <span className="text-[#344054] text-[20px] font-medium">
+                                Nome da Mãe
+                              </span>
                               <span className="text-[18px] text-[#344054] font-normal">
-                                {personalData.mother_name ? personalData.mother_name : 'Não Informado'}
+                                {personalData.mother_name
+                                  ? personalData.mother_name
+                                  : 'Não Informado'}
                               </span>
                             </div>
                           )}
 
                           <div className="flex flex-col gap-[8px] items-start">
-                            <span className="text-[#344054] text-[20px] font-medium">Naturalidade</span>
+                            <span className="text-[#344054] text-[20px] font-medium">
+                              Naturalidade
+                            </span>
                             <span className="text-[18px] text-[#344054] font-normal">
                               {personalData.nationality
                                 ? personalData.nationality === 'brazilian'
@@ -343,7 +359,9 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                           </div>
 
                           <div className="flex flex-col gap-[8px] items-start">
-                            <span className="text-[#344054] text-[20px] font-medium">Estado Civil</span>
+                            <span className="text-[#344054] text-[20px] font-medium">
+                              Estado Civil
+                            </span>
                             <span className="text-[18px] text-[#344054] font-normal">
                               {handleTranslationGender(personalData.civil_status)}
                             </span>
@@ -361,17 +379,29 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                           </div>
 
                           <div className="flex flex-col gap-[8px] items-start">
-                            <span className="text-[#344054] text-[20px] font-medium">Capacidade</span>
-                            <span className="text-[18px] text-[#344054] font-normal">{handleCapacity()}</span>
+                            <span className="text-[#344054] text-[20px] font-medium">
+                              Capacidade
+                            </span>
+                            <span className="text-[18px] text-[#344054] font-normal">
+                              {handleCapacity()}
+                            </span>
                           </div>
 
                           {personalData.represent && (
                             <div className="flex flex-col gap-[8px] items-start">
-                              <span className="text-[#344054] text-[20px] font-medium">Representante</span>
+                              <span className="text-[#344054] text-[20px] font-medium">
+                                Representante
+                              </span>
                               <span className="text-[18px] text-[#344054] font-normal">
-                                <a href={`/detalhes?type=cliente/representante&id=${personalData.represent.representor_id}`} className="text-[#344054] underline">
+                                <a
+                                  href={`/detalhes?type=cliente/representante&id=${personalData.represent.representor_id}`}
+                                  className="text-[#344054] underline"
+                                >
                                   {representorsList.map((representor: any) => {
-                                    if (Number(representor.id) === personalData.represent.representor_id) {
+                                    if (
+                                      Number(representor.id) ===
+                                      personalData.represent.representor_id
+                                    ) {
                                       return `${representor.id} - ${representor.attributes.name}`;
                                     }
                                   })}
@@ -430,7 +460,9 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         </div>
 
                         <div className="flex flex-col gap-[8px] items-start">
-                          <span className="text-[20px] font-medium text-[#344054]">Complemento</span>
+                          <span className="text-[20px] font-medium text-[#344054]">
+                            Complemento
+                          </span>
                           <span className="text-[18px] font-normal text-[#344054]">
                             {personalData.description ? personalData.description : 'Não Informado'}
                           </span>
@@ -455,7 +487,9 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                         <div className="flex flex-col gap-[8px] items-start">
                           <span className="text-[20px] font-medium text-[#344054]">Bairro</span>
                           <span className="text-[18px] font-normal text-[#344054]">
-                            {personalData.neighborhood ? personalData.neighborhood : 'Não Informado'}
+                            {personalData.neighborhood
+                              ? personalData.neighborhood
+                              : 'Não Informado'}
                           </span>
                         </div>
 
@@ -499,7 +533,10 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
 
                     {contactIsOpen && (
                       <div className="flex flex-col gap-[18px] pb-5">
-                        <div className="grid gap-[18px] px-8" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
+                        <div
+                          className="grid gap-[18px] px-8"
+                          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}
+                        >
                           <div className="flex flex-col gap-2 items-start w-[300px]">
                             <span className="text-[20px] font-medium text-[#344054]">Telefone</span>
                             <span className="text-[18px] font-normal text-[#344054] flex flex-col gap-2">
@@ -529,7 +566,9 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                           <div className="flex items-center gap-2">
                             <FiDollarSign size={24} color="#344054" />
                             <div className="w-[2px] bg-gray-300 h-8" />
-                            <span className="text-[22px] font-medium text-[#344054]">Dados Bancários</span>
+                            <span className="text-[22px] font-medium text-[#344054]">
+                              Dados Bancários
+                            </span>
                           </div>
                           <ButtonShowContact>
                             {bankIsOpen ? (
@@ -550,17 +589,32 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
 
                         {bankIsOpen && (
                           <div className="flex flex-col gap-[18px] pb-5">
-                            <div className="grid gap-[18px] px-8" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
-
-                              {(['bank_name', 'agency', 'operation', 'account'] as BankAccountFields[]).map((field, index) => (
+                            <div
+                              className="grid gap-[18px] px-8"
+                              style={{
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                              }}
+                            >
+                              {(
+                                [
+                                  'bank_name',
+                                  'agency',
+                                  'operation',
+                                  'account',
+                                ] as BankAccountFields[]
+                              ).map((field, index) => (
                                 <div
                                   key={index}
                                   className={`flex flex-col gap-2 items-start ${field === 'bank_name' ? 'w-[300px]' : 'w-[220px]'}`}
                                 >
                                   <span className="text-[20px] font-medium text-[#344054]">
-                                    {field === 'bank_name' ? 'Banco' :
-                                      field === 'agency' ? 'Agência' :
-                                        field === 'operation' ? 'Operação' : 'Conta'}
+                                    {field === 'bank_name'
+                                      ? 'Banco'
+                                      : field === 'agency'
+                                        ? 'Agência'
+                                        : field === 'operation'
+                                          ? 'Operação'
+                                          : 'Conta'}
                                   </span>
                                   <span className="text-[18px] font-normal text-[#344054]">
                                     {personalData.bank_accounts[0]?.[field] || 'Não Informado'}
@@ -570,7 +624,12 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                               <div className="flex flex-col gap-2 items-start w-[220px]" />
                             </div>
 
-                            <div className="grid gap-[18px] px-8" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
+                            <div
+                              className="grid gap-[18px] px-8"
+                              style={{
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                              }}
+                            >
                               <div className="flex flex-col gap-2 items-start w-[300px]">
                                 <span className="text-[20px] font-medium text-[#344054]">Pix</span>
                                 <span className="text-[18px] font-normal text-[#344054]">
@@ -585,7 +644,6 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                   </>
                 </ContainerDetails>
               </DetailsWrapper>
-
 
               {type !== 'cliente/pessoa_juridica' && (
                 <DetailsWrapper className="border-b border-gray-400 shadow-[0px_2px_2px_rgba(0,0,0,0.25)]">
@@ -621,21 +679,30 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
 
                       {aditionalIsOpen && (
                         <div className="flex flex-col gap-[18px] pb-5">
-                          <div className="grid gap-[18px] px-8" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
+                          <div
+                            className="grid gap-[18px] px-8"
+                            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}
+                          >
                             <div className="flex flex-col gap-2 items-start w-[300px]">
-                              <span className="text-[20px] font-medium text-[#344054]">Profissão</span>
+                              <span className="text-[20px] font-medium text-[#344054]">
+                                Profissão
+                              </span>
                               <span className="text-[18px] font-normal text-[#344054]">
                                 {personalData.profession || 'Não Informado'}
                               </span>
                             </div>
                             <div className="flex flex-col gap-2 items-start w-[220px]">
-                              <span className="text-[20px] font-medium text-[#344054]">Empresa Atual</span>
+                              <span className="text-[20px] font-medium text-[#344054]">
+                                Empresa Atual
+                              </span>
                               <span className="text-[18px] font-normal text-[#344054]">
                                 {personalData.company || 'Não Informado'}
                               </span>
                             </div>
                             <div className="flex flex-col gap-2 items-start w-[220px]">
-                              <span className="text-[20px] font-medium text-[#344054]">Número de Benefício</span>
+                              <span className="text-[20px] font-medium text-[#344054]">
+                                Número de Benefício
+                              </span>
                               <span className="text-[18px] font-normal text-[#344054]">
                                 {personalData.number_benefit || 'Não Informado'}
                               </span>
@@ -649,15 +716,22 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                             <div className="flex flex-col gap-2 items-start w-[220px]"></div>
                           </div>
 
-                          <div className="grid gap-[18px] px-8" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
+                          <div
+                            className="grid gap-[18px] px-8"
+                            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}
+                          >
                             <div className="flex flex-col gap-2 items-start w-[300px]">
-                              <span className="text-[20px] font-medium text-[#344054]">Nome da Mãe</span>
+                              <span className="text-[20px] font-medium text-[#344054]">
+                                Nome da Mãe
+                              </span>
                               <span className="text-[18px] font-normal text-[#344054]">
                                 {personalData.mother_name || 'Não Informado'}
                               </span>
                             </div>
                             <div className="flex flex-col gap-2 items-start w-[300px]">
-                              <span className="text-[20px] font-medium text-[#344054]">Senha do meu INSS</span>
+                              <span className="text-[20px] font-medium text-[#344054]">
+                                Senha do meu INSS
+                              </span>
                               <span className="text-[18px] font-normal text-[#344054]">
                                 {personalData.inss_password || 'Não Informado'}
                               </span>
@@ -669,7 +743,6 @@ const PersonalData = ({ id, type }: PersonalDataProps) => {
                   </ContainerDetails>
                 </DetailsWrapper>
               )}
-
             </div>
           )}
         </>

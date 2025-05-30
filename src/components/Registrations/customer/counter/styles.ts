@@ -5,6 +5,8 @@ export const Container = styled.div<any>`
   margin-top: 84px;
   padding: 0 40px;
   overflow-x: auto;
+  width: 100%;
+  min-height: 348px;
 
   .ml-8 {
     margin-right: 8px;

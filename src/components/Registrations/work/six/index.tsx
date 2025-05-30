@@ -279,7 +279,13 @@ const WorkStepSixComponent: ForwardRefRenderFunction<IRefWorkStepSixProps, IStep
             Documentos a Serem Produzidos
           </Typography>
           <CustomTooltip title="Documentos que o ProcStudio irá gerar para você." placement="right">
-            <MdOutlineInfo size={20} />
+            <span
+              style={{
+                display: 'flex',
+              }}
+            >
+              <MdOutlineInfo size={20} />
+            </span>
           </CustomTooltip>
           {errors.documents_attributes && formData.documentsProduced.length <= 0 && (
             <Typography color="error">*</Typography>
@@ -338,7 +344,13 @@ const WorkStepSixComponent: ForwardRefRenderFunction<IRefWorkStepSixProps, IStep
                 title="Notas, entrevista com o cliente e informações úteis para o desenvolvimento do caso para a equipe."
                 placement="right"
               >
-                <MdOutlineInfo size={20} />
+                <span
+                  style={{
+                    display: 'flex',
+                  }}
+                >
+                  <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
+                </span>
               </CustomTooltip>
             </Flex>
 
