@@ -55,7 +55,7 @@ export interface IProfileCustomerAttributes {
   status: number;
   customer_id: number;
   last_name: string | null;
-  cpf: string;
+  cpf?: string;
   rg: string;
   birth: string;
   gender: string;

@@ -30,6 +30,7 @@ import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
 import CustomDateField from '@/components/FormInputFields/CustomDateField';
 import { cepMask, cnpjMask, phoneMask } from '@/utils/masks';
+import { LoadingOverlay } from '../work/one/styles';
 
 interface FormData {
   name: string;
@@ -57,6 +58,7 @@ interface FormData {
 
 interface props {
   dataToEdit?: any;
+  isLoading: boolean;
 }
 
 const officeSchema = z.object({
@@ -90,7 +92,7 @@ const officeSchema = z.object({
     .refine(isDateTodayOrBefore, { message: 'Data de Função Exp. OAB inválida.' }),
 });
 
-const Office = ({ dataToEdit }: props) => {
+const Office = ({ dataToEdit, isLoading }: props) => {
   const route = useRouter();
 
   const [loading, setLoading] = useState(false);
@@ -577,6 +579,12 @@ const Office = ({ dataToEdit }: props) => {
       )}
 
       <Container>
+        {isLoading && (
+          <LoadingOverlay>
+            <CircularProgress size={50} sx={{ color: colors.primary }} />
+          </LoadingOverlay>
+        )}
+
         <Box
           display={'flex'}
           alignItems={'center'}

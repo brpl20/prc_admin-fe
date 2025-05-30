@@ -42,6 +42,7 @@ import CustomDateField from '@/components/FormInputFields/CustomDateField';
 import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
 import { isAxiosError } from 'axios';
 import { IProfileAdminAttributes } from '@/interfaces/IAdmin';
+import { LoadingOverlay } from '../work/one/styles';
 
 interface FormData {
   officeId: string;
@@ -78,6 +79,7 @@ interface FormData {
 
 interface props {
   dataToEdit?: any;
+  isLoading: boolean;
 }
 
 const userSchema = z
@@ -130,7 +132,7 @@ const userSchema = z
     path: ['oab'],
   });
 
-const User = ({ dataToEdit }: props) => {
+const User = ({ dataToEdit, isLoading }: props) => {
   const { data: session } = useSession();
 
   const [loading, setLoading] = useState(false);
@@ -839,6 +841,12 @@ const User = ({ dataToEdit }: props) => {
       )}
 
       <Container>
+        {isLoading && (
+          <LoadingOverlay>
+            <CircularProgress size={50} sx={{ color: colors.primary }} />
+          </LoadingOverlay>
+        )}
+
         <Box
           display={'flex'}
           alignItems={'center'}

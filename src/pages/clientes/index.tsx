@@ -183,7 +183,7 @@ const Customers = () => {
 
       case 'identification':
         filteredList = profileCustomersList.filter((profileCustomer: IProfileCustomer) =>
-          regex.test(profileCustomer.attributes.cpf),
+          regex.test(profileCustomer.attributes.cpf ?? ''),
         );
         break;
 

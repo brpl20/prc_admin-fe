@@ -34,6 +34,7 @@ import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
 import CustomDateField from '@/components/FormInputFields/CustomDateField';
 import { ZodFormError, ZodFormErrors } from '@/types/zod';
 import { getProfileCustomerFullName } from '@/utils/profileCustomerUtils';
+import { LoadingOverlay } from '../../work/one/styles';
 
 interface FormData {
   represent_id?: string;
@@ -110,7 +111,7 @@ const Representative = ({ pageTitle }: Props) => {
   const [isEditing, setIsEditing] = useState(false);
   const [customersList, setCustomersList] = useState<IProfileCustomer[]>([]);
 
-  const { customerForm } = useContext(CustomerContext);
+  const { customerForm, isLoading } = useContext(CustomerContext);
   const { setShowTitle, setPageTitle } = useContext(PageTitleContext);
 
   const currentDate = dayjs();
@@ -460,6 +461,12 @@ const Representative = ({ pageTitle }: Props) => {
       )}
 
       <Container>
+        {isLoading && (
+          <LoadingOverlay>
+            <CircularProgress size={50} sx={{ color: colors.primary }} />
+          </LoadingOverlay>
+        )}
+
         <Box
           display="flex"
           alignItems="center"

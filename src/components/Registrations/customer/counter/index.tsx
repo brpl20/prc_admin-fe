@@ -16,6 +16,7 @@ import { z, ZodError } from 'zod';
 import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import { ZodFormError, ZodFormErrors } from '@/types/zod';
 import { isValidEmail, isValidPhoneNumber } from '@/utils/validator';
+import { LoadingOverlay } from '../../work/one/styles';
 
 interface FormData {
   name: string;
@@ -60,7 +61,7 @@ const Counter = ({ pageTitle }: Props) => {
   const [isEditing, setIsEditing] = useState(false);
 
   const { setShowTitle, setPageTitle } = useContext(PageTitleContext);
-  const { customerForm } = useContext(CustomerContext);
+  const { customerForm, isLoading } = useContext(CustomerContext);
 
   const [message, setMessage] = useState('');
   const [type, setType] = useState<'success' | 'error'>('success');
@@ -320,6 +321,12 @@ const Counter = ({ pageTitle }: Props) => {
       )}
 
       <Container>
+        {isLoading && (
+          <LoadingOverlay>
+            <CircularProgress size={50} sx={{ color: colors.primary }} />
+          </LoadingOverlay>
+        )}
+
         <Box
           display="flex"
           alignItems="center"

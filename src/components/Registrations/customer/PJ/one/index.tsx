@@ -74,14 +74,16 @@ const stepOneSchema = z.object({
   street: z.string().min(2, { message: 'Endereço é um campo obrigatório.' }),
   number: z.coerce.string().min(2, { message: 'Número é um campo obrigatório' }),
   neighborhood: z.string().min(2, { message: 'Bairro é um campo obrigatório.' }),
+  city: z.string().min(2, { message: 'Cidade é um campo obrigatório.' }),
+  state: z.string().min(2, { message: 'Estado é um campo obrigatório.' }),
 });
 
 const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
   ({ nextStep, editMode }, ref) => {
-    const [loading, setLoading] = useState(true);
     const route = useRouter();
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const { customerForm, setCustomerForm, setNewCustomerForm } = useContext(CustomerContext);
+    const { customerForm, setCustomerForm, setNewCustomerForm, isLoading } =
+      useContext(CustomerContext);
     const { setPageTitle } = useContext(PageTitleContext);
     const [notification, setNotification] = useState({
       open: false,
@@ -223,6 +225,8 @@ const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
           zip_code: formData.zip_code,
           neighborhood: formData.neighborhood,
           number: formData.number,
+          city: formData.city,
+          state: formData.state,
         });
 
         const data = prepareCustomerData();
@@ -299,8 +303,6 @@ const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
         const address = customerForm.data.attributes?.addresses?.[0] || {};
         updateFormData(customerForm.data.attributes, address);
       }
-
-      setLoading(false);
     }, [customerForm]);
 
     return (
@@ -313,7 +315,7 @@ const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
         />
 
         <Container>
-          {loading && (
+          {isLoading && (
             <LoadingOverlay>
               <CircularProgress size={30} style={{ color: '#01013D' }} />
             </LoadingOverlay>
@@ -333,6 +335,7 @@ const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
                   label="Nome"
                   errorMessage={errors.name}
                   handleInputChange={handleInputChange}
+                  required
                 />
                 <CustomTextField
                   formData={formData}
@@ -341,6 +344,7 @@ const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
                   placeholder="00.000.000/0000-00"
                   errorMessage={errors.cnpj}
                   handleInputChange={handleInputChange}
+                  required
                 />
               </div>
 
@@ -360,6 +364,7 @@ const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
                     label="CEP"
                     errorMessage={errors.zip_code}
                     handleInputChange={handleInputChange}
+                    required
                   />
                   <div style={{ display: 'flex', gap: '16px' }}>
                     <CustomTextField
@@ -368,6 +373,7 @@ const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
                       label="Endereço"
                       errorMessage={errors.street}
                       handleInputChange={handleInputChange}
+                      required
                     />
                     <Box maxWidth="30%">
                       <CustomTextField
@@ -377,6 +383,7 @@ const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
                         placeholder="N.º"
                         errorMessage={errors.number}
                         handleInputChange={handleInputChange}
+                        required
                       />
                     </Box>
                   </div>
@@ -395,6 +402,7 @@ const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
                     label="Bairro"
                     errorMessage={errors.neighborhood}
                     handleInputChange={handleInputChange}
+                    required
                   />
                   <CustomTextField
                     formData={formData}
@@ -402,6 +410,7 @@ const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
                     label="Cidade"
                     errorMessage={errors.city}
                     handleInputChange={handleInputChange}
+                    required
                   />
                   <CustomTextField
                     formData={formData}
@@ -409,6 +418,7 @@ const PJCustomerStepOne = forwardRef<IRefPJCustomerStepOneProps, IStepOneProps>(
                     label="Estado"
                     errorMessage={errors.state}
                     handleInputChange={handleInputChange}
+                    required
                   />
                 </Box>
               </div>

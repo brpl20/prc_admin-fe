@@ -8,6 +8,9 @@ interface IContextValue {
   setNewCustomerForm: (data: any) => void;
 
   clearCustomerForm: () => void;
+
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
 }
 
 interface IProps {
@@ -18,6 +21,7 @@ export const CustomerContext = createContext<IContextValue>({} as IContextValue)
 
 const CustomerProvider = ({ children }: IProps) => {
   const [customerForm, setCustomerForm] = useState<any>({} as any);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [newCustomerForm, setNewCustomerForm] = useState<any>({} as any);
 
@@ -33,6 +37,8 @@ const CustomerProvider = ({ children }: IProps) => {
         setNewCustomerForm,
         setCustomerForm,
         clearCustomerForm,
+        isLoading,
+        setIsLoading,
       }}
     >
       {children}
