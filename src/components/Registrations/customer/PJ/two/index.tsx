@@ -369,7 +369,7 @@ const PJCustomerStepTwo = forwardRef<IRefPJCustomerStepTwoProps, IStepTwoProps>(
             <div className="flex gap-[16px]">
               <div>
                 <Typography variant="h6" mb={1}>
-                  Representante
+                  Representante *
                 </Typography>
 
                 <Select
@@ -437,7 +437,7 @@ const PJCustomerStepTwo = forwardRef<IRefPJCustomerStepTwoProps, IStepTwoProps>(
             <div className="flex gap-[16px]">
               <div>
                 <Typography variant="h6" mb={1}>
-                  Telefone
+                  Telefone *
                 </Typography>
                 {formData.phones_attributes.map((phone, index) => (
                   <Box key={index} display="flex" flexDirection="column" mb={1} gap={0.75}>
@@ -452,6 +452,7 @@ const PJCustomerStepTwo = forwardRef<IRefPJCustomerStepTwoProps, IStepTwoProps>(
                         }
                         errorMessage={getErrorMessage(index, 'phone_numbers')}
                         sx={{ width: '394px' }}
+                        required
                       />
                       {formData.phones_attributes.length > 1 && (
                         <button
@@ -481,7 +482,7 @@ const PJCustomerStepTwo = forwardRef<IRefPJCustomerStepTwoProps, IStepTwoProps>(
 
               <div>
                 <Typography variant="h6" mb={1}>
-                  E-mail
+                  E-mail *
                 </Typography>
                 {formData.emails_attributes.map((email, index) => (
                   <Box key={index} display="flex" flexDirection="column" mb={1} gap={0.75}>
@@ -496,6 +497,7 @@ const PJCustomerStepTwo = forwardRef<IRefPJCustomerStepTwoProps, IStepTwoProps>(
                         }
                         errorMessage={getErrorMessage(index, 'emails')}
                         sx={{ width: '394px' }}
+                        required
                       />
                       {formData.emails_attributes.length > 1 && (
                         <button

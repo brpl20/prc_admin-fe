@@ -94,10 +94,10 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
   ref,
 ) => {
   const [isModalRegisterRepresentativeOpen, setIsModalRegisterRepresentativeOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<{ [key in keyof FormData]?: string }>({});
   const { setPageTitle } = useContext(PageTitleContext);
-  const { customerForm, setCustomerForm, setNewCustomerForm } = useContext(CustomerContext);
+  const { customerForm, setCustomerForm, setNewCustomerForm, isLoading } =
+    useContext(CustomerContext);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [type, setType] = useState<'success' | 'error'>('success');
@@ -171,8 +171,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
         representor: parsedData.representor,
       });
     }
-
-    setLoading(false);
   };
 
   const saveDataLocalStorage = (data: any) => {
@@ -391,8 +389,6 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     if (customerForm.data) {
       handleDataForm();
     }
-
-    setLoading(false);
   }, [customerForm, representorsList]);
 
   useEffect(() => {
@@ -433,7 +429,7 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       )}
 
       <Container>
-        {loading && (
+        {isLoading && (
           <LoadingOverlay>
             <CircularProgress size={30} style={{ color: '#01013D' }} />
           </LoadingOverlay>

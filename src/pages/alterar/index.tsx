@@ -22,41 +22,57 @@ const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 const Registration = () => {
   const router = useRouter();
   const { type, id } = router.query;
-  const { setCustomerForm } = useContext(CustomerContext);
+  const { setCustomerForm, setIsLoading, isLoading } = useContext(CustomerContext);
   const { setWorkForm } = useContext(WorkContext);
   const [form, setForm] = useState({} as any);
 
   useEffect(() => {
     const handleEditCustomer = async () => {
+      setIsLoading(true);
+
       const response = await getCustomerById(id as string);
 
       if (response) {
         setCustomerForm(response);
       }
+
+      setIsLoading(false);
     };
 
     const handleEditWork = async () => {
+      setIsLoading(true);
+
       const response = await getWorkById(id as string);
 
       if (response) {
         setWorkForm(response);
       }
+
+      setIsLoading(false);
     };
 
     const handleEditUser = async () => {
+      setIsLoading(true);
+
       const response = await getProfileAdminById(id as string);
 
       if (response) {
         setForm(response);
       }
+
+      setIsLoading(false);
     };
 
     const handleEditOffice = async () => {
+      setIsLoading(true);
+
       const response = await getOfficeById(id as string);
 
       if (response) {
         setForm(response);
       }
+
+      setIsLoading(false);
     };
 
     if (type && type.includes('iente')) {
@@ -100,9 +116,9 @@ const Registration = () => {
 
       {type === 'cliente/representante' && <Representative pageTitle={'Alterar Representante'} />}
 
-      {type === 'usuario' && <User dataToEdit={form} />}
+      {type === 'usuario' && <User dataToEdit={form} isLoading={isLoading} />}
 
-      {type === 'escritorio' && <Office dataToEdit={form} />}
+      {type === 'escritorio' && <Office dataToEdit={form} isLoading={isLoading} />}
 
       <Footer />
     </Layout>
