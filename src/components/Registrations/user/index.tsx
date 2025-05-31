@@ -79,7 +79,7 @@ interface FormData {
 
 interface props {
   dataToEdit?: any;
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
 const userSchema = z

@@ -58,7 +58,7 @@ interface FormData {
 
 interface props {
   dataToEdit?: any;
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
 const officeSchema = z.object({
