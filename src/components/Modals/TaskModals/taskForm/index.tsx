@@ -526,7 +526,7 @@ const TaskModal = ({ isOpen, onClose, dataToEdit, showMessage }: ITaskModalProps
                       label="Pendente"
                     />
                     <FormControlLabel
-                      value="late"
+                      value="delayed"
                       control={<Radio size="small" />}
                       label="Atrasado"
                     />

@@ -184,8 +184,8 @@ export const ContentContainer = styled.div<any>`
   }
 
   .pending,
-  .late,
-  .completed {
+  .delayed,
+  .finished {
     width: 100px;
     height: 24px;
     display: flex;
@@ -200,11 +200,11 @@ export const ContentContainer = styled.div<any>`
     background-color: ${colors.orange};
   }
 
-  .late {
+  .delayed {
     background-color: ${colors.red};
   }
 
-  .completed {
+  .finished {
     background-color: ${colors.greenPill};
   }
 `;
