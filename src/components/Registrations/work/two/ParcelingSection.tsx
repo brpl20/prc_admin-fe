@@ -24,8 +24,12 @@ export const ParcelingSection: React.FC<ParcelingSectionProps> = ({
           title="No caso dos honorários fixos, especifique se você trabalhou com parcelamento dos valores."
           placement="right"
         >
-          <span className="tooltip-icon">
-            <MdOutlineInfo size={20} />
+          <span
+            style={{
+              display: 'flex',
+            }}
+          >
+            <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
           </span>
         </CustomTooltip>
       </div>

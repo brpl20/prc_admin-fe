@@ -69,8 +69,12 @@ export const HonoraryTypeSelection: React.FC<HonoraryTypeSelectionProps> = ({
             sx={{ width: '200px' }}
           />
           <CustomTooltip title={option.tooltip} placement="right">
-            <span className="tooltip-icon">
-              <MdOutlineInfo size={20} />
+            <span
+              style={{
+                display: 'flex',
+              }}
+            >
+              <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
             </span>
           </CustomTooltip>
         </div>

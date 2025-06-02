@@ -318,7 +318,13 @@ const WorkStepSixComponent: ForwardRefRenderFunction<IRefWorkStepSixProps, IStep
                   Pasta
                 </Typography>
                 <CustomTooltip title="Pasta do Cliente." placement="right">
-                  <MdOutlineInfo size={20} />
+                  <span
+                    style={{
+                      display: 'flex',
+                    }}
+                  >
+                    <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
+                  </span>
                 </CustomTooltip>
               </Box>
 
