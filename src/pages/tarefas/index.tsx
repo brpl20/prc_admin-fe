@@ -455,6 +455,7 @@ const Tasks = () => {
                 slots={{
                   loadingOverlay: LinearProgress,
                 }}
+                sortModel={[{ field: 'id', sort: 'desc' }]}
                 rows={
                   filteredTasksList.length > 0
                     ? filteredTasksList.map(task => ({

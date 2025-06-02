@@ -975,6 +975,9 @@ const Customers = () => {
                 processRowUpdate={handleProcessRowUpdate}
                 initialState={{
                   pagination: { paginationModel: { pageSize: 10 } },
+                  sorting: {
+                    sortModel: [{ field: 'name', sort: 'asc' }],
+                  },
                 }}
                 localeText={{
                   noRowsLabel: 'Nenhum cliente encontrado',

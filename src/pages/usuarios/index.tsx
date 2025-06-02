@@ -520,6 +520,9 @@ const Admins = () => {
                 ]}
                 initialState={{
                   pagination: { paginationModel: { pageSize: 10 } },
+                  sorting: {
+                    sortModel: [{ field: 'name', sort: 'asc' }],
+                  },
                 }}
                 localeText={{
                   noRowsLabel: 'Nenhum usuário encontrado',
