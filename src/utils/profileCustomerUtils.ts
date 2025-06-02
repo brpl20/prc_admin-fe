@@ -20,7 +20,7 @@ export function getProfileCustomerCpfOrCpnj(profileCustomer: IProfileCustomer) {
 export function getProfileCustomerFullName(profileCustomer: IProfileCustomer): string {
   const { name, last_name } = profileCustomer.attributes;
 
-  const fullName = `${name} ${last_name}`.trim();
+  const fullName = `${name ?? ''} ${last_name ?? ''}`.trim();
 
   return fullName;
 }
