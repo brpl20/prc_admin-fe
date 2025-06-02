@@ -41,12 +41,10 @@ const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
-import { useAuth } from '@/contexts/AuthContext';
 
 const Offices = () => {
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
   const { data: session } = useSession();
-  const { user, isLoading: isUserLoading } = useAuth();
 
   const [refetch, setRefetch] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -146,7 +144,7 @@ const Offices = () => {
       setOpenSnackbar(true);
       setRefetch(!refetch);
     } catch (error: any) {
-      setMessage('Erro ao inativar escritório');
+      setMessage(error.response?.data?.error || 'Erro ao inativar escritório');
       setTypeMessage('error');
       setOpenSnackbar(true);
     }
@@ -156,26 +154,6 @@ const Offices = () => {
     setRowItem(office);
     setOpenRemoveModal(true);
   };
-
-  useEffect(() => {
-    const getUserType = async () => {
-      const response = await getAllProfileAdmins('');
-      const admins = response.data;
-
-      const admin = admins.find(
-        (admin: any) => admin.attributes.email == user?.admin?.attributes.email,
-      );
-
-      if (admin?.attributes?.role == 'counter') {
-        setUserType('counter');
-        router.push('/clientes');
-      }
-    };
-
-    if (user) {
-      getUserType();
-    }
-  }, [user, router]);
 
   const getOffices = async () => {
     const requestParams = getForStatus === 'active' ? '' : getForStatus;
@@ -197,15 +175,6 @@ const Offices = () => {
     const office = response.data;
     setProfilesAdminsOfOffice(office.attributes.profile_admins);
   };
-
-  const validateAdmin = () => {
-    const isAllowed = user?.profile && profilesAdminsOfOffice.includes(user.profile?.id);
-    setAllowedToRemove(Boolean(isAllowed));
-  };
-
-  useEffect(() => {
-    validateAdmin();
-  }, [profilesAdminsOfOffice]);
 
   useEffect(() => {
     if (rowItem.id && rowItem.deleted === false) {
@@ -308,9 +277,7 @@ const Offices = () => {
                   <label className="font-medium	cursor-pointer">Alterar</label>
                 </MenuItem>
 
-                {rowItem.responsible_lawyer &&
-                Number(user?.admin?.id) === Number(rowItem.responsible_lawyer) &&
-                allowedToRemove === false ? null : (
+                {rowItem.responsible_lawyer && allowedToRemove === false ? null : (
                   <>
                     <MenuItem
                       className="flex gap-2 w-full"

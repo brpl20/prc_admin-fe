@@ -69,10 +69,10 @@ const ModalOfRemove = ({
           handleCloseModal();
           onClose();
         } catch (error: any) {
-          setMessage(`Erro ao remover ${model}`);
+          setMessage(error.response?.data?.error || `Erro ao remover ${model}`);
+          setLoading(false);
           setTypeMessage('error');
           setOpenSnackbar(true);
-          setLoading(false);
         }
         break;
     }

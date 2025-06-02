@@ -132,7 +132,7 @@ const Tasks = () => {
       setOpenSnackbar(true);
       setRefetch(!refetch);
     } catch (error: any) {
-      setMessage('Erro ao inativar tarefa');
+      setMessage(error.response?.data?.error || 'Erro ao inativar tarefa');
       setTypeMessage('error');
       setOpenSnackbar(true);
     }

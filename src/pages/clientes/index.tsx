@@ -275,7 +275,7 @@ const Customers = () => {
       setOpenSnackbar(true);
       setRefetch(!refetch);
     } catch (error: any) {
-      setMessage('Erro ao inativar cliente');
+      setMessage(error.response?.data?.error || 'Erro ao inativar cliente');
       setTypeMessage('error');
       setOpenSnackbar(true);
     }

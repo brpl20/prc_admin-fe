@@ -39,12 +39,10 @@ import { IProfileAdmin, IProfileAdminAttributes } from '@/interfaces/IAdmin';
 import dynamic from 'next/dynamic';
 import { getSession, useSession } from 'next-auth/react';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
-import { useAuth } from '@/contexts/AuthContext';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Admins = () => {
   const { data: session } = useSession();
-  const { user, isLoading: isUserLoading } = useAuth();
 
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
 
@@ -146,7 +144,7 @@ const Admins = () => {
       setOpenSnackbar(true);
       setRefetch(!refetch);
     } catch (error: any) {
-      setMessage('Erro ao inativar admin');
+      setMessage(error.response?.data?.error || 'Erro ao inativar admin');
       setTypeMessage('error');
       setOpenSnackbar(true);
     }
@@ -273,31 +271,27 @@ const Admins = () => {
                   <label className="font-medium	cursor-pointer">Alterar</label>
                 </MenuItem>
 
-                {Number(user?.admin?.id) === Number(rowItem.id) ? null : (
-                  <>
-                    <MenuItem
-                      className="flex gap-2 w-full"
-                      onClick={() => {
-                        handleCloseMenu();
-                        handleInactive(rowItem);
-                      }}
-                    >
-                      <MdOutlineArchive size={22} color={colors.icons} cursor={'pointer'} />
-                      <label className="font-medium	cursor-pointer">Inativar</label>
-                    </MenuItem>
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleCloseMenu();
+                    handleInactive(rowItem);
+                  }}
+                >
+                  <MdOutlineArchive size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Inativar</label>
+                </MenuItem>
 
-                    <MenuItem
-                      className="flex gap-2 w-full"
-                      onClick={() => {
-                        handleCloseMenu();
-                        handleDelete(rowItem);
-                      }}
-                    >
-                      <MdDeleteOutline size={22} color={colors.icons} cursor={'pointer'} />
-                      <label className="font-medium	cursor-pointer">Remover</label>
-                    </MenuItem>
-                  </>
-                )}
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleCloseMenu();
+                    handleDelete(rowItem);
+                  }}
+                >
+                  <MdDeleteOutline size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Remover</label>
+                </MenuItem>
               </>
             ) : null}
           </div>

@@ -28,13 +28,12 @@ export const authOptions: NextAuthOptions = {
 
           if (!res.ok) throw new Error(await res.text());
 
-          const { token, role } = await res.json();
+          const user = await res.json();
 
           return {
-            id: token,
+            id: user.token,
             email: credentials.email,
-            token,
-            role,
+            ...user,
           };
         } catch (error) {
           console.error('Erro na autenticação:', error);
@@ -45,18 +44,12 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    async jwt({ token, user }: any) {
-      if (user) {
-        token.token = user.token;
-        token.role = user.role;
-      }
-      return token;
+    jwt: ({ token, user }) => {
+      return user ? { ...token, user } : token;
     },
-
     session: ({ session, token }: any) => {
-      if (token) {
-        session.token = token.token;
-        session.role = token.role;
+      if (token?.user) {
+        return token.user;
       }
       return session;
     },
@@ -67,8 +60,7 @@ export const authOptions: NextAuthOptions = {
   },
 
   pages: {
-    signIn: '/auth/login',
-    error: '/auth/error',
+    signIn: '/login',
   },
 };
 
