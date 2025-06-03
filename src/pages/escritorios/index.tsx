@@ -494,6 +494,12 @@ const Offices = () => {
                 slots={{
                   loadingOverlay: LinearProgress,
                 }}
+                initialState={{
+                  sorting: {
+                    sortModel: [{ field: 'id', sort: 'desc' }],
+                  },
+                  pagination: { paginationModel: { pageSize: 10 } },
+                }}
                 rows={
                   officesListFiltered &&
                   officesListFiltered.map((office: IOfficeProps) => ({
@@ -574,9 +580,6 @@ const Offices = () => {
                   },
                 ]}
                 getRowClassName={getRowClassName}
-                initialState={{
-                  pagination: { paginationModel: { pageSize: 10 } },
-                }}
                 localeText={{
                   noRowsLabel: 'Nenhum escritório encontrado',
                   MuiTablePagination: {

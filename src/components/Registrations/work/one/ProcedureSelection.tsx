@@ -27,7 +27,13 @@ export const ProcedureSelection = ({
           Procedimento
         </Typography>
         <CustomTooltip title="Selecione um tipo de procedimento." placement="right">
-          <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
+          <span
+            style={{
+              display: 'flex',
+            }}
+          >
+            <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
+          </span>
         </CustomTooltip>
         {errors.procedure && !selectedProcedures.length && <label className="flagError">*</label>}
       </Flex>
