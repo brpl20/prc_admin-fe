@@ -26,7 +26,7 @@ import { createProfileAdmin, updateAdmin, updateProfileAdmin } from '@/services/
 import { IOfficeProps } from '@/interfaces/IOffice';
 
 import Router, { useRouter } from 'next/router';
-import { cepMask, cpfMask, phoneMask } from '@/utils/masks';
+import { cepMask, cpfMask, phoneMask, rgMask } from '@/utils/masks';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
 import {
@@ -277,6 +277,14 @@ const User = ({ dataToEdit, isLoading }: props) => {
       return;
     }
 
+    if (name === 'rg') {
+      setFormData(prevData => ({
+        ...prevData,
+        rg: rgMask(value),
+      }));
+      return;
+    }
+
     if (name === 'cep') {
       setFormData(prevData => ({
         ...prevData,
@@ -314,8 +322,8 @@ const User = ({ dataToEdit, isLoading }: props) => {
       userSchema.parse({
         name: formData.name,
         last_name: formData.last_name,
-        cpf: formData.cpf,
-        rg: formData.rg,
+        cpf: formData.cpf.replace(/\D/g, ''),
+        rg: formData.rg.replace(/\D/g, ''),
         mother_name: formData.mother_name,
         gender: formData.gender,
         civil_status: formData.civil_status,
@@ -357,7 +365,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
           addresses_attributes: {
             id: dataToEdit.data.attributes.addresses[0]?.id ?? '',
             description: formData.description,
-            zip_code: formData.cep,
+            zip_code: formData.cep.replace(/\D/g, ''),
             street: formData.address,
             number: formData.number,
             neighborhood: formData.neighborhood,
@@ -376,8 +384,8 @@ const User = ({ dataToEdit, isLoading }: props) => {
           emails_attributes: contactData.emailInputFields,
           name: formData.name.trim(),
           last_name: formData.last_name.trim(),
-          cpf: formData.cpf,
-          rg: formData.rg,
+          cpf: formData.cpf.replace(/\D/g, ''),
+          rg: formData.rg.replace(/\D/g, ''),
           gender: formData.gender,
           nationality: formData.nationality,
           civil_status: formData.civil_status,
@@ -420,8 +428,8 @@ const User = ({ dataToEdit, isLoading }: props) => {
           oab: formData.oab,
           name: formData.name.trim(),
           last_name: formData.last_name.trim(),
-          cpf: formData.cpf,
-          rg: formData.rg,
+          cpf: formData.cpf.replace(/\D/g, ''),
+          rg: formData.rg.replace(/\D/g, ''),
           gender: formData.gender,
           nationality: formData.nationality,
           civil_status: formData.civil_status,
@@ -433,7 +441,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
           addresses_attributes: [
             {
               description: formData.description,
-              zip_code: formData.cep,
+              zip_code: formData.cep.replace(/\D/g, ''),
               street: formData.address,
               number: formData.number ? Number(formData.number) : '',
               neighborhood: formData.neighborhood,
@@ -478,48 +486,58 @@ const User = ({ dataToEdit, isLoading }: props) => {
       setLoading(false);
     }
   };
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
   const handleFormError = (error: unknown) => {
-    // Check if its an API error
     if (isAxiosError(error)) {
-      if (error.response?.data.errors && Array.isArray(error.response?.data.errors)) {
-        const apiError = error.response.data.errors[0].code;
-        setMessage(apiError || 'Ocorreu um erro inesperado. Por favor, tente novamente.');
+      const responseErrors = error.response?.data.errors;
+
+      if (responseErrors) {
+        const formattedErrors: ZodFormErrors = {};
+
+        Object.entries(responseErrors).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            formattedErrors[key] = value.map((error: ZodFormError) => error.message);
+          } else {
+            formattedErrors[key] = [String(value)];
+          }
+        });
+
+        setErrors(formattedErrors);
+
+        setMessage('Erro ao processar a solicitação.');
         setType('error');
         setOpenSnackbar(true);
-        return;
+      } else {
+        setMessage('Erro ao processar a solicitação.');
+        setType('error');
+        setOpenSnackbar(true);
       }
-    }
-
-    // Assume the error is of type `{ issues: ZodFormError[] }`
-    const zodError = error as { issues: ZodFormError[] };
-    const newErrors = zodError.issues ?? [];
-
-    if (newErrors.length === 0) {
-      setMessage('Ocorreu um erro inesperado ao enviar os dados.');
+    } else if (error instanceof z.ZodError) {
+      const formattedErrors: ZodFormErrors = {};
+      error.errors.forEach(err => {
+        if (!formattedErrors[err.path[0]]) {
+          formattedErrors[err.path[0]] = [];
+        }
+        formattedErrors[err.path[0]].push(err.message);
+      });
+      setErrors(formattedErrors);
+      setMessage('Corrija os erros do formulário.');
       setType('error');
       setOpenSnackbar(true);
-      return;
+    } else {
+      setMessage('Erro desconhecido.');
+      setType('error');
+      setOpenSnackbar(true);
     }
 
-    setMessage('Corrija os erros no formulário.');
-    setType('error');
-    setOpenSnackbar(true);
-    const result: ZodFormErrors = {};
-
-    newErrors.forEach(err => {
-      const [field, index] = err.path;
-
-      if (!result[field]) {
-        result[field] = []; // Initialize array for the field if not present
-      }
-
-      // If there's no error for this index, add it
-      if (!result[field][index as number]) {
-        result[field][index as number] = err.message; // Store only the first error for this index
-      }
-    });
-
-    setErrors(result);
+    scrollToTop();
   };
 
   const getErrorMessage = (index: number, field: string) => {
@@ -707,15 +725,15 @@ const User = ({ dataToEdit, isLoading }: props) => {
           officeId: attributes.office_id ? String(attributes.office_id) : '',
           name: attributes.name ? attributes.name : '',
           last_name: attributes.last_name ? attributes.last_name : '',
-          cpf: attributes.cpf ? attributes.cpf : '',
-          rg: attributes.rg ? attributes.rg : '',
+          cpf: attributes.cpf ? cpfMask(attributes.cpf) : '',
+          rg: attributes.rg ? rgMask(attributes.rg) : '',
           address: addresses.street ? addresses.street : '',
           number: addresses.number ? String(addresses.number) : '',
           description: addresses.description ? addresses.description : '',
           neighborhood: addresses.neighborhood ? addresses.neighborhood : '',
           city: addresses.city ? addresses.city : '',
           state: addresses.state ? addresses.state : '',
-          cep: addresses.zip_code ? addresses.zip_code : '',
+          cep: addresses.zip_code ? cepMask(addresses.zip_code) : '',
           bank_name: bankAccounts.bank_name ? bankAccounts.bank_name : '',
           agency: bankAccounts.agency ? bankAccounts.agency : '',
           op: bankAccounts.type_account ? bankAccounts.type_account : '',
@@ -881,7 +899,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                     <CustomTextField
                       formData={formData}
                       name="name"
-                      label="Nome do Usuário"
+                      label="Nome do Usuário *"
                       errorMessage={getErrorMessage(0, 'name')}
                       handleInputChange={handleInputChange}
                     />
@@ -889,7 +907,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                     <CustomTextField
                       formData={formData}
                       name="last_name"
-                      label="Sobrenome do Usuário"
+                      label="Sobrenome do Usuário *"
                       errorMessage={getErrorMessage(0, 'last_name')}
                       handleInputChange={handleInputChange}
                     />
@@ -899,14 +917,14 @@ const User = ({ dataToEdit, isLoading }: props) => {
                     <CustomTextField
                       formData={formData}
                       name="cpf"
-                      label="CPF"
+                      label="CPF *"
                       errorMessage={getErrorMessage(0, 'cpf')}
                       handleInputChange={handleInputChange}
                     />
                     <CustomTextField
                       formData={formData}
                       name="rg"
-                      label="RG"
+                      label="RG *"
                       errorMessage={getErrorMessage(0, 'rg')}
                       handleInputChange={handleInputChange}
                     />
@@ -916,7 +934,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                     <CustomDateField
                       formData={formData}
                       name={'birth'}
-                      label={'Data de Nascimento'}
+                      label={'Data de Nascimento *'}
                       errorMessage={getErrorMessage(0, 'birth')}
                       maxDate={currentDate}
                       handleInputChange={handleInputChange}
@@ -924,7 +942,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                     <CustomTextField
                       formData={formData}
                       name="mother_name"
-                      label="Nome da Mãe"
+                      label="Nome da Mãe *"
                       errorMessage={getErrorMessage(0, 'mother_name')}
                       handleInputChange={handleInputChange}
                     />
@@ -941,7 +959,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                   <CustomSelectField
                     formData={formData}
                     name="gender"
-                    label="Gênero"
+                    label="Gênero *"
                     errorMessage={getErrorMessage(0, 'gender')}
                     options={gendersOptions}
                     handleSelectChange={handleSelectChange}
@@ -950,7 +968,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                   <CustomSelectField
                     formData={formData}
                     name="civil_status"
-                    label="Estado Civil"
+                    label="Estado Civil *"
                     errorMessage={getErrorMessage(0, 'civil_status')}
                     options={civilStatusOptions}
                     handleSelectChange={handleSelectChange}
@@ -959,7 +977,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                   <CustomSelectField
                     formData={formData}
                     name="nationality"
-                    label="Naturalidade"
+                    label="Naturalidade *"
                     errorMessage={getErrorMessage(0, 'nationality')}
                     options={nationalityOptions}
                     handleSelectChange={handleSelectChange}
@@ -982,7 +1000,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                   <CustomTextField
                     formData={formData}
                     name="cep"
-                    label="CEP"
+                    label="CEP *"
                     errorMessage={getErrorMessage(0, 'cep')}
                     handleInputChange={handleInputChange}
                   />
@@ -990,7 +1008,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                     <CustomTextField
                       formData={formData}
                       name="address"
-                      label="Endereço"
+                      label="Endereço *"
                       errorMessage={getErrorMessage(0, 'address')}
                       handleInputChange={handleInputChange}
                     />
@@ -999,7 +1017,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                       <CustomTextField
                         formData={formData}
                         name="number"
-                        label="Número"
+                        label="Número *"
                         placeholder="N.º"
                         errorMessage={getErrorMessage(0, 'number')}
                         handleInputChange={handleInputChange}
@@ -1019,7 +1037,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                   <CustomTextField
                     formData={formData}
                     name="neighborhood"
-                    label="Bairro"
+                    label="Bairro *"
                     errorMessage={getErrorMessage(0, 'neighborhood')}
                     handleInputChange={handleInputChange}
                   />
@@ -1027,7 +1045,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                   <CustomTextField
                     formData={formData}
                     name="city"
-                    label="Cidade"
+                    label="Cidade *"
                     errorMessage={getErrorMessage(0, 'city')}
                     handleInputChange={handleInputChange}
                   />
@@ -1035,7 +1053,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                   <CustomTextField
                     formData={formData}
                     name="state"
-                    label="Estado"
+                    label="Estado *"
                     errorMessage={getErrorMessage(0, 'state')}
                     handleInputChange={handleInputChange}
                   />
@@ -1055,7 +1073,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
               <Flex style={{ gap: '32px', flex: 1 }}>
                 <Box flex={1}>
                   <Typography style={{ marginBottom: '8px' }} variant="h6">
-                    Telefone
+                    Telefone *
                   </Typography>
 
                   {contactData.phoneInputFields.map((inputValue, index) => (
@@ -1111,7 +1129,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
 
                 <Box flex={1}>
                   <Typography style={{ marginBottom: '8px' }} variant="h6">
-                    E-mail
+                    E-mail *
                   </Typography>
 
                   {contactData.emailInputFields.map((inputValue, index) => (
@@ -1199,7 +1217,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                   <CustomSelectField
                     formData={formData}
                     name="role"
-                    label="Tipo do Usuário"
+                    label="Tipo do Usuário *"
                     options={
                       session?.role === 'counter'
                         ? UserRegisterTypesOptions.filter(option => option.value === 'counter')
@@ -1343,7 +1361,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                 <CustomTextField
                   formData={formData}
                   name="userEmail"
-                  label="E-mail"
+                  label="E-mail *"
                   errorMessage={getErrorMessage(0, 'userEmail')}
                   handleInputChange={handleInputChange}
                 />
@@ -1354,7 +1372,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                   <Flex style={{ gap: '24px', marginTop: '16px' }}>
                     <Flex style={{ flexDirection: 'column', flex: 1 }}>
                       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                        {'Senha'}
+                        {'Senha *'}
                       </Typography>
                       <TextField
                         variant="outlined"
@@ -1371,7 +1389,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
 
                     <Flex style={{ flexDirection: 'column', flex: 1 }}>
                       <Typography variant="h6" sx={{ marginBottom: '8px' }}>
-                        {'Confirme sua Senha'}
+                        {'Confirme sua Senha *'}
                       </Typography>
                       <TextField
                         variant="outlined"
