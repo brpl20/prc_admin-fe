@@ -86,9 +86,9 @@ const Tasks = () => {
     if (status === 'Pendente') {
       return 'pending-row';
     } else if (status === 'Atrasado') {
-      return 'late-row';
+      return 'delayed-row';
     } else {
-      return 'completed-row';
+      return 'finished-row';
     }
   };
 
@@ -477,7 +477,7 @@ const Tasks = () => {
                         status:
                           task.attributes.status === 'pending'
                             ? 'Pendente'
-                            : task.attributes.status === 'late'
+                            : task.attributes.status === 'delayed'
                               ? 'Atrasado'
                               : 'Finalizado',
                       }))
@@ -527,8 +527,8 @@ const Tasks = () => {
                           params.value === 'Pendente'
                             ? 'pending'
                             : params.value === 'Atrasado'
-                              ? 'late'
-                              : 'completed'
+                              ? 'delayed'
+                              : 'finished'
                         }`}
                       >
                         {params.value}
