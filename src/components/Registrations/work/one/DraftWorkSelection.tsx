@@ -24,7 +24,13 @@ export const DraftWorkSelection = ({
           title="Selecione uma opção para preencher automaticamente o formulário com dados anteriores, simplificando o processo de cadastro."
           placement="right"
         >
-          <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
+          <span
+            style={{
+              display: 'flex',
+            }}
+          >
+            <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
+          </span>
         </CustomTooltip>
       </Flex>
       <Autocomplete
