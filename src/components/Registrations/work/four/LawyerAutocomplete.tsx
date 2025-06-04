@@ -59,7 +59,8 @@ export const LawyerSelect = ({
         value={selectedOption || null}
         options={options}
         getOptionLabel={(option: any) =>
-          option?.attributes ? `${option.id} - ${option.attributes.name}` : ''
+          `${option.id} - ${option.attributes.name || ''} ${option.attributes.last_name || ''}` ||
+          'Selecione um Advogado'
         }
         getOptionValue={(option: any) => option.id.toString()}
         onChange={(value: any) => onChange(value)}

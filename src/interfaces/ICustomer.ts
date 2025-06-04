@@ -50,11 +50,11 @@ interface IPhone {
 
 export interface IProfileCustomerAttributes {
   id?: any;
-  name: string;
+  name: string | undefined;
   customer_type: string;
   status: number;
   customer_id: number;
-  last_name: string | null;
+  last_name: string | undefined;
   cpf?: string;
   rg: string;
   birth: string;
