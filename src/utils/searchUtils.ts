@@ -69,9 +69,9 @@ const getWorkCustomers = (
     if (fullProfile) {
       return {
         id: Number(fullProfile.id),
-        name: fullProfile.attributes.name,
+        name: fullProfile.attributes.name || '',
         last_name: fullProfile.attributes.last_name || '',
-        email: fullProfile.attributes.access_email,
+        email: fullProfile.attributes.access_email || '',
       };
     }
     return (

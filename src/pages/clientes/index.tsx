@@ -973,6 +973,7 @@ const Customers = () => {
                   },
                 ]}
                 processRowUpdate={handleProcessRowUpdate}
+                sortingOrder={['asc', 'desc']}
                 initialState={{
                   pagination: { paginationModel: { pageSize: 10 } },
                   sorting: {
