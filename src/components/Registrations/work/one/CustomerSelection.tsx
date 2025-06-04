@@ -1,11 +1,17 @@
 import { Flex } from '@/styles/globals';
 import { Autocomplete, TextField, Typography } from '@mui/material';
 
+interface CustomerAttributes {
+  id?: string;
+  name?: string;
+  last_name?: string;
+}
+
 interface CustomerSelectionProps {
-  customersList: Array<{ id: string; attributes?: { name?: string } }>;
-  customerSelectedList: Array<{ id: string; attributes?: { name?: string } }>;
+  customersList: Array<{ id: string; attributes?: CustomerAttributes }>;
+  customerSelectedList: Array<{ id: string; attributes?: CustomerAttributes }>;
   handleCustomersSelected: (
-    customers: Array<{ id: string; attributes?: { name?: string } }>,
+    customers: Array<{ id: string; attributes?: CustomerAttributes }>,
   ) => void;
   error?: string;
 }
@@ -26,7 +32,9 @@ export const CustomerSelection = ({
         limitTags={1}
         id="multiple-limit-tags"
         options={customersList}
-        getOptionLabel={option => `${option.id} - ${option?.attributes?.name || ''}`}
+        getOptionLabel={option =>
+          `${option.id} - ${option?.attributes?.name || ''} ${option?.attributes?.last_name || ''}`
+        }
         renderInput={params => (
           <TextField
             placeholder="Selecione um Cliente"

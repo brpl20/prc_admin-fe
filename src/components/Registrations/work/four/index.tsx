@@ -1,5 +1,5 @@
 // components/WorkStepFour.tsx
-import React, {
+import {
   useState,
   useContext,
   useEffect,
@@ -23,9 +23,8 @@ import {
 } from '@mui/material';
 import { WorkContext } from '@/contexts/WorkContext';
 import { getAllProfileAdmins } from '@/services/admins';
-import { getOfficeById, getOfficesWithLaws } from '@/services/offices';
+import { getOfficesWithLaws } from '@/services/offices';
 import { Notification } from '@/components';
-import { z } from 'zod';
 import { Container } from './styles';
 import { LawyerRadioGroup } from './LawyerRadioGroup';
 import { OfficeSelection } from './OfficeSelection';
@@ -43,11 +42,6 @@ interface FormData {
   physical_lawyer: string;
   physical_lawyer_type: 'legal' | 'physical';
 }
-
-const stepFourSchema = z.object({
-  profile_admin_ids: z.array(z.number()).nonempty(),
-  office_ids: z.array(z.number()).nonempty(),
-});
 
 interface IRefWorkStepFourProps {
   handleSubmitForm: () => void;
