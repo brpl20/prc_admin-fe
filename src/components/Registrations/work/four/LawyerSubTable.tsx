@@ -53,7 +53,7 @@ export const LawyerSubTable = ({
           </IconButton>
         </TableCell>
         <TableCell component="th" scope="row">
-          {row.attributes.name}
+          {row.attributes.name} {row.attributes.last_name}
         </TableCell>
         <TableCell />
         <TableCell />
@@ -68,7 +68,7 @@ export const LawyerSubTable = ({
                 <TableBody>
                   {lawyers && lawyers.length > 0
                     ? lawyers.map((lawyer: any) => (
-                        <TableRow key={lawyer.name}>
+                        <TableRow key={lawyer.id}>
                           <TableCell padding="checkbox">
                             <Box display={'flex'}>
                               <Checkbox
@@ -82,7 +82,7 @@ export const LawyerSubTable = ({
                             </Box>
                           </TableCell>
                           <TableCell component="th" scope="row">
-                            {lawyer.name}
+                            {lawyer.name || ''} {lawyer.last_name || ''}
                           </TableCell>
                         </TableRow>
                       ))
