@@ -82,6 +82,13 @@ const FirstSection = () => {
                 name="menu"
                 aria-label="menu"
                 aria-labelledby="menu"
+                onClick={() => {
+                  const plansSection = document.getElementById('plans-section');
+                  window.scrollTo({
+                    top: plansSection ? plansSection.offsetTop - 50 : 0,
+                    behavior: 'smooth',
+                  });
+                }}
               >
                 <label className="text-white cursor-pointer font-medium">
                   Conheça nossos planos

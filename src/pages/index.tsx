@@ -12,6 +12,7 @@ import {
   EighthSection,
   Footer,
 } from '@/components/LandingPageSections';
+import PlansSection from '@/components/LandingPageSections/PlansSection';
 
 const LandingPage = () => {
   return (
@@ -24,6 +25,7 @@ const LandingPage = () => {
       <FifthSection />
       <SixthSection />
       <SeventhSection />
+      <PlansSection />
       <EighthSection />
       <Footer />
     </div>

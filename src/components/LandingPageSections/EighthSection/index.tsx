@@ -25,7 +25,7 @@ const EighthSection = () => {
 
   return (
     <section
-      className="relative bg-white flex items-center justify-center text-center"
+      className="relative bg-[#F8F9FA] flex items-center justify-center text-center"
       id="blue-section"
     >
       <div className="flex my-[100px] items-center text-center ">
