@@ -127,7 +127,22 @@ const Admins = () => {
   const handleRestore = async (user: IProfileAdminAttributes) => {
     try {
       await restoreProfileAdmin(user.id);
-      setMessage('Cliente restaurado com sucesso!');
+      if (user.role === 'Estagiario') {
+        setMessage('Estagiário ativo com sucesso!');
+      }
+      if (user.role === 'Advogado') {
+        setMessage('Advogado ativo com sucesso!');
+      }
+      if (user.role === 'Paralegal') {
+        setMessage('Paralegal ativo com sucesso!');
+      }
+      if (user.role === 'Secretario') {
+        setMessage('Secretário ativo com sucesso!');
+      }
+      if (user.role === 'Contador') {
+        setMessage('Contador ativo com sucesso!');
+      }
+
       setTypeMessage('success');
       setOpenSnackbar(true);
       setRefetch(!refetch);
@@ -141,7 +156,22 @@ const Admins = () => {
   const handleInactive = async (user: IProfileAdminAttributes) => {
     try {
       await inactiveProfileAdmin(user.id);
-      setMessage('Admin inativado com sucesso!');
+      if (user.role === 'Estagiario') {
+        setMessage('Estagiário inativado com sucesso!');
+      }
+      if (user.role === 'Advogado') {
+        setMessage('Advogado inativado com sucesso!');
+      }
+      if (user.role === 'Paralegal') {
+        setMessage('Paralegal inativado com sucesso!');
+      }
+      if (user.role === 'Secretario') {
+        setMessage('Secretário inativado com sucesso!');
+      }
+      if (user.role === 'Contador') {
+        setMessage('Contador inativado com sucesso!');
+      }
+
       setTypeMessage('success');
       setOpenSnackbar(true);
       setRefetch(!refetch);
