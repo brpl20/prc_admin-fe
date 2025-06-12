@@ -23,6 +23,7 @@ interface UserDetailsProps {
 }
 
 interface IUserDetails {
+  access_email: string;
   name: string;
   last_name: string;
   birth: string;
@@ -149,6 +150,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
       bank_accounts: bankAccounts,
       emails,
       phones,
+      access_email: profileAdminAttributes.access_email ?? '',
     };
   };
 
@@ -501,14 +503,14 @@ export default function UserDetails({ id }: UserDetailsProps) {
                             ? userData.civil_status === 'single'
                               ? 'Solteiro'
                               : userData.civil_status === 'union'
-                              ? 'União Estável'
-                              : userData.civil_status === 'married'
-                              ? 'Casado'
-                              : userData.civil_status === 'divorced'
-                              ? 'Divorciado'
-                              : userData.civil_status === 'widower'
-                              ? 'Viúvo'
-                              : ''
+                                ? 'União Estável'
+                                : userData.civil_status === 'married'
+                                  ? 'Casado'
+                                  : userData.civil_status === 'divorced'
+                                    ? 'Divorciado'
+                                    : userData.civil_status === 'widower'
+                                      ? 'Viúvo'
+                                      : ''
                             : ''}
                         </span>
                       </Flex>
@@ -1109,14 +1111,14 @@ export default function UserDetails({ id }: UserDetailsProps) {
                           {userData.role === 'lawyer'
                             ? 'Advogado'
                             : userData.role === 'paralegal'
-                            ? 'Paralegal'
-                            : userData.role === 'trainee'
-                            ? 'Estagiário'
-                            : userData.role === 'secretary'
-                            ? 'Secretário(a)'
-                            : userData.role === 'counter'
-                            ? 'Contador(a)'
-                            : ''}
+                              ? 'Paralegal'
+                              : userData.role === 'trainee'
+                                ? 'Estagiário'
+                                : userData.role === 'secretary'
+                                  ? 'Secretário(a)'
+                                  : userData.role === 'counter'
+                                    ? 'Contador(a)'
+                                    : ''}
                         </span>
                       </Flex>
                       <Flex
@@ -1533,7 +1535,7 @@ export default function UserDetails({ id }: UserDetailsProps) {
                             fontWeight: '400',
                           }}
                         >
-                          {userData.email ? userData.email : 'Não Informado'}
+                          {userData.access_email ? userData.access_email : 'Não Informado'}
                         </span>
                       </Flex>
 
