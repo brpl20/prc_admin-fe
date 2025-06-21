@@ -1,5 +1,14 @@
+import { decode } from 'jsonwebtoken';
 import NextAuth, { type NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  last_name: string;
+  token: string;
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -30,9 +39,16 @@ export const authOptions: NextAuthOptions = {
 
           const user = await res.json();
 
+          const decoded = decode(user.token) as User | null;
+          if (!decoded) {
+            throw new Error('Token inválido');
+          }
+
           return {
             id: user.token,
             email: credentials.email,
+            name: decoded.name,
+            last_name: decoded.last_name,
             ...user,
           };
         } catch (error) {

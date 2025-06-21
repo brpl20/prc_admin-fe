@@ -157,7 +157,7 @@ const Layout = ({ children }: ILayoutProps) => {
 
   function formatUserName(fullName: string): string {
     const names = fullName.split(' ');
-    if (names.length <= 2) return fullName; // Show whole name if there's only a name and surname
+    if (names.length <= 2) return fullName;
 
     return `${names[0]} ${names[1]}...`;
   }
@@ -201,12 +201,9 @@ const Layout = ({ children }: ILayoutProps) => {
             <Image width={28} height={28} src={Profile} alt="Logo" priority />
             <Flex className="min-w-0">
               <Flex className="overflow-hidden select-none">
-                {false ? (
+                {session ? (
                   <Typography fontSize="md" color={colors.white} className="px-4 truncate">
-                    {/* {formatUserName(
-                      user.profile.attributes.name + ' ' + user.profile.attributes.last_name,
-                    )} */}
-                    Teste
+                    {formatUserName(`${session?.name} ${session?.last_name}`)}
                   </Typography>
                 ) : (
                   <Flex>

@@ -36,7 +36,7 @@ const ModalOfRemove = ({
   const [textButton, setTextButton] = useState(`Eu quero remover este ${model}`);
   const [steps, setSteps] = useState(0);
 
-  const textConfirmation = `${model}/${entityName}`;
+  const textConfirmation = `${model}/${entityName.trim()}`;
 
   const deleteCustomerFull = async (id: string) => {
     const customerId = (await getCustomerById(id, true)).data.attributes.customer_id;
