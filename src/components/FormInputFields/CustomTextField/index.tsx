@@ -12,6 +12,7 @@ interface CustomTextFieldProps {
   customValue?: unknown;
   sx?: CSSProperties;
   required?: boolean;
+  type?: string;
 }
 
 const CustomTextField: React.FC<CustomTextFieldProps> = ({
@@ -25,6 +26,7 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
   customValue,
   sx,
   required = false,
+  type = 'text',
 }) => {
   const value =
     customValue !== undefined && customValue !== null
@@ -43,7 +45,7 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
         variant="outlined"
         error={!!errorMessage}
         fullWidth
-        type="text"
+        type={type}
         name={name}
         size="small"
         inputProps={{

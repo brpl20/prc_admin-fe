@@ -121,9 +121,9 @@ const userSchema = z
     role: z.string().min(2, { message: 'O campo Tipo do Usuário é obrigatório.' }),
     city: z.string().min(2, { message: 'O campo Cidade é obrigatório.' }),
     state: z.string().min(2, { message: 'O campo Estado é obrigatório.' }),
-    neighborhood: z.string().min(2, { message: 'O campo Bairro é obrigatório.' }),
+    neighborhood: z.string(),
     address: z.string().min(2, { message: 'O campo Endereço é obrigatório.' }),
-    number: z.number().min(2, { message: 'O campo Número é obrigatório.' }),
+    number: z.number(),
     cep: z.string().min(2, { message: 'O campo CEP é obrigatório.' }),
     oab: z.string().optional(),
   })
@@ -174,9 +174,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
     address: '',
     state: '',
     city: '',
-    number: '',
     description: '',
-    neighborhood: '',
 
     bank_name: '',
     agency: '',
@@ -211,9 +209,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
       address: '',
       state: '',
       city: '',
-      number: '',
       description: '',
-      neighborhood: '',
 
       bank_name: '',
       agency: '',
@@ -242,11 +238,9 @@ const User = ({ dataToEdit, isLoading }: props) => {
       setFormData(prevData => ({
         ...prevData,
         ['address']: '',
-        ['number']: '',
         ['description']: '',
         ['state']: '',
         ['city']: '',
-        ['neighborhood']: '',
       }));
     }
 
@@ -274,14 +268,6 @@ const User = ({ dataToEdit, isLoading }: props) => {
       setFormData(prevData => ({
         ...prevData,
         cpf: cpfMask(value),
-      }));
-      return;
-    }
-
-    if (name === 'rg') {
-      setFormData(prevData => ({
-        ...prevData,
-        rg: rgMask(value),
       }));
       return;
     }
@@ -761,7 +747,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
           name: attributes.name || '',
           last_name: attributes.last_name || '',
           cpf: attributes.cpf ? cpfMask(attributes.cpf) : '',
-          rg: attributes.rg ? rgMask(attributes.rg) : '',
+          rg: attributes.rg ?? '',
           address: addresses.street || '',
           number: addresses.number ? String(addresses.number) : '',
           description: addresses.description || '',
@@ -1011,9 +997,10 @@ const User = ({ dataToEdit, isLoading }: props) => {
 
                     <Box maxWidth="30%">
                       <CustomTextField
+                        type="number"
                         formData={formData}
                         name="number"
-                        label="Número *"
+                        label="Número"
                         placeholder="N.º"
                         errorMessage={getErrorMessage(0, 'number')}
                         handleInputChange={handleInputChange}
@@ -1033,7 +1020,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                   <CustomTextField
                     formData={formData}
                     name="neighborhood"
-                    label="Bairro *"
+                    label="Bairro"
                     errorMessage={getErrorMessage(0, 'neighborhood')}
                     handleInputChange={handleInputChange}
                   />
