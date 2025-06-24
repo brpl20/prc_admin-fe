@@ -147,7 +147,7 @@ const Works = () => {
       setOpenSnackbar(true);
       setRefetch(!refetch);
     } catch (error: any) {
-      setMessage('Erro ao inativar trabalho');
+      setMessage(error.response?.data?.error || 'Erro ao inativar trabalho');
       setTypeMessage('error');
       setOpenSnackbar(true);
     }

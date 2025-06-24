@@ -34,11 +34,10 @@ import Image from 'next/image';
 import { CloseDropdown, Container, Flex, MenuItem, TitleWrapper } from './styles';
 
 import { SelectContainer, SelectItem, SelectItemsContainer } from '@/components/SelectContainer';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { TbLoader2 } from 'react-icons/tb';
 import Logo from '../../assets/logo-white.png';
 import Profile from '../../assets/Profile.png';
-import { useAuth } from '@/contexts/AuthContext';
 
 const drawerWidth = 224;
 
@@ -117,7 +116,6 @@ const Layout = ({ children }: ILayoutProps) => {
   const theme = useTheme();
   const { asPath, route } = useRouter();
   const { data: session } = useSession();
-  const { user, logout } = useAuth();
 
   const { showTitle, pageTitle } = useContext(PageTitleContext);
 
@@ -159,10 +157,15 @@ const Layout = ({ children }: ILayoutProps) => {
 
   function formatUserName(fullName: string): string {
     const names = fullName.split(' ');
-    if (names.length <= 2) return fullName; // Show whole name if there's only a name and surname
+    if (names.length <= 2) return fullName;
 
     return `${names[0]} ${names[1]}...`;
   }
+
+  const handleSignOut = async () => {
+    await signOut({ redirect: false });
+    window.location.href = '/login';
+  };
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -198,11 +201,9 @@ const Layout = ({ children }: ILayoutProps) => {
             <Image width={28} height={28} src={Profile} alt="Logo" priority />
             <Flex className="min-w-0">
               <Flex className="overflow-hidden select-none">
-                {user?.profile ? (
+                {session ? (
                   <Typography fontSize="md" color={colors.white} className="px-4 truncate">
-                    {formatUserName(
-                      user.profile.attributes.name + ' ' + user.profile.attributes.last_name,
-                    )}
+                    {formatUserName(`${session?.name} ${session?.last_name}`)}
                   </Typography>
                 ) : (
                   <Flex>
@@ -220,12 +221,13 @@ const Layout = ({ children }: ILayoutProps) => {
             </Flex>
             {openUserMenu && (
               <SelectItemsContainer>
-                <SelectItem href={`/alterar?type=usuario&id=${user?.profile?.id}`}>
+                {/* <SelectItem href={`/alterar?type=usuario&id=${user?.profile?.id}`}> */}
+                <SelectItem href={`/alterar?type=usuario&id=teste`}>
                   <AiOutlineUser size={20} />
                   <span className="text-sm font-medium">Conta</span>
                 </SelectItem>
 
-                <SelectItem href="/" onClick={logout}>
+                <SelectItem href="/" onClick={handleSignOut}>
                   <IoExitOutline size={20} />
                   <span className="text-sm font-medium">Sair</span>
                 </SelectItem>

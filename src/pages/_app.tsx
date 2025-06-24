@@ -1,4 +1,3 @@
-import * as React from 'react';
 import type { AppProps } from 'next/app';
 
 import '@/styles/index.css';
@@ -12,9 +11,8 @@ import Head from 'next/head';
 import CssBaseline from '@mui/material/CssBaseline';
 import { CacheProvider, EmotionCache } from '@emotion/react';
 import createEmotionCache from '../utils/createEmotionCache';
-import { SessionProvider } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { SessionProvider } from 'next-auth/react';
 
 const clientSideEmotionCache = createEmotionCache();
 
@@ -46,16 +44,14 @@ const StudioApp = (props: StudioAppProps) => {
       </Head>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <SessionProvider>
-          <AuthProvider>
-            <CustomerProvider>
-              <PageTitleProvider>
-                <WorkProvider>
-                  <Component {...pageProps} />
-                </WorkProvider>
-              </PageTitleProvider>
-            </CustomerProvider>
-          </AuthProvider>
+        <SessionProvider session={pageProps.session}>
+          <CustomerProvider>
+            <PageTitleProvider>
+              <WorkProvider>
+                <Component {...pageProps} />
+              </WorkProvider>
+            </PageTitleProvider>
+          </CustomerProvider>
         </SessionProvider>
       </ThemeProvider>
     </CacheProvider>

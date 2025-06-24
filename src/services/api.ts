@@ -20,18 +20,19 @@ export const serverApi = axios.create({
 api.interceptors.request.use(
   async config => {
     const session = await getSession();
-    if (session) {
+    if (!session) {
+      signOut();
+      return config;
+    }
+
+    if (session?.token) {
       config.headers.Authorization = `Bearer ${session.token}`;
     }
+
     return config;
   },
   error => {
-    if (error.response.status === 401) {
-      window.location.href = '/';
-      signOut();
-    } else {
-      return Promise.reject(error);
-    }
+    return Promise.reject(error);
   },
 );
 
@@ -40,11 +41,7 @@ api.interceptors.response.use(
     return response;
   },
   error => {
-    if (error.response.status === 401) {
-      window.location.href = '/';
-    } else {
-      return Promise.reject(error);
-    }
+    return Promise.reject(error);
   },
 );
 
