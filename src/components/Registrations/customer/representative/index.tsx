@@ -243,6 +243,9 @@ const Representative = ({ pageTitle }: Props) => {
         description: formData.description,
       });
 
+      const email = customerForm.data.attributes.emails_attributes[0]?.email;
+      if (!email) throw new Error('E-mail do cliente não fornecido');
+
       const data = {
         capacity: 'able',
         profession: formData.profession,
@@ -257,6 +260,9 @@ const Representative = ({ pageTitle }: Props) => {
         civil_status: formData.civil_status,
         phones_attributes: contactData.phoneInputFields,
         emails_attributes: contactData.emailInputFields,
+        customer_attributes: {
+          access_email: email,
+        },
         represent_attributes: {
           representor_id: formData.represent_id ? Number(formData.represent_id) : '',
         },
