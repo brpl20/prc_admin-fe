@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext, useEffect } from 'react';
+import { useState, useRef, useContext, useEffect } from 'react';
 import { animateScroll as scroll } from 'react-scroll';
 import Router, { useRouter } from 'next/router';
 
@@ -12,7 +12,7 @@ import { createDraftWork, createWork, updateWork } from '@/services/works';
 import { DescriptionText, ContentContainer, PageTitle } from '@/styles/globals';
 import { Container, Content } from './styles';
 
-import { Box, Stepper, Step, StepLabel, Button, CircularProgress } from '@mui/material';
+import { Box, Stepper, Step, StepLabel, Button } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
 
 import PFCustomerStepOne, { IRefPFCustomerStepOneProps } from './customer/PF/one';
@@ -34,8 +34,6 @@ import WorkStepFour from './work/four';
 import WorkStepFive, { IRefWorkStepFiveProps } from './work/five';
 import WorkStepSix, { IRefWorkStepSixProps } from './work/six';
 import { ConfirmDownloadDocument } from '@/components';
-import { ICustomer } from '@/interfaces/ICustomer';
-import { CustomersProps } from '@/pages/clientes';
 
 interface IRegistrationProps {
   registrationType: string;
@@ -141,15 +139,21 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
   };
 
   const handleCustomerRegistration = async () => {
-    const isPhisical = customerForm.customer_type === 'physical_person';
+    const isPhysical = customerForm.customer_type === 'physical_person';
 
     if (route.asPath.includes('alterar')) {
       const id = router.query.id as string;
       if (!id) throw new Error('ID do cliente não encontrado');
 
+      const email = customerForm.data.attributes.emails_attributes[0]?.email;
+      if (!email) throw new Error('E-mail do cliente não fornecido');
+
       const lastCustomerFile = customerForm.data.attributes.customer_files.at(-1);
       const prof_aux = {
         ...newCustomerForm,
+        customer_attributes: {
+          access_email: email,
+        },
         customer_files_attributes: [
           {
             id: lastCustomerFile?.id || '',
@@ -163,27 +167,52 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
         regenerate_documents: customerForm.issue_documents,
       };
 
-      const payload = isPhisical ? data : newCustomerForm;
-      const res = await updateProfileCustomer(id, payload);
+      const payload = isPhysical ? data : newCustomerForm;
 
-      if (!res?.data) throw new Error('Falha ao atualizar perfil do cliente');
+      try {
+        const res = await updateProfileCustomer(id, payload);
+        if (!res?.data) throw new Error('Falha ao atualizar perfil do cliente');
 
-      const files = res.data.attributes.customer_files;
-      handleCustomerResult(files, isPhisical);
+        const files = res.data.attributes.customer_files;
+        handleCustomerResult(files, isPhysical);
+      } catch (error) {
+        const emailErrorMessage = isEmailInUseError(error);
+        if (emailErrorMessage) {
+          setMessage('E-mail de acesso já esta em uso!');
+          setTypeMessage('error');
+          setOpenSnackbar(true);
+          return;
+        }
+        handleApiError(error);
+      }
     } else {
-      const prof_aux = {
-        ...customerForm,
-        customer_files_attributes: [
-          {
-            file_description: 'simple_procuration',
+      try {
+        const prof_aux = {
+          ...customerForm,
+          customer_attributes: {
+            access_email: customerForm.data.attributes.emails_attributes[0].email || '',
           },
-        ],
-      };
+          customer_files_attributes: [
+            {
+              file_description: 'simple_procuration',
+            },
+          ],
+        };
 
-      const payload = customerForm.issue_documents && isPhisical ? prof_aux : customerForm;
-      const res = await createProfileCustomer(payload);
+        const payload = customerForm.issue_documents && isPhysical ? prof_aux : customerForm;
+        const res = await createProfileCustomer(payload);
 
-      handleCustomerResult(res.data.attributes.customer_files, isPhisical);
+        handleCustomerResult(res.data.attributes.customer_files, isPhysical);
+      } catch (error: any) {
+        const emailErrorMessage = isEmailInUseError(error);
+        if (emailErrorMessage) {
+          setMessage('E-mail de acesso já esta em uso!');
+          setTypeMessage('error');
+          setOpenSnackbar(true);
+          return;
+        }
+        handleApiError(error);
+      }
     }
 
     setCustomerForm({});
@@ -243,28 +272,54 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
   };
 
   const handleApiError = (error: any) => {
-    let message = 'Ocorreu um erro ao completar o registro';
+    console.error('Erro durante a operação:', error);
 
-    if (error?.response?.data?.errors) {
-      const apiErrors = error.response.data.errors;
+    let message = 'Ocorreu um erro inesperado.';
 
-      if (Array.isArray(apiErrors)) {
-        const firstError = apiErrors[0];
+    const apiErrors = error?.response?.data?.errors;
+    if (Array.isArray(apiErrors)) {
+      const firstError = apiErrors[0];
+      const errorCodes = Array.isArray(firstError?.code) ? firstError.code : [firstError?.code];
 
-        if (Array.isArray(firstError?.code)) {
-          message = firstError.code[0];
-        } else if (firstError?.code) {
-          message = firstError.code;
-        }
+      const firstMessage = errorCodes?.[0];
+
+      if (firstMessage) {
+        message = firstMessage;
       }
-    } else if (error.message) {
-      message = error.message;
     }
 
-    console.error('Operation error:', error);
+    if (typeof error?.message === 'string') {
+      if (error.message.toLowerCase().includes('e-mail já está em uso')) {
+        message = 'E-mail já está em uso.';
+      } else if (error.message.toLowerCase().includes('dados inválidos')) {
+        message = 'Dados inválidos. Verifique os campos e tente novamente.';
+      } else {
+        message = error.message;
+      }
+    }
+
     setMessage(message);
     setTypeMessage('error');
     setOpenSnackbar(true);
+  };
+
+  const isEmailInUseError = (error: any): string | null => {
+    const apiErrors = error?.response?.data?.errors;
+    if (Array.isArray(apiErrors)) {
+      const emailError = apiErrors.find((err: any) => {
+        const codeArray = Array.isArray(err.code) ? err.code : [err.code];
+        return codeArray.some(
+          (code: string) =>
+            typeof code === 'string' &&
+            (code.toLowerCase().includes('email') || code.toLowerCase().includes('já está em uso')),
+        );
+      });
+
+      if (emailError) {
+        return Array.isArray(emailError.code) ? emailError.code[0] : emailError.code;
+      }
+    }
+    return null;
   };
 
   const handleSave = async (title: string) => {

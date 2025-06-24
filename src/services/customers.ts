@@ -1,6 +1,5 @@
-import { ICustomer, IProfileCustomer } from '@/interfaces/ICustomer';
+import { ICustomer } from '@/interfaces/ICustomer';
 import api from './api';
-import { CustomersProps } from '@/pages/clientes';
 
 const createProfileCustomer = async (data: any) => {
   try {

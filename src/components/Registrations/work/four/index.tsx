@@ -264,7 +264,6 @@ const WorkStepFour = forwardRef<IRefWorkStepFourProps, IStepFourProps>(({ nextSt
           sourceOfficeIds.includes(office.id),
         );
 
-        console.log('Filtered offices:', result.officesSelected);
         setIsLegalPerson(true);
       }
 
