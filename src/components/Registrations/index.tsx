@@ -6,11 +6,7 @@ import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { WorkContext } from '@/contexts/WorkContext';
 
-import {
-  createProfileCustomer,
-  createCustomer as createCustomerApi,
-  updateProfileCustomer,
-} from '@/services/customers';
+import { createProfileCustomer, updateProfileCustomer } from '@/services/customers';
 import { createDraftWork, createWork, updateWork } from '@/services/works';
 
 import { DescriptionText, ContentContainer, PageTitle } from '@/styles/globals';
@@ -39,6 +35,7 @@ import WorkStepFive, { IRefWorkStepFiveProps } from './work/five';
 import WorkStepSix, { IRefWorkStepSixProps } from './work/six';
 import { ConfirmDownloadDocument } from '@/components';
 import { ICustomer } from '@/interfaces/ICustomer';
+import { CustomersProps } from '@/pages/clientes';
 
 interface IRegistrationProps {
   registrationType: string;
@@ -79,7 +76,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [openDownloadModal, setOpenDownloadModal] = useState(false);
-  const [urlsDocuments, setUrlsDocuments] = useState([]);
+  const [urlsDocuments, setUrlsDocuments] = useState<any[]>([]);
   const [confirmCreationLoading, setConfirmCreationLoading] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -131,188 +128,143 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
     }
   };
 
-  const createCustomer = async (data: any): Promise<{ data: ICustomer }> => {
-    const response = await createCustomerApi(data);
-    return response;
+  const completeRegistration = async (title: string) => {
+    try {
+      if (registrationType.search('liente') !== -1) {
+        await handleCustomerRegistration();
+      } else if (registrationType.search('trabalho') !== -1) {
+        await handleWorkRegistration(title);
+      }
+    } catch (error: any) {
+      handleApiError(error);
+    }
   };
 
-  const completeRegistration = async (title: string) => {
-    if (registrationType.search('liente') !== -1) {
-      try {
-        const isPhisical = customerForm.customer_type === 'physical_person' ? true : false;
+  const handleCustomerRegistration = async () => {
+    const isPhisical = customerForm.customer_type === 'physical_person';
 
-        if (route.asPath.includes('alterar')) {
-          const id = router.query.id as string;
+    if (route.asPath.includes('alterar')) {
+      const id = router.query.id as string;
+      if (!id) throw new Error('ID do cliente não encontrado');
 
-          const lastCustomerFile =
-            customerForm.data.attributes.customer_files[
-              customerForm.data.attributes.customer_files.length - 1
-            ];
-
-          const prof_aux = {
-            ...newCustomerForm,
-            customer_files_attributes: [
-              {
-                id: lastCustomerFile && lastCustomerFile.id ? lastCustomerFile.id : '',
-                file_description: 'simple_procuration',
-              },
-            ],
-          };
-
-          const data = {
-            profile_customer: prof_aux,
-            regenerate_documents: customerForm.issue_documents,
-          };
-
-          const payload = isPhisical === true ? data : newCustomerForm;
-
-          if (id) {
-            const res = await updateProfileCustomer(id, payload);
-            const files = res.data.attributes.customer_files;
-
-            if (files && files.length > 0 && isPhisical && customerForm.issue_documents) {
-              setUrlsDocuments(files);
-              setOpenModal(false);
-              setOpenDownloadModal(true);
-            } else {
-              setOpenModal(false);
-
-              router.push('/clientes');
-            }
-
-            setCustomerForm({});
-            return;
-          }
-        }
-
-        const userEmail = customerForm.emails_attributes[0].email;
-        const customerData = {
-          customer: {
-            email: userEmail,
+      const lastCustomerFile = customerForm.data.attributes.customer_files.at(-1);
+      const prof_aux = {
+        ...newCustomerForm,
+        customer_files_attributes: [
+          {
+            id: lastCustomerFile?.id || '',
+            file_description: 'simple_procuration',
           },
-        };
+        ],
+      };
 
-        const customer = await createCustomer(customerData);
+      const data = {
+        profile_customer: prof_aux,
+        regenerate_documents: customerForm.issue_documents,
+      };
 
-        if (!customer.data.attributes.access_email) {
-          throw new Error('E-mail já está em uso !');
-        }
+      const payload = isPhisical ? data : newCustomerForm;
+      const res = await updateProfileCustomer(id, payload);
 
-        customerForm.customer_id = customer.data.id ? customer.data.id : createdCustomerId;
-        setCreatedCustomerId(Number(customer.data.id));
+      if (!res?.data) throw new Error('Falha ao atualizar perfil do cliente');
 
-        const prof_aux = {
-          ...customerForm,
-          customer_files_attributes: [
-            {
-              file_description: 'simple_procuration',
-            },
-          ],
-        };
+      const files = res.data.attributes.customer_files;
+      handleCustomerResult(files, isPhisical);
+    } else {
+      const prof_aux = {
+        ...customerForm,
+        customer_files_attributes: [
+          {
+            file_description: 'simple_procuration',
+          },
+        ],
+      };
 
-        const payload =
-          customerForm.issue_documents === true && isPhisical === true ? prof_aux : customerForm;
+      const payload = customerForm.issue_documents && isPhisical ? prof_aux : customerForm;
+      const res = await createProfileCustomer(payload);
 
-        const res = await createProfileCustomer(payload);
-        const files = res.data.attributes.customer_files;
+      handleCustomerResult(res.data.attributes.customer_files, isPhisical);
+    }
 
-        if (files && files.length > 0) {
-          setUrlsDocuments(files);
-          setOpenModal(false);
-          setOpenDownloadModal(true);
-        } else {
-          setOpenModal(false);
-          router.push('/clientes');
-        }
+    setCustomerForm({});
+  };
 
-        return;
-      } catch (error: any) {
-        let message = 'Ocorreu um erro inesperado.';
-        if (error?.request?.response) {
-          const parsed = JSON.parse(error.request.response);
-          if (parsed.errors && parsed.errors[0] && parsed.errors[0].code) {
-            message = parsed.errors[0].code;
-          }
-        }
-        setMessage(message);
-        setTypeMessage('error');
-        setOpenSnackbar(true);
-      }
-    } else if (registrationType.search('trabalho') !== -1) {
-      try {
-        if (route.asPath.includes('alterar')) {
-          const id: any = router.query.id;
+  const handleWorkRegistration = async (title: string) => {
+    if (route.asPath.includes('alterar')) {
+      const id = router.query.id as string;
+      if (!id) throw new Error('ID do trabalho não encontrado');
 
-          const payload = {
-            regenerate_documents: true,
-            work: updateWorkForm,
-          };
+      const payload = {
+        regenerate_documents: true,
+        work: updateWorkForm,
+      };
 
-          const res = await updateWork(id, payload);
+      const res = await updateWork(id, payload);
+      if (!res?.data) throw new Error('Falha ao atualizar trabalho');
 
-          if (title != '') {
-            const draftWork = {
-              draft_work: {
-                name: title,
-                work_id: res.data.id,
-              },
-            };
-
-            await createDraftWork(draftWork);
-          }
-
-          const url = res.data.attributes.documents;
-
-          if (url) {
-            setUrlsDocuments(url);
-
-            setOpenModal(false);
-
-            setOpenDownloadModal(true);
-          }
-
-          return;
-        }
-
-        const work = await createWork(workForm);
-
-        if (title != '') {
-          const draftWork = {
-            draft_work: {
-              name: title,
-              work_id: work.data.id,
-            },
-          };
-
-          await createDraftWork(draftWork);
-        }
-
-        const url = work.data.attributes.documents;
-
-        if (url) {
-          setUrlsDocuments(url);
-
-          setOpenModal(false);
-
-          setOpenDownloadModal(true);
-        }
-
-        return;
-      } catch (error: any) {
-        const errorMessages = error?.response.data.errors || [];
-        errorMessages.forEach((message: { code: string }) => {
-          if (message.code) {
-            setMessage(message.code);
-            setTypeMessage('error');
-            setOpenSnackbar(true);
-          } else {
-            setMessage('Erro ao criar trabalho');
-            setTypeMessage('error');
-            setOpenSnackbar(true);
-          }
+      if (title) {
+        await createDraftWork({
+          draft_work: { name: title, work_id: res.data.id },
         });
       }
+
+      handleWorkResult(res.data.attributes.documents);
+    } else {
+      const work = await createWork(workForm);
+      if (!work?.data) throw new Error('Falha ao criar trabalho');
+
+      if (title) {
+        await createDraftWork({
+          draft_work: { name: title, work_id: work.data.id },
+        });
+      }
+
+      handleWorkResult(work.data.attributes.documents);
     }
+  };
+
+  const handleCustomerResult = (files: any[], isPhisical: boolean) => {
+    if (files?.length > 0 && isPhisical && customerForm.issue_documents) {
+      setUrlsDocuments(files);
+      setOpenModal(false);
+      setOpenDownloadModal(true);
+    } else {
+      setOpenModal(false);
+      router.push('/clientes');
+    }
+  };
+
+  const handleWorkResult = (url: any) => {
+    if (url) {
+      setUrlsDocuments(url);
+      setOpenModal(false);
+      setOpenDownloadModal(true);
+    }
+  };
+
+  const handleApiError = (error: any) => {
+    let message = 'Ocorreu um erro ao completar o registro';
+
+    if (error?.response?.data?.errors) {
+      const apiErrors = error.response.data.errors;
+
+      if (Array.isArray(apiErrors)) {
+        const firstError = apiErrors[0];
+
+        if (Array.isArray(firstError?.code)) {
+          message = firstError.code[0];
+        } else if (firstError?.code) {
+          message = firstError.code;
+        }
+      }
+    } else if (error.message) {
+      message = error.message;
+    }
+
+    console.error('Operation error:', error);
+    setMessage(message);
+    setTypeMessage('error');
+    setOpenSnackbar(true);
   };
 
   const handleSave = async (title: string) => {

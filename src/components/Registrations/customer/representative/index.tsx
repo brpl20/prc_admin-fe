@@ -14,7 +14,6 @@ import dayjs from 'dayjs';
 import {
   createProfileCustomer,
   getAllProfileCustomer,
-  createCustomer as createCustomerApi,
   updateProfileCustomer,
 } from '@/services/customers';
 import { animateScroll as scroll } from 'react-scroll';
@@ -204,14 +203,7 @@ const Representative = ({ pageTitle }: Props) => {
 
   const completeRegistration = async (data: any) => {
     try {
-      const data_customer = { customer: { email: data.emails_attributes[0].email } };
-      const customer_data = await createCustomerApi(data_customer);
-
-      if (!customer_data.data.attributes.access_email) throw new Error('E-mail já está em uso !');
-
-      const customer_id = customer_data.data.id;
-      const newData = { ...data, customer_id: Number(customer_id) };
-      await createProfileCustomer(newData);
+      await createProfileCustomer(data);
 
       Router.push('/clientes');
       resetValues();

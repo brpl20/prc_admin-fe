@@ -258,8 +258,13 @@ const WorkStepFour = forwardRef<IRefWorkStepFourProps, IStepFourProps>(({ nextSt
       const result: any = { formData: {}, officesSelected: [], selectedLawyers: [] };
 
       if (source.offices) {
-        result.officesSelected = initialData.offices;
+        const sourceOfficeIds = source.offices.map((office: any) => office.id.toString());
 
+        result.officesSelected = initialData.offices.filter(office =>
+          sourceOfficeIds.includes(office.id),
+        );
+
+        console.log('Filtered offices:', result.officesSelected);
         setIsLegalPerson(true);
       }
 

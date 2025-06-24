@@ -14,7 +14,7 @@ import { colors, ContentContainer } from '@/styles/globals';
 import dayjs, { Dayjs } from 'dayjs';
 
 import { Flex, Divider } from '@/styles/globals';
-import { createProfileCustomer, createCustomer as createCustomerApi } from '@/services/customers';
+import { createProfileCustomer } from '@/services/customers';
 import { animateScroll as scroll } from 'react-scroll';
 
 import { z } from 'zod';
@@ -218,14 +218,7 @@ const RepresentativeModal = ({
 
   const completeRegistration = async (data: any) => {
     try {
-      const data_customer = { customer: { email: data.emails_attributes[0].email } };
-      const customer_data = await createCustomerApi(data_customer);
-
-      if (!customer_data.data.attributes.access_email) throw new Error('E-mail já está em uso !');
-
-      const customer_id = customer_data.data.id;
-      const newData = { ...data, customer_id: Number(customer_id) };
-      const createProfileCustomerResponse = await createProfileCustomer(newData);
+      const createProfileCustomerResponse = await createProfileCustomer(data);
 
       handleClose();
       resetValues();
