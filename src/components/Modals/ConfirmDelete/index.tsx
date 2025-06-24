@@ -36,7 +36,7 @@ const ModalOfRemove = ({
   const [textButton, setTextButton] = useState(`Eu quero remover este ${model}`);
   const [steps, setSteps] = useState(0);
 
-  const textConfirmation = `${model}/${entityName}`;
+  const textConfirmation = `${model}/${entityName.trim()}`;
 
   const deleteCustomerFull = async (id: string) => {
     const customerId = (await getCustomerById(id, true)).data.attributes.customer_id;
@@ -69,10 +69,10 @@ const ModalOfRemove = ({
           handleCloseModal();
           onClose();
         } catch (error: any) {
-          setMessage(`Erro ao remover ${model}`);
+          setMessage(error.response?.data?.error || `Erro ao remover ${model}`);
+          setLoading(false);
           setTypeMessage('error');
           setOpenSnackbar(true);
-          setLoading(false);
         }
         break;
     }
