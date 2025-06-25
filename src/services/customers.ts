@@ -1,6 +1,5 @@
-import { ICustomer, IProfileCustomer } from '@/interfaces/ICustomer';
+import { ICustomer } from '@/interfaces/ICustomer';
 import api from './api';
-import { CustomersProps } from '@/pages/clientes';
 
 const createProfileCustomer = async (data: any) => {
   try {
@@ -8,29 +7,6 @@ const createProfileCustomer = async (data: any) => {
     return response.data;
   } catch (error) {
     throw error;
-  }
-};
-
-const createCustomer = async (data: any): Promise<{ data: ICustomer }> => {
-  try {
-    const response = await api.post('/customers', data);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-const updateCustomer = async (data: CustomersProps) => {
-  const payload = {
-    customer: {
-      email: data.email,
-    },
-  };
-
-  try {
-    await api.put(`/customers/${data.id}`, payload);
-  } catch (error: any) {
-    throw error.response.data.errors;
   }
 };
 
@@ -104,9 +80,7 @@ const restoreProfileCustomer = async (id: string) => {
 
 export {
   createProfileCustomer,
-  updateCustomer,
   updateProfileCustomer,
-  createCustomer,
   getAllCustomers,
   getAllProfileCustomer,
   getCustomerById,
