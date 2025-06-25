@@ -182,7 +182,7 @@ const Customers = () => {
 
       case 'identification':
         filteredList = profileCustomersList.filter((profileCustomer: IProfileCustomer) =>
-          regex.test(profileCustomer.attributes.cpf ?? ''),
+          regex.test(getProfileCustomerCpfOrCpnj(profileCustomer).replace(/[^0-9]/g, '')),
         );
         break;
 
