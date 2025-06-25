@@ -266,7 +266,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
       setOpenDownloadModal(true);
     } else {
       setOpenModal(false);
-      // router.push('/clientes');
+      router.push('/clientes');
     }
   };
 
