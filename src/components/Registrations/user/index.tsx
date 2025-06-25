@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, useEffect, useContext } from 'react';
+import { useState, ChangeEvent, useEffect, useContext, useRef } from 'react';
 import { IoAddCircleOutline, IoCheckmark, IoClose } from 'react-icons/io5';
 
 import { TextField, Box, Typography, Button, Autocomplete, CircularProgress } from '@mui/material';
@@ -121,9 +121,9 @@ const userSchema = z
     role: z.string().min(2, { message: 'O campo Tipo do Usuário é obrigatório.' }),
     city: z.string().min(2, { message: 'O campo Cidade é obrigatório.' }),
     state: z.string().min(2, { message: 'O campo Estado é obrigatório.' }),
-    neighborhood: z.string().min(2, { message: 'O campo Bairro é obrigatório.' }),
+    neighborhood: z.string(),
     address: z.string().min(2, { message: 'O campo Endereço é obrigatório.' }),
-    number: z.number().min(1, { message: 'O campo Número é obrigatório.' }),
+    number: z.number(),
     cep: z.string().min(2, { message: 'O campo CEP é obrigatório.' }),
     oab: z.string().optional(),
   })
@@ -135,6 +135,7 @@ const userSchema = z
 const User = ({ dataToEdit, isLoading }: props) => {
   const { data: session } = useSession();
 
+  const hasInitializedRef = useRef(false);
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -173,9 +174,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
     address: '',
     state: '',
     city: '',
-    number: '',
     description: '',
-    neighborhood: '',
 
     bank_name: '',
     agency: '',
@@ -210,9 +209,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
       address: '',
       state: '',
       city: '',
-      number: '',
       description: '',
-      neighborhood: '',
 
       bank_name: '',
       agency: '',
@@ -241,11 +238,9 @@ const User = ({ dataToEdit, isLoading }: props) => {
       setFormData(prevData => ({
         ...prevData,
         ['address']: '',
-        ['number']: '',
         ['description']: '',
         ['state']: '',
         ['city']: '',
-        ['neighborhood']: '',
       }));
     }
 
@@ -273,14 +268,6 @@ const User = ({ dataToEdit, isLoading }: props) => {
       setFormData(prevData => ({
         ...prevData,
         cpf: cpfMask(value),
-      }));
-      return;
-    }
-
-    if (name === 'rg') {
-      setFormData(prevData => ({
-        ...prevData,
-        rg: rgMask(value),
       }));
       return;
     }
@@ -408,7 +395,6 @@ const User = ({ dataToEdit, isLoading }: props) => {
         const id = dataToEdit.data.id;
         await updateProfileAdmin(id, editData);
 
-        // Only attempt email update if it was actually changed
         const attributes: IProfileAdminAttributes = dataToEdit.data.attributes;
 
         if (formData.userEmail !== attributes.access_email) {
@@ -443,7 +429,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
               description: formData.description,
               zip_code: formData.cep.replace(/\D/g, ''),
               street: formData.address,
-              number: formData.number ? Number(formData.number) : '',
+              number: formData.number ? formData.number : '',
               neighborhood: formData.neighborhood,
               city: formData.city,
               state: formData.state,
@@ -501,17 +487,27 @@ const User = ({ dataToEdit, isLoading }: props) => {
       if (responseErrors) {
         const formattedErrors: ZodFormErrors = {};
 
-        Object.entries(responseErrors).forEach(([key, value]) => {
-          if (Array.isArray(value)) {
-            formattedErrors[key] = value.map((error: ZodFormError) => error.message);
-          } else {
-            formattedErrors[key] = [String(value)];
-          }
-        });
+        if (Array.isArray(responseErrors)) {
+          responseErrors.forEach((errObj: any) => {
+            Object.entries(errObj).forEach(([key, value]) => {
+              formattedErrors[key] = Array.isArray(value)
+                ? value.map(msg => String(msg))
+                : [String(value)];
+            });
+          });
+        } else if (typeof responseErrors === 'object') {
+          Object.entries(responseErrors).forEach(([key, value]) => {
+            formattedErrors[key] = Array.isArray(value)
+              ? value.map(msg => String(msg))
+              : [String(value)];
+          });
+        }
 
         setErrors(formattedErrors);
-
-        setMessage('Erro ao processar a solicitação.');
+        const errorMessage = Object.values(formattedErrors);
+        setMessage(
+          errorMessage.length > 0 ? errorMessage[0].join(', ') : 'Erro ao processar a solicitação.',
+        );
         setType('error');
         setOpenSnackbar(true);
       } else {
@@ -521,12 +517,15 @@ const User = ({ dataToEdit, isLoading }: props) => {
       }
     } else if (error instanceof z.ZodError) {
       const formattedErrors: ZodFormErrors = {};
+
       error.errors.forEach(err => {
-        if (!formattedErrors[err.path[0]]) {
-          formattedErrors[err.path[0]] = [];
+        const field = String(err.path[0] ?? 'form');
+        if (!formattedErrors[field]) {
+          formattedErrors[field] = [];
         }
-        formattedErrors[err.path[0]].push(err.message);
+        formattedErrors[field].push(err.message);
       });
+
       setErrors(formattedErrors);
       setMessage('Corrija os erros do formulário.');
       setType('error');
@@ -692,92 +691,6 @@ const User = ({ dataToEdit, isLoading }: props) => {
     };
   }, []);
 
-  useEffect(() => {
-    const handleDataForm = () => {
-      const attributes: IProfileAdminAttributes = dataToEdit.data.attributes;
-
-      if (attributes) {
-        const addresses = attributes.addresses[0]
-          ? attributes.addresses[0]
-          : {
-              description: '',
-              zip_code: '',
-              street: '',
-              number: '',
-              neighborhood: '',
-              city: '',
-              state: '',
-            };
-
-        const bankAccounts = attributes.bank_accounts[0]
-          ? attributes.bank_accounts[0]
-          : {
-              bank_name: '',
-              type_account: '',
-              agency: '',
-              account: '',
-              pix: '',
-            };
-
-        handleBankChange(bankAccounts.bank_name);
-
-        setFormData({
-          officeId: attributes.office_id ? String(attributes.office_id) : '',
-          name: attributes.name ? attributes.name : '',
-          last_name: attributes.last_name ? attributes.last_name : '',
-          cpf: attributes.cpf ? cpfMask(attributes.cpf) : '',
-          rg: attributes.rg ? rgMask(attributes.rg) : '',
-          address: addresses.street ? addresses.street : '',
-          number: addresses.number ? String(addresses.number) : '',
-          description: addresses.description ? addresses.description : '',
-          neighborhood: addresses.neighborhood ? addresses.neighborhood : '',
-          city: addresses.city ? addresses.city : '',
-          state: addresses.state ? addresses.state : '',
-          cep: addresses.zip_code ? cepMask(addresses.zip_code) : '',
-          bank_name: bankAccounts.bank_name ? bankAccounts.bank_name : '',
-          agency: bankAccounts.agency ? bankAccounts.agency : '',
-          op: bankAccounts.type_account ? bankAccounts.type_account : '',
-          account: bankAccounts.account ? bankAccounts.account : '',
-          pix: bankAccounts.pix ? bankAccounts.pix : '',
-          userEmail: attributes.access_email,
-          password: '',
-          street: addresses.street ? addresses.street : '',
-          confirmPassword: '',
-          gender: attributes.gender ? attributes.gender : '',
-          mother_name: attributes.mother_name ? attributes.mother_name : '',
-          nationality: attributes.nationality ? attributes.nationality : '',
-          role: attributes.role ? attributes.role : '',
-          civil_status: attributes.civil_status ? attributes.civil_status : '',
-          birth: attributes.birth ? attributes.birth : '',
-          oab: attributes.oab ? attributes.oab : '',
-        });
-
-        const office = officesList.find(office => office.id == String(attributes.office_id));
-
-        setSelectedOffice(office as IOfficeProps);
-
-        setContactData({
-          phoneInputFields:
-            attributes.phones && attributes.phones.length > 0
-              ? attributes.phones
-              : [{ phone_number: '' }],
-          emailInputFields:
-            attributes.emails && attributes.emails.length > 0 ? attributes.emails : [{ email: '' }],
-        });
-
-        setSelectedDate(dayjs(attributes.birth));
-      }
-    };
-
-    if (dataToEdit && dataToEdit.data) {
-      handleDataForm();
-    }
-  }, [dataToEdit, officesList, bankList]);
-
-  useEffect(() => {
-    setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro de' : 'Alterar'} Usuário`);
-  }, [route, setPageTitle]);
-
   const handleRemoveContact = (removeIndex: number, inputArrayName: string) => {
     if (inputArrayName === 'phoneInputFields') {
       if (contactData.phoneInputFields.length === 1) return;
@@ -803,16 +716,83 @@ const User = ({ dataToEdit, isLoading }: props) => {
   };
 
   useEffect(() => {
-    const fetchCEPDetails = async () => {
-      if (!formData.cep || formData.address !== '') {
-        return;
+    if (hasInitializedRef.current) return;
+
+    if (dataToEdit && dataToEdit.data) {
+      const attributes: IProfileAdminAttributes = dataToEdit.data.attributes;
+
+      if (attributes) {
+        const addresses = attributes.addresses?.[0] ?? {
+          description: '',
+          zip_code: '',
+          street: '',
+          number: '',
+          neighborhood: '',
+          city: '',
+          state: '',
+        };
+
+        const bankAccounts = attributes.bank_accounts?.[0] ?? {
+          bank_name: '',
+          type_account: '',
+          agency: '',
+          account: '',
+          pix: '',
+        };
+
+        handleBankChange(bankAccounts.bank_name);
+
+        setFormData({
+          officeId: attributes.office_id ? String(attributes.office_id) : '',
+          name: attributes.name || '',
+          last_name: attributes.last_name || '',
+          cpf: attributes.cpf ? cpfMask(attributes.cpf) : '',
+          rg: attributes.rg ?? '',
+          address: addresses.street || '',
+          number: addresses.number ? String(addresses.number) : '',
+          description: addresses.description || '',
+          neighborhood: addresses.neighborhood || '',
+          city: addresses.city || '',
+          state: addresses.state || '',
+          cep: addresses.zip_code ? cepMask(addresses.zip_code) : '',
+          bank_name: bankAccounts.bank_name || '',
+          agency: bankAccounts.agency || '',
+          op: bankAccounts.type_account || '',
+          account: bankAccounts.account || '',
+          pix: bankAccounts.pix || '',
+          userEmail: attributes.access_email,
+          password: '',
+          street: addresses.street || '',
+          confirmPassword: '',
+          gender: attributes.gender || '',
+          mother_name: attributes.mother_name || '',
+          nationality: attributes.nationality || '',
+          role: attributes.role || '',
+          civil_status: attributes.civil_status || '',
+          birth: attributes.birth || '',
+          oab: attributes.oab || '',
+        });
+
+        const office = officesList.find(office => office.id == String(attributes.office_id));
+        setSelectedOffice(office as IOfficeProps);
+
+        setContactData({
+          phoneInputFields: attributes.phones?.length ? attributes.phones : [{ phone_number: '' }],
+          emailInputFields: attributes.emails?.length ? attributes.emails : [{ email: '' }],
+        });
+
+        setSelectedDate(dayjs(attributes.birth));
+        hasInitializedRef.current = true;
       }
+    }
+  }, [dataToEdit, officesList, bankList]);
+
+  useEffect(() => {
+    const fetchCEPDetails = async () => {
+      if (!formData.cep || formData.address !== '') return;
 
       const numericCEP = formData.cep.replace(/\D/g, '');
-
-      if (numericCEP.length !== 8) {
-        return;
-      }
+      if (numericCEP.length !== 8) return;
 
       try {
         const response = await getCEPDetails(numericCEP);
@@ -825,9 +805,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
           neighborhood: response.neighborhood,
         }));
       } catch (error: any) {
-        setErrors({
-          cep: 'CEP inválido.',
-        });
+        setErrors({ cep: 'CEP inválido.' });
         setMessage('CEP inválido.');
         setType('error');
         setOpenSnackbar(true);
@@ -836,6 +814,10 @@ const User = ({ dataToEdit, isLoading }: props) => {
 
     fetchCEPDetails();
   }, [formData.cep]);
+
+  useEffect(() => {
+    setPageTitle(`${route.asPath.includes('cadastrar') ? 'Cadastro de' : 'Alterar'} Usuário`);
+  }, [route, setPageTitle]);
 
   return (
     <>
@@ -1015,9 +997,10 @@ const User = ({ dataToEdit, isLoading }: props) => {
 
                     <Box maxWidth="30%">
                       <CustomTextField
+                        type="number"
                         formData={formData}
                         name="number"
-                        label="Número *"
+                        label="Número"
                         placeholder="N.º"
                         errorMessage={getErrorMessage(0, 'number')}
                         handleInputChange={handleInputChange}
@@ -1037,7 +1020,7 @@ const User = ({ dataToEdit, isLoading }: props) => {
                   <CustomTextField
                     formData={formData}
                     name="neighborhood"
-                    label="Bairro *"
+                    label="Bairro"
                     errorMessage={getErrorMessage(0, 'neighborhood')}
                     handleInputChange={handleInputChange}
                   />

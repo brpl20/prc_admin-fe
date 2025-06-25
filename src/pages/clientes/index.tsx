@@ -10,7 +10,6 @@ import {
   getAllProfileCustomer,
   inactiveCustomer,
   restoreProfileCustomer,
-  updateCustomer,
 } from '@/services/customers';
 
 import Menu from '@mui/material/Menu';
@@ -183,7 +182,7 @@ const Customers = () => {
 
       case 'identification':
         filteredList = profileCustomersList.filter((profileCustomer: IProfileCustomer) =>
-          regex.test(profileCustomer.attributes.cpf ?? ''),
+          regex.test(getProfileCustomerCpfOrCpnj(profileCustomer).replace(/[^0-9]/g, '')),
         );
         break;
 
@@ -275,7 +274,7 @@ const Customers = () => {
       setOpenSnackbar(true);
       setRefetch(!refetch);
     } catch (error: any) {
-      setMessage('Erro ao inativar cliente');
+      setMessage(error.response?.data?.error || 'Erro ao inativar cliente');
       setTypeMessage('error');
       setOpenSnackbar(true);
     }
@@ -364,35 +363,6 @@ const Customers = () => {
     }
 
     return updatedRow;
-  };
-
-  const handleEmailChange = async () => {
-    setLoadingEmailChange(true);
-
-    try {
-      if (!customerToChange) {
-        throw new Error('Erro ao alterar e-mail');
-      }
-
-      await updateCustomer(customerToChange).finally(() => {
-        setOpenModal(false);
-        setMessage('E-mail alterado com sucesso!');
-        setTypeMessage('success');
-        setOpenSnackbar(true);
-
-        setRefetch(!refetch);
-      });
-
-      getProfileCustomers();
-    } catch (error: any) {
-      const message = error[0].code[0] ? error[0].code[0] : 'Erro ao alterar e-mail';
-
-      setMessage(message);
-      setTypeMessage('error');
-      setOpenSnackbar(true);
-    }
-
-    setLoadingEmailChange(false);
   };
 
   const orderByClick = (id: number) => {
@@ -497,7 +467,6 @@ const Customers = () => {
                 </div>
                 <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                   <button
-                    onClick={handleEmailChange}
                     type="button"
                     className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
                   >
@@ -926,7 +895,7 @@ const Customers = () => {
                   {
                     flex: 1,
                     minWidth: 210,
-                    editable: true,
+                    editable: false,
                     field: 'access_email',
                     headerName: 'E-mail de Acesso',
                     align: 'left',

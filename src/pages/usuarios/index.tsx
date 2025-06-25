@@ -39,12 +39,10 @@ import { IProfileAdmin, IProfileAdminAttributes } from '@/interfaces/IAdmin';
 import dynamic from 'next/dynamic';
 import { getSession, useSession } from 'next-auth/react';
 import { defaultTableValueFormatter } from '../../utils/defaultTableValueFormatter';
-import { useAuth } from '@/contexts/AuthContext';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 
 const Admins = () => {
   const { data: session } = useSession();
-  const { user, isLoading: isUserLoading } = useAuth();
 
   const { showTitle, setShowTitle } = useContext(PageTitleContext);
 
@@ -127,7 +125,22 @@ const Admins = () => {
   const handleRestore = async (user: IProfileAdminAttributes) => {
     try {
       await restoreProfileAdmin(user.id);
-      setMessage('Cliente restaurado com sucesso!');
+      if (user.role === 'Estagiario') {
+        setMessage('Estagiário ativo com sucesso!');
+      }
+      if (user.role === 'Advogado') {
+        setMessage('Advogado ativo com sucesso!');
+      }
+      if (user.role === 'Paralegal') {
+        setMessage('Paralegal ativo com sucesso!');
+      }
+      if (user.role === 'Secretario') {
+        setMessage('Secretário ativo com sucesso!');
+      }
+      if (user.role === 'Contador') {
+        setMessage('Contador ativo com sucesso!');
+      }
+
       setTypeMessage('success');
       setOpenSnackbar(true);
       setRefetch(!refetch);
@@ -141,12 +154,27 @@ const Admins = () => {
   const handleInactive = async (user: IProfileAdminAttributes) => {
     try {
       await inactiveProfileAdmin(user.id);
-      setMessage('Admin inativado com sucesso!');
+      if (user.role === 'Estagiario') {
+        setMessage('Estagiário inativado com sucesso!');
+      }
+      if (user.role === 'Advogado') {
+        setMessage('Advogado inativado com sucesso!');
+      }
+      if (user.role === 'Paralegal') {
+        setMessage('Paralegal inativado com sucesso!');
+      }
+      if (user.role === 'Secretario') {
+        setMessage('Secretário inativado com sucesso!');
+      }
+      if (user.role === 'Contador') {
+        setMessage('Contador inativado com sucesso!');
+      }
+
       setTypeMessage('success');
       setOpenSnackbar(true);
       setRefetch(!refetch);
     } catch (error: any) {
-      setMessage('Erro ao inativar admin');
+      setMessage(error.response?.data?.error || 'Erro ao inativar admin');
       setTypeMessage('error');
       setOpenSnackbar(true);
     }
@@ -273,31 +301,27 @@ const Admins = () => {
                   <label className="font-medium	cursor-pointer">Alterar</label>
                 </MenuItem>
 
-                {Number(user?.admin?.id) === Number(rowItem.id) ? null : (
-                  <>
-                    <MenuItem
-                      className="flex gap-2 w-full"
-                      onClick={() => {
-                        handleCloseMenu();
-                        handleInactive(rowItem);
-                      }}
-                    >
-                      <MdOutlineArchive size={22} color={colors.icons} cursor={'pointer'} />
-                      <label className="font-medium	cursor-pointer">Inativar</label>
-                    </MenuItem>
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleCloseMenu();
+                    handleInactive(rowItem);
+                  }}
+                >
+                  <MdOutlineArchive size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Inativar</label>
+                </MenuItem>
 
-                    <MenuItem
-                      className="flex gap-2 w-full"
-                      onClick={() => {
-                        handleCloseMenu();
-                        handleDelete(rowItem);
-                      }}
-                    >
-                      <MdDeleteOutline size={22} color={colors.icons} cursor={'pointer'} />
-                      <label className="font-medium	cursor-pointer">Remover</label>
-                    </MenuItem>
-                  </>
-                )}
+                <MenuItem
+                  className="flex gap-2 w-full"
+                  onClick={() => {
+                    handleCloseMenu();
+                    handleDelete(rowItem);
+                  }}
+                >
+                  <MdDeleteOutline size={22} color={colors.icons} cursor={'pointer'} />
+                  <label className="font-medium	cursor-pointer">Remover</label>
+                </MenuItem>
               </>
             ) : null}
           </div>

@@ -8,7 +8,7 @@ import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { CustomerContext } from '@/contexts/CustomerContext';
 import { Container, Title } from './styles';
 import { colors, ContentContainer, Divider } from '@/styles/globals';
-import { createProfileCustomer, createCustomer, updateProfileCustomer } from '@/services/customers';
+import { createProfileCustomer, updateProfileCustomer } from '@/services/customers';
 import { animateScroll as scroll } from 'react-scroll';
 import Router, { useRouter } from 'next/router';
 import { phoneMask } from '@/utils/masks';
@@ -125,24 +125,11 @@ const Counter = ({ pageTitle }: Props) => {
 
   const completeRegistration = async (data: any) => {
     try {
-      const data_customer = { customer: { email: data.emails_attributes[0].email } };
-      const customer_data = await createCustomer(data_customer);
-
-      if (!customer_data.data.attributes.access_email) {
-        setMessage('E-mail já está em uso!');
-        setType('error');
-        setOpenSnackbar(true);
-        return;
-      }
-
-      const customer_id = customer_data.data.id;
-      const newData = { ...data, customer_id: Number(customer_id) };
-      await createProfileCustomer(newData);
+      await createProfileCustomer(data);
 
       Router.push('/clientes');
       resetValues();
     } catch (error: any) {
-      // Extract the error message from the response
       const message =
         error?.response?.data?.errors?.[0]?.code?.[0] || 'Ocorreu um erro inesperado.';
       setMessage(message);
@@ -166,6 +153,9 @@ const Counter = ({ pageTitle }: Props) => {
 
       counterSchema.parse(validationData);
 
+      const email = customerForm.data.attributes.emails_attributes[0]?.email;
+      if (!email) throw new Error('E-mail do cliente não fornecido');
+
       const data = {
         ...formData,
         name: formData.name.trim(),
@@ -175,6 +165,9 @@ const Counter = ({ pageTitle }: Props) => {
         customer_type: 'counter',
         phones_attributes: contactData.phoneInputFields,
         emails_attributes: contactData.emailInputFields,
+        customer_attributes: {
+          access_email: email,
+        },
         capacity: 'able',
         cpf: '0000000000',
         nationality: 'brazilian',

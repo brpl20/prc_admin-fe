@@ -20,6 +20,8 @@ import { z } from 'zod';
 import { isValidEmail, isValidPhoneNumber } from '@/utils/validator';
 import CustomTextField from '@/components/FormInputFields/CustomTextField';
 import { ZodFormError, ZodFormErrors } from '@/types/zod';
+import CustomTooltip from '@/components/Tooltip';
+import { MdOutlineInfo } from 'react-icons/md';
 
 export interface IRefPFCustomerStepThreeProps {
   handleSubmitForm: () => void;
@@ -364,9 +366,24 @@ const PFCustomerStepThree: ForwardRefRenderFunction<
           </ColumnContainer>
           <ColumnContainer>
             <Box>
-              <Typography style={{ marginBottom: '8px' }} variant="h6">
-                {'E-mail *'}
-              </Typography>
+              <div className="flex flex-row justify-between items-center">
+                <Typography style={{ marginBottom: '8px' }} variant="h6">
+                  {'Email *'}
+                </Typography>
+                <CustomTooltip
+                  title="Este será utilizado para o acesso ao cadastro do sistema."
+                  placement="right"
+                >
+                  <span
+                    aria-label="Email de Acesso"
+                    style={{
+                      display: 'flex',
+                    }}
+                  >
+                    <MdOutlineInfo style={{ marginLeft: '8px' }} size={20} />
+                  </span>
+                </CustomTooltip>
+              </div>
               {formData &&
                 formData.emailInputFields.map((inputValue, index) => (
                   <div
