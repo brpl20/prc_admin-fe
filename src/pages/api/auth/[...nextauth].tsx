@@ -8,6 +8,9 @@ interface User {
   name: string;
   last_name: string;
   token: string;
+  teams?: any[];
+  current_team?: any;
+  team_role?: string;
 }
 
 export const authOptions: NextAuthOptions = {
@@ -49,6 +52,9 @@ export const authOptions: NextAuthOptions = {
             email: credentials.email,
             name: decoded.name,
             last_name: decoded.last_name,
+            teams: user.teams || [],
+            current_team: user.current_team,
+            team_role: user.team_role,
             ...user,
           };
         } catch (error) {

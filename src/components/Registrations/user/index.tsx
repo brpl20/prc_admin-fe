@@ -23,6 +23,7 @@ import { Flex, Divider } from '@/styles/globals';
 import { getAllOffices } from '@/services/offices';
 import { getAllBanks } from '@/services/brasilAPI';
 import { createProfileAdmin, updateAdmin, updateProfileAdmin } from '@/services/admins';
+import { createTeam } from '@/services/teams';
 import { IOfficeProps } from '@/interfaces/IOffice';
 
 import Router, { useRouter } from 'next/router';

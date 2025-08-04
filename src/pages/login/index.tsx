@@ -149,12 +149,12 @@ const Home = () => {
             </Button>
           </Box>
           <Box display={'flex'} justifyContent={'center'} textAlign={'center'} gap={1}>
-            <Link href="#">
-              <Typography variant="subtitle1">{'Não tem uma conta?'}</Typography>
+            <Typography variant="subtitle1">{'Não tem uma conta?'}</Typography>
+            <Link href="/register">
+              <Typography variant="subtitle1" fontWeight={'bold'}>
+                {'Cadastrar'}
+              </Typography>
             </Link>
-            <Typography variant="subtitle1" fontWeight={'bold'}>
-              {'Cadastrar.'}
-            </Typography>
           </Box>
         </Form>
       </Content>
