@@ -24,6 +24,7 @@ import {
   MdOutlineArrowRight,
   MdOutlineFormatListNumbered,
   MdPerson,
+  MdDashboard,
 } from 'react-icons/md';
 
 import { AiOutlineUser } from 'react-icons/ai';
@@ -253,6 +254,23 @@ const Layout = ({ children }: ILayoutProps) => {
 
           <Flex color={colors.white} sx={{ width: '100%' }}>
             <Stack spacing="8" sx={{ width: '100%' }}>
+              <ActiveLink href="/team-dashboard">
+                <MenuItem
+                  sx={{
+                    backgroundColor:
+                      asPath === '/team-dashboard' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                  }}
+                >
+                  <MdDashboard size={24} className="icon" />
+                  {openSidebar && (
+                    <>
+                      <Typography fontWeight="regular">{'Dashboard'}</Typography>
+                      <MdOutlineArrowRight size={24} className="arrow" />
+                    </>
+                  )}
+                </MenuItem>
+              </ActiveLink>
+
               <ActiveLink href="/clientes">
                 <MenuItem
                   sx={{
