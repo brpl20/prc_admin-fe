@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import WikiLayout from '@/components/Wiki/WikiLayout';
@@ -16,13 +16,7 @@ const WikiPageEdit: NextPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (currentTeam?.id && slug && typeof slug === 'string') {
-      loadPage();
-    }
-  }, [currentTeam?.id, slug]);
-
-  const loadPage = async () => {
+  const loadPage = useCallback(async () => {
     if (!currentTeam?.id || !slug || typeof slug !== 'string') return;
 
     try {
@@ -36,7 +30,13 @@ const WikiPageEdit: NextPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentTeam?.id, slug]);
+
+  useEffect(() => {
+    if (currentTeam?.id && slug && typeof slug === 'string') {
+      loadPage();
+    }
+  }, [currentTeam?.id, slug, loadPage]);
 
   const handleSave = (savedPage: WikiPage) => {
     router.push(`/wiki/${savedPage.slug}`);

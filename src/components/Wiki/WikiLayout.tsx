@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Drawer, AppBar, Toolbar, Typography, IconButton, List, ListItem, ListItemText, ListItemIcon, Collapse, Divider, Button, TextField, InputAdornment } from '@mui/material';
+import { Box, Drawer, AppBar, Toolbar, Typography, IconButton, List, ListItem, ListItemText, ListItemIcon, Collapse, Divider, Button, TextField, InputAdornment, CircularProgress } from '@mui/material';
 import { Menu as MenuIcon, ExpandLess, ExpandMore, Article, Folder, Add, Search } from '@mui/icons-material';
 import { useRouter } from 'next/router';
 import WikiService, { WikiPage, WikiCategory } from '@/services/wiki';
@@ -79,9 +79,9 @@ const WikiLayout: React.FC<WikiLayoutProps> = ({ children, teamId }) => {
   const renderPageItem = (page: WikiPage, level = 0) => (
     <ListItem
       key={page.id}
-      button
+      component="button"
       onClick={() => handlePageClick(page)}
-      sx={{ pl: 2 + level * 2 }}
+      sx={{ pl: 2 + level * 2, cursor: 'pointer' }}
     >
       <ListItemIcon>
         <Article fontSize="small" />
@@ -94,14 +94,16 @@ const WikiLayout: React.FC<WikiLayoutProps> = ({ children, teamId }) => {
   );
 
   const renderCategoryItem = (category: WikiCategory, level = 0) => {
+    // Prevent infinite recursion by limiting nesting depth
+    const maxDepth = 5;
     const isExpanded = expandedCategories.includes(category.id);
     
     return (
       <React.Fragment key={category.id}>
         <ListItem
-          button
+          component="button"
           onClick={() => handleCategoryToggle(category.id)}
-          sx={{ pl: 2 + level * 2 }}
+          sx={{ pl: 2 + level * 2, cursor: 'pointer' }}
         >
           <ListItemIcon>
             <Folder fontSize="small" sx={{ color: category.color || 'inherit' }} />
@@ -110,16 +112,24 @@ const WikiLayout: React.FC<WikiLayoutProps> = ({ children, teamId }) => {
             primary={category.name}
             primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
           />
-          {category.children && category.children.length > 0 && (
+          {category.children && category.children.length > 0 && level < maxDepth && (
             isExpanded ? <ExpandLess /> : <ExpandMore />
           )}
         </ListItem>
-        {category.children && category.children.length > 0 && (
+        {category.children && category.children.length > 0 && level < maxDepth && (
           <Collapse in={isExpanded} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
               {category.children.map(child => renderCategoryItem(child, level + 1))}
             </List>
           </Collapse>
+        )}
+        {level >= maxDepth && category.children && category.children.length > 0 && (
+          <ListItem sx={{ pl: 2 + (level + 1) * 2 }}>
+            <ListItemText 
+              primary="..."
+              primaryTypographyProps={{ fontSize: '0.8rem', color: 'text.secondary' }}
+            />
+          </ListItem>
         )}
       </React.Fragment>
     );
@@ -165,10 +175,16 @@ const WikiLayout: React.FC<WikiLayoutProps> = ({ children, teamId }) => {
 
       <Divider />
 
-      <List>
-        {categories.map(category => renderCategoryItem(category))}
-        {pages.filter(page => !page.parentId).map(page => renderPageItem(page))}
-      </List>
+      {loading ? (
+        <Box display="flex" justifyContent="center" py={3}>
+          <CircularProgress size={24} />
+        </Box>
+      ) : (
+        <List>
+          {categories.map(category => renderCategoryItem(category))}
+          {pages.filter(page => !page.parentId).map(page => renderPageItem(page))}
+        </List>
+      )}
     </Box>
   );
 

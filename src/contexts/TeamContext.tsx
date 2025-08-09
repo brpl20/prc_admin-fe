@@ -8,7 +8,7 @@ interface ITeamContextValue {
   teams: ITeam[];
   setCurrentTeam: (team: ITeam | null) => void;
   setTeams: (teams: ITeam[]) => void;
-  switchToTeam: (teamId: string) => Promise<void>;
+  switchToTeam: (teamId: number) => Promise<void>;
   teamRole: string | null;
   isLoading: boolean;
   refreshTeams: () => Promise<void>;
@@ -27,7 +27,7 @@ const TeamProvider = ({ children }: IProps) => {
   const [teamRole, setTeamRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const switchToTeam = async (teamId: string) => {
+  const switchToTeam = async (teamId: number) => {
     try {
       setIsLoading(true);
       const response = await switchTeam(teamId);

@@ -1,21 +1,21 @@
 import api from './api';
 
 export interface ITeam {
-  id: string;
+  id: number;
   name: string;
   subdomain: string;
   status: string;
   settings?: any;
-  main_admin_id: string;
-  owner_admin_id: string;
+  main_admin_id: number;
+  owner_admin_id: number;
   created_at: string;
   updated_at: string;
 }
 
 export interface ITeamMembership {
-  id: string;
-  team_id: string;
-  admin_id: string;
+  id: number;
+  team_id: number;
+  admin_id: number;
   role: 'owner' | 'admin' | 'member';
   status: string;
   joined_at: string;
@@ -42,7 +42,7 @@ export const getTeams = async () => {
   }
 };
 
-export const getTeamById = async (id: string) => {
+export const getTeamById = async (id: number) => {
   try {
     const response = await api.get(`/teams/${id}`);
     return response.data;
@@ -60,7 +60,7 @@ export const createTeam = async (data: ICreateTeamData) => {
   }
 };
 
-export const updateTeam = async (id: string, data: Partial<ICreateTeamData>) => {
+export const updateTeam = async (id: number, data: Partial<ICreateTeamData>) => {
   try {
     const response = await api.put(`/teams/${id}`, { team: data });
     return response.data;
@@ -69,7 +69,7 @@ export const updateTeam = async (id: string, data: Partial<ICreateTeamData>) => 
   }
 };
 
-export const deleteTeam = async (id: string) => {
+export const deleteTeam = async (id: number) => {
   try {
     await api.delete(`/teams/${id}`);
   } catch (error) {
@@ -78,7 +78,7 @@ export const deleteTeam = async (id: string) => {
 };
 
 // Team Member operations
-export const getTeamMembers = async (teamId: string) => {
+export const getTeamMembers = async (teamId: number) => {
   try {
     const response = await api.get(`/teams/${teamId}/members`);
     return response.data;
@@ -87,7 +87,7 @@ export const getTeamMembers = async (teamId: string) => {
   }
 };
 
-export const addTeamMember = async (teamId: string, data: IInviteData) => {
+export const addTeamMember = async (teamId: number, data: IInviteData) => {
   try {
     const response = await api.post(`/teams/${teamId}/members`, data);
     return response.data;
@@ -96,7 +96,7 @@ export const addTeamMember = async (teamId: string, data: IInviteData) => {
   }
 };
 
-export const updateTeamMember = async (teamId: string, memberId: string, role: string) => {
+export const updateTeamMember = async (teamId: number, memberId: number, role: string) => {
   try {
     const response = await api.put(`/teams/${teamId}/members/${memberId}`, { role });
     return response.data;
@@ -105,7 +105,7 @@ export const updateTeamMember = async (teamId: string, memberId: string, role: s
   }
 };
 
-export const removeTeamMember = async (teamId: string, memberId: string) => {
+export const removeTeamMember = async (teamId: number, memberId: number) => {
   try {
     await api.delete(`/teams/${teamId}/members/${memberId}`);
   } catch (error) {
@@ -114,7 +114,7 @@ export const removeTeamMember = async (teamId: string, memberId: string) => {
 };
 
 // Team switching
-export const switchTeam = async (teamId: string) => {
+export const switchTeam = async (teamId: number) => {
   try {
     const response = await api.post(`/teams/${teamId}/switch`);
     return response.data;

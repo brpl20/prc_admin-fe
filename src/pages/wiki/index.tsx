@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { Box, Typography, Grid, Card, CardContent, CardActions, Button, Chip, CircularProgress, Alert } from '@mui/material';
@@ -15,13 +15,7 @@ const WikiHomePage: NextPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (currentTeam?.id) {
-      loadRecentPages();
-    }
-  }, [currentTeam?.id]);
-
-  const loadRecentPages = async () => {
+  const loadRecentPages = useCallback(async () => {
     if (!currentTeam?.id) return;
     
     try {
@@ -36,7 +30,13 @@ const WikiHomePage: NextPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentTeam?.id]);
+
+  useEffect(() => {
+    if (currentTeam?.id) {
+      loadRecentPages();
+    }
+  }, [currentTeam?.id, loadRecentPages]);
 
   const handlePageClick = (page: WikiPage) => {
     router.push(`/wiki/${page.slug}`);

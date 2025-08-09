@@ -127,7 +127,7 @@ const TeamSelector: React.FC = () => {
     setAnchorEl(null);
   };
 
-  const handleTeamSwitch = async (teamId: string) => {
+  const handleTeamSwitch = async (teamId: number) => {
     setSwitching(true);
     try {
       await switchToTeam(teamId);
