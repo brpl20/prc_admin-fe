@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import Image from 'next/image';
 import Logo from '../../assets/logo-colors@3x.png';
-import { Box, Link, Typography, TextField, Stepper, Step, StepLabel } from '@mui/material';
+import { Box, Link, Typography, Stepper, Step, StepLabel } from '@mui/material';
 import { Notification } from '@/components';
 import {
   Container,
@@ -45,6 +45,7 @@ const Register = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
   const {
@@ -74,6 +75,8 @@ const Register = () => {
 
   async function handleRegister(data: UserDataForm) {
     setLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
 
     try {
       // Step 1: Create profile admin with team
@@ -94,6 +97,9 @@ const Register = () => {
       });
 
       if (response.status === 201) {
+        setSuccessMessage('Conta criada com sucesso! Fazendo login...');
+        setOpenSnackbar(true);
+
         // Auto login after registration
         const loginResponse = await signIn('credentials', {
           email: data.email,
@@ -108,10 +114,25 @@ const Register = () => {
         }
       }
     } catch (error: any) {
-      const errorMsg = error.response?.data?.errors?.[0] || 
-                      error.response?.data?.message || 
-                      'Erro ao criar conta';
-      setErrorMessage(errorMsg);
+      console.error('Registration error:', error);
+      
+      if (error.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        if (Array.isArray(errors)) {
+          setErrorMessage(errors.join(', '));
+        } else if (typeof errors === 'object') {
+          const errorMessages = Object.entries(errors)
+            .map(([field, messages]) => `${field}: ${messages}`)
+            .join(', ');
+          setErrorMessage(errorMessages);
+        } else {
+          setErrorMessage(errors);
+        }
+      } else if (error.response?.data?.message) {
+        setErrorMessage(error.response.data.message);
+      } else {
+        setErrorMessage('Erro ao criar conta. Por favor, tente novamente.');
+      }
       setOpenSnackbar(true);
     } finally {
       setLoading(false);
@@ -287,6 +308,7 @@ const Register = () => {
                 isLoading={loading}
                 type="submit"
                 style={{ cursor: 'pointer' }}
+                disabled={loading}
               >
                 {loading ? 'Criando conta...' : 'Criar Conta'}
               </Button>
@@ -295,8 +317,8 @@ const Register = () => {
 
           <Box display={'flex'} justifyContent={'center'} textAlign={'center'} gap={1} mt={2}>
             <Typography variant="subtitle1">{'Já tem uma conta?'}</Typography>
-            <Link href="/login">
-              <Typography variant="subtitle1" fontWeight={'bold'}>
+            <Link href="/login" style={{ textDecoration: 'none' }}>
+              <Typography variant="subtitle1" fontWeight={'bold'} color="primary" style={{ cursor: 'pointer' }}>
                 {'Fazer login'}
               </Typography>
             </Link>
@@ -305,9 +327,16 @@ const Register = () => {
       </Content>
 
       <Notification
-        open={openSnackbar}
+        open={openSnackbar && !!errorMessage}
         message={errorMessage}
         severity="error"
+        onClose={() => setOpenSnackbar(false)}
+      />
+
+      <Notification
+        open={openSnackbar && !!successMessage}
+        message={successMessage}
+        severity="success"
         onClose={() => setOpenSnackbar(false)}
       />
     </Container>

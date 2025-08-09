@@ -1,16 +1,13 @@
 import api from './api';
-
-export interface ITeam {
-  id: number;
-  name: string;
-  subdomain: string;
-  status: string;
-  settings?: any;
-  main_admin_id: number;
-  owner_admin_id: number;
-  created_at: string;
-  updated_at: string;
-}
+import {
+  ITeam,
+  ICreateTeamData,
+  IUpdateTeamData,
+  ITeamInvite,
+  ITeamMember,
+  ISubscription,
+  ISubscriptionPlan,
+} from '@/interfaces/ITeam';
 
 export interface ITeamMembership {
   id: number;
@@ -21,114 +18,184 @@ export interface ITeamMembership {
   joined_at: string;
 }
 
-export interface ICreateTeamData {
-  name: string;
-  subdomain: string;
-  settings?: any;
-}
-
 export interface IInviteData {
   email: string;
   role: 'admin' | 'member';
 }
 
-// Team CRUD operations
-export const getTeams = async () => {
-  try {
+class TeamService {
+  // Team CRUD operations
+  async listTeams(): Promise<ITeam[]> {
     const response = await api.get('/teams');
     return response.data;
-  } catch (error) {
-    throw error;
   }
-};
 
-export const getTeamById = async (id: number) => {
-  try {
+  async getTeam(id: number): Promise<ITeam> {
     const response = await api.get(`/teams/${id}`);
     return response.data;
-  } catch (error) {
-    throw error;
   }
-};
 
-export const createTeam = async (data: ICreateTeamData) => {
-  try {
-    const response = await api.post('/teams', { team: data });
+  async getTeamById(id: number): Promise<ITeam> {
+    return this.getTeam(id);
+  }
+
+  async createTeam(data: ICreateTeamData): Promise<ITeam> {
+    const formData = new FormData();
+    formData.append('team[name]', data.name);
+    if (data.description) {
+      formData.append('team[description]', data.description);
+    }
+    if (data.logo) {
+      formData.append('team[logo]', data.logo);
+    }
+
+    const response = await api.post('/teams', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
-  } catch (error) {
-    throw error;
   }
-};
 
-export const updateTeam = async (id: number, data: Partial<ICreateTeamData>) => {
-  try {
-    const response = await api.put(`/teams/${id}`, { team: data });
+  async updateTeam(id: number, data: IUpdateTeamData): Promise<ITeam> {
+    const formData = new FormData();
+    if (data.name) {
+      formData.append('team[name]', data.name);
+    }
+    if (data.description) {
+      formData.append('team[description]', data.description);
+    }
+    if (data.logo) {
+      formData.append('team[logo]', data.logo);
+    }
+    if (data.settings) {
+      formData.append('team[settings]', JSON.stringify(data.settings));
+    }
+
+    const response = await api.patch(`/teams/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
-  } catch (error) {
-    throw error;
   }
-};
 
-export const deleteTeam = async (id: number) => {
-  try {
+  async deleteTeam(id: number): Promise<void> {
     await api.delete(`/teams/${id}`);
-  } catch (error) {
-    throw error;
   }
-};
 
-// Team Member operations
-export const getTeamMembers = async (teamId: number) => {
-  try {
-    const response = await api.get(`/teams/${teamId}/members`);
+  // Team Member operations
+  async getTeamMembers(teamId: number) {
+    try {
+      const response = await api.get(`/teams/${teamId}/members`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async addTeamMember(teamId: number, invite: ITeamInvite): Promise<ITeamMember> {
+    const response = await api.post(`/teams/${teamId}/add_member`, {
+      member: invite,
+    });
     return response.data;
-  } catch (error) {
-    throw error;
   }
-};
 
-export const addTeamMember = async (teamId: number, data: IInviteData) => {
-  try {
-    const response = await api.post(`/teams/${teamId}/members`, data);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const updateTeamMember = async (teamId: number, memberId: number, role: string) => {
-  try {
-    const response = await api.put(`/teams/${teamId}/members/${memberId}`, { role });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const removeTeamMember = async (teamId: number, memberId: number) => {
-  try {
+  async removeTeamMember(teamId: number, memberId: number): Promise<void> {
     await api.delete(`/teams/${teamId}/members/${memberId}`);
-  } catch (error) {
-    throw error;
   }
-};
 
-// Team switching
-export const switchTeam = async (teamId: number) => {
-  try {
-    const response = await api.post(`/teams/${teamId}/switch`);
-    return response.data;
-  } catch (error) {
-    throw error;
+  async updateTeamMember(teamId: number, memberId: number, role: string) {
+    try {
+      const response = await api.put(`/teams/${teamId}/members/${memberId}`, { role });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
-};
 
-// Get current team
-export const getCurrentTeam = async () => {
-  try {
-    const response = await api.get('/teams/current');
+  async updateMemberRole(
+    teamId: number,
+    memberId: number,
+    role: ITeamMember['role']
+  ): Promise<ITeamMember> {
+    const response = await api.patch(`/teams/${teamId}/members/${memberId}`, {
+      member: { role },
+    });
     return response.data;
-  } catch (error) {
-    throw error;
   }
-};
+
+  // Team switching
+  async switchTeam(teamId: number) {
+    try {
+      const response = await api.post(`/teams/${teamId}/switch`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get current team
+  async getCurrentTeam() {
+    try {
+      const response = await api.get('/teams/current');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Subscription operations
+  async getSubscription(teamId: number): Promise<ISubscription> {
+    const response = await api.get(`/subscriptions/${teamId}`);
+    return response.data;
+  }
+
+  async createSubscription(planId: number): Promise<ISubscription> {
+    const response = await api.post('/subscriptions', {
+      subscription: {
+        subscription_plan_id: planId,
+      },
+    });
+    return response.data;
+  }
+
+  async updateSubscription(id: number, status: ISubscription['status']): Promise<ISubscription> {
+    const response = await api.patch(`/subscriptions/${id}`, {
+      subscription: { status },
+    });
+    return response.data;
+  }
+
+  async cancelSubscription(id: number): Promise<ISubscription> {
+    const response = await api.patch(`/subscriptions/${id}/cancel`);
+    return response.data;
+  }
+
+  async getSubscriptionPlans(): Promise<ISubscriptionPlan[]> {
+    const response = await api.get('/subscriptions/plans');
+    return response.data;
+  }
+
+  async getUsageStatistics(teamId: number): Promise<ISubscription['usage']> {
+    const response = await api.get('/subscriptions/usage');
+    return response.data;
+  }
+}
+
+const teamService = new TeamService();
+
+// Export both individual functions for backwards compatibility and the service class
+export const getTeams = () => teamService.listTeams();
+export const getTeamById = (id: number) => teamService.getTeamById(id);
+export const createTeam = (data: ICreateTeamData) => teamService.createTeam(data);
+export const updateTeam = (id: number, data: IUpdateTeamData) => teamService.updateTeam(id, data);
+export const deleteTeam = (id: number) => teamService.deleteTeam(id);
+export const getTeamMembers = (teamId: number) => teamService.getTeamMembers(teamId);
+export const addTeamMember = (teamId: number, data: IInviteData) => teamService.addTeamMember(teamId, data);
+export const updateTeamMember = (teamId: number, memberId: number, role: string) => teamService.updateTeamMember(teamId, memberId, role);
+export const removeTeamMember = (teamId: number, memberId: number) => teamService.removeTeamMember(teamId, memberId);
+export const switchTeam = (teamId: number) => teamService.switchTeam(teamId);
+export const getCurrentTeam = () => teamService.getCurrentTeam();
+
+export default teamService;

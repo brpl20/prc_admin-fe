@@ -59,7 +59,7 @@ const Home = () => {
       });
 
       if (response?.status === 200) {
-        router.push('/clientes');
+        router.push('/team-check');
       }
 
       if (response?.status === 401) {
@@ -150,9 +150,9 @@ const Home = () => {
           </Box>
           <Box display={'flex'} justifyContent={'center'} textAlign={'center'} gap={1}>
             <Typography variant="subtitle1">{'Não tem uma conta?'}</Typography>
-            <Link href="/register">
-              <Typography variant="subtitle1" fontWeight={'bold'}>
-                {'Cadastrar'}
+            <Link href="/register" style={{ textDecoration: 'none' }}>
+              <Typography variant="subtitle1" fontWeight={'bold'} color="primary" style={{ cursor: 'pointer' }}>
+                {'Cadastrar.'}
               </Typography>
             </Link>
           </Box>

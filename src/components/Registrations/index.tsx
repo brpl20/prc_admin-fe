@@ -187,11 +187,18 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
       }
     } else {
       try {
-        const prof_aux = {
+        const email = customerForm.emails_attributes[0]?.email;
+        if (!email) throw new Error('E-mail do cliente não fornecido');
+
+        const newCustomerForm = {
           ...customerForm,
           customer_attributes: {
-            access_email: customerForm.data.attributes.emails_attributes[0].email || '',
+            access_email: email,
           },
+        };
+
+        const prof_aux = {
+          ...newCustomerForm,
           customer_files_attributes: [
             {
               file_description: 'simple_procuration',
@@ -199,7 +206,7 @@ const RegistrationScreen = ({ registrationType, titleSteps }: IRegistrationProps
           ],
         };
 
-        const payload = customerForm.issue_documents && isPhysical ? prof_aux : customerForm;
+        const payload = customerForm.issue_documents && isPhysical ? prof_aux : newCustomerForm;
         const res = await createProfileCustomer(payload);
 
         handleCustomerResult(res.data.attributes.customer_files, isPhysical);
