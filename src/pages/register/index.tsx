@@ -277,7 +277,7 @@ const Register = () => {
                     {errors.teamSubdomain.message}
                   </Typography>
                 )}
-                <Typography variant="caption" sx={{ ml: 1, color: colors.textSecondary }}>
+                <Typography variant="caption" sx={{ ml: 1, color: colors.text }}>
                   Será usado como identificador único da sua equipe
                 </Typography>
               </Box>

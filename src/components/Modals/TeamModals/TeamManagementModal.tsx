@@ -56,7 +56,7 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ open, onClose
   const [editingTeam, setEditingTeam] = useState(false);
   const [teamName, setTeamName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member');
+  const [inviteRole, setInviteRole] = useState<'owner' | 'admin' | 'lawyer' | 'paralegal' | 'secretary' | 'intern'>('lawyer');
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
   useEffect(() => {
@@ -92,7 +92,7 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ open, onClose
     try {
       await addTeamMember(currentTeam.id, { email: inviteEmail, role: inviteRole });
       setInviteEmail('');
-      setInviteRole('member');
+      setInviteRole('lawyer');
       fetchTeamMembers();
       setNotification({
         open: true,
@@ -115,7 +115,7 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ open, onClose
 
     setLoading(true);
     try {
-      await updateTeamMember(currentTeam.id, memberId, newRole);
+      await updateTeamMember(currentTeam.id, Number(memberId), newRole);
       fetchTeamMembers();
       setNotification({
         open: true,
@@ -138,7 +138,7 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ open, onClose
 
     setLoading(true);
     try {
-      await removeTeamMember(currentTeam.id, memberId);
+      await removeTeamMember(currentTeam.id, Number(memberId));
       fetchTeamMembers();
       setNotification({
         open: true,
@@ -212,7 +212,7 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ open, onClose
                 )}
               </Box>
             )}
-            <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+            <Typography variant="caption" sx={{ color: colors.text }}>
               {currentTeam?.subdomain}
             </Typography>
           </Box>
@@ -237,11 +237,14 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ open, onClose
                   <InputLabel>Função</InputLabel>
                   <Select
                     value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member')}
+                    onChange={(e) => setInviteRole(e.target.value as 'owner' | 'admin' | 'lawyer' | 'paralegal' | 'secretary' | 'intern')}
                     label="Função"
                     disabled={loading}
                   >
-                    <MenuItem value="member">Membro</MenuItem>
+                    <MenuItem value="lawyer">Advogado</MenuItem>
+                    <MenuItem value="paralegal">Paralegal</MenuItem>
+                    <MenuItem value="secretary">Secretário</MenuItem>
+                    <MenuItem value="intern">Estagiário</MenuItem>
                     <MenuItem value="admin">Admin</MenuItem>
                   </Select>
                 </FormControl>
@@ -292,7 +295,10 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ open, onClose
                             size="small"
                             disabled={loading}
                           >
-                            <MenuItem value="member">Membro</MenuItem>
+                            <MenuItem value="lawyer">Advogado</MenuItem>
+                            <MenuItem value="paralegal">Paralegal</MenuItem>
+                            <MenuItem value="secretary">Secretário</MenuItem>
+                            <MenuItem value="intern">Estagiário</MenuItem>
                             <MenuItem value="admin">Admin</MenuItem>
                           </Select>
                         ) : (

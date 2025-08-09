@@ -1,7 +1,7 @@
 import React, { createContext, useState, ReactNode, useEffect, useContext } from 'react';
 import { useSession } from 'next-auth/react';
-import { ITeam } from '@/services/teams';
-import { getCurrentTeam, switchTeam } from '@/services/teams';
+import { ITeam } from '@/interfaces/ITeam';
+import { getCurrentTeam, switchTeam, getTeams } from '@/services/teams';
 
 interface ITeamContextValue {
   currentTeam: ITeam | null;
@@ -55,7 +55,8 @@ const TeamProvider = ({ children }: IProps) => {
         const currentTeamData = await getCurrentTeam();
         setCurrentTeam(currentTeamData.team);
         setTeamRole(currentTeamData.role);
-        setTeams(session.teams || []);
+        const teamsData = await getTeams();
+        setTeams(teamsData);
       }
     } catch (error) {
       console.error('Error fetching team data:', error);
@@ -66,10 +67,7 @@ const TeamProvider = ({ children }: IProps) => {
 
   useEffect(() => {
     if (session) {
-      setCurrentTeam(session.current_team || null);
-      setTeams(session.teams || []);
-      setTeamRole(session.team_role || null);
-      setIsLoading(false);
+      refreshTeams();
     }
   }, [session]);
 

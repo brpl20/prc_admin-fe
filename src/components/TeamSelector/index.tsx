@@ -165,12 +165,12 @@ const TeamSelector: React.FC = () => {
           sx={{
             textTransform: 'none',
             color: colors.text,
-            backgroundColor: colors.backgroundLight,
+            backgroundColor: colors.background,
             px: 2,
             py: 1,
             borderRadius: 1,
             '&:hover': {
-              backgroundColor: colors.backgroundMedium,
+              backgroundColor: colors.primaryOpacity,
             },
           }}
         >
@@ -179,7 +179,7 @@ const TeamSelector: React.FC = () => {
               {currentTeam?.name || 'Selecione uma equipe'}
             </Typography>
             {teamRole && (
-              <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+              <Typography variant="caption" sx={{ color: colors.text }}>
                 {teamRole === 'owner' ? 'Proprietário' : teamRole === 'admin' ? 'Administrador' : 'Membro'}
               </Typography>
             )}
@@ -199,7 +199,7 @@ const TeamSelector: React.FC = () => {
           }}
         >
           <Box sx={{ px: 2, py: 1 }}>
-            <Typography variant="subtitle2" sx={{ color: colors.textSecondary }}>
+            <Typography variant="subtitle2" sx={{ color: colors.text }}>
               Suas Equipes
             </Typography>
           </Box>
@@ -207,7 +207,7 @@ const TeamSelector: React.FC = () => {
           
           {teams.length === 0 ? (
             <Box sx={{ px: 2, py: 2 }}>
-              <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+              <Typography variant="body2" sx={{ color: colors.text }}>
                 Você não está em nenhuma equipe
               </Typography>
             </Box>
@@ -221,7 +221,7 @@ const TeamSelector: React.FC = () => {
               >
                 <Box sx={{ width: '100%' }}>
                   <Typography variant="body2">{team.name}</Typography>
-                  <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                  <Typography variant="caption" sx={{ color: colors.text }}>
                     {team.subdomain}
                   </Typography>
                 </Box>

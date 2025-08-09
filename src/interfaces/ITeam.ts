@@ -25,6 +25,7 @@ export interface ITeam {
   id: number;
   name: string;
   slug: string;
+  subdomain?: string;
   description?: string;
   logo_url?: string;
   owner_id: number;
@@ -92,6 +93,7 @@ export interface ITeamInvite {
 
 export interface ICreateTeamData {
   name: string;
+  subdomain?: string;
   description?: string;
   logo?: File;
 }

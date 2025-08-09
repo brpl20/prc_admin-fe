@@ -138,9 +138,27 @@ class TeamService {
   // Get current team
   async getCurrentTeam() {
     try {
-      const response = await api.get('/teams/current');
-      return response.data;
+      // Get all teams - the backend returns teams ordered by membership,
+      // so the first team should be the current/primary team
+      const response = await api.get('/teams');
+      const teams = response.data;
+      
+      if (teams && teams.length > 0) {
+        const currentTeam = teams[0];
+        
+        // TODO: Determine actual role from team membership data
+        // For now, default to 'owner' but this should be improved
+        const role = 'owner';
+        
+        return {
+          team: currentTeam,
+          role: role
+        };
+      }
+      
+      throw new Error('No teams found for current user');
     } catch (error) {
+      console.error('Error fetching current team:', error);
       throw error;
     }
   }
@@ -192,7 +210,7 @@ export const createTeam = (data: ICreateTeamData) => teamService.createTeam(data
 export const updateTeam = (id: number, data: IUpdateTeamData) => teamService.updateTeam(id, data);
 export const deleteTeam = (id: number) => teamService.deleteTeam(id);
 export const getTeamMembers = (teamId: number) => teamService.getTeamMembers(teamId);
-export const addTeamMember = (teamId: number, data: IInviteData) => teamService.addTeamMember(teamId, data);
+export const addTeamMember = (teamId: number, data: ITeamInvite) => teamService.addTeamMember(teamId, data);
 export const updateTeamMember = (teamId: number, memberId: number, role: string) => teamService.updateTeamMember(teamId, memberId, role);
 export const removeTeamMember = (teamId: number, memberId: number) => teamService.removeTeamMember(teamId, memberId);
 export const switchTeam = (teamId: number) => teamService.switchTeam(teamId);
