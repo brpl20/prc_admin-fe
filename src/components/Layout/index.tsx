@@ -24,6 +24,7 @@ import {
   MdOutlineArrowRight,
   MdOutlineFormatListNumbered,
   MdPerson,
+  MdBook,
   MdDashboard,
 } from 'react-icons/md';
 
@@ -39,6 +40,10 @@ import { signOut, useSession } from 'next-auth/react';
 import { TbLoader2 } from 'react-icons/tb';
 import Logo from '../../assets/logo-white.png';
 import Profile from '../../assets/Profile.png';
+import TeamSelector from '@/components/TeamSelector';
+import { useTeam } from '@/contexts/TeamContext';
+import TeamManagementModal from '@/components/Modals/TeamModals/TeamManagementModal';
+import { MdGroup } from 'react-icons/md';
 
 const drawerWidth = 224;
 
@@ -133,6 +138,8 @@ const Layout = ({ children }: ILayoutProps) => {
               ? 'Usuários'
               : route === '/escritorios'
                 ? 'Escritórios'
+                : asPath.startsWith('/wiki')
+                  ? 'Wiki'
                 : route === '/team-dashboard'
                   ? 'Dashboard'
                   : pageTitle;
@@ -143,6 +150,8 @@ const Layout = ({ children }: ILayoutProps) => {
 
   const [openSidebar, setOpenSidebar] = useState(initialSidebarState);
   const [openUserMenu, setOpenUserMenu] = useState(false);
+  const [openTeamModal, setOpenTeamModal] = useState(false);
+  const { teamRole } = useTeam();
 
   const handleDrawerOpen = () => {
     setOpenSidebar(true);
@@ -198,7 +207,11 @@ const Layout = ({ children }: ILayoutProps) => {
               {title}
             </HeaderPageTitle>
           </TitleWrapper>
-          <SelectContainer onClick={() => setOpenUserMenu(!openUserMenu)} isOpen={openUserMenu}>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 'auto' }}>
+            <TeamSelector />
+            
+            <SelectContainer onClick={() => setOpenUserMenu(!openUserMenu)} isOpen={openUserMenu}>
             <CloseDropdown className="close" onClick={() => setOpenUserMenu(false)} />
 
             <Image width={28} height={28} src={Profile} alt="Logo" priority />
@@ -229,6 +242,13 @@ const Layout = ({ children }: ILayoutProps) => {
                   <AiOutlineUser size={20} />
                   <span className="text-sm font-medium">Conta</span>
                 </SelectItem>
+                
+                {(teamRole === 'owner' || teamRole === 'admin') && (
+                  <SelectItem href="#" onClick={() => { setOpenUserMenu(false); setOpenTeamModal(true); }}>
+                    <MdGroup size={20} />
+                    <span className="text-sm font-medium">Gerenciar Equipe</span>
+                  </SelectItem>
+                )}
 
                 <SelectItem href="/" onClick={handleSignOut}>
                   <IoExitOutline size={20} />
@@ -237,6 +257,7 @@ const Layout = ({ children }: ILayoutProps) => {
               </SelectItemsContainer>
             )}
           </SelectContainer>
+          </Box>
         </Toolbar>
       </AppBar>
       <Container>
@@ -304,6 +325,24 @@ const Layout = ({ children }: ILayoutProps) => {
                       <Typography fontWeight="regular">{'Documentos'}</Typography>
 
                       <MdOutlineArrowRight size={24} className="arrow arrowWork" />
+                    </>
+                  )}
+                </MenuItem>
+              </ActiveLink>
+
+              <ActiveLink href="/wiki">
+                <MenuItem
+                  sx={{
+                    backgroundColor:
+                      asPath.startsWith('/wiki') ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                  }}
+                >
+                  <MdBook size={24} className="icon" />
+                  {openSidebar && (
+                    <>
+                      <Typography fontWeight="regular">{'Wiki'}</Typography>
+
+                      <MdOutlineArrowRight size={24} className="arrow" />
                     </>
                   )}
                 </MenuItem>
@@ -390,6 +429,11 @@ const Layout = ({ children }: ILayoutProps) => {
       <Box component="main" sx={{ flexGrow: 1, width: '100%', overflow: 'hidden' }}>
         {children}
       </Box>
+      
+      <TeamManagementModal 
+        open={openTeamModal}
+        onClose={() => setOpenTeamModal(false)}
+      />
     </Box>
   );
 };

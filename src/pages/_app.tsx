@@ -6,6 +6,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import WorkProvider from '@/contexts/WorkContext';
 import CustomerProvider from '@/contexts/CustomerContext';
 import PageTitleProvider from '@/contexts/PageTitleContext';
+import TeamProvider from '@/contexts/TeamContext';
 
 import Head from 'next/head';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -45,13 +46,15 @@ const StudioApp = (props: StudioAppProps) => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <SessionProvider session={pageProps.session}>
-          <CustomerProvider>
-            <PageTitleProvider>
-              <WorkProvider>
-                <Component {...pageProps} />
-              </WorkProvider>
-            </PageTitleProvider>
-          </CustomerProvider>
+          <TeamProvider>
+            <CustomerProvider>
+              <PageTitleProvider>
+                <WorkProvider>
+                  <Component {...pageProps} />
+                </WorkProvider>
+              </PageTitleProvider>
+            </CustomerProvider>
+          </TeamProvider>
         </SessionProvider>
       </ThemeProvider>
     </CacheProvider>

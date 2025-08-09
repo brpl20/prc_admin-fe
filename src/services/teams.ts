@@ -9,7 +9,22 @@ import {
   ISubscriptionPlan,
 } from '@/interfaces/ITeam';
 
+export interface ITeamMembership {
+  id: number;
+  team_id: number;
+  admin_id: number;
+  role: 'owner' | 'admin' | 'member';
+  status: string;
+  joined_at: string;
+}
+
+export interface IInviteData {
+  email: string;
+  role: 'admin' | 'member';
+}
+
 class TeamService {
+  // Team CRUD operations
   async listTeams(): Promise<ITeam[]> {
     const response = await api.get('/teams');
     return response.data;
@@ -18,6 +33,10 @@ class TeamService {
   async getTeam(id: number): Promise<ITeam> {
     const response = await api.get(`/teams/${id}`);
     return response.data;
+  }
+
+  async getTeamById(id: number): Promise<ITeam> {
+    return this.getTeam(id);
   }
 
   async createTeam(data: ICreateTeamData): Promise<ITeam> {
@@ -65,6 +84,16 @@ class TeamService {
     await api.delete(`/teams/${id}`);
   }
 
+  // Team Member operations
+  async getTeamMembers(teamId: number) {
+    try {
+      const response = await api.get(`/teams/${teamId}/members`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async addTeamMember(teamId: number, invite: ITeamInvite): Promise<ITeamMember> {
     const response = await api.post(`/teams/${teamId}/add_member`, {
       member: invite,
@@ -74,6 +103,15 @@ class TeamService {
 
   async removeTeamMember(teamId: number, memberId: number): Promise<void> {
     await api.delete(`/teams/${teamId}/members/${memberId}`);
+  }
+
+  async updateTeamMember(teamId: number, memberId: number, role: string) {
+    try {
+      const response = await api.put(`/teams/${teamId}/members/${memberId}`, { role });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 
   async updateMemberRole(
@@ -87,6 +125,27 @@ class TeamService {
     return response.data;
   }
 
+  // Team switching
+  async switchTeam(teamId: number) {
+    try {
+      const response = await api.post(`/teams/${teamId}/switch`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get current team
+  async getCurrentTeam() {
+    try {
+      const response = await api.get('/teams/current');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Subscription operations
   async getSubscription(teamId: number): Promise<ISubscription> {
     const response = await api.get(`/subscriptions/${teamId}`);
     return response.data;
@@ -124,4 +183,19 @@ class TeamService {
   }
 }
 
-export default new TeamService();
+const teamService = new TeamService();
+
+// Export both individual functions for backwards compatibility and the service class
+export const getTeams = () => teamService.listTeams();
+export const getTeamById = (id: number) => teamService.getTeamById(id);
+export const createTeam = (data: ICreateTeamData) => teamService.createTeam(data);
+export const updateTeam = (id: number, data: IUpdateTeamData) => teamService.updateTeam(id, data);
+export const deleteTeam = (id: number) => teamService.deleteTeam(id);
+export const getTeamMembers = (teamId: number) => teamService.getTeamMembers(teamId);
+export const addTeamMember = (teamId: number, data: IInviteData) => teamService.addTeamMember(teamId, data);
+export const updateTeamMember = (teamId: number, memberId: number, role: string) => teamService.updateTeamMember(teamId, memberId, role);
+export const removeTeamMember = (teamId: number, memberId: number) => teamService.removeTeamMember(teamId, memberId);
+export const switchTeam = (teamId: number) => teamService.switchTeam(teamId);
+export const getCurrentTeam = () => teamService.getCurrentTeam();
+
+export default teamService;
