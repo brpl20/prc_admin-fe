@@ -31,7 +31,7 @@ import { Notification } from '@/components';
 import { animateScroll as scroll } from 'react-scroll';
 import { CustomerContext } from '@/contexts/CustomerContext';
 
-import { cpfMask } from '@/utils/masks';
+import { cpfMask, dateBRMask } from '@/utils/masks';
 
 import { getAllProfileCustomer } from '@/services/customers';
 import CustomTooltip from '@/components/Tooltip';
@@ -40,7 +40,6 @@ import RepresentativeModal from '../../representative/representativeModal';
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { isDateBeforeToday, isValidCPF, isValidRG } from '@/utils/validator';
 import CustomTextField from '@/components/FormInputFields/CustomTextField';
-import CustomDateField from '@/components/FormInputFields/CustomDateField';
 import CustomSelectField from '@/components/FormInputFields/CustomSelectField';
 import { LoadingOverlay } from '@/components/Registrations/work/one/styles';
 
@@ -116,6 +115,8 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
     representor: {},
   });
 
+  
+
   const getRepresentors = async (newId?: number) => {
     const allCustomers = await getAllProfileCustomer('');
     const response = allCustomers.data;
@@ -147,11 +148,39 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
       return;
     }
 
+    if (name === 'birth') {
+      setFormData(prevData => ({
+        ...prevData,
+        birth: dateBRMask(value),
+      }));
+      return;
+    }
+
     setFormData(prevData => ({
       ...prevData,
       [name]: value,
     }));
   };
+
+  const getAgeFromBirthBR = (birthBR: string): number | null => {
+    const parts = birthBR.split('/');
+    if (parts.length !== 3) return null;
+    const [dayStr, monthStr, yearStr] = parts;
+    const day = Number(dayStr);
+    const month = Number(monthStr);
+    const year = Number(yearStr);
+    if (!day || !month || !year) return null;
+    const today = new Date();
+    let age = today.getFullYear() - year;
+    const mDiff = today.getMonth() + 1 - month;
+    const dDiff = today.getDate() - day;
+    if (mDiff < 0 || (mDiff === 0 && dDiff < 0)) age--;
+    return age;
+  };
+
+  const age = getAgeFromBirthBR(formData.birth);
+  const isUnder16 = typeof age === 'number' && age < 16;
+  const isBetween16And18 = typeof age === 'number' && age >= 16 && age < 18;
 
   const verifyDataLocalStorage = () => {
     const data = localStorage.getItem('PF/One');
@@ -195,7 +224,25 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
 
   const handleSubmitForm = () => {
     try {
-      stepOneSchema.parse(formData);
+      const parseBirthISOFromBR = (value: string): string => {
+        const parts = value?.split('/') ?? [];
+        if (parts.length !== 3) return '0000-00-00';
+        const [dayStr, monthStr, yearStr] = parts;
+        const day = String(dayStr || '').padStart(2, '0');
+        const month = String(monthStr || '').padStart(2, '0');
+        const year = String(yearStr || '');
+        if (!/^[0-9]{2}$/.test(day) || !/^[0-9]{2}$/.test(month) || !/^[0-9]{4}$/.test(year)) {
+          return '0000-00-00';
+        }
+        return `${year}-${month}-${day}`;
+      };
+
+      const formDataToValidate = {
+        ...formData,
+        birth: parseBirthISOFromBR(formData.birth),
+      } as FormData;
+
+      stepOneSchema.parse(formDataToValidate);
 
       if (
         (!formData.representor?.id && formData.capacity === 'relatively') ||
@@ -480,14 +527,28 @@ const PFCustomerStepOne: ForwardRefRenderFunction<IRefPFCustomerStepOneProps, IS
               />
             </div>
             <div style={{ display: 'flex', gap: '24px' }}>
-              <CustomDateField
-                formData={formData}
-                label="Data de Nascimento"
-                name="birth"
-                errorMessage={errors.birth}
-                handleInputChange={handleInputChange}
-                required
-              />
+              <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                <CustomTextField
+                  formData={formData as any}
+                  label="Data de Nascimento"
+                  name={'birth'}
+                  length={10}
+                  placeholder="dd/mm/aaaa"
+                  errorMessage={errors.birth}
+                  handleInputChange={handleInputChange}
+                  required
+                />
+                {isUnder16 && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                    {'Absolutamente Incapaz'}
+                  </Typography>
+                )}
+                {!isUnder16 && isBetween16And18 && (
+                  <Typography variant="caption" sx={{ mt: 0.5, color: '#666' }}>
+                    {'Relativamente Incapaz'}
+                  </Typography>
+                )}
+              </div>
 
               <CustomSelectField
                 formData={formData}

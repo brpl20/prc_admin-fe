@@ -6,19 +6,12 @@ import {
   Grid,
   Typography,
   Button,
-  LinearProgress,
   Avatar,
   Chip,
   IconButton,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   Alert,
-  Tabs,
-  Tab,
+  Stack,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -28,108 +21,275 @@ import {
   Business as BusinessIcon,
   Payment as PaymentIcon,
   Groups as GroupsIcon,
-  TrendingUp as TrendingUpIcon,
+  DragIndicator as DragIcon,
 } from '@mui/icons-material';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { useRouter } from 'next/router';
 import teamService from '@/services/teams';
 import { ITeam, ISubscription, ITeamMember } from '@/interfaces/ITeam';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  avatar?: string;
+  status: string;
 }
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
-    </div>
-  );
+interface Office {
+  id: string;
+  name: string;
+  address: string;
+  members: TeamMember[];
+}
+
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: string;
+  features: string[];
+  status: string;
+}
+
+interface Column {
+  id: string;
+  title: string;
+  items: (TeamMember | Office | SubscriptionPlan)[];
 }
 
 const TeamDashboard: React.FC = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [team, setTeam] = useState<ITeam | null>(null);
-  const [subscription, setSubscription] = useState<ISubscription | null>(null);
-  const [tabValue, setTabValue] = useState(0);
   const [error, setError] = useState('');
+  
+  const [columns, setColumns] = useState<Column[]>([
+    {
+      id: 'team',
+      title: 'Time & Escritórios',
+      items: []
+    },
+    {
+      id: 'people',
+      title: 'Todas as Pessoas',
+      items: []
+    },
+    {
+      id: 'subscriptions',
+      title: 'Planos de Assinatura',
+      items: [
+        {
+          id: 'basic',
+          name: 'Plano Básico',
+          price: 'R$ 99/mês',
+          features: ['5 usuários', '2 escritórios', '100 casos'],
+          status: 'available'
+        },
+        {
+          id: 'professional',
+          name: 'Plano Profissional',
+          price: 'R$ 199/mês',
+          features: ['15 usuários', '5 escritórios', '500 casos'],
+          status: 'popular'
+        },
+        {
+          id: 'enterprise',
+          name: 'Plano Enterprise',
+          price: 'R$ 399/mês',
+          features: ['Usuários ilimitados', 'Escritórios ilimitados', 'Casos ilimitados'],
+          status: 'premium'
+        }
+      ]
+    }
+  ]);
 
   useEffect(() => {
-    fetchTeamData();
+    fetchData();
   }, []);
 
-  const fetchTeamData = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const teams = await teamService.listTeams();
-      if (teams.length > 0) {
-        const teamData = await teamService.getTeam(teams[0].id);
-        setTeam(teamData);
-        
-        const subData = await teamService.getSubscription(teams[0].id);
-        setSubscription(subData);
-      }
+      // Simular dados do time
+      const mockTeamMembers: TeamMember[] = [
+        { id: 'tm1', name: 'João Silva', role: 'Advogado', email: 'joao@email.com', status: 'active' },
+        { id: 'tm2', name: 'Maria Santos', role: 'Paralegal', email: 'maria@email.com', status: 'active' },
+        { id: 'tm3', name: 'Pedro Costa', role: 'Estagiário', email: 'pedro@email.com', status: 'invited' },
+      ];
+
+      const mockOffices: Office[] = [
+        { 
+          id: 'of1', 
+          name: 'Escritório Principal', 
+          address: 'Rua das Flores, 123', 
+          members: [mockTeamMembers[0]] 
+        },
+        { 
+          id: 'of2', 
+          name: 'Filial São Paulo', 
+          address: 'Av. Paulista, 456', 
+          members: [] 
+        },
+      ];
+
+      const mockAllPeople: TeamMember[] = [
+        { id: 'ap1', name: 'Ana Lima', role: 'Advogada', email: 'ana@email.com', status: 'available' },
+        { id: 'ap2', name: 'Carlos Oliveira', role: 'Contador', email: 'carlos@email.com', status: 'available' },
+        { id: 'ap3', name: 'Fernanda Rocha', role: 'Secretária', email: 'fernanda@email.com', status: 'available' },
+      ];
+
+      setColumns(prev => [
+        {
+          ...prev[0],
+          items: [...mockTeamMembers, ...mockOffices]
+        },
+        {
+          ...prev[1],
+          items: mockAllPeople
+        },
+        prev[2] // Manter planos como estão
+      ]);
+
     } catch (err: any) {
-      setError('Erro ao carregar dados do time');
+      setError('Erro ao carregar dados');
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const sourceColumnId = result.source.droppableId;
+    const destColumnId = result.destination.droppableId;
+    const sourceIndex = result.source.index;
+    const destIndex = result.destination.index;
+
+    // Se moveu dentro da mesma coluna
+    if (sourceColumnId === destColumnId) {
+      setColumns(prev => {
+        const newColumns = [...prev];
+        const columnIndex = newColumns.findIndex(col => col.id === sourceColumnId);
+        const [reorderedItem] = newColumns[columnIndex].items.splice(sourceIndex, 1);
+        newColumns[columnIndex].items.splice(destIndex, 0, reorderedItem);
+        return newColumns;
+      });
+    } else {
+      // Se moveu entre colunas diferentes
+      setColumns(prev => {
+        const newColumns = [...prev];
+        const sourceColumnIndex = newColumns.findIndex(col => col.id === sourceColumnId);
+        const destColumnIndex = newColumns.findIndex(col => col.id === destColumnId);
+        
+        const [movedItem] = newColumns[sourceColumnIndex].items.splice(sourceIndex, 1);
+        newColumns[destColumnIndex].items.splice(destIndex, 0, movedItem);
+        
+        return newColumns;
+      });
+    }
   };
 
-  const getRoleLabel = (role: string) => {
-    const labels: { [key: string]: string } = {
-      owner: 'Proprietário',
-      admin: 'Administrador',
-      lawyer: 'Advogado',
-      paralegal: 'Paralegal',
-      secretary: 'Secretário',
-      intern: 'Estagiário',
-    };
-    return labels[role] || role;
-  };
+  const renderCard = (item: TeamMember | Office | SubscriptionPlan, index: number) => {
+    // Card de Membro do Time
+    if ('role' in item && 'email' in item) {
+      const member = item as TeamMember;
+      return (
+        <Card key={member.id} sx={{ mb: 2, '&:hover': { boxShadow: 3 } }}>
+          <CardContent sx={{ p: 2 }}>
+            <Box display="flex" alignItems="center" mb={1}>
+              <Avatar sx={{ width: 32, height: 32, mr: 2 }}>
+                {member.name.charAt(0)}
+              </Avatar>
+              <Box flex={1}>
+                <Typography variant="subtitle2">{member.name}</Typography>
+                <Typography variant="caption" color="textSecondary">
+                  {member.email}
+                </Typography>
+              </Box>
+            </Box>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Chip 
+                label={member.role} 
+                size="small" 
+                color="primary" 
+                variant="outlined"
+              />
+              <Chip 
+                label={member.status} 
+                size="small" 
+                color={member.status === 'active' ? 'success' : 'warning'}
+              />
+            </Box>
+          </CardContent>
+        </Card>
+      );
+    }
 
-  const getStatusColor = (status: string) => {
-    const colors: { [key: string]: 'success' | 'warning' | 'error' | 'default' } = {
-      active: 'success',
-      invited: 'warning',
-      inactive: 'error',
-      trial: 'warning',
-      cancelled: 'error',
-      expired: 'error',
-    };
-    return colors[status] || 'default';
+    // Card de Escritório
+    if ('address' in item && 'members' in item) {
+      const office = item as Office;
+      return (
+        <Card key={office.id} sx={{ mb: 2, '&:hover': { boxShadow: 3 } }}>
+          <CardContent sx={{ p: 2 }}>
+            <Box display="flex" alignItems="center" mb={1}>
+              <BusinessIcon color="primary" sx={{ mr: 2 }} />
+              <Box flex={1}>
+                <Typography variant="subtitle2">{office.name}</Typography>
+                <Typography variant="caption" color="textSecondary">
+                  {office.address}
+                </Typography>
+              </Box>
+            </Box>
+            <Typography variant="body2" color="textSecondary">
+              {office.members.length} membro(s)
+            </Typography>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Card de Plano de Assinatura
+    if ('price' in item && 'features' in item) {
+      const plan = item as SubscriptionPlan;
+      return (
+        <Card key={plan.id} sx={{ mb: 2, '&:hover': { boxShadow: 3 } }}>
+          <CardContent sx={{ p: 2 }}>
+            <Box display="flex" alignItems="center" mb={1}>
+              <PaymentIcon color="primary" sx={{ mr: 2 }} />
+              <Box flex={1}>
+                <Typography variant="subtitle2">{plan.name}</Typography>
+                <Typography variant="h6" color="primary">
+                  {plan.price}
+                </Typography>
+              </Box>
+            </Box>
+            <Stack spacing={0.5} mb={1}>
+              {plan.features.map((feature, idx) => (
+                <Typography key={idx} variant="caption" color="textSecondary">
+                  • {feature}
+                </Typography>
+              ))}
+            </Stack>
+            <Button 
+              variant={plan.status === 'popular' ? 'contained' : 'outlined'}
+              size="small" 
+              fullWidth
+            >
+              {plan.status === 'popular' ? 'Mais Popular' : 'Escolher Plano'}
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return null;
   };
 
   if (loading) {
     return (
-      <Box sx={{ width: '100%', mt: 2 }}>
-        <LinearProgress />
-      </Box>
-    );
-  }
-
-  if (!team) {
-    return (
-      <Box sx={{ textAlign: 'center', mt: 5 }}>
-        <Typography variant="h5" gutterBottom>
-          Nenhum time encontrado
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => router.push('/team-setup')}
-          sx={{ mt: 2 }}
-        >
-          Criar Time
-        </Button>
+      <Box sx={{ p: 3 }}>
+        <Typography>Carregando...</Typography>
       </Box>
     );
   }
@@ -146,306 +306,64 @@ const TeamDashboard: React.FC = () => {
         Dashboard do Time
       </Typography>
 
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={1}>
-                <GroupsIcon color="primary" sx={{ mr: 1 }} />
-                <Typography color="textSecondary" variant="body2">
-                  Membros do Time
-                </Typography>
-              </Box>
-              <Typography variant="h4">
-                {team.members?.length || 0}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                de {subscription?.subscription_plan?.max_users || '∞'} permitidos
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+      <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
+        Arraste e solte os cards entre as colunas para organizar seu time, escritórios e escolher planos
+      </Typography>
 
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={1}>
-                <BusinessIcon color="primary" sx={{ mr: 1 }} />
-                <Typography color="textSecondary" variant="body2">
-                  Escritórios
-                </Typography>
-              </Box>
-              <Typography variant="h4">
-                {team.offices?.length || 0}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                de {subscription?.subscription_plan?.max_offices || '∞'} permitidos
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={1}>
-                <PaymentIcon color="primary" sx={{ mr: 1 }} />
-                <Typography color="textSecondary" variant="body2">
-                  Plano Atual
-                </Typography>
-              </Box>
-              <Typography variant="h6">
-                {subscription?.subscription_plan?.name || 'Sem plano'}
-              </Typography>
-              <Chip
-                label={subscription?.status || 'Inativo'}
-                color={getStatusColor(subscription?.status || '')}
-                size="small"
-                sx={{ mt: 1 }}
-              />
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={1}>
-                <TrendingUpIcon color="primary" sx={{ mr: 1 }} />
-                <Typography color="textSecondary" variant="body2">
-                  Uso de Casos
-                </Typography>
-              </Box>
-              <Typography variant="h4">
-                {subscription?.usage?.cases?.used || 0}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                de {subscription?.subscription_plan?.max_cases || '∞'} permitidos
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      <Paper sx={{ width: '100%', mb: 2 }}>
-        <Tabs value={tabValue} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tab label="Informações do Time" />
-          <Tab label="Membros" />
-          <Tab label="Escritórios" />
-          <Tab label="Assinatura" />
-        </Tabs>
-
-        <TabPanel value={tabValue} index={0}>
-          <Box sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              {team.name}
-            </Typography>
-            <Typography variant="body1" color="textSecondary" gutterBottom>
-              {team.description || 'Sem descrição'}
-            </Typography>
-            <Box mt={2}>
-              <Button variant="outlined" startIcon={<EditIcon />}>
-                Editar Informações
-              </Button>
-            </Box>
-          </Box>
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={1}>
-          <Box sx={{ p: 2 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6">Membros do Time</Typography>
-              <Button variant="contained" startIcon={<PersonAddIcon />}>
-                Convidar Membro
-              </Button>
-            </Box>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Nome</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Função</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Ações</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {team.members?.map((member) => (
-                  <TableRow key={member.id}>
-                    <TableCell>{member.name}</TableCell>
-                    <TableCell>{member.email}</TableCell>
-                    <TableCell>
-                      <Chip label={getRoleLabel(member.role)} size="small" />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={member.status}
-                        color={getStatusColor(member.status)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <IconButton size="small">
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" color="error">
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Box>
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={2}>
-          <Box sx={{ p: 2 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6">Escritórios</Typography>
-              <Button variant="contained" startIcon={<BusinessIcon />}>
-                Adicionar Escritório
-              </Button>
-            </Box>
-            <Grid container spacing={2}>
-              {team.offices?.map((office) => (
-                <Grid item xs={12} md={6} key={office.id}>
-                  <Card>
-                    <CardContent>
-                      <Typography variant="h6">
-                        {office.name}
-                        {office.is_main && (
-                          <Chip label="Principal" size="small" color="primary" sx={{ ml: 1 }} />
-                        )}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {office.address}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {office.city}, {office.state} - {office.zip_code}
-                      </Typography>
-                      <Box mt={1}>
-                        <Typography variant="body2">
-                          📞 {office.phone}
-                        </Typography>
-                        <Typography variant="body2">
-                          ✉️ {office.email}
-                        </Typography>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={3}>
-          <Box sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Detalhes da Assinatura
-            </Typography>
-            {subscription ? (
-              <Box>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="body2" color="textSecondary">
-                      Plano
-                    </Typography>
-                    <Typography variant="h6">
-                      {subscription.subscription_plan.name}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="body2" color="textSecondary">
-                      Status
-                    </Typography>
-                    <Chip
-                      label={subscription.status}
-                      color={getStatusColor(subscription.status)}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="body2" color="textSecondary">
-                      Valor Mensal
-                    </Typography>
-                    <Typography variant="h6">
-                      R$ {subscription.monthly_amount}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="body2" color="textSecondary">
-                      Período
-                    </Typography>
-                    <Typography variant="body1">
-                      {new Date(subscription.start_date).toLocaleDateString('pt-BR')}
-                      {subscription.end_date && ` - ${new Date(subscription.end_date).toLocaleDateString('pt-BR')}`}
-                    </Typography>
-                  </Grid>
-                </Grid>
-
-                <Box mt={3}>
-                  <Typography variant="h6" gutterBottom>
-                    Uso do Plano
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Grid container spacing={3}>
+          {columns.map((column) => (
+            <Grid item xs={12} md={4} key={column.id}>
+              <Paper sx={{ p: 2, height: 'fit-content', minHeight: '500px' }}>
+                <Box display="flex" alignItems="center" mb={2}>
+                  <Typography variant="h6" sx={{ flex: 1 }}>
+                    {column.title}
                   </Typography>
-                  {subscription.usage && (
-                    <Box>
-                      <Box mb={2}>
-                        <Typography variant="body2">
-                          Usuários: {subscription.usage.users.used} / {subscription.usage.users.limit}
-                        </Typography>
-                        <LinearProgress
-                          variant="determinate"
-                          value={subscription.usage.users.percentage}
-                          sx={{ mt: 1 }}
-                        />
-                      </Box>
-                      <Box mb={2}>
-                        <Typography variant="body2">
-                          Escritórios: {subscription.usage.offices.used} / {subscription.usage.offices.limit}
-                        </Typography>
-                        <LinearProgress
-                          variant="determinate"
-                          value={subscription.usage.offices.percentage}
-                          sx={{ mt: 1 }}
-                        />
-                      </Box>
-                      <Box mb={2}>
-                        <Typography variant="body2">
-                          Casos: {subscription.usage.cases.used} / {subscription.usage.cases.limit}
-                        </Typography>
-                        <LinearProgress
-                          variant="determinate"
-                          value={subscription.usage.cases.percentage}
-                          sx={{ mt: 1 }}
-                        />
-                      </Box>
-                    </Box>
+                  {column.id === 'team' && (
+                    <IconButton size="small" color="primary">
+                      <AddIcon />
+                    </IconButton>
                   )}
                 </Box>
 
-                <Box mt={3}>
-                  <Button variant="outlined" sx={{ mr: 2 }}>
-                    Alterar Plano
-                  </Button>
-                  <Button variant="outlined" color="error">
-                    Cancelar Assinatura
-                  </Button>
-                </Box>
-              </Box>
-            ) : (
-              <Box>
-                <Typography variant="body1" color="textSecondary">
-                  Nenhuma assinatura ativa
-                </Typography>
-                <Button variant="contained" sx={{ mt: 2 }}>
-                  Escolher Plano
-                </Button>
-              </Box>
-            )}
-          </Box>
-        </TabPanel>
-      </Paper>
+                <Droppable droppableId={column.id}>
+                  {(provided, snapshot) => (
+                    <Box
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      sx={{
+                        minHeight: '400px',
+                        backgroundColor: snapshot.isDraggingOver ? '#f5f5f5' : 'transparent',
+                        borderRadius: 1,
+                        p: 1,
+                      }}
+                    >
+                      {column.items.map((item, index) => (
+                        <Draggable key={item.id} draggableId={item.id} index={index}>
+                          {(provided, snapshot) => (
+                            <Box
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              sx={{
+                                opacity: snapshot.isDragging ? 0.8 : 1,
+                                transform: snapshot.isDragging ? 'rotate(5deg)' : 'none',
+                              }}
+                            >
+                              {renderCard(item, index)}
+                            </Box>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </Box>
+                  )}
+                </Droppable>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+      </DragDropContext>
     </Box>
   );
 };

@@ -11,12 +11,12 @@ import {
 
 class TeamService {
   async listTeams(): Promise<ITeam[]> {
-    const response = await api.get('/api/v1/teams');
+    const response = await api.get('/teams');
     return response.data;
   }
 
   async getTeam(id: number): Promise<ITeam> {
-    const response = await api.get(`/api/v1/teams/${id}`);
+    const response = await api.get(`/teams/${id}`);
     return response.data;
   }
 
@@ -30,7 +30,7 @@ class TeamService {
       formData.append('team[logo]', data.logo);
     }
 
-    const response = await api.post('/api/v1/teams', formData, {
+    const response = await api.post('/teams', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -53,7 +53,7 @@ class TeamService {
       formData.append('team[settings]', JSON.stringify(data.settings));
     }
 
-    const response = await api.patch(`/api/v1/teams/${id}`, formData, {
+    const response = await api.patch(`/teams/${id}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -62,18 +62,18 @@ class TeamService {
   }
 
   async deleteTeam(id: number): Promise<void> {
-    await api.delete(`/api/v1/teams/${id}`);
+    await api.delete(`/teams/${id}`);
   }
 
   async addTeamMember(teamId: number, invite: ITeamInvite): Promise<ITeamMember> {
-    const response = await api.post(`/api/v1/teams/${teamId}/add_member`, {
+    const response = await api.post(`/teams/${teamId}/add_member`, {
       member: invite,
     });
     return response.data;
   }
 
   async removeTeamMember(teamId: number, memberId: number): Promise<void> {
-    await api.delete(`/api/v1/teams/${teamId}/members/${memberId}`);
+    await api.delete(`/teams/${teamId}/members/${memberId}`);
   }
 
   async updateMemberRole(
@@ -81,19 +81,19 @@ class TeamService {
     memberId: number,
     role: ITeamMember['role']
   ): Promise<ITeamMember> {
-    const response = await api.patch(`/api/v1/teams/${teamId}/members/${memberId}`, {
+    const response = await api.patch(`/teams/${teamId}/members/${memberId}`, {
       member: { role },
     });
     return response.data;
   }
 
   async getSubscription(teamId: number): Promise<ISubscription> {
-    const response = await api.get(`/api/v1/subscriptions/${teamId}`);
+    const response = await api.get(`/subscriptions/${teamId}`);
     return response.data;
   }
 
   async createSubscription(planId: number): Promise<ISubscription> {
-    const response = await api.post('/api/v1/subscriptions', {
+    const response = await api.post('/subscriptions', {
       subscription: {
         subscription_plan_id: planId,
       },
@@ -102,24 +102,24 @@ class TeamService {
   }
 
   async updateSubscription(id: number, status: ISubscription['status']): Promise<ISubscription> {
-    const response = await api.patch(`/api/v1/subscriptions/${id}`, {
+    const response = await api.patch(`/subscriptions/${id}`, {
       subscription: { status },
     });
     return response.data;
   }
 
   async cancelSubscription(id: number): Promise<ISubscription> {
-    const response = await api.patch(`/api/v1/subscriptions/${id}/cancel`);
+    const response = await api.patch(`/subscriptions/${id}/cancel`);
     return response.data;
   }
 
   async getSubscriptionPlans(): Promise<ISubscriptionPlan[]> {
-    const response = await api.get('/api/v1/subscriptions/plans');
+    const response = await api.get('/subscriptions/plans');
     return response.data;
   }
 
   async getUsageStatistics(teamId: number): Promise<ISubscription['usage']> {
-    const response = await api.get('/api/v1/subscriptions/usage');
+    const response = await api.get('/subscriptions/usage');
     return response.data;
   }
 }

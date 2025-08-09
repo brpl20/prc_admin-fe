@@ -133,7 +133,9 @@ const Layout = ({ children }: ILayoutProps) => {
               ? 'Usuários'
               : route === '/escritorios'
                 ? 'Escritórios'
-                : pageTitle;
+                : route === '/team-dashboard'
+                  ? 'Dashboard'
+                  : pageTitle;
 
   const supportsLocalStorage = typeof window !== 'undefined' && window.localStorage;
   const storedOpenSidebar = supportsLocalStorage ? localStorage.getItem('openSidebar') : null;
@@ -254,23 +256,6 @@ const Layout = ({ children }: ILayoutProps) => {
 
           <Flex color={colors.white} sx={{ width: '100%' }}>
             <Stack spacing="8" sx={{ width: '100%' }}>
-              <ActiveLink href="/team-dashboard">
-                <MenuItem
-                  sx={{
-                    backgroundColor:
-                      asPath === '/team-dashboard' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                  }}
-                >
-                  <MdDashboard size={24} className="icon" />
-                  {openSidebar && (
-                    <>
-                      <Typography fontWeight="regular">{'Dashboard'}</Typography>
-                      <MdOutlineArrowRight size={24} className="arrow" />
-                    </>
-                  )}
-                </MenuItem>
-              </ActiveLink>
-
               <ActiveLink href="/clientes">
                 <MenuItem
                   sx={{
@@ -380,6 +365,23 @@ const Layout = ({ children }: ILayoutProps) => {
                   </MenuItem>
                 </ActiveLink>
               )}
+
+              <ActiveLink href="/team-dashboard">
+                <MenuItem
+                  sx={{
+                    backgroundColor:
+                      asPath === '/team-dashboard' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                  }}
+                >
+                  <MdDashboard size={24} className="icon" />
+                  {openSidebar && (
+                    <>
+                      <Typography fontWeight="regular">{'Dashboard'}</Typography>
+                      <MdOutlineArrowRight size={24} className="arrow" />
+                    </>
+                  )}
+                </MenuItem>
+              </ActiveLink>
             </Stack>
           </Flex>
         </Drawer>

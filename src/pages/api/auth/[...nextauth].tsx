@@ -39,7 +39,7 @@ export const authOptions: NextAuthOptions = {
 
           const user = await res.json();
 
-          const decoded = decode(user.token) as User | null;
+          const decoded = decode(user.token) as any | null;
           if (!decoded) {
             throw new Error('Token inválido');
           }
@@ -47,8 +47,9 @@ export const authOptions: NextAuthOptions = {
           return {
             id: user.token,
             email: credentials.email,
-            name: decoded.name,
-            last_name: decoded.last_name,
+            name: decoded.name || decoded.email,
+            last_name: decoded.last_name || '',
+            needs_profile_setup: user.needs_profile_setup,
             ...user,
           };
         } catch (error) {

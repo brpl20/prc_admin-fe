@@ -15,11 +15,9 @@ import {
   Button,
 } from '@/styles/login';
 import { useRouter } from 'next/router';
-import api from '@/services/api';
+import api, { serverApi } from '@/services/api';
 
 const RegisterSchema = z.object({
-  name: z.string().min(2, { message: 'Nome é obrigatório' }),
-  lastName: z.string().min(2, { message: 'Sobrenome é obrigatório' }),
   email: z.string().min(3, { message: 'Email é obrigatório' }).email({ message: 'Email inválido' }),
   password: z.string().min(6, { message: 'Senha deve ter no mínimo 6 caracteres' }),
   passwordConfirmation: z.string().min(6, { message: 'Confirmação de senha é obrigatória' }),
@@ -52,14 +50,11 @@ const Register = () => {
     setSuccessMessage('');
 
     try {
-      const response = await api.post('/api/v1/profile_admins', {
-        profile_admin: {
-          name: data.name,
-          last_name: data.lastName,
+      const response = await api.post('/register', {
+        registration: {
           email: data.email,
           password: data.password,
-          password_confirmation: data.passwordConfirmation,
-          role: 'admin',
+          password_confirmation: data.passwordConfirmation
         }
       });
 
@@ -111,45 +106,11 @@ const Register = () => {
         </Typography>
 
         <Typography sx={{ marginBottom: '24px', fontSize: '14px', color: 'text.secondary' }}>
-          {'Preencha os dados abaixo para começar'}
+          {'Crie sua conta para começar'}
         </Typography>
 
         <Form onSubmit={handleSubmit(handleRegister)}>
           <Box>
-            <Box mb={2}>
-              <Input
-                isErrored={!!errors.name}
-                {...register('name')}
-                id="name"
-                name="name"
-                type="text"
-                autoComplete="given-name"
-                placeholder="Nome"
-              />
-              {errors.name && (
-                <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
-                  {errors.name.message}
-                </Typography>
-              )}
-            </Box>
-
-            <Box mb={2}>
-              <Input
-                isErrored={!!errors.lastName}
-                {...register('lastName')}
-                id="lastName"
-                name="lastName"
-                type="text"
-                autoComplete="family-name"
-                placeholder="Sobrenome"
-              />
-              {errors.lastName && (
-                <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
-                  {errors.lastName.message}
-                </Typography>
-              )}
-            </Box>
-
             <Box mb={2}>
               <Input
                 isErrored={!!errors.email}
@@ -200,6 +161,7 @@ const Register = () => {
                 </Typography>
               )}
             </Box>
+
           </Box>
 
           <Box display={'flex'} justifyContent={'center'} sx={{ marginTop: '24px' }}>
