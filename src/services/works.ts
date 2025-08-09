@@ -1,8 +1,23 @@
 import api from './api';
+import teamService from './teams';
 
 const createWork = async (data: any) => {
+  // Obter o team atual do usuário
+  let teamId = null;
+  try {
+    const teams = await teamService.listTeams();
+    if (teams && teams.length > 0) {
+      teamId = teams[0].id;
+    }
+  } catch (error) {
+    console.warn('Não foi possível obter o team atual:', error);
+  }
+
   const payload = {
-    work: data,
+    work: {
+      ...data,
+      team_id: teamId, // Adicionar team_id ao payload
+    },
   };
 
   const response = await api.post('/works', payload);

@@ -1,9 +1,24 @@
 import { ICustomer } from '@/interfaces/ICustomer';
 import api from './api';
+import teamService from './teams';
 
 const createProfileCustomer = async (data: any) => {
   try {
-    const response = await api.post('/profile_customers', data);
+    // Obter o team atual do usuário
+    let teamId = null;
+    try {
+      const teams = await teamService.listTeams();
+      if (teams && teams.length > 0) {
+        teamId = teams[0].id;
+      }
+    } catch (error) {
+      console.warn('Não foi possível obter o team atual:', error);
+    }
+
+    // Adicionar team_id ao payload se houver
+    const payload = teamId ? { ...data, team_id: teamId } : data;
+    
+    const response = await api.post('/profile_customers', payload);
     return response.data;
   } catch (error) {
     throw error;
