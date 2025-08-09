@@ -2,28 +2,36 @@ import { ICustomer } from '@/interfaces/ICustomer';
 import api from './api';
 import teamService from './teams';
 
-const createProfileCustomer = async (data: any) => {
-  try {
-    // Obter o team atual do usuário
-    let teamId = null;
+  const createProfileCustomer = async (data: any) => {
     try {
-      const teams = await teamService.listTeams();
-      if (teams && teams.length > 0) {
-        teamId = teams[0].id;
-      }
-    } catch (error) {
-      console.warn('Não foi possível obter o team atual:', error);
-    }
+      // Buscar team_id automaticamente se não fornecido
+      let teamId = data.profile_customer?.team_id;
 
-    // Adicionar team_id ao payload se houver
-    const payload = teamId ? { ...data, team_id: teamId } : data;
-    
-    const response = await api.post('/profile_customers', payload);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
+      if (!teamId) {
+        try {
+          const teams = await teamService.listTeams();
+          if (teams && teams.length > 0) {
+            teamId = teams[0].id;
+          }
+        } catch (error) {
+          console.warn('Não foi possível obter o team atual:', error);
+        }
+      }
+
+      const payload = {
+        ...data,
+        profile_customer: {
+          ...data.profile_customer,
+          team_id: teamId,
+        },
+      };
+
+      const response = await api.post('/profile_customers', payload);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
 
 const updateProfileCustomer = async (id: string, data: any) => {
   try {
