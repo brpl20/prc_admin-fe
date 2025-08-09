@@ -1,9 +1,28 @@
 import { ICustomer } from '@/interfaces/ICustomer';
 import api from './api';
+import teamService from './teams';
 
 const createProfileCustomer = async (data: any) => {
   try {
-    const response = await api.post('/profile_customers', data);
+    // Buscar team_id automaticamente se não fornecido
+    let teamId = data.profile_customer?.team_id;
+    
+    if (!teamId) {
+      const teams = await teamService.listTeams();
+      if (teams && teams.length > 0) {
+        teamId = teams[0].id;
+      }
+    }
+    
+    const payload = {
+      ...data,
+      profile_customer: {
+        ...data.profile_customer,
+        team_id: teamId,
+      },
+    };
+    
+    const response = await api.post('/profile_customers', payload);
     return response.data;
   } catch (error) {
     throw error;
