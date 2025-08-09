@@ -14,34 +14,180 @@ import {
   Stack,
 } from '@mui/material';
 import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  PersonAdd as PersonAddIcon,
   Business as BusinessIcon,
   Payment as PaymentIcon,
-  Groups as GroupsIcon,
-  DragIndicator as DragIcon,
 } from '@mui/icons-material';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
-import { useRouter } from 'next/router';
-import teamService from '@/services/teams';
-import { ITeam, ISubscription, ITeamMember } from '@/interfaces/ITeam';
+import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+// Removido DropIndicator devido a problema com CSS global do Next.js
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
+import { getAllProfileAdmins } from '@/services/admins';
+import { getAllOffices } from '@/services/offices';
+
+// Componente DropArea para colunas
+interface DropAreaProps {
+  columnId: string;
+  children: React.ReactNode;
+}
+
+const DropArea: React.FC<DropAreaProps> = ({ columnId, children }) => {
+  const dropRef = React.useRef<HTMLDivElement>(null);
+  const [isDraggedOver, setIsDraggedOver] = React.useState(false);
+
+  React.useEffect(() => {
+    const element = dropRef.current;
+    if (!element) return;
+
+    return dropTargetForElements({
+      element,
+      getData: () => ({ columnId }),
+      onDragEnter: () => setIsDraggedOver(true),
+      onDragLeave: () => setIsDraggedOver(false),
+      onDrop: () => setIsDraggedOver(false),
+    });
+  }, [columnId]);
+
+  return (
+    <Box
+      ref={dropRef}
+      sx={{
+        minHeight: '400px',
+        borderRadius: 1,
+        p: 1,
+        backgroundColor: isDraggedOver ? '#e3f2fd' : 'transparent',
+        border: isDraggedOver ? '2px dashed #1976d2' : '2px dashed transparent',
+        transition: 'all 0.2s ease',
+      }}
+    >
+      {children}
+    </Box>
+  );
+};
+
+// Indicador de Drop Customizado
+const CustomDropIndicator: React.FC<{ position: 'top' | 'bottom' | 'left' | 'right' }> = ({ position }) => {
+  const styles = {
+    position: 'absolute' as const,
+    backgroundColor: '#1976d2',
+    zIndex: 1000,
+    ...(position === 'bottom' && {
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: '2px',
+    }),
+    ...(position === 'top' && {
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '2px',
+    }),
+    ...(position === 'left' && {
+      top: 0,
+      bottom: 0,
+      left: 0,
+      width: '2px',
+    }),
+    ...(position === 'right' && {
+      top: 0,
+      bottom: 0,
+      right: 0,
+      width: '2px',
+    }),
+  };
+  
+  return <div style={styles} />;
+};
+
+// Componente DraggableCard usando Pragmatic Drag and Drop
+interface DraggableCardProps {
+  item: TeamMember | Office | SubscriptionPlan;
+  columnId: string;
+  index: number;
+  children: React.ReactNode;
+  sx?: any;
+  onClick?: () => void;
+}
+
+const DraggableCard: React.FC<DraggableCardProps> = ({ 
+  item, 
+  columnId, 
+  index, 
+  children, 
+  sx, 
+  onClick 
+}) => {
+  const cardRef = React.useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [isDraggedOver, setIsDraggedOver] = React.useState(false);
+
+  React.useEffect(() => {
+    const element = cardRef.current;
+    if (!element) return;
+
+    // Configurar como draggable
+    return draggable({
+      element,
+      getInitialData: () => ({ itemId: item.id, columnId, index }),
+      onDragStart: () => setIsDragging(true),
+      onDrop: () => setIsDragging(false),
+    });
+  }, [item.id, columnId, index]);
+
+  React.useEffect(() => {
+    const element = cardRef.current;
+    if (!element) return;
+
+    // Configurar como drop target
+    return dropTargetForElements({
+      element,
+      getData: () => ({ columnId, index }),
+      onDragEnter: () => setIsDraggedOver(true),
+      onDragLeave: () => setIsDraggedOver(false),
+      onDrop: () => setIsDraggedOver(false),
+    });
+  }, [columnId, index]);
+
+  return (
+    <Card
+      ref={cardRef}
+      sx={{
+        ...sx,
+        position: 'relative',
+        opacity: isDragging ? 0.5 : 1,
+        '&:hover': { boxShadow: 3 },
+        cursor: isDragging ? 'grabbing' : 'grab',
+        backgroundColor: isDraggedOver ? '#e3f2fd' : 'white',
+        transition: 'all 0.2s ease',
+        transform: isDragging ? 'rotate(5deg)' : 'none',
+      }}
+      onClick={onClick}
+    >
+      {children}
+      {isDraggedOver && <CustomDropIndicator position="bottom" />}
+    </Card>
+  );
+};
 
 interface TeamMember {
   id: string;
   name: string;
   role: string;
-  email: string;
+  email?: string;
   avatar?: string;
   status: string;
+  oab?: string;
+  cpf?: string;
 }
 
 interface Office {
   id: string;
   name: string;
+  cnpj?: string;
   address: string;
   members: TeamMember[];
+  profile_admins?: TeamMember[];
 }
 
 interface SubscriptionPlan {
@@ -59,49 +205,50 @@ interface Column {
 }
 
 const TeamDashboard: React.FC = () => {
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
   const [columns, setColumns] = useState<Column[]>([
     {
       id: 'team',
-      title: 'Time & Escritórios',
+      title: 'Time',
       items: []
     },
     {
-      id: 'people',
-      title: 'Todas as Pessoas',
+      id: 'available',
+      title: 'Disponíveis (Pessoas & Offices)',
       items: []
     },
     {
       id: 'subscriptions',
       title: 'Planos de Assinatura',
-      items: [
-        {
-          id: 'basic',
-          name: 'Plano Básico',
-          price: 'R$ 99/mês',
-          features: ['5 usuários', '2 escritórios', '100 casos'],
-          status: 'available'
-        },
-        {
-          id: 'professional',
-          name: 'Plano Profissional',
-          price: 'R$ 199/mês',
-          features: ['15 usuários', '5 escritórios', '500 casos'],
-          status: 'popular'
-        },
-        {
-          id: 'enterprise',
-          name: 'Plano Enterprise',
-          price: 'R$ 399/mês',
-          features: ['Usuários ilimitados', 'Escritórios ilimitados', 'Casos ilimitados'],
-          status: 'premium'
-        }
-      ]
+      items: []
     }
   ]);
+
+  const [subscriptionPlans] = useState<SubscriptionPlan[]>([{
+      id: 'basic',
+      name: 'Plano Básico',
+      price: 'R$ 99/mês',
+      features: ['5 usuários', '2 escritórios', '100 casos'],
+      status: 'available'
+    },
+    {
+      id: 'professional',
+      name: 'Plano Profissional',
+      price: 'R$ 199/mês',
+      features: ['15 usuários', '5 escritórios', '500 casos'],
+      status: 'popular'
+    },
+    {
+      id: 'enterprise',
+      name: 'Plano Enterprise',
+      price: 'R$ 399/mês',
+      features: ['Usuários ilimitados', 'Escritórios ilimitados', 'Casos ilimitados'],
+      status: 'premium'
+    }]);
+
+  // Removido expandedOffices - offices não expandem mais
 
   useEffect(() => {
     fetchData();
@@ -110,44 +257,57 @@ const TeamDashboard: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Simular dados do time
-      const mockTeamMembers: TeamMember[] = [
-        { id: 'tm1', name: 'João Silva', role: 'Advogado', email: 'joao@email.com', status: 'active' },
-        { id: 'tm2', name: 'Maria Santos', role: 'Paralegal', email: 'maria@email.com', status: 'active' },
-        { id: 'tm3', name: 'Pedro Costa', role: 'Estagiário', email: 'pedro@email.com', status: 'invited' },
-      ];
+      
+      // Buscar ProfileAdmins reais do backend
+      const profileAdminsResponse = await getAllProfileAdmins('');
+      const profileAdmins: TeamMember[] = profileAdminsResponse.data.map((admin: any) => ({
+        id: admin.id.toString(),
+        name: `${admin.name} ${admin.last_name || ''}`.trim(),
+        role: admin.role || 'lawyer',
+        email: admin.admin?.email || admin.emails?.[0]?.email || '',
+        status: admin.status || 'active',
+        oab: admin.oab,
+        cpf: admin.cpf
+      }));
 
-      const mockOffices: Office[] = [
-        { 
-          id: 'of1', 
-          name: 'Escritório Principal', 
-          address: 'Rua das Flores, 123', 
-          members: [mockTeamMembers[0]] 
-        },
-        { 
-          id: 'of2', 
-          name: 'Filial São Paulo', 
-          address: 'Av. Paulista, 456', 
-          members: [] 
-        },
-      ];
+      // Buscar Offices reais do backend
+      const officesResponse = await getAllOffices('');
+      const offices: Office[] = officesResponse.data.map((office: any) => {
+        const officeMembers = office.profile_admins?.map((admin: any) => ({
+          id: admin.id.toString(),
+          name: `${admin.name} ${admin.last_name || ''}`.trim(),
+          role: admin.role || 'lawyer',
+          email: admin.admin?.email || admin.emails?.[0]?.email || '',
+          status: admin.status || 'active',
+          oab: admin.oab
+        })) || [];
+        
+        return {
+          id: office.id.toString(),
+          name: office.name,
+          cnpj: office.cnpj,
+          address: `${office.street || ''}, ${office.number || ''} - ${office.city || ''}/${office.state || ''}`.replace(/^, /, '').replace(/ - \//, '').trim() || 'Endereço não informado',
+          members: officeMembers,
+          profile_admins: officeMembers
+        };
+      });
 
-      const mockAllPeople: TeamMember[] = [
-        { id: 'ap1', name: 'Ana Lima', role: 'Advogada', email: 'ana@email.com', status: 'available' },
-        { id: 'ap2', name: 'Carlos Oliveira', role: 'Contador', email: 'carlos@email.com', status: 'available' },
-        { id: 'ap3', name: 'Fernanda Rocha', role: 'Secretária', email: 'fernanda@email.com', status: 'available' },
-      ];
-
+      // Combinar ProfileAdmins e Offices na coluna de disponíveis
+      const allAvailableItems = [...profileAdmins, ...offices];
+      
       setColumns(prev => [
         {
           ...prev[0],
-          items: [...mockTeamMembers, ...mockOffices]
+          items: [] // Time começará vazio, mas pode receber cards
         },
         {
           ...prev[1],
-          items: mockAllPeople
+          items: allAvailableItems // ProfileAdmins + Offices juntos
         },
-        prev[2] // Manter planos como estão
+        {
+          ...prev[2],
+          items: subscriptionPlans // Planos de assinatura
+        }
       ]);
 
     } catch (err: any) {
@@ -158,44 +318,85 @@ const TeamDashboard: React.FC = () => {
     }
   };
 
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
+  // Pragmatic Drag and Drop setup
+  useEffect(() => {
+    return monitorForElements({
+      onDrop({ location, source }) {
+        const destination = location.current.dropTargets[0];
+        if (!destination) return;
 
-    const sourceColumnId = result.source.droppableId;
-    const destColumnId = result.destination.droppableId;
-    const sourceIndex = result.source.index;
-    const destIndex = result.destination.index;
-
-    // Se moveu dentro da mesma coluna
-    if (sourceColumnId === destColumnId) {
-      setColumns(prev => {
-        const newColumns = [...prev];
-        const columnIndex = newColumns.findIndex(col => col.id === sourceColumnId);
-        const [reorderedItem] = newColumns[columnIndex].items.splice(sourceIndex, 1);
-        newColumns[columnIndex].items.splice(destIndex, 0, reorderedItem);
-        return newColumns;
-      });
-    } else {
-      // Se moveu entre colunas diferentes
-      setColumns(prev => {
-        const newColumns = [...prev];
-        const sourceColumnIndex = newColumns.findIndex(col => col.id === sourceColumnId);
-        const destColumnIndex = newColumns.findIndex(col => col.id === destColumnId);
+        const sourceData = source.data;
+        const destData = destination.data;
         
-        const [movedItem] = newColumns[sourceColumnIndex].items.splice(sourceIndex, 1);
-        newColumns[destColumnIndex].items.splice(destIndex, 0, movedItem);
-        
-        return newColumns;
-      });
-    }
-  };
+        if (!sourceData || !destData) return;
 
-  const renderCard = (item: TeamMember | Office | SubscriptionPlan, index: number) => {
+        const sourceColumnId = sourceData.columnId as string;
+        const destColumnId = destData.columnId as string;
+        const itemId = sourceData.itemId as string;
+        
+        // Se for drop em uma coluna (não em um card específico)
+        const isColumnDrop = !destData.index && destData.index !== 0;
+        const destIndex = isColumnDrop ? undefined : (destData.index as number);
+
+        // Se moveu dentro da mesma coluna
+        if (sourceColumnId === destColumnId && !isColumnDrop) {
+          setColumns(prev => {
+            const newColumns = [...prev];
+            const columnIndex = newColumns.findIndex(col => col.id === sourceColumnId);
+            const sourceIndex = newColumns[columnIndex].items.findIndex(item => item.id === itemId);
+            
+            if (sourceIndex !== -1) {
+              const [reorderedItem] = newColumns[columnIndex].items.splice(sourceIndex, 1);
+              newColumns[columnIndex].items.splice(destIndex!, 0, reorderedItem);
+            }
+            return newColumns;
+          });
+        } else {
+          // Se moveu entre colunas diferentes
+          setColumns(prev => {
+            const newColumns = [...prev];
+            const sourceColumnIndex = newColumns.findIndex(col => col.id === sourceColumnId);
+            const destColumnIndex = newColumns.findIndex(col => col.id === destColumnId);
+            const sourceIndex = newColumns[sourceColumnIndex].items.findIndex(item => item.id === itemId);
+            
+            if (sourceIndex !== -1 && destColumnIndex !== -1) {
+              const [movedItem] = newColumns[sourceColumnIndex].items.splice(sourceIndex, 1);
+              // Se for drop na coluna, adicionar no final; senão, na posição específica
+              if (isColumnDrop) {
+                newColumns[destColumnIndex].items.push(movedItem);
+              } else {
+                newColumns[destColumnIndex].items.splice(destIndex!, 0, movedItem);
+              }
+            }
+            
+            return newColumns;
+          });
+        }
+      }
+    });
+  }, []);
+
+  // Auto-scroll setup
+  useEffect(() => {
+    return autoScrollForElements({
+      element: document.documentElement,
+    });
+  }, []);
+
+  // Removido handleOfficeClick - offices não expandem mais
+
+  const renderCard = (item: TeamMember | Office | SubscriptionPlan, index: number, columnId: string) => {
     // Card de Membro do Time
     if ('role' in item && 'email' in item) {
       const member = item as TeamMember;
       return (
-        <Card key={member.id} sx={{ mb: 2, '&:hover': { boxShadow: 3 } }}>
+        <DraggableCard 
+          key={member.id} 
+          item={member} 
+          columnId={columnId} 
+          index={index}
+          sx={{ mb: 2 }}
+        >
           <CardContent sx={{ p: 2 }}>
             <Box display="flex" alignItems="center" mb={1}>
               <Avatar sx={{ width: 32, height: 32, mr: 2 }}>
@@ -222,30 +423,44 @@ const TeamDashboard: React.FC = () => {
               />
             </Box>
           </CardContent>
-        </Card>
+        </DraggableCard>
       );
     }
 
     // Card de Escritório
     if ('address' in item && 'members' in item) {
       const office = item as Office;
+      
       return (
-        <Card key={office.id} sx={{ mb: 2, '&:hover': { boxShadow: 3 } }}>
+        <DraggableCard
+          key={office.id}
+          item={office}
+          columnId={columnId}
+          index={index}
+          sx={{
+            mb: 2
+          }}
+        >
           <CardContent sx={{ p: 2 }}>
             <Box display="flex" alignItems="center" mb={1}>
               <BusinessIcon color="primary" sx={{ mr: 2 }} />
               <Box flex={1}>
                 <Typography variant="subtitle2">{office.name}</Typography>
-                <Typography variant="caption" color="textSecondary">
+                {office.cnpj && (
+                  <Typography variant="caption" color="textSecondary" display="block">
+                    CNPJ: {office.cnpj}
+                  </Typography>
+                )}
+                <Typography variant="caption" color="textSecondary" display="block">
                   {office.address}
                 </Typography>
               </Box>
             </Box>
             <Typography variant="body2" color="textSecondary">
-              {office.members.length} membro(s)
+              {office.members?.length || 0} membro(s)
             </Typography>
           </CardContent>
-        </Card>
+        </DraggableCard>
       );
     }
 
@@ -253,7 +468,13 @@ const TeamDashboard: React.FC = () => {
     if ('price' in item && 'features' in item) {
       const plan = item as SubscriptionPlan;
       return (
-        <Card key={plan.id} sx={{ mb: 2, '&:hover': { boxShadow: 3 } }}>
+        <DraggableCard
+          key={plan.id}
+          item={plan}
+          columnId={columnId}
+          index={index}
+          sx={{ mb: 2 }}
+        >
           <CardContent sx={{ p: 2 }}>
             <Box display="flex" alignItems="center" mb={1}>
               <PaymentIcon color="primary" sx={{ mr: 2 }} />
@@ -279,7 +500,7 @@ const TeamDashboard: React.FC = () => {
               {plan.status === 'popular' ? 'Mais Popular' : 'Escolher Plano'}
             </Button>
           </CardContent>
-        </Card>
+        </DraggableCard>
       );
     }
 
@@ -310,60 +531,44 @@ const TeamDashboard: React.FC = () => {
         Arraste e solte os cards entre as colunas para organizar seu time, escritórios e escolher planos
       </Typography>
 
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <Grid container spacing={3}>
-          {columns.map((column) => (
-            <Grid item xs={12} md={4} key={column.id}>
+      <div>
+        <Grid container spacing={3} sx={{ overflowX: 'auto' }}>
+          {columns.map((column, index) => {
+            // Calcular largura dinâmica baseada no número de colunas
+            const totalColumns = columns.length;
+            const minWidth = totalColumns > 3 ? 300 : undefined;
+            const gridSize = totalColumns <= 3 ? 12 / totalColumns : undefined;
+            
+            return (
+            <Grid 
+              item 
+              xs={12} 
+              md={gridSize || false} 
+              key={column.id}
+              sx={{ 
+                minWidth: minWidth,
+                flexShrink: 0 
+              }}
+            >
               <Paper sx={{ p: 2, height: 'fit-content', minHeight: '500px' }}>
                 <Box display="flex" alignItems="center" mb={2}>
                   <Typography variant="h6" sx={{ flex: 1 }}>
                     {column.title}
                   </Typography>
-                  {column.id === 'team' && (
-                    <IconButton size="small" color="primary">
-                      <AddIcon />
-                    </IconButton>
-                  )}
+                  {/* Remover botão de adicionar da coluna Team */}
                 </Box>
 
-                <Droppable droppableId={column.id}>
-                  {(provided, snapshot) => (
-                    <Box
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      sx={{
-                        minHeight: '400px',
-                        backgroundColor: snapshot.isDraggingOver ? '#f5f5f5' : 'transparent',
-                        borderRadius: 1,
-                        p: 1,
-                      }}
-                    >
-                      {column.items.map((item, index) => (
-                        <Draggable key={item.id} draggableId={item.id} index={index}>
-                          {(provided, snapshot) => (
-                            <Box
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              sx={{
-                                opacity: snapshot.isDragging ? 0.8 : 1,
-                                transform: snapshot.isDragging ? 'rotate(5deg)' : 'none',
-                              }}
-                            >
-                              {renderCard(item, index)}
-                            </Box>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </Box>
+                <DropArea columnId={column.id}>
+                  {column.items.map((item, itemIndex) => 
+                    renderCard(item, itemIndex, column.id)
                   )}
-                </Droppable>
+                </DropArea>
               </Paper>
             </Grid>
-          ))}
+          );
+          })}
         </Grid>
-      </DragDropContext>
+      </div>
     </Box>
   );
 };

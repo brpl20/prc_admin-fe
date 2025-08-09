@@ -14,6 +14,8 @@ import {
   FormControl,
   InputLabel,
   Backdrop,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import { Input, Button } from '@/styles/login';
 import api from '@/services/api';
@@ -29,6 +31,25 @@ const ProfileSetupSchema = z.object({
   gender: z.enum(['male', 'female', 'other']),
   civilStatus: z.enum(['single', 'married', 'divorced', 'widower', 'union']),
   nationality: z.enum(['brazilian', 'foreigner']),
+  // Endereço obrigatório
+  street: z.string().min(1, { message: 'Rua é obrigatória' }),
+  number: z.string().min(1, { message: 'Número é obrigatório' }),
+  neighborhood: z.string().min(1, { message: 'Bairro é obrigatório' }),
+  city: z.string().min(1, { message: 'Cidade é obrigatória' }),
+  state: z.string().min(2, { message: 'Estado é obrigatório' }),
+  zipCode: z.string().min(8, { message: 'CEP é obrigatório' }),
+  // Opção de cadastrar escritório
+  createOffice: z.boolean().default(false),
+  // Campos do escritório (opcionais, mas obrigatórios quando createOffice é true)
+  officeName: z.string().optional(),
+  officeCnpj: z.string().optional(),
+  officeOab: z.string().optional(),
+  officeStreet: z.string().optional(),
+  officeNumber: z.string().optional(),
+  officeNeighborhood: z.string().optional(),
+  officeCity: z.string().optional(),
+  officeState: z.string().optional(),
+  officeZipCode: z.string().optional(),
 });
 
 type ProfileSetupForm = z.infer<typeof ProfileSetupSchema>;
@@ -39,11 +60,38 @@ interface ProfileSetupModalProps {
   oab?: string;
 }
 
+// Função para buscar endereço pelo CEP usando ViaCEP
+const fetchAddressByCep = async (cep: string) => {
+  const cleanCep = cep.replace(/\D/g, '');
+  if (cleanCep.length !== 8) return null;
+  
+  try {
+    const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+    const data = await response.json();
+    
+    if (data.erro) {
+      return null;
+    }
+    
+    return {
+      street: data.logradouro || '',
+      neighborhood: data.bairro || '',
+      city: data.localidade || '',
+      state: data.uf || '',
+    };
+  } catch (error) {
+    console.error('Erro ao buscar CEP:', error);
+    return null;
+  }
+};
+
 const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete, oab }) => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [tempOab, setTempOab] = useState('');
+  const [loadingCep, setLoadingCep] = useState(false);
+  const [loadingOfficeCep, setLoadingOfficeCep] = useState(false);
 
   const {
     register,
@@ -58,6 +106,7 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
       gender: 'male',
       civilStatus: 'single',
       nationality: 'brazilian',
+      createOffice: false,
     },
   });
 
@@ -66,6 +115,45 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
   const watchGender = watch('gender');
   const watchCivilStatus = watch('civilStatus');
   const watchNationality = watch('nationality');
+  const watchCreateOffice = watch('createOffice');
+  const watchZipCode = watch('zipCode');
+  const watchOfficeZipCode = watch('officeZipCode');
+
+  // Auto-fill address when CEP changes
+  React.useEffect(() => {
+    const fetchAddress = async () => {
+      if (watchZipCode && watchZipCode.length >= 8) {
+        setLoadingCep(true);
+        const address = await fetchAddressByCep(watchZipCode);
+        if (address) {
+          setValue('street', address.street);
+          setValue('neighborhood', address.neighborhood);
+          setValue('city', address.city);
+          setValue('state', address.state);
+        }
+        setLoadingCep(false);
+      }
+    };
+    fetchAddress();
+  }, [watchZipCode, setValue]);
+
+  // Auto-fill office address when Office CEP changes
+  React.useEffect(() => {
+    const fetchAddress = async () => {
+      if (watchOfficeZipCode && watchOfficeZipCode.length >= 8) {
+        setLoadingOfficeCep(true);
+        const address = await fetchAddressByCep(watchOfficeZipCode);
+        if (address) {
+          setValue('officeStreet', address.street);
+          setValue('officeNeighborhood', address.neighborhood);
+          setValue('officeCity', address.city);
+          setValue('officeState', address.state);
+        }
+        setLoadingOfficeCep(false);
+      }
+    };
+    fetchAddress();
+  }, [watchOfficeZipCode, setValue]);
 
   async function handleProfileSetup(data: ProfileSetupForm) {
     setLoading(true);
@@ -83,8 +171,47 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
           gender: data.gender,
           civil_status: data.civilStatus,
           nationality: data.nationality,
+          addresses_attributes: [
+            {
+              street: data.street,
+              number: data.number,
+              neighborhood: data.neighborhood,
+              city: data.city,
+              state: data.state,
+              zip_code: data.zipCode,
+              description: 'Endereço Principal'
+            }
+          ]
         }
       });
+
+      // Se escolheu criar escritório, criar após o ProfileAdmin
+      if (data.createOffice && data.officeName) {
+        try {
+          // Obter o ProfileAdmin criado para usar como responsible_lawyer_id
+          const profileAdminId = response.data?.data?.id;
+          
+          await api.post('/offices', {
+            office: {
+              name: data.officeName,
+              cnpj: data.officeCnpj,
+              oab: data.officeOab,
+              street: data.officeStreet,
+              number: data.officeNumber,
+              neighborhood: data.officeNeighborhood,
+              city: data.officeCity,
+              state: data.officeState,
+              cep: data.officeZipCode,
+              society: 'company',
+              office_type_id: 1, // Advocacia
+              responsible_lawyer_id: profileAdminId
+            }
+          });
+        } catch (officeError) {
+          console.error('Erro ao criar escritório:', officeError);
+          // Não bloquear o fluxo se o escritório falhar
+        }
+      }
 
       if (response.status === 201 || response.status === 200) {
         onComplete();
@@ -118,7 +245,9 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
         maxWidth="sm"
         fullWidth
         disableEscapeKeyDown
-        disableBackdropClick
+        onClose={(_event, reason) => {
+          if (reason === 'backdropClick') return;
+        }}
         BackdropComponent={(props) => (
           <Backdrop
             {...props}
@@ -141,7 +270,15 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
         <form onSubmit={handleSubmit(handleProfileSetup)}>
           <DialogContent>
             <Box display="flex" flexDirection="column" gap={2}>
+              {/* Dados Pessoais */}
+              <Typography variant="subtitle1" fontWeight="bold">
+                Dados Pessoais
+              </Typography>
+
               <Box>
+                <Typography variant="body2" color="text.secondary" mb={0.5}>
+                  Nome *
+                </Typography>
                 <Input
                   isErrored={!!errors.name}
                   {...register('name')}
@@ -156,6 +293,9 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
               </Box>
 
               <Box>
+                <Typography variant="body2" color="text.secondary" mb={0.5}>
+                  Sobrenome *
+                </Typography>
                 <Input
                   isErrored={!!errors.lastName}
                   {...register('lastName')}
@@ -170,10 +310,13 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
               </Box>
 
               <Box>
+                <Typography variant="body2" color="text.secondary" mb={0.5}>
+                  CPF *
+                </Typography>
                 <Input
                   isErrored={!!errors.cpf}
                   {...register('cpf')}
-                  placeholder="CPF"
+                  placeholder="000.000.000-00"
                   fullWidth
                 />
                 {errors.cpf && (
@@ -184,10 +327,13 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
               </Box>
 
               <Box>
+                <Typography variant="body2" color="text.secondary" mb={0.5}>
+                  RG *
+                </Typography>
                 <Input
                   isErrored={!!errors.rg}
                   {...register('rg')}
-                  placeholder="RG"
+                  placeholder="Digite seu RG"
                   fullWidth
                 />
                 {errors.rg && (
@@ -198,10 +344,13 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
               </Box>
 
               <Box>
+                <Typography variant="body2" color="text.secondary" mb={0.5}>
+                  OAB *
+                </Typography>
                 <Input
                   isErrored={!!errors.oab}
                   {...register('oab')}
-                  placeholder="Digite sua OAB UF_00000"
+                  placeholder="UF 000000"
                   fullWidth
                 />
                 {errors.oab && (
@@ -211,11 +360,15 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
                 )}
               </Box>
 
-              <FormControl fullWidth>
-                <InputLabel>Função</InputLabel>
-                <Select
-                  value={watchRole}
-                  label="Função"
+              <Box>
+                <Typography variant="body2" color="text.secondary" mb={0.5}>
+                  Função *
+                </Typography>
+                <FormControl fullWidth>
+                  <InputLabel>Selecione sua função</InputLabel>
+                  <Select
+                    value={watchRole}
+                    label="Selecione sua função"
                   onChange={(e) => setValue('role', e.target.value as any)}
                 >
                   <MenuItem value="lawyer">Advogado</MenuItem>
@@ -225,27 +378,37 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
                   <MenuItem value="counter">Contador</MenuItem>
                   <MenuItem value="excounter">Ex-contador</MenuItem>
                   <MenuItem value="representant">Representante</MenuItem>
-                </Select>
-              </FormControl>
+                  </Select>
+                </FormControl>
+              </Box>
 
-              <FormControl fullWidth>
-                <InputLabel>Gênero</InputLabel>
-                <Select
-                  value={watchGender}
-                  label="Gênero"
+              <Box>
+                <Typography variant="body2" color="text.secondary" mb={0.5}>
+                  Gênero *
+                </Typography>
+                <FormControl fullWidth>
+                  <InputLabel>Selecione seu gênero</InputLabel>
+                  <Select
+                    value={watchGender}
+                    label="Selecione seu gênero"
                   onChange={(e) => setValue('gender', e.target.value as any)}
                 >
                   <MenuItem value="male">Masculino</MenuItem>
                   <MenuItem value="female">Feminino</MenuItem>
                   <MenuItem value="other">Outro</MenuItem>
-                </Select>
-              </FormControl>
+                  </Select>
+                </FormControl>
+              </Box>
 
-              <FormControl fullWidth>
-                <InputLabel>Estado Civil</InputLabel>
-                <Select
-                  value={watchCivilStatus}
-                  label="Estado Civil"
+              <Box>
+                <Typography variant="body2" color="text.secondary" mb={0.5}>
+                  Estado Civil *
+                </Typography>
+                <FormControl fullWidth>
+                  <InputLabel>Selecione seu estado civil</InputLabel>
+                  <Select
+                    value={watchCivilStatus}
+                    label="Selecione seu estado civil"
                   onChange={(e) => setValue('civilStatus', e.target.value as any)}
                 >
                   <MenuItem value="single">Solteiro</MenuItem>
@@ -253,20 +416,261 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
                   <MenuItem value="divorced">Divorciado</MenuItem>
                   <MenuItem value="widower">Viúvo</MenuItem>
                   <MenuItem value="union">União Estável</MenuItem>
-                </Select>
-              </FormControl>
+                  </Select>
+                </FormControl>
+              </Box>
 
-              <FormControl fullWidth>
-                <InputLabel>Nacionalidade</InputLabel>
-                <Select
-                  value={watchNationality}
-                  label="Nacionalidade"
+              <Box>
+                <Typography variant="body2" color="text.secondary" mb={0.5}>
+                  Nacionalidade *
+                </Typography>
+                <FormControl fullWidth>
+                  <InputLabel>Selecione sua nacionalidade</InputLabel>
+                  <Select
+                    value={watchNationality}
+                    label="Selecione sua nacionalidade"
                   onChange={(e) => setValue('nationality', e.target.value as any)}
                 >
                   <MenuItem value="brazilian">Brasileiro</MenuItem>
                   <MenuItem value="foreigner">Estrangeiro</MenuItem>
-                </Select>
-              </FormControl>
+                  </Select>
+                </FormControl>
+              </Box>
+
+              {/* Seção de Endereço */}
+              <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2 }}>
+                Endereço Profissional
+              </Typography>
+
+              <Box>
+                <Typography variant="body2" color="text.secondary" mb={0.5}>
+                  CEP * {loadingCep && '(Buscando endereço...)'}
+                </Typography>
+                <Input
+                  isErrored={!!errors.zipCode}
+                  {...register('zipCode')}
+                  placeholder="00000-000"
+                  fullWidth
+                />
+                {errors.zipCode && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+                    {errors.zipCode.message}
+                  </Typography>
+                )}
+              </Box>
+
+              <Box display="flex" gap={2}>
+                <Box flex={3}>
+                  <Typography variant="body2" color="text.secondary" mb={0.5}>
+                    Rua/Avenida *
+                  </Typography>
+                  <Input
+                    isErrored={!!errors.street}
+                    {...register('street')}
+                    placeholder="Rua/Avenida"
+                    fullWidth
+                  />
+                  {errors.street && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+                      {errors.street.message}
+                    </Typography>
+                  )}
+                </Box>
+                <Box flex={1}>
+                  <Typography variant="body2" color="text.secondary" mb={0.5}>
+                    Número *
+                  </Typography>
+                  <Input
+                    isErrored={!!errors.number}
+                    {...register('number')}
+                    placeholder="Número"
+                    fullWidth
+                  />
+                  {errors.number && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+                      {errors.number.message}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+
+              <Box>
+                <Typography variant="body2" color="text.secondary" mb={0.5}>
+                  Bairro *
+                </Typography>
+                <Input
+                  isErrored={!!errors.neighborhood}
+                  {...register('neighborhood')}
+                  placeholder="Bairro"
+                  fullWidth
+                />
+                {errors.neighborhood && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+                    {errors.neighborhood.message}
+                  </Typography>
+                )}
+              </Box>
+
+              <Box display="flex" gap={2}>
+                <Box flex={2}>
+                  <Typography variant="body2" color="text.secondary" mb={0.5}>
+                    Cidade *
+                  </Typography>
+                  <Input
+                    isErrored={!!errors.city}
+                    {...register('city')}
+                    placeholder="Cidade"
+                    fullWidth
+                  />
+                  {errors.city && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+                      {errors.city.message}
+                    </Typography>
+                  )}
+                </Box>
+                <Box flex={1}>
+                  <Typography variant="body2" color="text.secondary" mb={0.5}>
+                    Estado (UF) *
+                  </Typography>
+                  <Input
+                    isErrored={!!errors.state}
+                    {...register('state')}
+                    placeholder="SP"
+                    fullWidth
+                  />
+                  {errors.state && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+                      {errors.state.message}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+
+
+              {/* Opção de Criar Escritório */}
+              <Box sx={{ mt: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={watchCreateOffice}
+                      onChange={(e) => setValue('createOffice', e.target.checked)}
+                    />
+                  }
+                  label="Deseja cadastrar seu Escritório (PJ) também?"
+                />
+              </Box>
+
+              {/* Campos do Escritório - mostrados apenas se checkbox marcado */}
+              {watchCreateOffice && (
+                <Box>
+                  <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2 }}>
+                    Dados do Escritório (Pessoa Jurídica)
+                  </Typography>
+
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="body2" color="text.secondary" mb={0.5}>
+                      Nome do Escritório *
+                    </Typography>
+                    <Input
+                      {...register('officeName')}
+                      placeholder="Razão Social"
+                      fullWidth
+                    />
+                  </Box>
+
+                  <Box display="flex" gap={2} sx={{ mt: 2 }}>
+                    <Box flex={1}>
+                      <Typography variant="body2" color="text.secondary" mb={0.5}>
+                        CNPJ *
+                      </Typography>
+                      <Input
+                        {...register('officeCnpj')}
+                        placeholder="00.000.000/0000-00"
+                        fullWidth
+                      />
+                    </Box>
+                    <Box flex={1}>
+                      <Typography variant="body2" color="text.secondary" mb={0.5}>
+                        OAB do Escritório
+                      </Typography>
+                      <Input
+                        {...register('officeOab')}
+                        placeholder="OAB/UF 000000"
+                        fullWidth
+                      />
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="body2" color="text.secondary" mb={0.5}>
+                      CEP do Escritório * {loadingOfficeCep && '(Buscando endereço...)'}
+                    </Typography>
+                    <Input
+                      {...register('officeZipCode')}
+                      placeholder="00000-000"
+                      fullWidth
+                    />
+                  </Box>
+
+                  <Box display="flex" gap={2} sx={{ mt: 2 }}>
+                    <Box flex={3}>
+                      <Typography variant="body2" color="text.secondary" mb={0.5}>
+                        Rua/Avenida *
+                      </Typography>
+                      <Input
+                        {...register('officeStreet')}
+                        placeholder="Rua/Avenida"
+                        fullWidth
+                      />
+                    </Box>
+                    <Box flex={1}>
+                      <Typography variant="body2" color="text.secondary" mb={0.5}>
+                        Número *
+                      </Typography>
+                      <Input
+                        {...register('officeNumber')}
+                        placeholder="000"
+                        fullWidth
+                      />
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="body2" color="text.secondary" mb={0.5}>
+                      Bairro *
+                    </Typography>
+                    <Input
+                      {...register('officeNeighborhood')}
+                      placeholder="Bairro"
+                      fullWidth
+                    />
+                  </Box>
+
+                  <Box display="flex" gap={2} sx={{ mt: 2 }}>
+                    <Box flex={2}>
+                      <Typography variant="body2" color="text.secondary" mb={0.5}>
+                        Cidade *
+                      </Typography>
+                      <Input
+                        {...register('officeCity')}
+                        placeholder="Cidade"
+                        fullWidth
+                      />
+                    </Box>
+                    <Box flex={1}>
+                      <Typography variant="body2" color="text.secondary" mb={0.5}>
+                        Estado (UF) *
+                      </Typography>
+                      <Input
+                        {...register('officeState')}
+                        placeholder="SP"
+                        fullWidth
+                      />
+                    </Box>
+                  </Box>
+
+                </Box>
+              )}
             </Box>
           </DialogContent>
           
