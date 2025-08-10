@@ -1,5 +1,6 @@
 import api from './api';
 import { getSession } from 'next-auth/react';
+import { apiCache, getCacheKey, CACHE_DURATION } from '@/utils/apiCache';
 import {
   ITeam,
   ICreateTeamData,
@@ -42,8 +43,16 @@ class TeamService {
   // Team CRUD operations
   async listTeams(): Promise<ITeam[]> {
     await this.ensureAuthenticated();
-    const response = await api.get('/teams');
-    return response.data;
+    
+    const cacheKey = getCacheKey('/teams');
+    return apiCache.cachedApiCall(
+      cacheKey,
+      async () => {
+        const response = await api.get('/teams');
+        return response.data;
+      },
+      CACHE_DURATION.MEDIUM
+    );
   }
 
   async getTeam(id: number): Promise<ITeam> {
@@ -99,6 +108,11 @@ class TeamService {
         'Content-Type': 'multipart/form-data',
       },
     });
+    
+    // Invalidate cache when team is updated
+    apiCache.delete(getCacheKey('/teams'));
+    apiCache.delete(getCacheKey(`/teams/${id}`));
+    
     return response.data;
   }
 

@@ -24,6 +24,18 @@ const nextConfig = {
         },
       };
 
+      // Bundle analyzer
+      if (process.env.ANALYZE === 'true') {
+        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+        config.plugins.push(
+          new BundleAnalyzerPlugin({
+            analyzerMode: 'server',
+            analyzerPort: isServer ? 8888 : 8889,
+            openAnalyzer: true,
+          })
+        );
+      }
+
       // Reduce memory usage and optimize chunk splitting
       config.optimization.splitChunks = {
         chunks: 'all',
