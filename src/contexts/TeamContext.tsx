@@ -32,7 +32,7 @@ const TeamProvider = ({ children }: IProps) => {
 
   const switchToTeam = async (teamId: number) => {
     // Don't allow team switching if user is not authenticated
-    if (!session?.token || !session?.email) {
+    if (!isSessionAuthenticated(session)) {
       throw new Error('User not authenticated');
     }
 
