@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { ITeam } from '@/interfaces/ITeam';
 import { getCurrentTeam, switchTeam, getTeams } from '@/services/teams';
+import { isSessionAuthenticated, isSessionReady } from '@/utils/authValidation';
 
 interface ITeamContextValue {
   currentTeam: ITeam | null;
@@ -60,16 +61,7 @@ const TeamProvider = ({ children }: IProps) => {
       setIsLoading(true);
       
       // Verify authentication before making API calls
-      const isAuthenticated = session && 
-                             session.token && 
-                             typeof session.token === 'string' && 
-                             session.token.trim() !== '' &&
-                             session.token !== 'undefined' &&
-                             session.email &&
-                             typeof session.email === 'string' &&
-                             session.email.trim() !== '';
-      
-      if (!isAuthenticated) {
+      if (!isSessionAuthenticated(session)) {
         setCurrentTeam(null);
         setTeams([]);
         setTeamRole(null);
@@ -106,25 +98,8 @@ const TeamProvider = ({ children }: IProps) => {
       return;
     }
     
-    // Don't run if no session at all
-    if (!session) {
-      setCurrentTeam(null);
-      setTeams([]);
-      setTeamRole(null);
-      setIsLoading(false);
-      return;
-    }
-    
-    // Check if this is a valid authenticated session
-    const isAuthenticated = session.token && 
-                           typeof session.token === 'string' && 
-                           session.token.trim() !== '' &&
-                           session.token !== 'undefined' &&
-                           session.email &&
-                           typeof session.email === 'string' &&
-                           session.email.trim() !== '';
-    
-    if (isAuthenticated) {
+    // Check if session is authenticated and ready
+    if (isSessionAuthenticated(session)) {
       refreshTeams();
     } else {
       setCurrentTeam(null);

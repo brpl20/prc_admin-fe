@@ -181,9 +181,9 @@ const TeamSetup: React.FC = () => {
           //   inviterName: userProfile?.name || session?.name
           // });
           
-          console.log(`TODO: Send invitation to ${member.email} as ${member.role}`);
+          console.log(`TODO: Send invitation to team member as ${member.role} (email masked for privacy)`);
         } catch (memberErr: any) {
-          console.error(`Failed to invite ${member.email}:`, memberErr);
+          console.error(`Failed to invite team member with role ${member.role}:`, memberErr);
           // Don't fail the entire process for individual member errors
         }
       }
@@ -215,8 +215,15 @@ const TeamSetup: React.FC = () => {
 
   const handleFinish = async () => {
     setLoading(true);
+    setError(''); // Clear any previous errors
     
     try {
+      // Validate that we have a current team before finishing
+      if (!currentTeam) {
+        setError('Erro interno: Nenhum time encontrado. Por favor, tente configurar novamente.');
+        return;
+      }
+
       // TODO: Link office to team if user has an office
       // if (userOffice && currentTeam) {
       //   await api.post(`/teams/${currentTeam.id}/offices`, {
@@ -227,14 +234,25 @@ const TeamSetup: React.FC = () => {
       // TODO: Update user's default team if needed
       // await teamService.switchTeam(currentTeam.id);
       
-      // Setup completed - redirect to main application only if ProfileAdmin exists
-      console.log('Team setup completed successfully');
-      router.push('/clientes');
-    } catch (error) {
+      // Verify team setup was completed successfully by checking if it's no longer a mock team
+      try {
+        const updatedTeams = await teamService.listTeams();
+        const setupTeam = updatedTeams.find(team => team.id === currentTeam.id);
+        
+        if (setupTeam && setupTeam.updated_at !== setupTeam.created_at) {
+          console.log('Team setup completed successfully - team was updated');
+          router.push('/clientes');
+        } else {
+          setError('Parece que a configuração não foi salva corretamente. Por favor, verifique os dados e tente novamente.');
+        }
+      } catch (verificationError) {
+        console.error('Error verifying team setup:', verificationError);
+        setError('Não foi possível verificar se a configuração foi salva. Por favor, verifique sua conexão e tente novamente.');
+      }
+    } catch (error: any) {
       console.error('Error finishing setup:', error);
-      // Don't block the user if there are minor issues
-      console.log('Minor setup issues, proceeding to main app');
-      router.push('/clientes');
+      const errorMessage = error.response?.data?.message || error.message || 'Erro inesperado ao finalizar configuração';
+      setError(`Erro ao finalizar configuração: ${errorMessage}. Por favor, tente novamente.`);
     } finally {
       setLoading(false);
     }

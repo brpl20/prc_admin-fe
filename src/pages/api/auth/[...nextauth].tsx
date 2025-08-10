@@ -81,12 +81,29 @@ export const authOptions: NextAuthOptions = {
       if (url === baseUrl || url === `${baseUrl}/`) {
         return `${baseUrl}/team-check`;
       }
-      // If already on team-check, stay there
-      if (url.includes('/team-check')) {
-        return url;
+      
+      // Parse URL to check exact path
+      try {
+        const parsedUrl = new URL(url, baseUrl);
+        const pathname = parsedUrl.pathname;
+        
+        // If already on team-check or team-setup, stay there
+        if (pathname === '/team-check' || pathname === '/team-setup') {
+          return url;
+        }
+        
+        // If trying to go to login/register, allow it
+        if (pathname === '/login' || pathname === '/register') {
+          return url;
+        }
+        
+        // For any other authenticated route, redirect to team-check first
+        return `${baseUrl}/team-check`;
+      } catch (error) {
+        // If URL parsing fails, default to team-check
+        console.warn('Failed to parse redirect URL:', url);
+        return `${baseUrl}/team-check`;
       }
-      // For any other login, go to team-check
-      return `${baseUrl}/team-check`;
     },
   },
 

@@ -7,6 +7,7 @@ import teamService from '@/services/teams';
 import FirstTimeSetupModal from '@/components/Modals/FirstTimeSetup';
 import ProfileSetupModal from '@/components/ProfileSetupModal';
 import api from '@/services/api';
+import { doesTeamNeedSetup, getTeamSetupReason } from '@/utils/teamValidation';
 
 const TeamCheckPage = () => {
   const router = useRouter();
@@ -44,22 +45,33 @@ const TeamCheckPage = () => {
         return;
       }
 
-      // ProfileAdmin exists, check if we have teams (only other API call we make)
-      let hasTeams = false;
+      // ProfileAdmin exists, check if we have properly configured teams
       try {
         const teams = await teamService.listTeams();
-        hasTeams = teams && teams.length > 0;
+        
+        if (!teams || teams.length === 0) {
+          // No teams at all - show team setup
+          setShowSetupModal(true);
+          setLoading(false);
+          return;
+        }
+
+        // Check if any team needs configuration (mock teams or incomplete setup)
+        const teamNeedsSetup = teams.some(team => doesTeamNeedSetup(team));
+        
+        if (teamNeedsSetup) {
+          // Team exists but needs user configuration
+          console.log('Team needs setup - showing configuration modal');
+          setShowSetupModal(true);
+          setLoading(false);
+        } else {
+          // Team is properly configured - proceed to main application
+          console.log('Team is properly configured - proceeding to main app');
+          router.push('/clientes');
+        }
       } catch (error) {
         console.error('Error checking teams:', error);
-        hasTeams = false;
-      }
-
-      if (hasTeams) {
-        // Everything is set up - but let's show team setup anyway for configuration
-        setShowSetupModal(true);
-        setLoading(false);
-      } else {
-        // Has ProfileAdmin but no teams - show team setup
+        // On error, assume team setup is needed
         setShowSetupModal(true);
         setLoading(false);
       }
@@ -94,13 +106,21 @@ const TeamCheckPage = () => {
         // ProfileAdmin criado com sucesso, verificar teams
         const teams = await teamService.listTeams();
         
-        if (teams && teams.length > 0) {
-          // Even with teams, show setup modal to allow configuration
+        if (!teams || teams.length === 0) {
+          // No teams - show team setup
           setShowSetupModal(true);
           setLoading(false);
         } else {
-          setShowSetupModal(true);
-          setLoading(false);
+          // Check if existing teams need configuration
+          const teamNeedsSetup = teams.some(team => doesTeamNeedSetup(team));
+          
+          if (teamNeedsSetup) {
+            setShowSetupModal(true);
+            setLoading(false);
+          } else {
+            // Teams are properly configured - proceed to main app
+            router.push('/clientes');
+          }
         }
       } else {
         // Se ainda não tem ProfileAdmin, mostrar o modal novamente
