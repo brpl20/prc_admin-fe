@@ -122,5 +122,5 @@ MailJet: Not used in Dev mode, we will be implemented in Production mode.
   - /Users/brpl/code/prc_admin-fe/images/second.png # second screeen => Team creation with team name and subdomain
 - So the output should be an straight and clean register processes
 - Use end2end testing to ensure the registration process is working as expected.
-- Let me know when you finish the task, testesd the output and know that everything is working.
+- Let me know when you finish the task, tested the output and know that everything is working.
 - Dont advance further on the task, keep working only on the first registration process and we will handle the team creation and the user details later.
