@@ -1,4 +1,5 @@
 import api from './api';
+import { getSession } from 'next-auth/react';
 import {
   ITeam,
   ICreateTeamData,
@@ -24,13 +25,29 @@ export interface IInviteData {
 }
 
 class TeamService {
+  // Helper method to check authentication before API calls
+  private async ensureAuthenticated(): Promise<void> {
+    const session = await getSession();
+    
+    if (!session || !session.token || !session.email) {
+      throw new Error('User not authenticated - cannot access team data');
+    }
+    
+    // Additional check - ensure token is not empty string
+    if (typeof session.token !== 'string' || session.token.trim() === '') {
+      throw new Error('Invalid authentication token');
+    }
+  }
+
   // Team CRUD operations
   async listTeams(): Promise<ITeam[]> {
+    await this.ensureAuthenticated();
     const response = await api.get('/teams');
     return response.data;
   }
 
   async getTeam(id: number): Promise<ITeam> {
+    await this.ensureAuthenticated();
     const response = await api.get(`/teams/${id}`);
     return response.data;
   }
@@ -40,6 +57,7 @@ class TeamService {
   }
 
   async createTeam(data: ICreateTeamData): Promise<ITeam> {
+    await this.ensureAuthenticated();
     const formData = new FormData();
     formData.append('team[name]', data.name);
     if (data.description) {
@@ -58,9 +76,13 @@ class TeamService {
   }
 
   async updateTeam(id: number, data: IUpdateTeamData): Promise<ITeam> {
+    await this.ensureAuthenticated();
     const formData = new FormData();
     if (data.name) {
       formData.append('team[name]', data.name);
+    }
+    if (data.subdomain) {
+      formData.append('team[subdomain]', data.subdomain);
     }
     if (data.description) {
       formData.append('team[description]', data.description);
@@ -81,12 +103,14 @@ class TeamService {
   }
 
   async deleteTeam(id: number): Promise<void> {
+    await this.ensureAuthenticated();
     await api.delete(`/teams/${id}`);
   }
 
   // Team Member operations
   async getTeamMembers(teamId: number) {
     try {
+      await this.ensureAuthenticated();
       const response = await api.get(`/teams/${teamId}/members`);
       return response.data;
     } catch (error) {
@@ -128,6 +152,7 @@ class TeamService {
   // Team switching
   async switchTeam(teamId: number) {
     try {
+      await this.ensureAuthenticated();
       const response = await api.post(`/teams/${teamId}/switch`);
       return response.data;
     } catch (error) {
@@ -138,6 +163,7 @@ class TeamService {
   // Get current team
   async getCurrentTeam() {
     try {
+      await this.ensureAuthenticated();
       // Get all teams - the backend returns teams ordered by membership,
       // so the first team should be the current/primary team
       const response = await api.get('/teams');

@@ -100,6 +100,7 @@ export interface ICreateTeamData {
 
 export interface IUpdateTeamData {
   name?: string;
+  subdomain?: string;
   description?: string;
   logo?: File;
   settings?: ITeam['settings'];
