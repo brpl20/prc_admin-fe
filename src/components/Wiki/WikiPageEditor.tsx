@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, Paper, Button, FormControlLabel, Switch, Autocomplete, Chip, Typography, Divider, Alert, Tab, Tabs } from '@mui/material';
-import { Save, Cancel, Preview } from '@mui/icons-material';
+import { Box, TextField, Paper, Button, FormControlLabel, Switch, Autocomplete, Chip, Typography, Divider, Alert, Tab, Tabs, Tooltip, IconButton } from '@mui/material';
+import { Save, Cancel, Preview, Info, Add } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import dynamic from 'next/dynamic';
 import WikiService, { WikiPage, WikiCategory, WikiPageParams } from '@/services/wiki';
@@ -45,6 +45,8 @@ const WikiPageEditor: React.FC<WikiPageEditorProps> = ({ teamId, page, onSave, o
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
+  const [showNewCategory, setShowNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   const { control, handleSubmit, watch, formState: { errors } } = useForm<WikiPageParams>({
     defaultValues: {
@@ -99,6 +101,24 @@ const WikiPageEditor: React.FC<WikiPageEditorProps> = ({ teamId, page, onSave, o
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    
+    try {
+      const newCategory = await WikiService.createCategory(teamId, {
+        name: newCategoryName.trim(),
+        slug: newCategoryName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+      });
+      
+      setCategories([...categories, newCategory]);
+      setNewCategoryName('');
+      setShowNewCategory(false);
+    } catch (err) {
+      console.error('Failed to create category:', err);
+      setError('Erro ao criar categoria');
+    }
   };
 
   const modules = {
@@ -167,37 +187,93 @@ const WikiPageEditor: React.FC<WikiPageEditorProps> = ({ teamId, page, onSave, o
                 value={pages.find(p => p.id === field.value) || null}
                 onChange={(_, value) => field.onChange(value?.id || null)}
                 renderInput={(params) => (
-                  <TextField {...params} label="Página Pai" />
+                  <TextField 
+                    {...params} 
+                    label="Página Pai (opcional)" 
+                    helperText="Selecione uma página existente para criar uma hierarquia"
+                  />
                 )}
               />
             )}
           />
 
-          <Controller
-            name="categoryIds"
-            control={control}
-            render={({ field }) => (
-              <Autocomplete
-                multiple
-                options={categories}
-                getOptionLabel={(option) => option.name}
-                value={categories.filter(c => field.value?.includes(c.id))}
-                onChange={(_, value) => field.onChange(value.map(v => v.id))}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip
-                      label={option.name}
-                      {...getTagProps({ index })}
-                      style={{ backgroundColor: option.color || undefined }}
-                    />
-                  ))
-                }
-                renderInput={(params) => (
-                  <TextField {...params} label="Categorias" />
+          <Box>
+            <Box display="flex" alignItems="flex-start" gap={1}>
+              <Controller
+                name="categoryIds"
+                control={control}
+                render={({ field }) => (
+                  <Autocomplete
+                    multiple
+                    fullWidth
+                    options={categories}
+                    getOptionLabel={(option) => option.name}
+                    value={categories.filter(c => field.value?.includes(c.id))}
+                    onChange={(_, value) => field.onChange(value.map(v => v.id))}
+                    renderTags={(value, getTagProps) =>
+                      value.map((option, index) => (
+                        <Chip
+                          label={option.name}
+                          {...getTagProps({ index })}
+                          style={{ backgroundColor: option.color || undefined }}
+                        />
+                      ))
+                    }
+                    renderInput={(params) => (
+                      <TextField 
+                        {...params} 
+                        label="Categorias" 
+                        helperText="Selecione as categorias ou crie uma nova"
+                      />
+                    )}
+                  />
                 )}
               />
+              <Tooltip title="Criar nova categoria">
+                <IconButton 
+                  onClick={() => setShowNewCategory(!showNewCategory)}
+                  color="primary"
+                  sx={{ mt: 1 }}
+                >
+                  <Add />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            
+            {showNewCategory && (
+              <Box display="flex" gap={1} mt={2}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Nome da nova categoria"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleCreateCategory();
+                    }
+                  }}
+                />
+                <Button 
+                  variant="contained" 
+                  onClick={handleCreateCategory}
+                  disabled={!newCategoryName.trim()}
+                >
+                  Criar
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  onClick={() => {
+                    setShowNewCategory(false);
+                    setNewCategoryName('');
+                  }}
+                >
+                  Cancelar
+                </Button>
+              </Box>
             )}
-          />
+          </Box>
 
           <Box>
             <Tabs value={tabValue} onChange={handleTabChange}>
@@ -275,21 +351,31 @@ const WikiPageEditor: React.FC<WikiPageEditorProps> = ({ teamId, page, onSave, o
             </TabPanel>
           </Box>
 
-          <Controller
-            name="isPublished"
-            control={control}
-            render={({ field }) => (
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={field.value}
-                    onChange={field.onChange}
-                  />
-                }
-                label="Publicar página"
-              />
-            )}
-          />
+          <Box display="flex" alignItems="center" gap={1}>
+            <Controller
+              name="isPublished"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={field.value}
+                      onChange={field.onChange}
+                    />
+                  }
+                  label="Publicar página"
+                />
+              )}
+            />
+            <Tooltip 
+              title="Páginas publicadas ficam visíveis para todos os membros do time. Páginas não publicadas são rascunhos visíveis apenas para você."
+              arrow
+            >
+              <IconButton size="small">
+                <Info fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
 
           {page && (
             <Controller
