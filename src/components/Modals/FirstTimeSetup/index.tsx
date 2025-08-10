@@ -69,10 +69,8 @@ const FirstTimeSetupModal: React.FC<FirstTimeSetupModalProps> = ({
         },
       }}
     >
-      <DialogTitle>
-        <Typography variant="h5" fontWeight="bold">
-          Bem-vindo ao ProcStudio!
-        </Typography>
+      <DialogTitle sx={{ fontWeight: 'bold' }}>
+        Bem-vindo ao ProcStudio!
       </DialogTitle>
       
       <DialogContent>
