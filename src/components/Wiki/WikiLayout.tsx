@@ -190,37 +190,31 @@ const WikiLayout: React.FC<WikiLayoutProps> = ({ children, teamId }) => {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <AppBar
-        position="fixed"
+      <Box
+        component="main"
         sx={{
+          flexGrow: 1,
+          p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
+          pt: 2,
         }}
       >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            Wiki
-          </Typography>
-        </Toolbar>
-      </AppBar>
+        {children}
+      </Box>
 
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        sx={{ 
+          width: { sm: drawerWidth }, 
+          flexShrink: { sm: 0 },
+          order: 2
+        }}
       >
         <Drawer
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}
+          anchor="right"
           ModalProps={{
             keepMounted: true,
           }}
@@ -233,9 +227,16 @@ const WikiLayout: React.FC<WikiLayoutProps> = ({ children, teamId }) => {
         </Drawer>
         <Drawer
           variant="permanent"
+          anchor="right"
           sx={{
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': { 
+              boxSizing: 'border-box', 
+              width: drawerWidth,
+              position: 'relative',
+              height: '100vh',
+              top: 0
+            },
           }}
           open
         >
@@ -243,17 +244,25 @@ const WikiLayout: React.FC<WikiLayoutProps> = ({ children, teamId }) => {
         </Drawer>
       </Box>
 
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          mt: 8,
+      {/* Mobile menu button */}
+      <IconButton
+        color="primary"
+        aria-label="open drawer"
+        onClick={handleDrawerToggle}
+        sx={{ 
+          display: { sm: 'none' },
+          position: 'fixed',
+          top: 16,
+          right: 16,
+          zIndex: 1300,
+          bgcolor: 'background.paper',
+          '&:hover': {
+            bgcolor: 'background.default',
+          }
         }}
       >
-        {children}
-      </Box>
+        <MenuIcon />
+      </IconButton>
     </Box>
   );
 };

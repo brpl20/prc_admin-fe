@@ -1,9 +1,21 @@
 import { useSession } from 'next-auth/react';
 import { useMemo, useRef, useCallback } from 'react';
 
+// Define session type based on our NextAuth configuration
+interface OptimizedSessionData {
+  id: string;
+  email: string;
+  name?: string;
+  last_name?: string;
+  teams?: any[];
+  current_team?: any;
+  team_role?: string;
+  needs_profile_setup?: boolean;
+}
+
 /**
  * Optimized session hook that reduces unnecessary re-renders and API calls
- * Caches session data and provides stable references
+ * Caches session data and provides stable references with proper type safety
  */
 export const useOptimizedSession = () => {
   const { data: session, status, update } = useSession();
@@ -20,26 +32,28 @@ export const useOptimizedSession = () => {
   }
 
   // Memoize session properties to prevent unnecessary re-renders
-  const optimizedSession = useMemo(() => {
+  const optimizedSession = useMemo((): OptimizedSessionData | null => {
     if (!session) return null;
     
+    // Type-safe access to session properties (NextAuth returns user object directly)
+    const sessionData = session as any;
+    
     return {
-      id: session.id,
-      email: session.email,
-      name: session.name,
-      last_name: session.last_name,
-      teams: session.teams || [],
-      current_team: session.current_team,
-      team_role: session.team_role,
-      needs_profile_setup: session.needs_profile_setup,
-      // Add any other properties you need
+      id: sessionData.id || '',
+      email: sessionData.email || '',
+      name: sessionData.name || '',
+      last_name: sessionData.last_name || '',
+      teams: sessionData.teams || [],
+      current_team: sessionData.current_team || null,
+      team_role: sessionData.team_role || '',
+      needs_profile_setup: sessionData.needs_profile_setup || false,
     };
-  }, [session?.id, session?.email, session?.name, session?.last_name, session?.teams, session?.current_team, session?.team_role, session?.needs_profile_setup]);
+  }, [session]);
 
   // Memoize frequently used computed values
   const isAuthenticated = useMemo(() => {
-    return Boolean(session?.id && session?.email);
-  }, [session?.id, session?.email]);
+    return Boolean(optimizedSession?.id && optimizedSession?.email);
+  }, [optimizedSession?.id, optimizedSession?.email]);
 
   const isLoading = useMemo(() => {
     return status === 'loading';
@@ -49,7 +63,7 @@ export const useOptimizedSession = () => {
     return status !== 'loading';
   }, [status]);
 
-  // Stable update function
+  // Stable update function with proper typing
   const stableUpdate = useCallback((data?: any) => {
     return update(data);
   }, [update]);
