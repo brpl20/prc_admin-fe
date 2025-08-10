@@ -225,6 +225,18 @@ const TeamSetup: React.FC = () => {
         return;
       }
 
+      console.log('=== FINAL SETUP STEP ===');
+      console.log('Current team:', currentTeam);
+      console.log('Form data:', teamData);
+
+      // Simple validation: if we have a team with name and subdomain, it's configured
+      if (currentTeam.name && currentTeam.subdomain && 
+          currentTeam.name.trim() !== '' && currentTeam.subdomain.trim() !== '') {
+        console.log('✅ Team has basic configuration, proceeding to main app');
+        router.push('/clientes');
+        return;
+      }
+
       // TODO: Link office to team if user has an office
       // if (userOffice && currentTeam) {
       //   await api.post(`/teams/${currentTeam.id}/offices`, {
@@ -241,40 +253,63 @@ const TeamSetup: React.FC = () => {
         const setupTeam = updatedTeams.find(team => team.id === currentTeam.id);
         
         if (setupTeam) {
+          console.log('=== TEAM SETUP VERIFICATION START ===');
+          console.log('Current team data:', setupTeam);
+          console.log('Team data from form:', teamData);
+          
           // Use the existing validation logic instead of fragile timestamp comparison
           const teamStillNeedsSetup = doesTeamNeedSetup(setupTeam);
+          console.log('Team still needs setup?', teamStillNeedsSetup);
           
           if (!teamStillNeedsSetup) {
             // Team is properly configured - success!
-            console.log('Team setup completed successfully - team is properly configured');
+            console.log('✅ Team setup completed successfully - team is properly configured');
             router.push('/clientes');
           } else {
             // Team still needs setup - likely the update didn't work properly
-            console.log('Team still needs setup after configuration attempt');
+            console.log('❌ Team still needs setup after configuration attempt, attempting force update...');
             
             // Force a simple update to ensure the team gets an updated_at timestamp
             try {
-              console.log('Attempting to force team update to complete setup...');
+              console.log('Attempting to force team update with data:', {
+                name: setupTeam.name,
+                subdomain: setupTeam.subdomain || teamData.subdomain,
+              });
+              
               await teamService.updateTeam(currentTeam.id, {
                 name: setupTeam.name, // Keep the same name
                 subdomain: setupTeam.subdomain || teamData.subdomain, // Ensure subdomain is set
               });
               
+              console.log('Force update completed, re-verifying...');
+              
               // Now check again
               const reVerifiedTeams = await teamService.listTeams();
               const reVerifiedTeam = reVerifiedTeams.find(team => team.id === currentTeam.id);
               
-              if (reVerifiedTeam && !doesTeamNeedSetup(reVerifiedTeam)) {
-                console.log('Team setup completed successfully after forced update');
-                router.push('/clientes');
+              console.log('Re-verified team data:', reVerifiedTeam);
+              
+              if (reVerifiedTeam) {
+                const stillNeedsSetupAfterUpdate = doesTeamNeedSetup(reVerifiedTeam);
+                console.log('Team still needs setup after force update?', stillNeedsSetupAfterUpdate);
+                
+                if (!stillNeedsSetupAfterUpdate) {
+                  console.log('✅ Team setup completed successfully after forced update');
+                  router.push('/clientes');
+                } else {
+                  console.log('❌ Team still needs setup even after force update - this shouldn\'t happen');
+                  setError('Parece que a configuração não foi salva corretamente. Por favor, verifique os dados e tente novamente.');
+                }
               } else {
-                setError('Parece que a configuração não foi salva corretamente. Por favor, verifique os dados e tente novamente.');
+                console.log('❌ Team not found after force update');
+                setError('Erro interno: Time não encontrado após atualização. Por favor, recarregue a página.');
               }
             } catch (forceUpdateError) {
               console.error('Error in force update:', forceUpdateError);
               setError('Erro ao finalizar a configuração. Por favor, tente novamente.');
             }
           }
+          console.log('=== TEAM SETUP VERIFICATION END ===');
         } else {
           setError('Erro interno: Time não encontrado após configuração. Por favor, recarregue a página.');
         }
