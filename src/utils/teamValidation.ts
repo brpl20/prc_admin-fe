@@ -20,10 +20,17 @@ export const isTeamMockOrUnconfigured = (team: ITeam): boolean => {
   const createdAt = new Date(team.created_at);
   const updatedAt = new Date(team.updated_at);
   
-  // If updated_at is the same as created_at (within 1 second tolerance for DB timing)
+  // If updated_at is the same as created_at (within a more generous 5 second tolerance for DB timing)
   // then user hasn't configured the team yet
   const timeDifference = Math.abs(updatedAt.getTime() - createdAt.getTime());
-  const isUnconfigured = timeDifference <= 1000; // 1 second tolerance
+  const isUnconfigured = timeDifference <= 5000; // 5 second tolerance for better reliability
+
+  console.log(`Team ${team.name} timestamp check:`, {
+    created_at: team.created_at,
+    updated_at: team.updated_at,
+    timeDifference,
+    isUnconfigured
+  });
 
   return isUnconfigured;
 };
@@ -37,8 +44,18 @@ export const isTeamMockOrUnconfigured = (team: ITeam): boolean => {
  * @returns boolean indicating if team setup modal should be shown
  */
 export const doesTeamNeedSetup = (team: ITeam): boolean => {
-  // Check if it's a mock team
-  if (isTeamMockOrUnconfigured(team)) {
+  console.log(`Checking if team '${team.name}' needs setup:`, {
+    id: team.id,
+    name: team.name,
+    subdomain: team.subdomain,
+    created_at: team.created_at,
+    updated_at: team.updated_at
+  });
+
+  // Check if it's a mock team based on timestamps
+  const isMockTeam = isTeamMockOrUnconfigured(team);
+  if (isMockTeam) {
+    console.log(`Team '${team.name}' needs setup: is mock/unconfigured team`);
     return true;
   }
 
@@ -49,18 +66,37 @@ export const doesTeamNeedSetup = (team: ITeam): boolean => {
     /^Default\s+/i,        // "Default Something"
     /^Untitled/i,          // "Untitled"
     /^New\s+Team/i,        // "New Team"
+    /^Temporary\s+/i,      // "Temporary Something"
+    /^Auto[\s-]?Generated/i, // "Auto Generated" or "Auto-Generated"
   ];
 
   const hasGenericName = genericNamePatterns.some(pattern => pattern.test(team.name));
   if (hasGenericName) {
+    console.log(`Team '${team.name}' needs setup: has generic name`);
     return true;
   }
 
   // Check if missing critical configuration
   if (!team.subdomain || team.subdomain.trim() === '') {
+    console.log(`Team '${team.name}' needs setup: missing subdomain`);
     return true;
   }
 
+  // Check if subdomain looks generic/auto-generated
+  const genericSubdomainPatterns = [
+    /^team-\d+$/i,         // "team-123"
+    /^mock-/i,             // "mock-something"
+    /^temp-/i,             // "temp-something"
+    /^auto-/i,             // "auto-something"
+  ];
+
+  const hasGenericSubdomain = team.subdomain && genericSubdomainPatterns.some(pattern => pattern.test(team.subdomain));
+  if (hasGenericSubdomain) {
+    console.log(`Team '${team.name}' needs setup: has generic subdomain '${team.subdomain}'`);
+    return true;
+  }
+
+  console.log(`Team '${team.name}' appears to be properly configured`);
   return false; // Team appears to be properly configured
 };
 
