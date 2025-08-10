@@ -61,9 +61,9 @@ const getAllProfileCustomer = async (typeOfParams: string) => {
       } catch (profileError: any) {
         if (profileError.response?.status === 401 || profileError.response?.status === 404) {
           // ProfileAdmin doesn't exist - this is expected for first-time users
-          const error = new Error('PROFILE_ADMIN_REQUIRED: User needs to complete profile setup before accessing customers');
-          error.name = 'PROFILE_ADMIN_REQUIRED';
-          throw error;
+          const profileError = new Error('PROFILE_ADMIN_REQUIRED: User needs to complete profile setup before accessing customers');
+          profileError.name = 'PROFILE_ADMIN_REQUIRED';
+          throw profileError;
         }
         // Different error, re-throw original
         throw error;
