@@ -1,10 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
-import { getSession } from 'next-auth/react';
+import { getSession, useSession } from 'next-auth/react';
 import { Box, CircularProgress, Typography } from '@mui/material';
-import { useOptimizedSession } from '@/hooks/useOptimizedSession';
-import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import teamService from '@/services/teams';
 import FirstTimeSetupModal from '@/components/Modals/FirstTimeSetup';
 import ProfileSetupModal from '@/components/ProfileSetupModal';
@@ -13,8 +11,7 @@ import { doesTeamNeedSetup, getTeamSetupReason } from '@/utils/teamValidation';
 
 const TeamCheckPage = () => {
   const router = useRouter();
-  const { data: session, isReady, isAuthenticated } = useOptimizedSession();
-  const { measureApiCall } = usePerformanceMonitor('team-check');
+  const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
@@ -27,10 +24,7 @@ const TeamCheckPage = () => {
       // First, always check if ProfileAdmin exists (only API call we make)
       let hasProfileAdmin = false;
       try {
-        const profileResponse = await measureApiCall(
-          () => api.get('/profile_admins/me'), 
-          'profile-admin-check'
-        );
+        const profileResponse = await api.get('/profile_admins/me');
         hasProfileAdmin = Boolean(profileResponse);
       } catch (error) {
         console.log('ProfileAdmin not found - expected for new users');
@@ -46,10 +40,7 @@ const TeamCheckPage = () => {
 
       // ProfileAdmin exists, check if we have properly configured teams
       try {
-        const teams = await measureApiCall(
-          () => teamService.listTeams(), 
-          'teams-list'
-        );
+        const teams = await teamService.listTeams();
         
         if (!teams || teams.length === 0) {
           // No teams at all - show team setup
@@ -84,17 +75,17 @@ const TeamCheckPage = () => {
       setShowProfileSetup(true);
       setLoading(false);
     }
-  }, [session, router, measureApiCall]);
+  }, [session, router]);
 
   useEffect(() => {
-    if (isReady && isAuthenticated && !hasChecked) {
+    if (status === 'authenticated' && session && !hasChecked) {
       checkUserSetup();
       setHasChecked(true);
-    } else if (isReady && !isAuthenticated) {
+    } else if (status === 'unauthenticated') {
       // Not authenticated, redirect to login
       router.push('/login');
     }
-  }, [isReady, isAuthenticated, hasChecked, checkUserSetup, router]);
+  }, [status, session, hasChecked, checkUserSetup, router]);
 
 
   const handleStartSetup = () => {
