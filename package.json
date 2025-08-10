@@ -5,8 +5,10 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
+    "build:analyze": "ANALYZE=true next build",
     "start": "next start -p 3001",
-    "lint": "next lint"
+    "lint": "next lint",
+    "perf": "npm run build && npm run start"
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.7.4",

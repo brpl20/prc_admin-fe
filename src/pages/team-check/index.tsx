@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
-import { getSession, useSession } from 'next-auth/react';
+import { getSession } from 'next-auth/react';
 import { Box, CircularProgress, Typography } from '@mui/material';
+import { useOptimizedSession } from '@/hooks/useOptimizedSession';
 import teamService from '@/services/teams';
 import FirstTimeSetupModal from '@/components/Modals/FirstTimeSetup';
 import ProfileSetupModal from '@/components/ProfileSetupModal';
@@ -11,20 +12,13 @@ import { doesTeamNeedSetup, getTeamSetupReason } from '@/utils/teamValidation';
 
 const TeamCheckPage = () => {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, isReady, isAuthenticated } = useOptimizedSession();
   const [loading, setLoading] = useState(true);
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
 
-  useEffect(() => {
-    if (session && !hasChecked) {
-      checkUserSetup();
-      setHasChecked(true);
-    }
-  }, [session?.token, hasChecked]); // Só re-executar quando o token mudar e não foi verificado ainda
-
-  const checkUserSetup = async () => {
+  const checkUserSetup = useCallback(async () => {
     if (!session) return;
 
     try {
@@ -82,7 +76,18 @@ const TeamCheckPage = () => {
       setShowProfileSetup(true);
       setLoading(false);
     }
-  };
+  }, [session, router]);
+
+  useEffect(() => {
+    if (isReady && isAuthenticated && !hasChecked) {
+      checkUserSetup();
+      setHasChecked(true);
+    } else if (isReady && !isAuthenticated) {
+      // Not authenticated, redirect to login
+      router.push('/login');
+    }
+  }, [isReady, isAuthenticated, hasChecked, checkUserSetup, router]);
+
 
   const handleStartSetup = () => {
     router.push('/team-setup');
