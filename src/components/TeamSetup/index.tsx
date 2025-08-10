@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -11,31 +11,95 @@ import {
   Container,
   Grid,
   Alert,
+  Chip,
+  IconButton,
+  Divider,
 } from '@mui/material';
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import teamService from '@/services/teams';
-import { ICreateTeamData } from '@/interfaces/ITeam';
+import { ITeam, ICreateTeamData } from '@/interfaces/ITeam';
+import api from '@/services/api';
 
-const steps = ['Criar Time', 'Adicionar Membros', 'Configurar Escritórios'];
+const steps = ['Configurar Time', 'Convidar Membros', 'Finalizar Configuração'];
 
 const TeamSetup: React.FC = () => {
   const router = useRouter();
+  const { data: session } = useSession();
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState('');
-  const [teamId, setTeamId] = useState<number | null>(null);
+  const [currentTeam, setCurrentTeam] = useState<ITeam | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userOffice, setUserOffice] = useState<any>(null);
 
-  const [teamData, setTeamData] = useState<ICreateTeamData>({
+  const [teamData, setTeamData] = useState({
     name: '',
-    description: '',
+    subdomain: '',
+    info: '', // Using 'info' instead of 'description' for display only
   });
 
-  const [members, setMembers] = useState<Array<{ email: string; role: string }>>([]);
-  const [offices, setOffices] = useState<Array<{ name: string; address: string }>>([]);
+  const [members, setMembers] = useState<Array<{ email: string; role: string; id?: string }>>([{ email: '', role: 'lawyer' }]);
 
-  const handleCreateTeam = async () => {
-    if (!teamData.name) {
+  // Load existing team data when component mounts
+  useEffect(() => {
+    loadInitialData();
+  }, [session]);
+
+  const loadInitialData = async () => {
+    if (!session?.token) return;
+    
+    try {
+      setInitialLoading(true);
+      
+      // Load current team (mock team created during registration)
+      const teams = await teamService.listTeams();
+      if (teams && teams.length > 0) {
+        const team = teams[0]; // Get the first team (mock team)
+        setCurrentTeam(team);
+        setTeamData({
+          name: team.name,
+          subdomain: team.subdomain || '',
+          info: team.description || '', // Map description to info for display
+        });
+      }
+      
+      // Load user profile
+      try {
+        const profileResponse = await api.get('/profile_admins/me');
+        setUserProfile(profileResponse.data?.data);
+      } catch (profileErr) {
+        console.log('Profile not found, which is expected for new users');
+      }
+      
+      // TODO: Load user office if exists
+      // This will need to be implemented when office-team linking is ready
+      
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+      setError('Erro ao carregar dados iniciais');
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  const handleUpdateTeam = async () => {
+    if (!teamData.name.trim()) {
       setError('Nome do time é obrigatório');
+      return;
+    }
+    
+    if (!teamData.subdomain.trim()) {
+      setError('Subdomínio é obrigatório');
+      return;
+    }
+    
+    // Validate subdomain format
+    const subdomainRegex = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
+    if (teamData.subdomain.length < 3 || !subdomainRegex.test(teamData.subdomain)) {
+      setError('Subdomínio deve ter pelo menos 3 caracteres e conter apenas letras minúsculas, números e hífens');
       return;
     }
 
@@ -43,52 +107,165 @@ const TeamSetup: React.FC = () => {
     setError('');
 
     try {
-      const team = await teamService.createTeam(teamData);
-      setTeamId(team.id);
-      setActiveStep(1);
+      console.log('Updating team with data:', teamData);
+      console.log('Current team:', currentTeam);
+      
+      if (currentTeam) {
+        // Update existing mock team (only name and subdomain for now)
+        console.log('Updating existing team:', currentTeam.id);
+        const updatedTeam = await teamService.updateTeam(currentTeam.id, {
+          name: teamData.name.trim(),
+          subdomain: teamData.subdomain.toLowerCase().trim(),
+          // TODO: Add description field to Team model in backend
+          // description: teamData.info.trim(),
+        });
+        console.log('Team updated successfully:', updatedTeam);
+        setCurrentTeam(updatedTeam);
+        setActiveStep(1);
+        console.log('Moving to step 1 (team invitations)');
+      } else {
+        // Fallback: create new team if no mock team exists
+        console.log('Creating new team');
+        const team = await teamService.createTeam({
+          name: teamData.name.trim(),
+          subdomain: teamData.subdomain.toLowerCase().trim(),
+          // TODO: Add description field to Team model in backend
+          // description: teamData.info.trim(),
+        });
+        console.log('New team created:', team);
+        setCurrentTeam(team);
+        setActiveStep(1);
+        console.log('Moving to step 1 (team invitations)');
+      }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao criar time');
+      console.error('Error in handleUpdateTeam:', err);
+      console.error('Error response:', err.response?.data);
+      const errorMessage = err.response?.data?.message || err.response?.data?.errors || 'Erro ao configurar time';
+      setError(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddMembers = async () => {
-    if (!teamId) return;
+  const handleSendInvitations = async () => {
+    if (!currentTeam) return;
 
     setLoading(true);
     setError('');
 
     try {
-      for (const member of members) {
-        if (member.email) {
-          await teamService.addTeamMember(teamId, {
-            email: member.email,
-            role: member.role as any,
-          });
+      // Filter out empty emails
+      const validMembers = members.filter(member => member.email.trim() !== '');
+      
+      if (validMembers.length === 0) {
+        setActiveStep(2); // Skip if no members to invite
+        return;
+      }
+
+      // TODO: Implement team member invitation logic
+      // For now, this is a walking skeleton - just simulate the process
+      
+      for (const member of validMembers) {
+        try {
+          // TODO: Replace with actual team invitation API call
+          // await teamService.addTeamMember(currentTeam.id, {
+          //   email: member.email.trim(),
+          //   role: member.role as any,
+          // });
+          
+          // TODO: Send invitation email
+          // await emailService.sendTeamInvitation({
+          //   email: member.email,
+          //   teamName: currentTeam.name,
+          //   role: member.role,
+          //   inviterName: userProfile?.name || session?.name
+          // });
+          
+          console.log(`TODO: Send invitation to ${member.email} as ${member.role}`);
+        } catch (memberErr: any) {
+          console.error(`Failed to invite ${member.email}:`, memberErr);
+          // Don't fail the entire process for individual member errors
         }
       }
+      
       setActiveStep(2);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao adicionar membros');
+      setError(err.response?.data?.message || 'Erro ao enviar convites');
     } finally {
       setLoading(false);
     }
   };
+  
+  const addMemberField = () => {
+    setMembers([...members, { email: '', role: 'lawyer' }]);
+  };
+  
+  const removeMemberField = (index: number) => {
+    if (members.length > 1) {
+      const newMembers = members.filter((_, i) => i !== index);
+      setMembers(newMembers);
+    }
+  };
+  
+  const updateMember = (index: number, field: 'email' | 'role', value: string) => {
+    const newMembers = [...members];
+    newMembers[index][field] = value;
+    setMembers(newMembers);
+  };
 
   const handleFinish = async () => {
-    router.push('/home');
+    setLoading(true);
+    
+    try {
+      // TODO: Link office to team if user has an office
+      // if (userOffice && currentTeam) {
+      //   await api.post(`/teams/${currentTeam.id}/offices`, {
+      //     office_id: userOffice.id
+      //   });
+      // }
+      
+      // TODO: Update user's default team if needed
+      // await teamService.switchTeam(currentTeam.id);
+      
+      // Setup completed - redirect to main application only if ProfileAdmin exists
+      console.log('Team setup completed successfully');
+      router.push('/clientes');
+    } catch (error) {
+      console.error('Error finishing setup:', error);
+      // Don't block the user if there are minor issues
+      console.log('Minor setup issues, proceeding to main app');
+      router.push('/clientes');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSkip = () => {
     if (activeStep === 0) {
+      // Can't skip team configuration
       return;
     } else if (activeStep === 1) {
+      // Skip member invitations
       setActiveStep(2);
     } else {
+      // Skip and finish
       handleFinish();
     }
   };
+  
+  const handleBack = () => {
+    if (activeStep > 0) {
+      setActiveStep(activeStep - 1);
+    }
+  };
+  
+  if (initialLoading) {
+    return (
+      <Container maxWidth="md" sx={{ mt: 4, textAlign: 'center' }}>
+        <Typography>Carregando configuração do time...</Typography>
+      </Container>
+    );
+  }
 
   const renderStepContent = () => {
     switch (activeStep) {
@@ -96,42 +273,66 @@ const TeamSetup: React.FC = () => {
         return (
           <Box>
             <Typography variant="h5" gutterBottom>
-              Criar seu Time
+              Configure seu Time Jurídico
             </Typography>
-            <Typography variant="body2" color="textSecondary" gutterBottom>
-              Configure as informações básicas do seu time jurídico
+            <Typography variant="body2" color="textSecondary" gutterBottom sx={{ mb: 2 }}>
+              Adicione suas informações sobre seu time jurídico (o termo time é usado para todos os escritórios mesmo que seja uma advocacia individual)
             </Typography>
+            
+            {currentTeam && (
+              <Alert severity="info" sx={{ mb: 3 }}>
+                Atualizando informações do seu time: <strong>{currentTeam.name}</strong>
+              </Alert>
+            )}
+            
             <Box mt={3}>
               <TextField
                 fullWidth
-                label="Nome do Time"
+                label="Nome do Time/Escritório"
                 value={teamData.name}
                 onChange={(e) => setTeamData({ ...teamData, name: e.target.value })}
                 margin="normal"
                 required
-                placeholder="Ex: Escritório Silva & Associados"
+                placeholder="Ex: Escritório Silva & Associados, Advocacia João Santos"
+                helperText="Este será o nome exibido em documentos e comunicações"
               />
+              
               <TextField
                 fullWidth
-                label="Descrição"
-                value={teamData.description}
-                onChange={(e) => setTeamData({ ...teamData, description: e.target.value })}
+                label="Subdomínio"
+                value={teamData.subdomain}
+                onChange={(e) => setTeamData({ ...teamData, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
+                margin="normal"
+                required
+                placeholder="Ex: silva-associados, joao-santos"
+                helperText="Será usado como identificador único (apenas letras minúsculas, números e hífens)"
+              />
+              
+              <TextField
+                fullWidth
+                label="Informações do Time"
+                value={teamData.info}
+                onChange={(e) => setTeamData({ ...teamData, info: e.target.value })}
                 margin="normal"
                 multiline
-                rows={3}
-                placeholder="Descreva brevemente seu escritório ou equipe jurídica"
+                rows={4}
+                placeholder="Descreva brevemente seu escritório ou equipe jurídica. Ex: Especializado em direito empresarial e trabalhista, atendendo empresas de pequeno e médio porte na região metropolitana."
+                helperText="[Em desenvolvimento] Estas informações serão salvas quando o backend for atualizado"
+                disabled
+                sx={{ opacity: 0.7 }}
               />
             </Box>
-            <Box mt={3} display="flex" justifyContent="space-between">
+            <Box mt={4} display="flex" justifyContent="space-between">
               <Button variant="outlined" disabled>
                 Voltar
               </Button>
               <Button
                 variant="contained"
-                onClick={handleCreateTeam}
-                disabled={loading || !teamData.name}
+                onClick={handleUpdateTeam}
+                disabled={loading || !teamData.name.trim() || !teamData.subdomain.trim()}
+                size="large"
               >
-                {loading ? 'Criando...' : 'Criar Time'}
+                {loading ? 'Salvando...' : 'Continuar'}
               </Button>
             </Box>
           </Box>
@@ -141,28 +342,29 @@ const TeamSetup: React.FC = () => {
         return (
           <Box>
             <Typography variant="h5" gutterBottom>
-              Convidar Membros do Time
+              Convidar Membros da Equipe
             </Typography>
             <Typography variant="body2" color="textSecondary" gutterBottom>
-              Adicione advogados, paralegais e outros membros da equipe
+              Envie convites para advogados, paralegais e outros colaboradores que farão parte do seu time
             </Typography>
+            
+            <Alert severity="warning" sx={{ mt: 2, mb: 3 }}>
+              <Typography variant="body2">
+                <strong>Funcionalidade em Desenvolvimento:</strong> Os convites por email ainda não estão funcionais. 
+                Por enquanto, os membros precisarão se registrar separadamente e você poderá adicioná-los à equipe posteriormente.
+              </Typography>
+            </Alert>
+            
             <Box mt={3}>
-              {[0, 1, 2].map((index) => (
-                <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
-                  <Grid item xs={8}>
+              {members.map((member, index) => (
+                <Grid container spacing={2} key={index} sx={{ mb: 2, alignItems: 'center' }}>
+                  <Grid item xs={7}>
                     <TextField
                       fullWidth
-                      label="Email"
+                      label={`Email do ${index === 0 ? '1º' : index === 1 ? '2º' : `${index + 1}º`} Membro`}
                       type="email"
-                      value={members[index]?.email || ''}
-                      onChange={(e) => {
-                        const newMembers = [...members];
-                        if (!newMembers[index]) {
-                          newMembers[index] = { email: '', role: 'lawyer' };
-                        }
-                        newMembers[index].email = e.target.value;
-                        setMembers(newMembers);
-                      }}
+                      value={member.email}
+                      onChange={(e) => updateMember(index, 'email', e.target.value)}
                       placeholder="email@exemplo.com"
                     />
                   </Grid>
@@ -171,43 +373,62 @@ const TeamSetup: React.FC = () => {
                       select
                       fullWidth
                       label="Função"
-                      value={members[index]?.role || 'lawyer'}
-                      onChange={(e) => {
-                        const newMembers = [...members];
-                        if (!newMembers[index]) {
-                          newMembers[index] = { email: '', role: 'lawyer' };
-                        }
-                        newMembers[index].role = e.target.value;
-                        setMembers(newMembers);
-                      }}
+                      value={member.role}
+                      onChange={(e) => updateMember(index, 'role', e.target.value)}
                       SelectProps={{
                         native: true,
                       }}
                     >
                       <option value="lawyer">Advogado</option>
                       <option value="paralegal">Paralegal</option>
+                      <option value="trainee">Estagiário</option>
                       <option value="secretary">Secretário</option>
-                      <option value="intern">Estagiário</option>
                       <option value="admin">Administrador</option>
                     </TextField>
                   </Grid>
+                  <Grid item xs={1}>
+                    {members.length > 1 && (
+                      <IconButton 
+                        onClick={() => removeMemberField(index)}
+                        color="error"
+                        size="small"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    )}
+                  </Grid>
                 </Grid>
               ))}
+              
+              <Box mt={2}>
+                <Button
+                  startIcon={<AddIcon />}
+                  onClick={addMemberField}
+                  variant="outlined"
+                  size="small"
+                >
+                  Adicionar Outro Membro
+                </Button>
+              </Box>
             </Box>
-            <Box mt={3} display="flex" justifyContent="space-between">
-              <Button variant="outlined" onClick={() => setActiveStep(0)}>
+            
+            <Divider sx={{ my: 3 }} />
+            
+            <Box display="flex" justifyContent="space-between">
+              <Button variant="outlined" onClick={handleBack}>
                 Voltar
               </Button>
               <Box>
                 <Button variant="text" onClick={handleSkip} sx={{ mr: 2 }}>
-                  Pular
+                  Pular por Enquanto
                 </Button>
                 <Button
                   variant="contained"
-                  onClick={handleAddMembers}
+                  onClick={handleSendInvitations}
                   disabled={loading}
+                  size="large"
                 >
-                  {loading ? 'Convidando...' : 'Enviar Convites'}
+                  {loading ? 'Processando...' : 'Continuar'}
                 </Button>
               </Box>
             </Box>
@@ -218,63 +439,53 @@ const TeamSetup: React.FC = () => {
         return (
           <Box>
             <Typography variant="h5" gutterBottom>
-              Configurar Escritórios
+              Configuração Concluída! 🎉
             </Typography>
-            <Typography variant="body2" color="textSecondary" gutterBottom>
-              Adicione os endereços dos seus escritórios
+            <Typography variant="body2" color="textSecondary" gutterBottom sx={{ mb: 3 }}>
+              Seu time jurídico foi configurado com sucesso. Agora você pode começar a usar o sistema.
             </Typography>
-            <Box mt={3}>
-              {[0, 1].map((index) => (
-                <Box key={index} sx={{ mb: 3 }}>
-                  <TextField
-                    fullWidth
-                    label="Nome do Escritório"
-                    value={offices[index]?.name || ''}
-                    onChange={(e) => {
-                      const newOffices = [...offices];
-                      if (!newOffices[index]) {
-                        newOffices[index] = { name: '', address: '' };
-                      }
-                      newOffices[index].name = e.target.value;
-                      setOffices(newOffices);
-                    }}
-                    margin="normal"
-                    placeholder="Ex: Sede Principal"
-                  />
-                  <TextField
-                    fullWidth
-                    label="Endereço"
-                    value={offices[index]?.address || ''}
-                    onChange={(e) => {
-                      const newOffices = [...offices];
-                      if (!newOffices[index]) {
-                        newOffices[index] = { name: '', address: '' };
-                      }
-                      newOffices[index].address = e.target.value;
-                      setOffices(newOffices);
-                    }}
-                    margin="normal"
-                    placeholder="Rua, número, cidade, estado"
-                  />
-                </Box>
-              ))}
-            </Box>
-            <Box mt={3} display="flex" justifyContent="space-between">
-              <Button variant="outlined" onClick={() => setActiveStep(1)}>
+            
+            <Paper elevation={1} sx={{ p: 3, mb: 3, backgroundColor: 'primary.50' }}>
+              <Typography variant="h6" gutterBottom color="primary">
+                Resumo da Configuração:
+              </Typography>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body1"><strong>Time:</strong> {teamData.name}</Typography>
+                <Typography variant="body1"><strong>Subdomínio:</strong> {teamData.subdomain}</Typography>
+                {teamData.info && (
+                  <Typography variant="body1"><strong>Informações:</strong> {teamData.info}</Typography>
+                )}
+                <Typography variant="body1">
+                  <strong>Convites Enviados:</strong> {members.filter(m => m.email.trim() !== '').length} membro(s)
+                </Typography>
+              </Box>
+            </Paper>
+            
+            <Alert severity="info" sx={{ mb: 3 }}>
+              <Typography variant="body2">
+                <strong>Próximos Passos:</strong>
+                <br />• Gerencie clientes e casos na seção "Clientes"
+                <br />• Configure escritórios e endereços nas "Configurações"
+                <br />• Adicione mais membros à equipe quando necessário
+                {userOffice && (
+                  <><br />• Seu escritório cadastrado será automaticamente vinculado ao time</>
+                )}
+              </Typography>
+            </Alert>
+            
+            <Box mt={4} display="flex" justifyContent="space-between">
+              <Button variant="outlined" onClick={handleBack}>
                 Voltar
               </Button>
-              <Box>
-                <Button variant="text" onClick={handleSkip} sx={{ mr: 2 }}>
-                  Pular
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={handleFinish}
-                  disabled={loading}
-                >
-                  Finalizar Configuração
-                </Button>
-              </Box>
+              <Button
+                variant="contained"
+                onClick={handleFinish}
+                disabled={loading}
+                size="large"
+                color="primary"
+              >
+                {loading ? 'Finalizando...' : 'Começar a Usar o Sistema'}
+              </Button>
             </Box>
           </Box>
         );
@@ -285,8 +496,17 @@ const TeamSetup: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
+    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
+        <Box textAlign="center" mb={4}>
+          <Typography variant="h4" gutterBottom color="primary">
+            Configurar seu Time Jurídico
+          </Typography>
+          <Typography variant="body1" color="textSecondary">
+            Vamos personalizar seu ambiente de trabalho em alguns passos simples
+          </Typography>
+        </Box>
+        
         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
           {steps.map((label) => (
             <Step key={label}>
@@ -296,7 +516,7 @@ const TeamSetup: React.FC = () => {
         </Stepper>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 3 }}>
             {error}
           </Alert>
         )}

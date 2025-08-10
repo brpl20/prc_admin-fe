@@ -3,6 +3,8 @@ import styles from './style.module.css';
 import Link from 'next/link';
 import Router from 'next/router';
 import React, { useContext, useEffect, useState } from 'react';
+import { GetServerSideProps } from 'next';
+import { getSession, useSession } from 'next-auth/react';
 
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import {
@@ -86,6 +88,8 @@ type AllCustomer = {
 };
 
 const Customers = () => {
+  const { data: session, status } = useSession();
+  
   const legend = [
     {
       id: 1,
@@ -286,46 +290,88 @@ const Customers = () => {
   };
 
   const getProfileCustomers = async () => {
-    const requestParams = getForStatus === 'active' ? '' : getForStatus;
+    // Verify authentication before making API calls
+    if (status === 'loading') {
+      return; // Wait for session to load
+    }
+    
+    if (!session || !session.token) {
+      console.error('No valid session found for API calls');
+      setIsLoading(false);
+      return;
+    }
+    
+    try {
+      const requestParams = getForStatus === 'active' ? '' : getForStatus;
 
-    const allProfileCustomers = await getAllProfileCustomer(requestParams);
-    const allCustomers = await getAllCustomers();
+      const allProfileCustomers = await getAllProfileCustomer(requestParams);
+      const allCustomers = await getAllCustomers();
 
-    setCustomerList(allCustomers.data);
+      setCustomerList(allCustomers.data);
 
-    const translatedCustomers = allProfileCustomers.data.map(
-      (profileCustomer: IProfileCustomer) => ({
-        ...profileCustomer,
-        attributes: {
-          ...profileCustomer.attributes,
-          customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
-        },
-      }),
-    );
-
-    translatedCustomers.forEach((translatedCustomer: TranslatedCustomer) => {
-      const matchingCustomer = allCustomers.data.find(
-        (customer: ICustomer) =>
-          customer.attributes.profile_customer_id &&
-          customer.attributes.profile_customer_id === translatedCustomer.id,
+      const translatedCustomers = allProfileCustomers.data.map(
+        (profileCustomer: IProfileCustomer) => ({
+          ...profileCustomer,
+          attributes: {
+            ...profileCustomer.attributes,
+            customer_type: translateCustomerType(profileCustomer.attributes.customer_type),
+          },
+        }),
       );
 
-      if (matchingCustomer) {
-        translatedCustomer.attributes.access_email = matchingCustomer.attributes.access_email;
-      }
-    });
+      translatedCustomers.forEach((translatedCustomer: TranslatedCustomer) => {
+        const matchingCustomer = allCustomers.data.find(
+          (customer: ICustomer) =>
+            customer.attributes.profile_customer_id &&
+            customer.attributes.profile_customer_id === translatedCustomer.id,
+        );
 
-    setProfileCustomersList(translatedCustomers);
-    setProfileCustomersListFiltered(translatedCustomers);
-    setIsLoading(false);
+        if (matchingCustomer) {
+          translatedCustomer.attributes.access_email = matchingCustomer.attributes.access_email;
+        }
+      });
+
+      setProfileCustomersList(translatedCustomers);
+      setProfileCustomersListFiltered(translatedCustomers);
+    } catch (error: any) {
+      console.error('Error fetching customer data:', error);
+      
+      // Handle first-time user ProfileAdmin requirement
+      if (error.message?.includes('PROFILE_ADMIN_REQUIRED') || error.name === 'PROFILE_ADMIN_REQUIRED') {
+        console.log('First-time user detected - silently redirecting to team-check');
+        // Silent redirect without showing error message
+        Router.push('/team-check');
+        return;
+      }
+      
+      // Handle other authentication errors
+      if (error.response?.status === 401) {
+        console.error('Authentication failed - redirecting to login');
+        Router.push('/login');
+        return;
+      }
+      
+      setMessage('Erro ao carregar dados dos clientes. Por favor, tente novamente.');
+      setTypeMessage('error');
+      setOpenSnackbar(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    setIsLoading(true);
-
-    getProfileCustomers();
-    setCustomerForm({});
-  }, [refetch, getForStatus]);
+    // Only fetch data when session is ready and valid
+    if (status === 'loading') return; // Wait for session to load
+    
+    if (status === 'authenticated' && session?.token) {
+      setIsLoading(true);
+      getProfileCustomers();
+      setCustomerForm({});
+    } else if (status === 'unauthenticated') {
+      // Session is invalid, redirect to login
+      Router.push('/login');
+    }
+  }, [refetch, getForStatus, status, session?.token]);
 
   useEffect(() => {
     const updateScrollPosition = () => {
@@ -967,6 +1013,24 @@ const Customers = () => {
       </Layout>
     </>
   );
+};
+
+// Authentication protection
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getSession(context);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
 };
 
 export default Customers;

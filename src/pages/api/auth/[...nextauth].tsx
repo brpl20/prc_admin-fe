@@ -76,6 +76,18 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // Always redirect to team-check after login to avoid API verification issues
+      if (url === baseUrl || url === `${baseUrl}/`) {
+        return `${baseUrl}/team-check`;
+      }
+      // If already on team-check, stay there
+      if (url.includes('/team-check')) {
+        return url;
+      }
+      // For any other login, go to team-check
+      return `${baseUrl}/team-check`;
+    },
   },
 
   session: {

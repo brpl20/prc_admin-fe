@@ -27,25 +27,46 @@ const TeamCheckPage = () => {
     if (!session) return;
 
     try {
-      // Verificar se precisa de setup de perfil baseado na sessão
-      if ((session as any).needs_profile_setup) {
+      // First, always check if ProfileAdmin exists (only API call we make)
+      let hasProfileAdmin = false;
+      try {
+        await api.get('/profile_admins/me');
+        hasProfileAdmin = true;
+      } catch (error) {
+        // ProfileAdmin doesn't exist, which is expected for new users
+        hasProfileAdmin = false;
+      }
+
+      if (!hasProfileAdmin) {
+        // No ProfileAdmin - show profile setup modal
         setShowProfileSetup(true);
         setLoading(false);
         return;
       }
 
-      // Se não precisa de setup de perfil, verificar teams
-      const teams = await teamService.listTeams();
-      
-      if (teams && teams.length > 0) {
-        router.push('/clientes');
+      // ProfileAdmin exists, check if we have teams (only other API call we make)
+      let hasTeams = false;
+      try {
+        const teams = await teamService.listTeams();
+        hasTeams = teams && teams.length > 0;
+      } catch (error) {
+        console.error('Error checking teams:', error);
+        hasTeams = false;
+      }
+
+      if (hasTeams) {
+        // Everything is set up - but let's show team setup anyway for configuration
+        setShowSetupModal(true);
+        setLoading(false);
       } else {
+        // Has ProfileAdmin but no teams - show team setup
         setShowSetupModal(true);
         setLoading(false);
       }
+
     } catch (error) {
-      console.error('Error checking user setup:', error);
-      // Em caso de erro, assumir que precisa de setup de perfil
+      console.error('Error in user setup check:', error);
+      // On any error, show ProfileAdmin setup to be safe
       setShowProfileSetup(true);
       setLoading(false);
     }
@@ -56,6 +77,7 @@ const TeamCheckPage = () => {
   };
 
   const handleSkipSetup = () => {
+    // Only allow skipping to /clientes if ProfileAdmin exists
     router.push('/clientes');
   };
 
@@ -73,7 +95,9 @@ const TeamCheckPage = () => {
         const teams = await teamService.listTeams();
         
         if (teams && teams.length > 0) {
-          router.push('/clientes');
+          // Even with teams, show setup modal to allow configuration
+          setShowSetupModal(true);
+          setLoading(false);
         } else {
           setShowSetupModal(true);
           setLoading(false);

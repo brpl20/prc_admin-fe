@@ -119,40 +119,58 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
   const watchZipCode = watch('zipCode');
   const watchOfficeZipCode = watch('officeZipCode');
 
-  // Auto-fill address when CEP changes
+  // Auto-fill address when CEP changes - with debounce to prevent flickering
   React.useEffect(() => {
-    const fetchAddress = async () => {
-      if (watchZipCode && watchZipCode.length >= 8) {
-        setLoadingCep(true);
+    if (!watchZipCode || watchZipCode.length < 8) {
+      setLoadingCep(false);
+      return;
+    }
+    
+    const timeoutId = setTimeout(async () => {
+      setLoadingCep(true);
+      try {
         const address = await fetchAddressByCep(watchZipCode);
         if (address) {
-          setValue('street', address.street);
-          setValue('neighborhood', address.neighborhood);
-          setValue('city', address.city);
-          setValue('state', address.state);
+          setValue('street', address.street, { shouldValidate: false });
+          setValue('neighborhood', address.neighborhood, { shouldValidate: false });
+          setValue('city', address.city, { shouldValidate: false });
+          setValue('state', address.state, { shouldValidate: false });
         }
+      } catch (error) {
+        console.error('Error fetching address:', error);
+      } finally {
         setLoadingCep(false);
       }
-    };
-    fetchAddress();
+    }, 500); // 500ms debounce to prevent too many requests
+
+    return () => clearTimeout(timeoutId);
   }, [watchZipCode, setValue]);
 
-  // Auto-fill office address when Office CEP changes
+  // Auto-fill office address when Office CEP changes - with debounce
   React.useEffect(() => {
-    const fetchAddress = async () => {
-      if (watchOfficeZipCode && watchOfficeZipCode.length >= 8) {
-        setLoadingOfficeCep(true);
+    if (!watchOfficeZipCode || watchOfficeZipCode.length < 8) {
+      setLoadingOfficeCep(false);
+      return;
+    }
+    
+    const timeoutId = setTimeout(async () => {
+      setLoadingOfficeCep(true);
+      try {
         const address = await fetchAddressByCep(watchOfficeZipCode);
         if (address) {
-          setValue('officeStreet', address.street);
-          setValue('officeNeighborhood', address.neighborhood);
-          setValue('officeCity', address.city);
-          setValue('officeState', address.state);
+          setValue('officeStreet', address.street, { shouldValidate: false });
+          setValue('officeNeighborhood', address.neighborhood, { shouldValidate: false });
+          setValue('officeCity', address.city, { shouldValidate: false });
+          setValue('officeState', address.state, { shouldValidate: false });
         }
+      } catch (error) {
+        console.error('Error fetching office address:', error);
+      } finally {
         setLoadingOfficeCep(false);
       }
-    };
-    fetchAddress();
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
   }, [watchOfficeZipCode, setValue]);
 
   async function handleProfileSetup(data: ProfileSetupForm) {
@@ -245,18 +263,22 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
         maxWidth="sm"
         fullWidth
         disableEscapeKeyDown
+        keepMounted={false}
         onClose={(_event, reason) => {
           if (reason === 'backdropClick') return;
         }}
-        BackdropComponent={(props) => (
-          <Backdrop
-            {...props}
-            sx={{
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              backdropFilter: 'blur(4px)',
-            }}
-          />
-        )}
+        BackdropProps={{
+          sx: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(4px)',
+          }
+        }}
+        sx={{
+          '& .MuiDialog-paper': {
+            maxHeight: '90vh',
+            overflow: 'visible',
+          }
+        }}
       >
         <DialogTitle>
           <Typography variant="h5" component="h2" textAlign="center">
@@ -268,7 +290,14 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ open, onComplete,
         </DialogTitle>
         
         <form onSubmit={handleSubmit(handleProfileSetup)}>
-          <DialogContent>
+          <DialogContent 
+            sx={{ 
+              maxHeight: '60vh', 
+              overflowY: 'auto',
+              paddingTop: 2,
+              paddingBottom: 2
+            }}
+          >
             <Box display="flex" flexDirection="column" gap={2}>
               {/* Dados Pessoais */}
               <Typography variant="subtitle1" fontWeight="bold">
