@@ -112,13 +112,35 @@ class WikiService {
   }
 
   async createPage(teamId: number, data: WikiPageParams) {
-    const response = await api.post(`/teams/${teamId}/wiki_pages`, { wiki_page: data });
+    // Convert camelCase to snake_case for backend
+    const backendData = {
+      title: data.title,
+      content: data.content,
+      slug: data.slug,
+      parent_id: data.parentId || null,
+      position: data.position,
+      is_published: data.isPublished !== undefined ? data.isPublished : true,
+      category_ids: data.categoryIds || [],
+    };
+    
+    const response = await api.post(`/teams/${teamId}/wiki_pages`, { wiki_page: backendData });
     return response.data;
   }
 
   async updatePage(teamId: number, slug: string, data: WikiPageParams) {
+    // Convert camelCase to snake_case for backend
+    const backendData = {
+      title: data.title,
+      content: data.content,
+      slug: data.slug,
+      parent_id: data.parentId,
+      position: data.position,
+      is_published: data.isPublished,
+      category_ids: data.categoryIds || [],
+    };
+    
     const response = await api.patch(`/teams/${teamId}/wiki_pages/${slug}`, { 
-      wiki_page: data,
+      wiki_page: backendData,
       change_summary: data.changeSummary 
     });
     return response.data;
@@ -175,12 +197,34 @@ class WikiService {
   }
 
   async createCategory(teamId: number, data: WikiCategoryParams) {
-    const response = await api.post(`/teams/${teamId}/wiki_categories`, { wiki_category: data });
+    // Convert camelCase to snake_case for backend
+    const backendData = {
+      name: data.name,
+      slug: data.slug,
+      description: data.description,
+      parent_id: data.parentId || null,
+      position: data.position,
+      color: data.color,
+      icon: data.icon,
+    };
+    
+    const response = await api.post(`/teams/${teamId}/wiki_categories`, { wiki_category: backendData });
     return response.data;
   }
 
   async updateCategory(teamId: number, slug: string, data: WikiCategoryParams) {
-    const response = await api.patch(`/teams/${teamId}/wiki_categories/${slug}`, { wiki_category: data });
+    // Convert camelCase to snake_case for backend
+    const backendData = {
+      name: data.name,
+      slug: data.slug,
+      description: data.description,
+      parent_id: data.parentId,
+      position: data.position,
+      color: data.color,
+      icon: data.icon,
+    };
+    
+    const response = await api.patch(`/teams/${teamId}/wiki_categories/${slug}`, { wiki_category: backendData });
     return response.data;
   }
 
