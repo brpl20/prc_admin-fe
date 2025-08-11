@@ -108,9 +108,52 @@ export interface ICustomerAttributes {
   access_email: string;
   created_by_id: string | null;
   confirmed_at: string | null;
-  profile_customer_id: string | null;
+  profile_type: string | null;
+  profile_id: string | null;
   confirmed: boolean;
   deleted: boolean;
+  name: string;
+  last_name?: string;
+  customer_type: string;
+  cpf?: string;
+  cnpj?: string;
+  rg?: string;
+  birth?: string;
+  gender?: string;
+  nationality?: string;
+  civil_status?: string;
+  capacity?: string;
+  mother_name?: string;
+  profession?: string;
+  company?: string;
+  number_benefit?: string;
+  nit?: string;
+  inss_password?: string;
+  addresses: Array<{
+    street: string;
+    number: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+    zip_code: string;
+    description: string;
+  }>;
+  phones: Array<{
+    phone_number: string;
+  }>;
+  emails: Array<{
+    email: string;
+  }>;
+  bank_accounts: Array<{
+    id: string;
+    account: string;
+    agency: string;
+    bank_name: string;
+    operation?: string;
+    pix?: string;
+    type_account?: string;
+  }>;
+  represent?: any;
 }
 
 export interface ICustomer {

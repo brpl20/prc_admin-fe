@@ -15,11 +15,10 @@ export const cpfMask = (value: string) => {
 };
 
 export const rgMask = (value: string) => {
+  // Aceita letras, números, pontos e hífens para RG
   return value
-    .replace(/\D/g, '')
-    .replace(/(\d{1})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1');
+    .replace(/[^A-Za-z0-9.\-]/g, '') // Remove caracteres especiais, mas mantém letras, números, pontos e hífens
+    .toUpperCase(); // Converte para maiúsculo
 };
 
 export const cnpjMask = (value: string) => {
