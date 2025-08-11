@@ -14,6 +14,28 @@ Background Jobs: Sidekiq with Redis
 Testing: RSpec (backend) and Jest/React Testing Library (frontend)
 Static Code Analysis: RuboCop, ESLint, TypeScript
 
+## System Requirements
+  System Requirements:
+  - Ruby 3.1.0 ✓
+  - Rails 7.0.4+ ✓
+  - PostgreSQL 14+ ✓
+  - Bundler 2.5+ ✓
+
+  Key Dependencies:
+  - Database: PostgreSQL
+  - Authentication: Devise + JWT
+  - Authorization: Pundit
+  - API Serialization: jsonapi-serializer
+  - File Storage: AWS S3
+  - Email: Mailjet
+  - Document Processing: Prawn (PDF), Docx, Libreconv
+
+  Development Tools:
+  - Testing: RSpec 6.0
+  - Code Quality: Rubocop
+  - Debugging: Pry-byebug
+  - Environment: dotenv-rails
+
 ### Key Architectural Principles
 Service-Oriented Design: Backend organized around domain services
 Clean Architecture: Separation of concerns with presenters, services, and repositories

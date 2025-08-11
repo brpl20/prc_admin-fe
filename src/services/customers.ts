@@ -2,7 +2,29 @@ import { ICustomer } from '@/interfaces/ICustomer';
 import api from './api';
 import teamService from './teams';
 
-  const createProfileCustomer = async (data: any) => {
+const createCustomer = async (data: any) => {
+  try {
+    const response = await api.post('/customers', data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const createCustomerWithProfile = async (customerData: any, profileData: any) => {
+  try {
+    const payload = {
+      customer: customerData,
+      profile: profileData
+    };
+    const response = await api.post('/customers/create_with_profile', payload);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const createProfileCustomer = async (data: any) => {
     try {
       // Buscar team_id automaticamente se não fornecido
       let teamId = data.profile_customer?.team_id;
@@ -83,7 +105,7 @@ const getAllCustomers = async (): Promise<{ data: ICustomer[] }> => {
 };
 
 const getCustomerById = async (id: string, includeDeleted: boolean = false) => {
-  const url = `/profile_customers/${id}${includeDeleted ? '?include_deleted=true' : ''}`;
+  const url = `/customers/${id}${includeDeleted ? '?include_deleted=true' : ''}`;
   const response = await api.get(url);
   return response.data;
 };
@@ -121,6 +143,8 @@ const restoreProfileCustomer = async (id: string) => {
 };
 
 export {
+  createCustomer,
+  createCustomerWithProfile,
   createProfileCustomer,
   updateProfileCustomer,
   getAllCustomers,

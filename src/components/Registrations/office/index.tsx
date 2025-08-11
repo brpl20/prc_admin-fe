@@ -1,11 +1,17 @@
 import { useState, ChangeEvent, useEffect, useContext } from 'react';
 import { IoAddCircleOutline } from 'react-icons/io5';
 
-import { TextField, Box, Typography, Button, Autocomplete, CircularProgress } from '@mui/material';
+import { TextField, Box, Typography, Button, Autocomplete, CircularProgress, Slider, Link } from '@mui/material';
 import { Notification, ConfirmCreation } from '@/components';
 
 import { PageTitleContext } from '@/contexts/PageTitleContext';
 import { accountingType, societyType } from '@/utils/constants';
+
+const partnershipTypes = [
+  { value: 'socio', label: 'Sócio' },
+  { value: 'associado', label: 'Associado' },
+  { value: 'socio_de_servico', label: 'Sócio de Serviço' }
+];
 
 import { Container, Title } from './styles';
 import { colors, ContentContainer } from '@/styles/globals';
@@ -17,7 +23,9 @@ import { IoMdTrash } from 'react-icons/io';
 
 import { getAllOfficeTypes } from '@/services/offices';
 import { getAllBanks, getCEPDetails } from '@/services/brasilAPI';
+import { getMinimumWage, getINSSCeiling, validateProLaboreAmount } from '@/services/systemSettings';
 import { createOffice, updateOffice } from '@/services/offices';
+import { createLegalEntityOffice, updateLegalEntityOffice } from '@/services/legalEntityOffices';
 
 import Router, { useRouter } from 'next/router';
 
@@ -54,6 +62,15 @@ interface FormData {
   operation: string;
   account: string;
   pix: string;
+}
+
+interface Partner {
+  lawyer_id: string;
+  lawyer_name?: string;
+  partnership_type: 'socio' | 'associado' | 'socio_de_servico' | '';
+  ownership_percentage: number;
+  is_managing_partner: boolean;
+  pro_labore_amount?: number;
 }
 
 interface props {
@@ -142,6 +159,26 @@ const Office = ({ dataToEdit, isLoading }: props) => {
     emailInputFields: [{ email: '' }],
   });
 
+  const [partners, setPartners] = useState<Partner[]>([
+    {
+      lawyer_id: '',
+      partnership_type: '',
+      ownership_percentage: 100,
+      is_managing_partner: false
+    }
+  ]);
+
+  // Estados para distribuição de lucros e contrato social
+  const [profitDistribution, setProfitDistribution] = useState<'proportional' | 'disproportional'>('proportional');
+  const [profitPercentages, setProfitPercentages] = useState<{ [key: number]: number }>({});
+  const [createSocialContract, setCreateSocialContract] = useState(false);
+  
+  // Estados para pro-labore
+  const [partnersWithProLabore, setPartnersWithProLabore] = useState(true);
+  const [minimumWage, setMinimumWage] = useState<number>(1320);
+  const [inssCeiling, setInssCeiling] = useState<number>(7507.49);
+  const [proLaboreErrors, setProLaboreErrors] = useState<{ [key: number]: string }>({});
+
   const resetValues = () => {
     setFormData({
       name: '',
@@ -170,6 +207,127 @@ const Office = ({ dataToEdit, isLoading }: props) => {
       phoneInputFields: [{ phone_number: '' }],
       emailInputFields: [{ email: '' }],
     });
+    setPartners([{
+      lawyer_id: '',
+      partnership_type: '',
+      ownership_percentage: 100,
+      is_managing_partner: false
+    }]);
+    setProfitDistribution('proportional');
+    setProfitPercentages({});
+    setCreateSocialContract(false);
+    setPartnersWithProLabore(true);
+    setProLaboreErrors({});
+  };
+
+  const handlePartnerChange = (index: number, field: keyof Partner, value: any) => {
+    setPartners(prevPartners => {
+      const newPartners = [...prevPartners];
+      if (field === 'lawyer_id' && value) {
+        newPartners[index] = {
+          ...newPartners[index],
+          [field]: value.id,
+          lawyer_name: `${value.attributes.name} ${value.attributes.last_name}`
+        };
+      } else if (field === 'ownership_percentage') {
+        // Ajustar percentuais proporcionalmente quando há 2 sócios
+        if (newPartners.length === 2) {
+          const otherIndex = index === 0 ? 1 : 0;
+          const newPercentage = Math.max(0, Math.min(100, Number(value) || 0));
+          newPartners[index] = {
+            ...newPartners[index],
+            ownership_percentage: newPercentage
+          };
+          newPartners[otherIndex] = {
+            ...newPartners[otherIndex],
+            ownership_percentage: 100 - newPercentage
+          };
+        } else {
+          newPartners[index] = {
+            ...newPartners[index],
+            [field]: Math.max(0, Math.min(100, Number(value) || 0))
+          };
+        }
+      } else if (field === 'pro_labore_amount') {
+        // Validar valor do pro-labore
+        const amount = Number(value) || 0;
+        newPartners[index] = {
+          ...newPartners[index],
+          [field]: amount
+        };
+        
+        // Validar e atualizar erros
+        const error = validateProLaboreAmount(amount, minimumWage, inssCeiling);
+        setProLaboreErrors(prev => {
+          const newErrors = { ...prev };
+          if (error) {
+            newErrors[index] = error;
+          } else {
+            delete newErrors[index];
+          }
+          return newErrors;
+        });
+      } else {
+        newPartners[index] = {
+          ...newPartners[index],
+          [field]: value
+        };
+      }
+      return newPartners;
+    });
+  };
+
+  const handleAddPartner = () => {
+    setPartners(prevPartners => {
+      const newPartners = [...prevPartners];
+      
+      // Se é o segundo sócio, ajustar percentuais (50/50)
+      if (newPartners.length === 1) {
+        newPartners[0] = { ...newPartners[0], ownership_percentage: 50 };
+      }
+      
+      newPartners.push({
+        lawyer_id: '',
+        partnership_type: '',
+        ownership_percentage: newPartners.length === 1 ? 50 : 0,
+        is_managing_partner: false
+      });
+      
+      return newPartners;
+    });
+  };
+
+  const handleRemovePartner = (index: number) => {
+    if (partners.length === 1) return;
+    setPartners(prevPartners => {
+      const newPartners = prevPartners.filter((_, i) => i !== index);
+      // Ajustar percentuais se ficou com 2 sócios
+      if (newPartners.length === 2) {
+        newPartners[0].ownership_percentage = 50;
+        newPartners[1].ownership_percentage = 50;
+      }
+      return newPartners;
+    });
+  };
+
+  // Função para filtrar advogados disponíveis (remove os já selecionados)
+  const getAvailableLawyers = (currentIndex: number) => {
+    const selectedLawyerIds = partners
+      .map((partner, index) => index !== currentIndex ? partner.lawyer_id : null)
+      .filter(id => id && id !== '');
+    
+    return adminsList.filter(admin => !selectedLawyerIds.includes(admin.id));
+  };
+
+  // Função para calcular total de percentuais
+  const getTotalPercentage = () => {
+    return partners.reduce((total, partner) => total + (partner.ownership_percentage || 0), 0);
+  };
+
+  // Função para validar se passou de 100%
+  const isOverPercentage = () => {
+    const total = getTotalPercentage();
+    return total > 100;
   };
 
   const handleCloseModal = () => {
@@ -402,8 +560,22 @@ const Office = ({ dataToEdit, isLoading }: props) => {
 
   useEffect(() => {
     getAdmins();
-
     getOfficeTypes();
+    
+    // Buscar configurações do sistema
+    const fetchSystemSettings = async () => {
+      try {
+        const wage = await getMinimumWage();
+        const ceiling = await getINSSCeiling();
+        setMinimumWage(wage);
+        setInssCeiling(ceiling);
+      } catch (error) {
+        console.error('Erro ao buscar configurações do sistema:', error);
+        // Manter valores padrão
+      }
+    };
+    
+    fetchSystemSettings();
   }, []);
 
   useEffect(() => {
@@ -1021,6 +1193,490 @@ const Office = ({ dataToEdit, isLoading }: props) => {
               </Flex>
             </Flex>
           </form>
+
+          <Divider />
+
+          {/* Seção de Sócios */}
+          <Flex>
+            <Box width={'300px'}>
+              <Typography variant="h6" sx={{ marginRight: 'auto' }}>
+                {'Sócios do Escritório'}
+              </Typography>
+            </Box>
+
+            <Box style={{ flex: 1 }}>
+              <Box display={'flex'} flexDirection={'column'} gap={'16px'}>
+                {partners.map((partner, index) => (
+                  <Box key={index} sx={{ border: '1px solid #e0e0e0', borderRadius: '8px', p: 2, mb: 2 }}>
+                    <Box display={'flex'} justifyContent={'space-between'} alignItems={'center'} mb={1}>
+                      <Typography variant="h6">Sócio {index + 1}</Typography>
+                      {partners.length > 1 && (
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          onClick={() => handleRemovePartner(index)}
+                        >
+                          <IoMdTrash />
+                        </Button>
+                      )}
+                    </Box>
+                    
+                    <Box display={'flex'} gap={'16px'} mb={2}>
+                      <Box flex={2}>
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>Advogado</Typography>
+                        <Autocomplete
+                          value={
+                            partner.lawyer_id 
+                              ? adminsList.find(admin => admin.id === partner.lawyer_id) || null
+                              : null
+                          }
+                          options={getAvailableLawyers(index)}
+                          loading={adminsList.length === 0}
+                          loadingText="Carregando advogados..."
+                          getOptionLabel={(option) => 
+                            option && option.attributes 
+                              ? `${option.attributes.name} ${option.attributes.last_name}`
+                              : ''
+                          }
+                          onChange={(event, value) => handlePartnerChange(index, 'lawyer_id', value)}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              placeholder="Selecione o Advogado"
+                              size="small"
+                              InputProps={{
+                                ...params.InputProps,
+                                endAdornment: (
+                                  <>
+                                    {adminsList.length === 0 ? (
+                                      <CircularProgress color="inherit" size={20} />
+                                    ) : null}
+                                    {params.InputProps.endAdornment}
+                                  </>
+                                ),
+                              }}
+                            />
+                          )}
+                          noOptionsText="Nenhum advogado disponível"
+                        />
+                      </Box>
+                      
+                      <Box flex={1}>
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>Função</Typography>
+                        <Autocomplete
+                          value={partnershipTypes.find(type => type.value === partner.partnership_type) || null}
+                          options={partnershipTypes}
+                          getOptionLabel={(option) => option.label}
+                          onChange={(event, value) => handlePartnerChange(index, 'partnership_type', value?.value || '')}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              placeholder="Selecione a Função"
+                              size="small"
+                            />
+                          )}
+                          noOptionsText="Nenhuma função encontrada"
+                        />
+                      </Box>
+                      
+                      <Box flex={1}>
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>Participação (%)</Typography>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <TextField
+                            size="small"
+                            type="number"
+                            value={partner.ownership_percentage || ''}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === '') {
+                                handlePartnerChange(index, 'ownership_percentage', 0);
+                              } else {
+                                handlePartnerChange(index, 'ownership_percentage', parseFloat(value));
+                              }
+                            }}
+                            placeholder="0"
+                            inputProps={{ min: 0, max: 100, step: 0.01 }}
+                            sx={{ width: '80px' }}
+                          />
+                          <Typography variant="body2">%</Typography>
+                        </Box>
+                        
+                        {/* Slider para ajuste visual - só aparece quando há 2 sócios */}
+                        {partners.length === 2 && (
+                          <Box sx={{ mt: 1 }}>
+                            <Typography variant="caption" color="textSecondary" gutterBottom>
+                              Ajuste proporcional
+                            </Typography>
+                            <Slider
+                              value={partner.ownership_percentage}
+                              onChange={(_, value) => handlePartnerChange(index, 'ownership_percentage', value)}
+                              min={0}
+                              max={100}
+                              step={1}
+                              size="small"
+                              valueLabelDisplay="auto"
+                              valueLabelFormat={(value) => `${value}%`}
+                            />
+                          </Box>
+                        )}
+                      </Box>
+                    </Box>
+                    
+                    {/* Campo Sócio Administrador - só para sócios */}
+                    {partner.partnership_type === 'socio' && (
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                          Sócio Administrador
+                        </Typography>
+                        <Box display="flex" alignItems="center">
+                          <input
+                            type="checkbox"
+                            id={`managing-partner-${index}`}
+                            checked={partner.is_managing_partner}
+                            onChange={(e) => handlePartnerChange(index, 'is_managing_partner', e.target.checked)}
+                            style={{ marginRight: '8px' }}
+                          />
+                          <label htmlFor={`managing-partner-${index}`}>
+                            Este sócio é administrador
+                          </label>
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+                ))}
+                
+                {/* Aviso quando percentual excede 100% */}
+                {isOverPercentage() && (
+                  <Box 
+                    sx={{ 
+                      backgroundColor: '#fff3cd', 
+                      border: '1px solid #ffeaa7', 
+                      borderRadius: '4px', 
+                      p: 2, 
+                      mb: 2 
+                    }}
+                  >
+                    <Typography variant="body2" color="#856404">
+                      ⚠️ O total de participação ({getTotalPercentage()}%) excede 100%. 
+                      Ajuste as porcentagens para que somem no máximo 100%.
+                    </Typography>
+                  </Box>
+                )}
+                
+                <Box>
+                  <Button
+                    variant="outlined"
+                    startIcon={<IoAddCircleOutline />}
+                    onClick={handleAddPartner}
+                    disabled={adminsList.length <= partners.length}
+                    sx={{ 
+                      alignSelf: 'flex-start',
+                      opacity: adminsList.length <= partners.length ? 0.6 : 1
+                    }}
+                  >
+                    Adicionar Sócio
+                  </Button>
+                  
+                  {adminsList.length <= partners.length && (
+                    <Typography 
+                      variant="caption" 
+                      color="textSecondary" 
+                      sx={{ 
+                        display: 'block', 
+                        mt: 1, 
+                        fontStyle: 'italic' 
+                      }}
+                    >
+                      Cadastre mais advogados para alterar seu quadro societário.{' '}
+                      <Link 
+                        href="http://localhost:3001/cadastrar?type=usuario" 
+                        target="_blank"
+                        sx={{ textDecoration: 'underline', cursor: 'pointer' }}
+                      >
+                        Cadastrar novo usuário
+                      </Link>
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            </Box>
+          </Flex>
+
+          <Divider />
+
+          {/* Seção Distribuição de Lucros */}
+          <Flex>
+            <Box width={'300px'}>
+              <Typography variant="h6" sx={{ marginRight: 'auto' }}>
+                {'Distribuição de Lucros'}
+              </Typography>
+            </Box>
+
+            <Box style={{ flex: 1 }}>
+              <Box display={'flex'} flexDirection={'column'} gap={'16px'}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Como será a distribuição de lucros?
+                </Typography>
+                
+                <Box display="flex" gap={2} mb={2}>
+                  <Box display="flex" alignItems="center">
+                    <input
+                      type="radio"
+                      id="proportional"
+                      name="profit-distribution"
+                      value="proportional"
+                      checked={profitDistribution === 'proportional'}
+                      onChange={(e) => setProfitDistribution(e.target.value as 'proportional')}
+                      style={{ marginRight: '8px' }}
+                    />
+                    <label htmlFor="proportional">Proporcional à participação</label>
+                  </Box>
+                  
+                  <Box display="flex" alignItems="center">
+                    <input
+                      type="radio"
+                      id="disproportional"
+                      name="profit-distribution"
+                      value="disproportional"
+                      checked={profitDistribution === 'disproportional'}
+                      onChange={(e) => setProfitDistribution(e.target.value as 'disproportional')}
+                      style={{ marginRight: '8px' }}
+                    />
+                    <label htmlFor="disproportional">Desproporcional</label>
+                  </Box>
+                </Box>
+
+                {profitDistribution === 'proportional' && (
+                  <Box 
+                    sx={{ 
+                      backgroundColor: '#f0f8ff', 
+                      border: '1px solid #add8e6', 
+                      borderRadius: '4px', 
+                      p: 2 
+                    }}
+                  >
+                    <Typography variant="body2" color="#2e5a87">
+                      ℹ️ Os lucros serão distribuídos proporcionalmente à participação de cada sócio.
+                    </Typography>
+                    
+                    {/* Visualização das porcentagens atuais */}
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        Distribuição atual:
+                      </Typography>
+                      {partners.map((partner, index) => (
+                        partner.lawyer_name && (
+                          <Box key={index} display="flex" justifyContent="space-between" sx={{ mb: 0.5 }}>
+                            <Typography variant="body2">
+                              {partner.lawyer_name}:
+                            </Typography>
+                            <Typography variant="body2" fontWeight="bold">
+                              {partner.ownership_percentage}%
+                            </Typography>
+                          </Box>
+                        )
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                {profitDistribution === 'disproportional' && (
+                  <Box 
+                    sx={{ 
+                      backgroundColor: '#fff8dc', 
+                      border: '1px solid #daa520', 
+                      borderRadius: '4px', 
+                      p: 2 
+                    }}
+                  >
+                    <Typography variant="body2" color="#b8860b">
+                      ⚠️ Distribuição desproporcional será definida de acordo com cada trabalho/processo.
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          </Flex>
+
+          <Divider />
+
+          {/* Seção Contrato Social */}
+          <Flex>
+            <Box width={'300px'}>
+              <Typography variant="h6" sx={{ marginRight: 'auto' }}>
+                {'Contrato Social'}
+              </Typography>
+            </Box>
+
+            <Box style={{ flex: 1 }}>
+              <Box display={'flex'} flexDirection={'column'} gap={'16px'}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Deseja criar um contrato social?
+                </Typography>
+                
+                <Box display="flex" alignItems="center">
+                  <input
+                    type="checkbox"
+                    id="create-social-contract"
+                    checked={createSocialContract}
+                    onChange={(e) => setCreateSocialContract(e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <label htmlFor="create-social-contract">
+                    Sim, desejo criar um contrato social
+                  </label>
+                </Box>
+
+                {createSocialContract && (
+                  <Box 
+                    sx={{ 
+                      backgroundColor: '#f0f8ff', 
+                      border: '1px solid #add8e6', 
+                      borderRadius: '4px', 
+                      p: 2 
+                    }}
+                  >
+                    <Typography variant="body2" color="#2e5a87">
+                      ℹ️ A lógica para criação do contrato social será implementada posteriormente.
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          </Flex>
+
+          <Divider />
+
+          {/* Seção Pro-Labore */}
+          <Flex>
+            <Box width={'300px'}>
+              <Typography variant="h6" sx={{ marginRight: 'auto' }}>
+                {'Pro-Labore'}
+              </Typography>
+            </Box>
+
+            <Box style={{ flex: 1 }}>
+              <Box display={'flex'} flexDirection={'column'} gap={'16px'}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Os sócios retirarão pro-labore?
+                </Typography>
+                
+                <Box display="flex" alignItems="center" mb={2}>
+                  <input
+                    type="checkbox"
+                    id="partners-pro-labore"
+                    checked={partnersWithProLabore}
+                    onChange={(e) => setPartnersWithProLabore(e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <label htmlFor="partners-pro-labore">
+                    Sim, os sócios retirarão pro-labore
+                  </label>
+                </Box>
+
+                {partnersWithProLabore && (
+                  <Box>
+                    <Box 
+                      sx={{ 
+                        backgroundColor: '#f0f8ff', 
+                        border: '1px solid #add8e6', 
+                        borderRadius: '4px', 
+                        p: 2,
+                        mb: 2
+                      }}
+                    >
+                      <Typography variant="body2" color="#2e5a87">
+                        ℹ️ <strong>Faixas de Valor:</strong>
+                      </Typography>
+                      <Typography variant="caption" color="#2e5a87" sx={{ display: 'block', mt: 0.5 }}>
+                        • Salário Mínimo: R$ {minimumWage.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </Typography>
+                      <Typography variant="caption" color="#2e5a87" sx={{ display: 'block' }}>
+                        • Teto INSS: R$ {inssCeiling.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </Typography>
+                      <Typography variant="caption" color="#2e5a87" sx={{ display: 'block', mt: 1 }}>
+                        Valor R$ 0,00 = sócio não receberá pro-labore
+                      </Typography>
+                    </Box>
+
+                    {/* Pro-labore para todos os sócios */}
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                        Valores de Pro-Labore por Sócio:
+                      </Typography>
+                      
+                      {partners.map((partner, index) => (
+                        partner.lawyer_name && (
+                          <Box key={index} sx={{ border: '1px solid #e0e0e0', borderRadius: '8px', p: 2, mb: 2 }}>
+                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                              <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                                {partner.lawyer_name}
+                              </Typography>
+                              <Typography variant="caption" color="textSecondary">
+                                {partnershipTypes.find(type => type.value === partner.partnership_type)?.label || partner.partnership_type}
+                              </Typography>
+                            </Box>
+                            
+                            <Box display="flex" alignItems="center" gap={2}>
+                              <Typography variant="body2" sx={{ minWidth: '120px' }}>
+                                Pro-Labore:
+                              </Typography>
+                              <TextField
+                                type="number"
+                                size="small"
+                                value={partner.pro_labore_amount || ''}
+                                onChange={(e) => handlePartnerChange(index, 'pro_labore_amount', parseFloat(e.target.value) || 0)}
+                                placeholder="0"
+                                inputProps={{ min: 0, step: 0.01 }}
+                                error={!!proLaboreErrors[index]}
+                                InputProps={{
+                                  startAdornment: <Typography variant="body2" sx={{ mr: 1 }}>R$</Typography>
+                                }}
+                              />
+                            </Box>
+                            
+                            {proLaboreErrors[index] && (
+                              <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>
+                                ⚠️ {proLaboreErrors[index]}
+                              </Typography>
+                            )}
+                            
+                            {!proLaboreErrors[index] && (partner.pro_labore_amount === 0) && (
+                              <Typography variant="caption" color="success.main" sx={{ display: 'block', mt: 1 }}>
+                                ✓ Este sócio não receberá pro-labore
+                              </Typography>
+                            )}
+                            
+                            {!proLaboreErrors[index] && (partner.pro_labore_amount > 0) && (
+                              <Typography variant="caption" color="success.main" sx={{ display: 'block', mt: 1 }}>
+                                ✓ Valor válido
+                              </Typography>
+                            )}
+                          </Box>
+                        )
+                      ))}
+                      
+                      {partners.filter(p => p.lawyer_name).length === 0 && (
+                        <Box 
+                          sx={{ 
+                            backgroundColor: '#fff8dc', 
+                            border: '1px solid #daa520', 
+                            borderRadius: '4px', 
+                            p: 2 
+                          }}
+                        >
+                          <Typography variant="body2" color="#b8860b">
+                            Adicione e selecione sócios para definir os valores de pro-labore.
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          </Flex>
 
           <Divider />
 
